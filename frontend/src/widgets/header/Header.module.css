@@ -1,0 +1,53 @@
+.header {
+    padding-block: 16px;
+  }
+  /* TOP BAR */
+  .topInner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr; /* left / logo / right */
+    align-items: center;
+    gap: 16px;
+  }
+  .left { display: flex; }
+  .center { display: grid; justify-items: center; }
+  .right { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+  .search { display: flex; gap: 8px; align-items: center; }
+  .searchInput { width: 260px; }
+  .user { display: flex; align-items: center; gap: 8px; }
+  .avatar { width: 36px; height: 36px; border-radius: 999px; background: rgba(255,255,255,.2); }
+  .userName { max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .userCoins { font-size: 12px; opacity: .8; }
+  .iconBtn { background: transparent; border: 0; color: inherit; cursor: pointer; }
+  .burger { display: none; }
+  /* NAV BAR */
+  .nav {
+    margin-top: 10px;
+  }
+  .navInner {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap; /* говорит: если элементы не помещаются в одну линию — переноси их на следующую.*/
+  }
+  .navLink {
+    text-decoration: none;
+    color: inherit;
+    white-space: nowrap;
+  }
+  /* TABLET/MOBILE: верх меняется, но nav не прячем */
+  @media (max-width: 1279px) {
+    .topInner { grid-template-columns: auto 1fr auto; }
+    .searchInput { display: none; }   /* оставили только иконку */
+    .burger { display: inline-flex; } /* если нужен бургер для отдельного меню */
+  }
+  /* Узкие телефоны: лучше сделать nav одной строкой со скроллом (вариант) */
+  @media (max-width: 480px) {
+    .navInner {
+      justify-content: flex-start;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      gap: 14px;
+    }
+  }
+  

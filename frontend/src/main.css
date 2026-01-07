@@ -1,0 +1,15 @@
+:root{
+  --container-max: 1280px;
+  --gutter: clamp(14px, 3vw, 28px);
+  --text: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.65);
+}
+
+*{ box-sizing: border-box; }
+
+body{ margin:0; color:var(--text); background:#020a0b; }
+
+a{ color:inherit; }
+
+button{ font: inherit; }
+img{ max-width:100%; display:block; }

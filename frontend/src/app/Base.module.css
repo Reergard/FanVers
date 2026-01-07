@@ -1,0 +1,19 @@
+.app {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    color: rgba(255,255,255,.92);
+  }
+  .bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(circle at 30% 20%, rgba(0,180,180,.15), transparent 45%),
+                #020a0b;
+  }
+  .main {
+    flex: 1;
+    padding-block: 24px;
+  }
+  
