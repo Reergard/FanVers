@@ -1,18 +1,18 @@
-# Структура фронтенда FanVers (Vite + React + TypeScript)
+# Структура фронтенду FanVers (Vite + React + TypeScript)
 
-Этот документ объясняет **для чего нужна каждая папка/файл**, **почему она существует**, и **как её использовать** (с небольшими примерами).
+Цей документ пояснює **для чого потрібна кожна папка/файл**, **чому вона існує** та **як її використовувати** (з короткими прикладами).
 
-> **Правило большого пальца**
+> **Просте правило**
 >
-> - **Макет** (Header/Footer/фон/основная область) находится в `app/` (Base).
-> - **Страницы** находятся в папках функциональности типа `main/`, `catalog/` и т.д.
-> - **Переиспользуемые блоки** находятся в `shared/` и `widgets/`.
-> - **Глобальные изображения/иконки** находятся в `assets/`.
-> - **Точки входа** (`main.tsx`, `App.tsx`) связывают всё воедино.
+> - **Макет** (Header / Footer / фон / основна область) знаходиться в `app/` (Base).
+> - **Сторінки** зберігаються у папках функціональності типу `main/`, `catalog/` тощо.
+> - **Повторно використовувані блоки** — у `shared/` та `widgets/`.
+> - **Глобальні зображення та іконки** — у `assets/`.
+> - **Точки входу** (`main.tsx`, `App.tsx`) з’єднують усе в одне ціле.
 
 ---
 
-## Текущее дерево
+## Поточне дерево
 
 ```txt
 frontend/src/
@@ -24,14 +24,14 @@ frontend/src/
 ├── main/
 │   ├── HomePage.tsx
 │   ├── HomePage.module.css
-│   └── images/              # только для HomePage
+│   └── images/              # лише для HomePage
 ├── shared/
 │   ├── Container.tsx
 │   └── Container.module.css
 ├── widgets/
 │   ├── header/
 │   └── footer/
-├── assets/                   # ГЛОБАЛЬНЫЕ ресурсы, используемые по всему сайту
+├── assets/                   # ГЛОБАЛЬНІ ресурси для всього сайту
 │   ├── icons/
 │   ├── logos/
 │   └── backgrounds/
@@ -42,18 +42,18 @@ frontend/src/
 
 ---
 
-## `main.tsx` — точка входа React (начало приложения)
+## `main.tsx` — точка входу React (старт застосунку)
 
-**Что это:** файл, где React монтируется в HTML-страницу.
+**Що це:** файл, у якому React монтується в HTML-сторінку.
 
-**Почему существует:** Vite загружает `main.tsx` первым. Он создаёт корень React и рендерит `<App />`.
+**Навіщо існує:** Vite завантажує `main.tsx` першим. Він створює React-root і рендерить `<App />`.
 
-**Типичное содержимое:**
+**Типовий вміст:**
 ```tsx
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { App } from "./App";
-import "./main.css"; // глобальные стили (токены, базовая типографика и т.д.)
+import "./main.css"; // глобальні стилі (токени, базова типографіка тощо)
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -62,21 +62,21 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 );
 ```
 
-**Ключевая идея:** здесь редко размещают UI. Это файл-"загрузчик".
+**Ключова ідея:** тут майже не розміщують UI. Це файл-завантажувач.
 
 ---
 
-## `App.tsx` — корень приложения (связующее звено)
+## `App.tsx` — корінь застосунку (зв’язуюча ланка)
 
-**Что это:** компонент верхнего уровня, который связывает воедино:
-- маршрутизацию (React Router),
-- провайдеры (auth/theme/query client позже),
-- глобальный макет (`Base`).
+**Що це:** компонент верхнього рівня, який поєднує:
+- маршрутизацію (React Router),
+- провайдери (auth / theme / query client пізніше),
+- глобальний макет (`Base`).
 
-**Почему существует:** Нужно одно место, которое говорит:
-> "Вот структура моего приложения: роутер → макет → страницы"
+**Навіщо існує:** потрібне одне місце, яке говорить:
+> «Ось структура мого застосунку: роутер → макет → сторінки»
 
-**Минимальный пример без роутера (для начала):**
+**Мінімальний приклад без роутера (на старті):**
 ```tsx
 import { Base } from "./app/Base";
 import { HomePage } from "./main/HomePage";
@@ -90,7 +90,7 @@ export function App() {
 }
 ```
 
-**Пример с роутером (позже):**
+**Приклад з роутером (пізніше):**
 ```tsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Base } from "./app/Base";
@@ -111,18 +111,18 @@ export function App() {
 
 ---
 
-## `app/` — "оболочка" сайта (макет + глобальный фон)
+## `app/` — «оболонка» сайту (макет + глобальний фон)
 
 ### `app/Base.tsx`
-**Что это:** ваш шаблон макета (аналогично `base.html` в Django).
+**Що це:** шаблон макета (аналог `base.html` у Django).
 
-**Почему существует:** Большинство страниц имеют общие:
+**Навіщо існує:** більшість сторінок мають спільні:
 - фон,
-- шапку,
-- подвал,
-- область `<main>`, где отображаются страницы.
+- хедер,
+- футер,
+- область `<main>`, де рендеряться сторінки.
 
-**Типичная структура:**
+**Типова структура:**
 ```tsx
 import styles from "./Base.module.css";
 import { Header } from "../widgets/header/Header";
@@ -145,11 +145,11 @@ export function Base({ children }: Props) {
 ```
 
 ### `app/Base.module.css`
-**Что это:** CSS Modules для макета Base.
+**Що це:** CSS Modules для макета Base.
 
-**Почему существует:** Стили Base не должны просачиваться в другие компоненты. С CSS Modules имена классов изолированы.
+**Навіщо існує:** стилі Base не повинні «протікати» в інші компоненти. CSS Modules ізолюють імена класів.
 
-**Пример:**
+**Приклад:**
 ```css
 .app {
   min-height: 100svh;
@@ -163,7 +163,7 @@ export function Base({ children }: Props) {
   position: fixed;
   inset: 0;
   z-index: -1;
-  /* ваш тёмный фон + светящиеся градиенты */
+  /* темний фон + світні градієнти */
   background:
     radial-gradient(circle at 30% 20%, rgba(0, 180, 180, 0.15), transparent 45%),
     #020a0b;
@@ -175,18 +175,18 @@ export function Base({ children }: Props) {
 }
 ```
 
-**Совет:** Размещайте здесь **глобальный фон и общие отступы страниц**, потому что они применяются ко всем страницам.
+**Порада:** тут тримайте **глобальний фон і загальні відступи сторінок**, бо вони застосовуються до всіх сторінок.
 
 ---
 
-## `routes/` — определения маршрутов (опционально сейчас, полезно скоро)
+## `routes/` — визначення маршрутів (опційно зараз, корисно згодом)
 
-**Что это:** папка для хранения конфигураций маршрутов, путей и (позже) ленивой загрузки.
+**Що це:** папка для конфігурацій маршрутів, шляхів і (пізніше) лінивої загрузки.
 
-**Почему существует:** Как только у вас появится много страниц, хранение маршрутов внутри `App.tsx` станет беспорядочным.
-Вы можете переместить логику маршрутизации в `routes/`.
+**Навіщо існує:** коли сторінок стає багато, зберігати маршрути в `App.tsx` стає незручно.
+Логіку маршрутизації можна винести в `routes/`.
 
-**Пример (простой):** `routes/routes.tsx`
+**Простий приклад:** `routes/routes.tsx`
 ```tsx
 import { HomePage } from "../main/HomePage";
 
@@ -195,7 +195,7 @@ export const routes = [
 ];
 ```
 
-**Пример (с компонентами React Router):**
+**Приклад з компонентом React Router:**
 ```tsx
 // routes/AppRoutes.tsx
 import { Routes, Route } from "react-router-dom";
@@ -209,68 +209,32 @@ export function AppRoutes() {
   );
 }
 ```
-Затем в `App.tsx` вы просто рендерите `<AppRoutes />`.
+Потім у `App.tsx` просто рендерите `<AppRoutes />`.
 
 ---
 
-## `api/` — server calls (axios/fetch layer)
+## `api/` — запити до сервера (шар axios/fetch)
 
-**What it is:** a place for:
-- axios instance,
-- base URL config,
-- interceptors (later),
-- typed API functions.
+**Що це:** місце для:
+- інстансу axios,
+- базової URL-конфігурації,
+- інтерцепторів (пізніше),
+- типізованих API-функцій.
 
-**Why it exists:** You don't want API code scattered across pages/components.
+**Навіщо існує:** щоб API-код не був розкиданий по сторінках і компонентах.
 
-**Typical file:** `api/http.ts`
-```ts
-import axios from "axios";
 
-export const http = axios.create({
-  baseURL: "/api", // in dev you proxy /api -> Django
-  withCredentials: true, // if you use cookies for refresh tokens
-});
-```
-
-**Example usage in a page:**
-```ts
-import { http } from "../api/http";
-
-export async function loadProfile() {
-  const { data } = await http.get("/me/");
-  return data;
-}
-```
 
 ---
 
-## `shared/` — reusable small building blocks
+## `shared/` — дрібні повторно використовувані блоки
 
 ### `shared/Container.tsx`
-**What it is:** a reusable wrapper that centers content and adds responsive side padding.
+**Що це:** універсальна обгортка, яка центрує контент і додає адаптивні бічні відступи.
 
-**Why it exists:** Without it you will repeat the same CSS everywhere and pages will “jump” in width.
+**Навіщо існує:** без неї довелося б дублювати CSS, а ширина сторінок «стрибала» б.
 
-**Example:**
-```tsx
-import styles from "./Container.module.css";
 
-type Props = {
-  children: React.ReactNode;
-  as?: "div" | "section" | "header" | "footer";
-  className?: string;
-};
-
-export function Container({ children, as = "div", className }: Props) {
-  const Tag = as;
-  return (
-    <Tag className={[styles.container, className].filter(Boolean).join(" ")}>
-      {children}
-    </Tag>
-  );
-}
-```
 
 ### `shared/Container.module.css`
 ```css
@@ -281,62 +245,51 @@ export function Container({ children, as = "div", className }: Props) {
 }
 ```
 
-**Why `clamp()` is good:** on small screens padding is small, on big screens padding grows a bit, but stays reasonable.
+**Чому `clamp()` корисний:** на малих екранах відступи менші, на великих — трохи більші, але в межах норми.
 
 ---
 
-## `widgets/` — big UI parts used across many pages
+## `widgets/` — великі UI-блоки, що використовуються на багатьох сторінках
 
 ### `widgets/header/`
-- `Header.tsx` — site header (logo, menu, user block, burger, etc.)
-- `Header.module.css` — its styles
+- `Header.tsx` — хедер сайту (лого, меню, блок користувача, бургер тощо)
+- `Header.module.css` — стилі хедера
 
 ### `widgets/footer/`
-- `Footer.tsx` — site footer (links, dragons, socials, 18+ text, etc.)
-- `Footer.module.css` — its styles
+- `Footer.tsx` — футер сайту (посилання, дракони, соцмережі, 18+ текст тощо)
+- `Footer.module.css` — стилі футера
 
-**Why widgets exist:** Header/Footer are not “shared tiny components” — they are large sections of the UI that appear on many pages.
+**Навіщо widgets:** Header/Footer — це не дрібні shared-компоненти, а великі секції UI, що повторюються.
 
 ---
 
-## `main/` — the Home feature (page + local styles + local images)
+## `main/` — фіча Home (сторінка + локальні стилі + локальні зображення)
 
 ### `main/HomePage.tsx`
-**What it is:** the Home page component.
+**Що це:** компонент головної сторінки.
 
-**Example:**
-```tsx
-import styles from "./HomePage.module.css";
 
-export function HomePage() {
-  return (
-    <section className={styles.page}>
-      <h1>Home</h1>
-    </section>
-  );
-}
 ```
 
 ### `main/HomePage.module.css`
-Page-specific styles. They should NOT affect other pages.
+Стилі лише для цієї сторінки. Вони НЕ повинні впливати на інші сторінки.
 
 ### `main/images/`
-Only images used by Home. If an image is used by multiple pages, move it to `assets/`.
+Лише зображення, що використовуються на Home. Якщо зображення потрібне на кількох сторінках — переносьте його в `assets/`.
 
 ---
 
-## `assets/` — global assets (used across the whole site)
+## `assets/` — глобальні ресурси (для всього сайту)
 
-Use this for resources shared across many parts of the project.
+Використовуйте для ресурсів, які застосовуються у багатьох місцях.
 
-Recommended subfolders:
+Рекомендовані підпапки:
+- `assets/icons/` — дрібні UI-іконки
+- `assets/logos/` — логотипи FanVers
+- `assets/backgrounds/` — лише якщо згодом з’являться фонові картинки  
+  (якщо фон — чистий CSS, папку можна не використовувати)
 
-- `assets/icons/` — small UI icons (search, bell, message, arrow, etc.)
-- `assets/logos/` — FanVers logo variants (svg/png)
-- `assets/backgrounds/` — only if you decide to use image backgrounds later.
-  - If your background is only CSS gradients (like on your screenshots), you may keep this folder empty or remove it.
-
-**Example usage:**
+**Приклад використання:**
 ```tsx
 import logo from "../assets/logos/fanvers-logo.svg";
 
@@ -347,77 +300,55 @@ export function HeaderLogo() {
 
 ---
 
-## `main.css` — global CSS (tokens + base rules)
+## `main.css` — глобальний CSS (токени + базові правила)
 
-**What it is:** global CSS imported once in `main.tsx`.
+**Що це:** глобальний CSS, який імпортується один раз у `main.tsx`.
 
-**What should be here:**
-- CSS variables (“tokens”): colors, spacing, font sizes
-- base typography (`body`, `a`, `button`)
-- resets / sensible defaults
-- *not* page-specific styling
+**Що тут має бути:**
+- CSS-змінні (токени): кольори, відступи, розміри шрифтів
+- базова типографіка (`body`, `a`, `button`)
+- reset / дефолтні правила
+- **не** сторінкові стилі
 
-**Example:**
-```css
-:root {
-  --bg: #020a0b;
-  --text: rgba(255, 255, 255, 0.92);
-  --accent: rgba(80, 220, 220, 1);
-  --container: 1280px;
-}
 
-html, body {
-  height: 100%;
-}
-
-body {
-  margin: 0;
-  color: var(--text);
-  background: var(--bg);
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-}
-
-a {
-  color: inherit;
-}
 ```
 
 ---
 
-## Naming & placement rules (so you don’t get lost later)
+## Правила іменування та розміщення (щоб не загубитися)
 
-1) **Entry files**
-- Keep `main.tsx` as the entry point.
-- Keep `App.tsx` as the root component.
+1) **Entry-файли**
+- `main.tsx` — точка входу.
+- `App.tsx` — корінь застосунку.
 
-2) **Layout**
-- Layout belongs in `app/` (Base).
+2) **Макет**
+- Макет живе в `app/` (Base).
 
-3) **Pages**
-- Pages belong to their feature folders (`main/`, `catalog/`, etc.).
-- Page styles live next to the page (`HomePage.module.css`).
+3) **Сторінки**
+- Сторінки — у своїх фіча-папках (`main/`, `catalog/`, тощо).
+- Стилі сторінки — поруч із нею.
 
 4) **Shared**
-- `shared/` is for small reusable helpers (Container, Button, Modal, etc.).
+- `shared/` — для дрібних повторно використовуваних хелперів.
 
 5) **Widgets**
-- `widgets/` is for large reusable parts (Header, Footer, Sidebar).
+- `widgets/` — для великих повторюваних секцій (Header, Footer).
 
 6) **Assets**
-- If used across many pages: `assets/`
-- If used only in one feature: `feature/images/`
+- Для багатьох сторінок — `assets/`.
+- Для однієї фічі — `feature/images/`.
 
 ---
 
-## Quick “does this belong here?” checklist
+## Швидка перевірка «куди це класти?»
 
-- “Is it a **page**?” → feature folder (`main/`, `catalog/`, ...)
-- “Is it the **site layout**?” → `app/`
-- “Is it reusable everywhere and small?” → `shared/`
-- “Is it a big section reused on many pages?” → `widgets/`
-- “Is it a global icon/logo?” → `assets/`
-- “Is it only for one page/feature?” → that feature’s `images/`
+- «Це **сторінка**?» → фіча-папка (`main/`, `catalog/`)
+- «Це **макет сайту**?» → `app/`
+- «Це дрібний повторюваний компонент?» → `shared/`
+- «Це велика повторювана секція?» → `widgets/`
+- «Це глобальна іконка/лого?» → `assets/`
+- «Це лише для однієї сторінки?» → `feature/images/`
 
 ---
 
-**Done.** Keep this file in the repo as `STRUCTURE.md` so you always have one source of truth.
+**Готово.** Збережіть цей файл у репозиторії як `STRUCTURE.md` — це ваш єдиний «джерело правди» щодо структури фронтенду.

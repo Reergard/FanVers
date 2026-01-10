@@ -1,10 +1,19 @@
 import styles from "./HomePage.module.css";
+import { Container } from "../shared/Container";
+import Home1 from "./HomePage1";
+import Home2 from "./HomePage2";
+import Home3 from "./HomePage3";
 
-function HomePage() {
+export function HomePage() {
     return (
         <section className={styles.page}>
-        <h1 className={styles.title}>FanVers</h1>
-        <p className={styles.description}>...</p>
+            <Container>
+                <div className={styles.homepage}>
+                    <Home1 />
+                    <Home2 />
+                    <Home3 />
+                </div>
+            </Container>
         </section>
     );
 }

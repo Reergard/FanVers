@@ -1,0 +1,41 @@
+.frameLink {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* ширина — от текста */
+  padding-inline: 30px;
+
+  /* ВАЖНО: фиксируем высоту, чтобы сверху/снизу всегда было одинаково */
+  height: clamp(44px, 4.2vw, 64px);
+
+  text-decoration: none;
+
+  background-image: none;
+  background-repeat: no-repeat;
+
+  /* фон подгоняем под box элемента */
+  background-size: 100% 100%;
+
+  transition: background-image 0.2s ease;
+}
+
+.frameLink:hover {
+  background-image: url("../../assets/backgrounds/nav_frame.svg");
+}
+
+.text {
+  font-family: "Seminaria", sans-serif;
+  font-size: clamp(16px, 1.6vw, 24px);
+
+  /* КЛЮЧ: убираем "плавание" по вертикали */
+  line-height: 1;
+
+  color: rgba(0, 255, 225, 0.95);
+  text-shadow: 0 0 12px rgba(0, 210, 210, 0.25);
+  white-space: nowrap;
+
+  position: relative;
+  z-index: 1;
+}

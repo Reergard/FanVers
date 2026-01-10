@@ -1,7 +1,186 @@
 .footer {
-    background: #1a1a1a;
-    color: #fff;
-    padding: 2rem 0;
-    margin-top: auto;
-    text-align: center;
+  color: #fff;
+  padding: 5px;
+  margin-top: auto;
+  font-family: 'SofiaSansSemiCondensed', sans-serif;
+}
+
+/* ===== Верхняя строка (4 колонки) ===== */
+.topGrid {
+  display: grid;
+  align-items: center;
+
+  /* 4 смысловых зоны + 3 разделителя */
+  grid-template-columns:
+    1fr 2px
+    220px 2px
+    1fr 2px
+    260px;
+
+  gap: 22px;
+}
+
+.vLine {
+  width: 5px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    #343045 0%,
+    #06ABC1 50%,
+    #343045 100%
+  );
+  box-shadow: 0 0 18px rgba(6, 171, 193, 0.3);
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: start;
+  justify-content: center;
+}
+
+.colTitle {
+  margin: 0 0 10px;
+  font-size: 14px;
+  opacity: 0.85;
+  text-align: start;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  text-align: start;
+}
+
+.link {
+  text-decoration: none;
+  opacity: 0.85;
+}
+
+.link:hover {
+  opacity: 1;
+}
+
+/* Центр: логотип */
+.centerLogo {
+  display: grid;
+  place-items: center;
+  padding-top: 8px;
+}
+
+.logo {
+  width: 180px;
+  height: 180px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(10, 20, 22, 0.35);
+  text-decoration: none;
+}
+
+.logoImg {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 0 18px rgba(80, 220, 220, 0.10));
+}
+
+/* Правая колонка: соц + 18+ */
+.side {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+}
+
+.social {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.socialBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+
+  text-decoration: none;
+  border: 1px solid rgba(80, 220, 220, 0.35);
+  background: rgba(10, 20, 22, 0.35);
+  transition: all 0.2s ease;
+}
+
+.socialBtn:hover {
+  border-color: rgba(80, 220, 220, 0.65);
+  background: rgba(10, 20, 22, 0.55);
+  box-shadow: 0 0 12px rgba(80, 220, 220, 0.25);
+}
+
+.socialIcon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.age {
+  margin: 0;
+  font-size: 16px;
+  width: 57%;
+  opacity: 0.75;
+  max-width: 220px;
+  text-align: center;
+}
+
+/* ===== Нижняя строка (полоса под колонками) ===== */
+.bottomBar {
+  margin-top: 26px;
+  padding-top: 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+
+  border-top: 1px solid rgba(80, 220, 220, 0.18);
+}
+
+.copy {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+/* ===== Tablet/Mobile ===== */
+@media (max-width: 1023px) {
+  .topGrid {
+    grid-template-columns: 1fr;
+    gap: 22px;
   }
+
+  .vLine {
+    display: none;
+  }
+
+  .side {
+    justify-items: start;
+  }
+
+  .age {
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .bottomBar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

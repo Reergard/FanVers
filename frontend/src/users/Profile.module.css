@@ -1,0 +1,31 @@
+.page {
+    padding: 2rem 0;
+  }
+  
+  .top {
+    margin-bottom: 2rem;
+  }
+  
+  .topInner {
+    margin-bottom: 1rem;
+    color: #888;
+  }
+  
+  .topInner a {
+    color: #50dcdc;
+    text-decoration: none;
+  }
+  
+  .topInner a:hover {
+    text-decoration: underline;
+  }
+  
+  .title {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .lead {
+    font-size: 1.1rem;
+    color: #ccc;
+  }

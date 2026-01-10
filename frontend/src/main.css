@@ -3,13 +3,114 @@
   --gutter: clamp(14px, 3vw, 28px);
   --text: rgba(255,255,255,.92);
   --muted: rgba(255,255,255,.65);
+
+  /* ScrollIndicator (overlay) */
+  --si-right: 8px;
+  --si-gap: 10px; /* top/bottom отступы */
+  --si-z: 50;
+  --si-visible: 0; /* 0/1 — выставляет JS */
+
+  --si-width: 4px;
+  --si-track-opacity: 0.22;
+  --si-thumb-opacity: 0.6;
+
+  --si-thumb-top: 0px; /* выставляет JS */
+  --si-thumb-height: 40px; /* выставляет JS */
+  --si-progress: 0; /* выставляет JS (на будущее) */
+}
+
+@font-face {
+  font-family: "Seminaria";
+  src: url("./assets/fonts/seminaria-normal.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "SofiaSansSemiCondensed";
+  src: url("./assets/fonts/SofiaSansSemiCondensedRegular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "BadScript";
+  src: url("./assets/fonts/BadScript-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Arizonia";
+  src: url("./assets/fonts/Arizonia-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 *{ box-sizing: border-box; }
 
-body{ margin:0; color:var(--text); background:#020a0b; }
+body {
+  margin: 0;
+  color: var(--text);
+  background: #020a0b; /* простой fallback */
+}
+
+/* Скрываем нативную полосу прокрутки, но оставляем нативный скролл */
+html, body { scrollbar-width: none; }
+body::-webkit-scrollbar { width: 0; height: 0; }
+
+/* Overlay ScrollIndicator (не влияет на разметку) */
+.scrollIndicator{
+  position: fixed;
+  top: var(--si-gap);
+  bottom: var(--si-gap);
+  right: calc(var(--si-right) + env(safe-area-inset-right, 0px));
+  width: var(--si-width);
+  z-index: var(--si-z);
+  pointer-events: none;
+  opacity: var(--si-visible);
+  transition: width 180ms cubic-bezier(.2,.8,.2,1), opacity 180ms ease;
+}
+.scrollIndicator__track{
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(255,255,255,var(--si-track-opacity));
+}
+.scrollIndicator__thumb{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--si-thumb-top);
+  height: var(--si-thumb-height);
+  border-radius: 999px;
+  opacity: var(--si-thumb-opacity);
+  background: linear-gradient(180deg, rgba(5,180,199,100), rgba(5,180,199,100));
+  box-shadow: 0 0 0 rgba(0,0,0,0);
+  transition: opacity 180ms ease, box-shadow 220ms ease;
+}
+
+/* Активное состояние (когда пользователь скроллит/тачится) */
+html.is-scrolling{
+  --si-width: 10px;
+  --si-track-opacity: 0.55;
+  --si-thumb-opacity: 1;
+}
+html.is-scrolling .scrollIndicator__thumb{
+  box-shadow: 0 0 18px rgba(160, 240, 255, .35);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .scrollIndicator,
+  .scrollIndicator__thumb{
+    transition: none;
+  }
+}
+
 
 a{ color:inherit; }
 
 button{ font: inherit; }
 img{ max-width:100%; display:block; }
+

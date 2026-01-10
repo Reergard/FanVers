@@ -399,3 +399,15 @@ WARNING 2026-01-07 15:50:48,729 log 28276 27784 Too Many Requests: /api/main/boo
 WARNING 2026-01-07 15:50:48,729 basehttp 28276 10864 "GET /api/website-advertising/advertisements/main_page_ads/ HTTP/1.1" 429 72
 WARNING 2026-01-07 15:50:48,729 basehttp 28276 27784 "GET /api/main/books-news/ HTTP/1.1" 429 72
 INFO 2026-01-07 19:37:56,275 autoreload 1896 8124 Watching for file changes with StatReloader
+INFO 2026-01-07 19:48:02,879 autoreload 1896 8124 D:\Website\Обучение дизайна\Fan-vers\backend\apps\navigation\migrations\0001_initial.py changed, reloading.
+INFO 2026-01-07 19:51:58,043 autoreload 1580 15292 Watching for file changes with StatReloader
+INFO 2026-01-07 22:11:04,754 basehttp 1580 17288 "GET /admin/login/?next=/admin/catalog/book/ HTTP/1.1" 200 4187
+WARNING 2026-01-07 22:11:05,003 log 1580 1936 Not Found: /favicon.ico
+WARNING 2026-01-07 22:11:05,003 basehttp 1580 1936 "GET /favicon.ico HTTP/1.1" 404 3849
+WARNING 2026-01-07 23:20:15,023 log 1580 33320 Not Found: /Invitation/Z9keiY2_alt_/
+WARNING 2026-01-07 23:20:15,025 basehttp 1580 33320 "GET /Invitation/Z9keiY2_alt_/ HTTP/1.1" 404 3888
+WARNING 2026-01-07 23:20:15,068 log 1580 33320 Not Found: /favicon.ico
+WARNING 2026-01-07 23:20:15,068 basehttp 1580 33320 "GET /favicon.ico HTTP/1.1" 404 3849
+INFO 2026-01-08 16:09:08,240 basehttp 1580 4044 "GET /admin/login/?next=/admin/catalog/book/ HTTP/1.1" 200 4187
+WARNING 2026-01-08 16:09:09,097 log 1580 23660 Not Found: /favicon.ico
+WARNING 2026-01-08 16:09:09,097 basehttp 1580 23660 "GET /favicon.ico HTTP/1.1" 404 3849
