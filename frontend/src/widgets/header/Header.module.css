@@ -39,7 +39,7 @@
 .logo {
   display: inline-block;
   line-height: 0;
-  filter: drop-shadow(0 0 18px rgba(0, 180, 255, 0.18));
+  filter: drop-shadow(0 0 18px rgba(5, 180, 199, 0.18));
 }
 
 .logoImg {
@@ -66,7 +66,7 @@
   height: 28px;
   display: block;
   opacity: 0.95;
-  filter: drop-shadow(0 0 10px rgba(0, 185, 210, 0.12));
+  filter: drop-shadow(0 0 10px rgba(5, 180, 199, 0.12));
 }
 
 .chevron {
@@ -120,7 +120,7 @@
 .searchLabel {
   font-family: "Seminaria", sans-serif;
   font-size: 21px;
-  color: rgba(5, 180, 199, 100);
+  color: rgba(5, 180, 199, 1);
   left: 20px;
   padding-left: 20px;
 }
@@ -169,11 +169,11 @@
   /* центр прозрачный, яркое кольцо у края + широкий мягкий хвост наружу */
   background: radial-gradient(
     circle,
-    rgba(5, 181, 200, 0) 52%,
-    rgba(5, 181, 200, 0.55) 64%,
-    rgba(5, 181, 200, 0.32) 78%,
-    rgba(5, 181, 200, 0.12) 88%,
-    rgba(5, 181, 200, 0) 100%
+    rgba(5, 180, 199, 0) 52%,
+    rgba(5, 180, 199, 0.55) 64%,
+    rgba(5, 180, 199, 0.32) 78%,
+    rgba(5, 180, 199, 0.12) 88%,
+    rgba(5, 180, 199, 0) 100%
   );
 
   filter: blur(12px);        /* мягче, шире */
@@ -190,10 +190,10 @@
 
   box-shadow:
     /* тонкое кольцо (не жирное!) */
-    inset 0 0 0 1px rgba(5, 181, 200, 0.9),
+    inset 0 0 0 1px rgba(5, 180, 199, 0.9),
 
     /* маленькое свечение прямо на границе */
-    0 0 6px rgba(5, 181, 200, 0.28);
+    0 0 6px rgba(5, 180, 199, 0.28);
 }
 
 .userText {
@@ -218,20 +218,20 @@
 }
 
 .userCoins {
-  color: rgba(0, 210, 210, 0.95);
-  text-shadow: 0 0 12px rgba(0, 210, 210, 0.2);
+  color: rgba(5, 180, 199, 0.95);
+  text-shadow: 0 0 12px rgba(5, 180, 199, 0.2);
 }
 .coinsLabel {
   font-family: "BadScript", sans-serif;
   font-size: clamp(16px, 1.6vw, 21px);
-  color: rgba(0, 210, 210, 0.95);
-  text-shadow: 0 0 12px rgba(0, 210, 210, 0.2);
+  color: rgba(5, 180, 199, 0.95);
+  text-shadow: 0 0 12px rgba(5, 180, 199, 0.2);
 }
 
 .userCoinsValue {
   font-family: "Arizonia", sans-serif;
   font-size: clamp(16px, 1.6vw, 21px);
-  color: rgba(0, 255, 225, 0.95);
+  color: rgba(5, 180, 199, 0.95);
 }
 
 /* ===== NAV ===== */
@@ -313,8 +313,8 @@
 
   .coinsLine {
     font-size: 16px;
-    color: rgba(0, 210, 210, 0.95);
-    text-shadow: 0 0 14px rgba(0, 210, 210, 0.18);
+    color: rgba(5, 180, 199, 0.95);
+    text-shadow: 0 0 14px rgba(5, 180, 199, 0.18);
   }
 
   .coinsLabel {
@@ -324,7 +324,7 @@
 
   .coinsValue {
     font-family: "Arizonia", sans-serif;
-    color: rgba(0, 255, 225, 0.95);
+    color: rgba(5, 180, 199, 0.95);
   }
 
   .compactActions {
@@ -338,13 +338,13 @@
     align-items: center;
     justify-content: center;
 
-    border: 1px solid rgba(0, 210, 210, 0.55);
-    background: rgba(0, 180, 210, 0.08);
+    border: 1px solid rgba(5, 180, 199, 0.55);
+    background: rgba(5, 180, 199, 0.08);
     border-radius: 999px;
     padding: 10px 14px;
     cursor: pointer;
 
-    box-shadow: 0 0 20px rgba(0, 210, 210, 0.16);
+    box-shadow: 0 0 20px rgba(5, 180, 199, 0.16);
   }
 
   .burgerIcon {

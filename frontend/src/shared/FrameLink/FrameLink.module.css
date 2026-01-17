@@ -32,8 +32,8 @@
   /* КЛЮЧ: убираем "плавание" по вертикали */
   line-height: 1;
 
-  color: rgba(0, 255, 225, 0.95);
-  text-shadow: 0 0 12px rgba(0, 210, 210, 0.25);
+  color: rgba(5, 180, 199, 0.95);
+  text-shadow: 0 0 12px rgba(5, 180, 199, 0.25);
   white-space: nowrap;
 
   position: relative;

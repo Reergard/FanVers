@@ -411,3 +411,10 @@ WARNING 2026-01-07 23:20:15,068 basehttp 1580 33320 "GET /favicon.ico HTTP/1.1" 
 INFO 2026-01-08 16:09:08,240 basehttp 1580 4044 "GET /admin/login/?next=/admin/catalog/book/ HTTP/1.1" 200 4187
 WARNING 2026-01-08 16:09:09,097 log 1580 23660 Not Found: /favicon.ico
 WARNING 2026-01-08 16:09:09,097 basehttp 1580 23660 "GET /favicon.ico HTTP/1.1" 404 3849
+INFO 2026-01-15 18:16:31,270 basehttp 1580 16604 "GET /admin/login/?next=/admin/catalog/book/ HTTP/1.1" 200 4187
+WARNING 2026-01-15 18:16:31,683 log 1580 20632 Not Found: /favicon.ico
+WARNING 2026-01-15 18:16:31,683 basehttp 1580 20632 "GET /favicon.ico HTTP/1.1" 404 3849
+INFO 2026-01-15 20:10:18,430 basehttp 1580 12024 "GET /admin/login/?next=/admin/catalog/book/ HTTP/1.1" 200 4187
+WARNING 2026-01-15 20:10:18,933 log 1580 18144 Not Found: /favicon.ico
+WARNING 2026-01-15 20:10:18,933 basehttp 1580 18144 "GET /favicon.ico HTTP/1.1" 404 3849
+INFO 2026-01-17 12:17:42,681 autoreload 1368 38384 Watching for file changes with StatReloader
