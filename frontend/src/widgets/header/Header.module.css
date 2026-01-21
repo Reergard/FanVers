@@ -5,6 +5,7 @@
 /* ===== TOP ===== */
 .top {
   padding-top: 0px;
+  padding-block: 0px;
 }
 
 .topInner {
@@ -29,12 +30,17 @@
   gap: 10px;
 }
 
-/* show/hide blocks */
+/* Desktop modifiers (показываем на desktop по умолчанию) */
+.leftDesktop,
+.rightDesktop {
+  display: flex;
+}
+
+/* Compact modifiers (скрываем на desktop по умолчанию) */
 .leftCompact,
 .rightCompact {
   display: none;
 }
-
 /* ===== LOGO ===== */
 .logo {
   display: inline-block;
@@ -44,7 +50,7 @@
 
 .logoImg {
   width: auto;
-  height: clamp(110px, 12vw, 190px);
+  height: clamp(110px, calc(12 * var(--vwu)), 190px);
   object-fit: contain;
   display: block;
 }
@@ -67,6 +73,7 @@
   display: block;
   opacity: 0.95;
   filter: drop-shadow(0 0 10px rgba(5, 180, 199, 0.12));
+  shape-rendering: geometricPrecision;
 }
 
 .chevron {
@@ -79,6 +86,7 @@
 .badgeWrap {
   position: relative;
   display: inline-flex;
+  overflow: visible;
 }
 
 .badge {
@@ -147,7 +155,7 @@
   height: 56px;
   border-radius: 999px;
 
-  overflow: hidden;
+  overflow: visible; /* ВАЖНО: чтобы ::before не обрезался */
   position: relative;
   flex: 0 0 auto;
 
@@ -211,7 +219,7 @@
   font-family: "Seminaria", sans-serif;
 
   /* было 21px, стало адаптивно */
-  font-size: clamp(16px, 1.6vw, 22px);
+  font-size: clamp(16px, calc(1.6 * var(--vwu)), 22px);
 
   line-height: 1.1;
   margin-top: 15px;
@@ -223,14 +231,14 @@
 }
 .coinsLabel {
   font-family: "BadScript", sans-serif;
-  font-size: clamp(16px, 1.6vw, 21px);
+  font-size: clamp(16px, calc(1.6 * var(--vwu)), 21px);
   color: rgba(5, 180, 199, 0.95);
   text-shadow: 0 0 12px rgba(5, 180, 199, 0.2);
 }
 
 .userCoinsValue {
   font-family: "Arizonia", sans-serif;
-  font-size: clamp(16px, 1.6vw, 21px);
+  font-size: clamp(16px, calc(1.6 * var(--vwu)), 21px);
   color: rgba(5, 180, 199, 0.95);
 }
 
@@ -241,27 +249,13 @@
 
 .navInner {
   display: flex;
+  max-width: 100%;
+  overflow-x: hidden;
   align-items: center;
   justify-content: center;
   gap: 0px;
   flex-wrap: wrap; /* как на tablet/mobile в дизайне (в 2 строки) */
   padding-bottom: 6px;
-}
-
-.navLink {
-  position: relative;
-  text-decoration: none;
-  color: inherit;
-  white-space: nowrap;
-
-  font-family: "Seminaria", sans-serif;
-  font-size: clamp(12px, 2.2vw, 24px);
-  letter-spacing: 0.2px;
-
-  color: rgba(255, 166, 0, 0.95);
-  text-shadow: 0 0 18px rgba(255, 166, 0, 0.18);
-  padding: 6px 14px;
-  border-radius: 999px;
 }
 
 /* ✦ separators */
@@ -277,10 +271,21 @@
 
 
 /* ============================================================
-   TABLET & MOBILE (<= 1024) — как на твоём дизайне
+   TABLET & MOBILE (<= 1024)
    TOP становится: слева (аватар+бейджи+coins), центр лого, справа (поиск+бургер)
    ============================================================ */
 @media (max-width: 1024px) {
+
+  .avatar { 
+    flex: 0 0 auto;
+    width: 72px;
+    height: 72px; 
+  }
+
+  .top {
+    padding-block: 10px;
+  }
+
   .topInner {
     grid-template-columns: 1fr auto 1fr;
     gap: 12px;
@@ -296,22 +301,37 @@
     display: flex;
   }
 
+  .leftCompact {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+    justify-content: flex-start;
+  }
+
   .logoImg {
-    height: clamp(86px, 14vw, 130px);
+    height: clamp(140px, 28vw, 215px); /* tablet: до ~215 */
   }
 
   .compactLeft {
     display: flex;
     align-items: center;
     gap: 10px;
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .compactMeta {
     display: grid;
     gap: 6px;
+    min-width: 0;
+    flex: 1 1 auto;
+    justify-items: start;
+    width: 100%;
   }
 
   .coinsLine {
+    position: relative;
+    max-width: 100%;
     font-size: 16px;
     color: rgba(5, 180, 199, 0.95);
     text-shadow: 0 0 14px rgba(5, 180, 199, 0.18);
@@ -327,10 +347,26 @@
     color: rgba(5, 180, 199, 0.95);
   }
 
+  .balanceGlow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+  }
+
   .compactActions {
     display: flex;
+    flex: 0 0 auto;
     gap: 10px;
     align-items: center;
+  }
+
+  .rightCompact {
+    justify-content: flex-end;
   }
 
   .burgerPill {
@@ -338,29 +374,245 @@
     align-items: center;
     justify-content: center;
 
-    border: 1px solid rgba(5, 180, 199, 0.55);
-    background: rgba(5, 180, 199, 0.08);
-    border-radius: 999px;
+    border: 2px solid #05B4C7;
+    background: transparent;
+    border-radius: 999px 0 0 999px;
     padding: 10px 14px;
     cursor: pointer;
 
-    box-shadow: 0 0 20px rgba(5, 180, 199, 0.16);
+    box-shadow: 0 0 18px rgba(5, 180, 199, 0.18);
+    margin-right: calc(-1 * var(--gutter) - env(safe-area-inset-right, 0px));
+    padding-right: calc(14px + env(safe-area-inset-right, 0px));
   }
 
   .burgerIcon {
-    width: 26px;
-    height: 26px;
+    width: 36px;
+    height: 36px;
     display: block;
+    color: #05B4C7;
   }
 
-  .navInner {
+  .searchMini {
+    position: relative;
+    padding-bottom: 8px;
+  }
+
+  .searchMini::before {
+    content: "";
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 2px;
+    height: 1px;
+    background: rgba(5, 180, 199, 0.9);
+    box-shadow: 0 0 10px rgba(5, 180, 199, 0.18);
+  }
+
+  .searchMini::after {
+    content: "";
+    position: absolute;
+    right: 10px;
+    bottom: 6px;
+    width: 3px;
+    height: 3px;
+    border-radius: 999px;
+    background: rgba(5, 180, 199, 0.95);
+    box-shadow: -6px 0 0 rgba(5, 180, 199, 0.95), -12px 0 0 rgba(5, 180, 199, 0.95);
+  }
+
+  .navRows {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+  }
+
+  .navRow {
+    display: flex;
+    align-items: center;
     justify-content: center;
-    gap: 10px;
+    flex-wrap: wrap;
+  }
+}
+
+/* ============================================================
+   TABLET SCALE (768–1024) — увеличить compact header + навигацию
+   ============================================================ */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* чуть больше воздуха по высоте */
+  .top {
+    padding-block: 16px;
   }
 
-  .navLink {
-    font-size: clamp(18px, 2.6vw, 30px);
-    padding: 6px 12px;
+  /* левый блок: аватар + действия + coins - МАКСИМАЛЬНО УВЕЛИЧИВАЕМ */
+  .leftCompact {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .compactLeft {
+    gap: 16px;
+    width: 100%;
+  }
+
+  .avatar {
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+  }
+
+  .avatar::before {
+    inset: -30px;
+  }
+
+  .iconBtn {
+    padding: 8px;
+  }
+
+  .icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .badge {
+    min-width: 20px;
+    height: 20px;
+    font-size: 13px;
+  }
+
+  .compactMeta {
+    flex: 1 1 auto;
+  }
+
+  .compactActions {
+    gap: 14px;
+  }
+
+  .coinsLine {
+    font-size: 20px;
+    line-height: 1.15;
+  }
+
+  .coinsLabel,
+  .coinsValue {
+    font-size: 20px;
+  }
+
+  /* правый блок */
+  .rightCompact {
+    gap: 14px;
+  }
+
+  .burgerPill {
+    padding: 14px 20px;
+  }
+
+  .burgerIcon {
+    width: 34px;
+    height: 34px;
+  }
+
+  /* лого на планшете можно чуть больше */
+  .logoImg {
+    height: clamp(160px, 20vw, 220px);
+  }
+
+  /* NAV rows: на планшете уменьшаем вертикальные отступы */
+  .navRows {
+    gap: 4px; /* было 8 */
+  }
+
+  .navSeparator {
+    margin-top: 10px; /* было 14 */
+    opacity: 0.75;
+  }
+}
+
+/* ============================================================
+   TABLET LARGE (900–1024) — дополнительное увеличение перед desktop
+   ============================================================ */
+@media (min-width: 900px) and (max-width: 1024px) {
+  /* Максимально увеличиваем для больших планшетов/маленьких ноутбуков */
+  .top {
+    padding-block: 18px;
+  }
+
+  .leftCompact {
+    flex: 1 1 auto;
+  }
+
+  .compactLeft {
+    gap: 18px;
+  }
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+  }
+
+  .avatar::before {
+    inset: -32px;
+  }
+
+  .iconBtn {
+    padding: 9px;
+  }
+
+  .icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .badge {
+    min-width: 22px;
+    height: 22px;
+    font-size: 14px;
+    top: -7px;
+    right: -9px;
+  }
+
+  .compactActions {
+    gap: 16px;
+  }
+
+  .coinsLine {
+    font-size: 22px;
+    line-height: 1.2;
+  }
+
+  .coinsLabel,
+  .coinsValue {
+    font-size: 22px;
+  }
+
+  .burgerPill {
+    padding: 16px 22px;
+  }
+
+  .burgerIcon {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* ============================================================
+   ТОЧНО 1024px — гарантируем применение увеличенных размеров
+   ============================================================ */
+@media (width: 1024px) {
+  .avatar {
+    width: 80px !important;
+    height: 80px !important;
+  }
+
+  .icon {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .coinsLine,
+  .coinsLabel,
+  .coinsValue {
+    font-size: 22px !important;
   }
 }
 
@@ -369,28 +621,158 @@
    ============================================================ */
 @media (max-width: 480px) {
   .top {
-    padding-top: 8px;
+    padding-block: 8px;
+  }
+
+  /* 1) ГЛАВНОЕ: фиксируем пропорции колонок, чтобы лого не сжималось */
+  .topInner {
+    grid-template-columns: minmax(0, 35vw) auto minmax(0, 86px);
+    gap: 6px;
+  }
+
+  /* чтобы текст/контент в колонках мог сжиматься, а не ломать сетку */
+  .left,
+  .right {
+    min-width: 0;
+    overflow: visible;
+  }
+
+  /* 2) УМЕНЬШАЕМ левый блок */
+  .compactLeft {
+    width: 100%;
+    max-width: 35vw;
   }
 
   .avatar {
-    width: 58px;
-    height: 58px;
+    width: 46px;
+    height: 46px;
+  }
+
+  .compactMeta {
+    min-width: 0;
+  }
+
+  .iconBtn {
+    padding: 3px; /* было 6px */
   }
 
   .icon {
-    width: 26px;
-    height: 26px;
+    width: 19px;
+    height: 19px;
+  }
+
+  .badge {
+    top: -5px;
+    right: -7px;
+    min-width: 16px;
+    height: 16px;
+    font-size: 11px;
+    padding-inline: 4px;
+  }
+
+  .coinsLine {
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* фон-свечение под coins на узких лучше убрать — оно визуально раздувает блок */
+  .balanceGlow {
+    display: none;
+  }
+
+  /* 3) УМЕНЬШАЕМ правый блок (поиск + бургер) */
+  .rightCompact {
+    gap: 6px;
   }
 
   .burgerPill {
-    padding: 9px 12px;
+    padding: 10px 14px;
   }
 
-  .navInner {
-    gap: 8px;
+  .burgerIcon {
+    width: 22px;
+    height: 22px;
   }
 
-  .navLink::after {
-    margin-left: 10px;
+  /* 4) Лого: на узких оставляем 92px как ты хотел */
+  .logoImg {
+    height: 92px;
+  }
+
+  .navRows {
+    gap: 1px;
+  }
+
+  .navRow {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .navSeparator {
+    width: 24px;
+    height: 24px;
+    margin-top: 10px;
+    opacity: 0.65;
+  }
+}
+
+/* ============================================================
+   MOBILE extra narrow (<= 360) — максимальная компактность
+   ============================================================ */
+@media (max-width: 360px) {
+  .topInner {
+    gap: 4px;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .avatar::before {
+    inset: -20px; /* уменьшаем ореол */
+  }
+
+  .compactActions {
+    gap: 4px;
+  }
+
+  .iconBtn {
+    padding: 2px;
+  }
+
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .coinsLine {
+    font-size: 11px;
+  }
+
+  .rightCompact {
+    gap: 4px;
+  }
+
+  .burgerPill {
+    padding: 6px 8px;
+  }
+
+  .burgerIcon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .logoImg {
+    height: 85px;
+  }
+
+  /* Навигация: уменьшаем отступы */
+  .navRow {
+    gap: 0;
   }
 }

@@ -1,0 +1,118 @@
+/**
+ * Система адаптивного масштабирования
+ * 
+ * Брейкпоинты:
+ * - Mobile: до 480px (базовая мобильная версия)
+ * - Mobile Small: до 360px (маленькие телефоны)
+ * - Tablet: 768px - 1024px (планшеты)
+ * - Desktop/Laptop: 1025px+ (ноутбуки и ПК)
+ * - Large Desktop: 1440px+ (большие мониторы)
+ * - 4K: 2560px+ (4K дисплеи)
+ */
+
+:root {
+  /* Базовое масштабирование UI элементов */
+  --ui-scale: 1;
+  
+  /* Размеры для разных типов элементов */
+  --icon-size-base: 24px;
+  --icon-size: calc(var(--icon-size-base) * var(--ui-scale));
+  
+  --avatar-size-base: 40px;
+  --avatar-size: calc(var(--avatar-size-base) * var(--ui-scale));
+  
+  --font-size-nav-base: 18px;
+  --font-size-nav: calc(var(--font-size-nav-base) * var(--ui-scale));
+  
+  --font-size-coins-base: 16px;
+  --font-size-coins: calc(var(--font-size-coins-base) * var(--ui-scale));
+  
+  --gap-base: 16px;
+  --gap: calc(var(--gap-base) * var(--ui-scale));
+}
+
+/* ========================================
+   DESKTOP/LAPTOP (базовый масштаб)
+   ======================================== */
+@media (min-width: 1025px) {
+  :root {
+    --ui-scale: 1;
+  }
+}
+
+/* ========================================
+   LARGE DESKTOP (легкое увеличение)
+   ======================================== */
+@media (min-width: 1440px) {
+  :root {
+    --ui-scale: 1.08;
+  }
+}
+
+/* ========================================
+   FULL HD+ (среднее увеличение)
+   ======================================== */
+@media (min-width: 1920px) {
+  :root {
+    --ui-scale: 1.15;
+  }
+}
+
+/* ========================================
+   4K (значительное увеличение)
+   ======================================== */
+@media (min-width: 2560px) and (min-height: 1400px) {
+  :root {
+    --ui-scale: 1.25;
+  }
+}
+
+/* ========================================
+   TABLET (768-1024px)
+   Отдельный дизайн, свои размеры
+   ======================================== */
+@media (min-width: 768px) and (max-width: 1024px) {
+  :root {
+    --ui-scale: 0.95; /* немного компактнее desktop */
+    
+    /* Tablet-specific overrides */
+    --icon-size-base: 26px;
+    --avatar-size-base: 36px;
+    --font-size-nav-base: 16px;
+    --gap-base: 14px;
+  }
+}
+
+/* ========================================
+   MOBILE (до 480px)
+   Компактный дизайн
+   ======================================== */
+@media (max-width: 480px) {
+  :root {
+    --ui-scale: 0.85;
+    
+    /* Mobile-specific overrides */
+    --icon-size-base: 22px;
+    --avatar-size-base: 32px;
+    --font-size-nav-base: 14px;
+    --font-size-coins-base: 14px;
+    --gap-base: 10px;
+  }
+}
+
+/* ========================================
+   MOBILE SMALL (до 360px)
+   Очень компактный дизайн
+   ======================================== */
+@media (max-width: 360px) {
+  :root {
+    --ui-scale: 0.75;
+    
+    /* Small mobile overrides */
+    --icon-size-base: 20px;
+    --avatar-size-base: 28px;
+    --font-size-nav-base: 13px;
+    --font-size-coins-base: 13px;
+    --gap-base: 8px;
+  }
+}

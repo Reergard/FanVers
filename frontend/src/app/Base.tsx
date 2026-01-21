@@ -3,6 +3,7 @@ import { Header } from "../widgets/header/Header";
 import { Footer } from "../widgets/footer/Footer";
 import { SvgSprite } from "../shared/SvgSprite";
 import { ScrollIndicator } from "../shared/ScrollIndicator/ScrollIndicator";
+import { Container } from "../shared/Container";
 
 type Props = { children: React.ReactNode };
 export function Base({ children }: Props) {
@@ -13,7 +14,9 @@ export function Base({ children }: Props) {
       <div className={styles.bg} aria-hidden="true" />
       <Header />
       <main className={styles.main} role="main">
-        {children}
+        <Container>
+          {children}
+        </Container>
       </main>
       <Footer />
     </div>

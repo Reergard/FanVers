@@ -4,6 +4,8 @@
     flex-direction: column;
     position: relative;
     color: rgba(255,255,255,.92);
+    overflow-x: hidden; /* предотвращаем горизонтальный скролл */
+    width: 100%;
   }
   .bg {
     position: fixed;
@@ -14,5 +16,21 @@
   .main {
     flex: 1;
     padding-block: 24px;
+  }
+
+  /* ТОЛЬКО очень большие экраны (4K) */
+  @media (min-width: 2560px) and (min-height: 1400px) {
+    .main {
+      padding-block: 80px;
+      min-height: auto;        
+      display: grid;
+      align-content: start;      /* не центрируем вертикально */
+      gap: 40px;
+      line-height: 1.6;
+    }
+  
+    .app {
+      min-height: auto;          /* убираем 100vh */
+    }
   }
   

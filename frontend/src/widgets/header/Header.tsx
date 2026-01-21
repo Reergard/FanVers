@@ -3,16 +3,34 @@ import { Container } from "../../shared/Container";
 import { Icon } from "../../shared/Icon";
 import { Link } from "react-router-dom";
 import { FrameLink } from "../../shared/FrameLink/FrameLink";
-import React from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import logo from "../../assets/logos/logo.png";
+import backBalance from "../../assets/backgrounds/back_balance.svg";
+import { UserMenuOverlay } from "./UserMenuOverlay/UserMenuOverlay";
+import { USER_MENU } from "../../shared/menu/menuData";
+import { useMedia } from "../../shared/hooks/useMedia";
 
-// Single source of truth
-const NAV_MENU = [
+// Single source of truth (Desktop)
+const NAV_MENU_OLD = [
   { to: "/catalog", label: "Каталог" },
-  { to: "/gd", label: "Чарівни ГД" },
+  { to: "/gd", label: "Чарівний Гід" },
   { to: "/authors", label: "Автори" },
   { to: "/translators", label: "Перекладачі" },
   { to: "/abandoned", label: "Покинуті переклади" },
+  { to: "/search", label: "Пошук" },
+  { to: "/faq", label: "FAQ" },
+];
+
+// Tablet/Mobile: навигация в 2 строки
+const NAV_ROW_1 = [
+  { to: "/catalog", label: "Каталог" },
+  { to: "/gd", label: "Чарівний Гід" },
+  { to: "/abandoned", label: "Покинуті переклади" },
+];
+
+const NAV_ROW_2 = [
+  { to: "/translators", label: "Перекладачі" },
+  { to: "/authors", label: "Автори" },
   { to: "/search", label: "Пошук" },
   { to: "/faq", label: "FAQ" },
 ];
@@ -27,13 +45,65 @@ export function Header() {
     avatarUrl: "",
   };
 
+  // Состояние меню
+  const [menuOpen, setMenuOpen] = useState(false);
+  const lastTriggerRef = useRef<"dropdown" | "burger">("dropdown");
+
+  // Refs для кнопок
+  const dropdownBtnRef = useRef<HTMLButtonElement>(null);
+  const burgerBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Определяем режим (mobile/tablet <= 1024px) - синхронизировано с CSS
+  const isMobile = useMedia("(max-width: 1024px)");
+  // Определяем tablet/mobile для навигации в 2 строки
+  const isTablet = useMedia("(max-width: 1024px)");
+
+  // Определяем контент меню
+  const menuItems = USER_MENU;
+  const mode = isMobile ? "drawer" : "popover";
+  const anchorRef = isMobile ? burgerBtnRef : dropdownBtnRef;
+
+  // Закрываем меню при изменении breakpoint
+  const prevIsMobileRef = useRef(isMobile);
+  useEffect(() => {
+    if (prevIsMobileRef.current !== isMobile) {
+      prevIsMobileRef.current = isMobile;
+      setMenuOpen(false);
+    }
+  }, [isMobile]);
+
+  // Обработчики открытия
+  const openFromDropdown = useCallback(() => {
+    lastTriggerRef.current = "dropdown";
+    setMenuOpen(true);
+  }, []);
+
+  const openFromBurger = useCallback(() => {
+    lastTriggerRef.current = "burger";
+    setMenuOpen(true);
+  }, []);
+
+  // Обработчик закрытия
+  const closeMenu = useCallback(() => {
+    setMenuOpen(false);
+    // Возвращаем фокус на кнопку
+    requestAnimationFrame(() => {
+      const targetBtn = lastTriggerRef.current === "burger" 
+        ? burgerBtnRef.current 
+        : dropdownBtnRef.current;
+      targetBtn?.focus();
+    });
+  }, []);
+
+  const menuId = "user-menu";
+
   return (
     <header className={styles.header}>
       {/* TOP */}
       <div className={styles.top}>
         <Container className={styles.topInner}>
           {/* ===== Desktop LEFT: Search ===== */}
-          <div className={`${styles.left} ${styles.leftDesktop}`}>
+          <div className={[styles.left, styles.leftDesktop].filter(Boolean).join(" ")}>
             <form className={styles.search} role="search" aria-label="Пошук по сайту">
               <label className={styles.searchField}>
                 <span className={styles.searchLabel}>Пошук по сайту</span>
@@ -53,7 +123,7 @@ export function Header() {
           </div>
 
           {/* ===== Compact LEFT: Avatar + (bell/mail) + FanCoins ===== */}
-          <div className={`${styles.left} ${styles.leftCompact}`}>
+          <div className={[styles.left, styles.leftCompact].filter(Boolean).join(" ")}>
             <div className={styles.compactLeft}>
               <div
                 className={styles.avatar}
@@ -62,11 +132,6 @@ export function Header() {
               />
 
               <div className={styles.compactMeta}>
-                <div className={styles.coinsLine}>
-                  <span className={styles.coinsLabel}>FanCoins:</span>{" "}
-                  <span className={styles.coinsValue}>{user.coins}</span>
-                </div>
-
                 <div className={styles.compactActions} aria-label="Сповіщення та повідомлення">
                   <button className={styles.iconBtn} type="button" aria-label="Сповіщення">
                     <span className={styles.badgeWrap}>
@@ -90,6 +155,12 @@ export function Header() {
                     </span>
                   </button>
                 </div>
+
+                <div className={styles.coinsLine}>
+                  <span className={styles.coinsLabel}>FanCoins:</span>{" "}
+                  <span className={styles.coinsValue}>{user.coins}</span>
+                  <Icon name="back_balance" className={styles.balanceGlow} aria-hidden="true" />
+                </div>
               </div>
             </div>
           </div>
@@ -102,7 +173,7 @@ export function Header() {
           </div>
 
           {/* ===== Desktop RIGHT: bell/mail + user dropdown ===== */}
-          <div className={`${styles.right} ${styles.rightDesktop}`}>
+          <div className={[styles.right, styles.rightDesktop].filter(Boolean).join(" ")}>
             <button className={styles.iconBtn} type="button" aria-label="Сповіщення">
               <span className={styles.badgeWrap}>
                 <Icon name="bell" className={styles.icon} title="Сповіщення" />
@@ -131,19 +202,35 @@ export function Header() {
                 </div>
               </div>
 
-              <button className={styles.iconBtn} type="button" aria-label="Меню користувача">
+              <button
+                ref={dropdownBtnRef}
+                className={styles.iconBtn}
+                type="button"
+                aria-label="Меню користувача"
+                aria-expanded={menuOpen}
+                aria-controls={menuId}
+                onClick={openFromDropdown}
+              >
                 <Icon name="chevron-down" className={styles.chevron} title="Відкрити меню" />
               </button>
             </div>
           </div>
 
           {/* ===== Compact RIGHT: search + burger (pill) ===== */}
-          <div className={`${styles.right} ${styles.rightCompact}`}>
-            <button className={styles.iconBtn} type="button" aria-label="Пошук">
+          <div className={[styles.right, styles.rightCompact].filter(Boolean).join(" ")}>
+            <button className={`${styles.iconBtn} ${styles.searchMini}`} type="button" aria-label="Пошук">
               <Icon name="search" className={styles.icon} title="Пошук" />
             </button>
 
-            <button className={styles.burgerPill} type="button" aria-label="Меню">
+            <button
+              ref={burgerBtnRef}
+              className={styles.burgerPill}
+              type="button"
+              aria-label="Меню"
+              aria-expanded={menuOpen}
+              aria-controls={menuId}
+              onClick={openFromBurger}
+            >
               <Icon name="burger" className={styles.burgerIcon} title="Меню" />
             </button>
           </div>
@@ -152,19 +239,57 @@ export function Header() {
 
       {/* NAV */}
       <nav className={styles.nav} aria-label="Навігація">
-        <Container className={styles.navInner}>
-          {NAV_MENU.map((i, index) => (
-            <React.Fragment key={i.to}>
-              <FrameLink to={i.to}>
-                {i.label}
-              </FrameLink>
-              {index < NAV_MENU.length - 1 && (
-                <Icon name="Star_icon" className={styles.navSeparator} aria-hidden="true" />
-              )}
-            </React.Fragment>
-          ))}
+        <Container>
+          {isTablet ? (
+            <div className={styles.navRows}>
+              <div className={styles.navRow}>
+                {NAV_ROW_1.map((i, idx) => (
+                  <React.Fragment key={i.to}>
+                    <FrameLink to={i.to}>{i.label}</FrameLink>
+                    {idx < NAV_ROW_1.length - 1 && (
+                      <Icon name="Star_icon" className={styles.navSeparator} aria-hidden="true" />
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+
+              <div className={styles.navRow}>
+                {NAV_ROW_2.map((i, idx) => (
+                  <React.Fragment key={i.to}>
+                    <FrameLink to={i.to}>{i.label}</FrameLink>
+                    {idx < NAV_ROW_2.length - 1 && (
+                      <Icon name="Star_icon" className={styles.navSeparator} aria-hidden="true" />
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className={styles.navInner}>
+              {NAV_MENU_OLD.map((i, index) => (
+                <React.Fragment key={i.to}>
+                  <FrameLink to={i.to}>{i.label}</FrameLink>
+                  {index < NAV_MENU_OLD.length - 1 && (
+                    <Icon name="Star_icon" className={styles.navSeparator} aria-hidden="true" />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          )}
         </Container>
       </nav>
+
+      {/* User Menu Overlay */}
+      <UserMenuOverlay
+        open={menuOpen}
+        mode={mode}
+        anchorRef={anchorRef}
+        items={menuItems}
+        onClose={closeMenu}
+        menuId={menuId}
+        name={user.name}
+        avatarUrl={user.avatarUrl}
+      />
     </header>
   );
 }

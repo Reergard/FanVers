@@ -1,0 +1,110 @@
+/* Overlay для drawer (backdrop) */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 1000;
+  pointer-events: auto;
+  /* Убрана анимация fadeIn, так как overlay прозрачный */
+}
+
+/* Панель меню (базовые стили) */
+.panel {
+  position: fixed;
+  background: #050d11;
+  z-index: 1001;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* РАМКА */
+  border: 1px solid rgba(5, 180, 199, 0.55);
+  /* мягкое свечение рамки */
+  box-shadow:
+    inset 0 0 0 1px rgba(5, 180, 199, 0.35),
+    0 0 24px rgba(5, 180, 199, 0.25);
+  /* Скругление только левых углов */
+  border-top-left-radius: clamp(44px, calc(6 * var(--vwu)), 86px);
+  border-bottom-left-radius: clamp(44px, calc(6 * var(--vwu)), 86px);
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Popover режим (desktop) */
+.panelPopover {
+  /* Позиционирование в правом углу страницы */
+  top: 0;
+  right: 0;
+  bottom: auto;
+  height: auto;
+  max-height: min(790px, 100dvh);
+  width: clamp(260px, calc(22 * var(--vwu)), 320px); /* было 320..400 */
+  max-width: min(calc(82 * var(--vwu)), 400px);
+  /* Анимация появления */
+  animation: slideInRight 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Drawer режим (mobile/tablet) */
+.panelDrawer {
+  /* Позиционирование в правом углу страницы */
+  top: 0;
+  right: 0;
+  bottom: 0;        /* мобильный: на весь экран */
+  height: 100dvh;
+  max-height: 100dvh;
+  width: clamp(240px, calc(72 * var(--vwu)), 320px); /* на телефоне пусть шире */
+  max-width: min(calc(85 * var(--vwu)), 400px);
+  /* Анимация появления */
+  animation: slideInRight 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Анимация закрытия (через класс, если нужно) */
+.panel.closing {
+  animation: slideOutRight 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* Убираем анимацию для пользователей с prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .overlay {
+    animation: none;
+  }
+}
+
+/* Скрываем скроллбар, но оставляем скролл */
+.panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.panel::-webkit-scrollbar-thumb {
+  background: rgba(5, 180, 199, 0.3);
+  border-radius: 2px;
+}
+
+.panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(5, 180, 199, 0.5);
+}

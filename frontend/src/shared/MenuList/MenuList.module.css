@@ -1,0 +1,53 @@
+.menuList {
+  list-style: none;
+  margin: 0;
+  left: -10px;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, calc(0.8 * var(--vwu)), 90px);
+}
+
+.menuItem {
+  margin: 0;
+  padding: 0;
+}
+
+.menuLink {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, calc(1.2 * var(--vwu)), 14px);
+  padding: clamp(3px, calc(0.45 * var(--vwu)), 6px) clamp(15px, calc(1.2 * var(--vwu)), 19px);
+  text-decoration: none;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  width: 100%;
+  text-align: left;
+  transition: opacity 0.2s ease;
+}
+
+.menuLink:hover {
+  opacity: 0.8;
+}
+
+.menuLink:focus-visible {
+  outline: 2px solid rgba(5, 180, 199, 0.8);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.menuIcon {
+  width: clamp(16px, calc(1.4 * var(--vwu)), 22px);
+  height: clamp(16px, calc(1.4 * var(--vwu)), 22px);
+  flex-shrink: 0;
+  display: block;
+}
+
+.menuLabel {
+  font-size: clamp(14px, calc(1.2 * var(--vwu)), 18px);
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0 12px rgba(5, 180, 199, 0.2);
+}

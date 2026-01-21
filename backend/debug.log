@@ -418,3 +418,18 @@ INFO 2026-01-15 20:10:18,430 basehttp 1580 12024 "GET /admin/login/?next=/admin/
 WARNING 2026-01-15 20:10:18,933 log 1580 18144 Not Found: /favicon.ico
 WARNING 2026-01-15 20:10:18,933 basehttp 1580 18144 "GET /favicon.ico HTTP/1.1" 404 3849
 INFO 2026-01-17 12:17:42,681 autoreload 1368 38384 Watching for file changes with StatReloader
+INFO 2026-01-17 12:59:15,871 basehttp 1368 908 "GET /admin/login/?next=/admin/catalog/book/ HTTP/1.1" 200 4187
+WARNING 2026-01-17 12:59:15,957 log 1368 36712 Not Found: /favicon.ico
+WARNING 2026-01-17 12:59:15,957 basehttp 1368 36712 "GET /favicon.ico HTTP/1.1" 404 3849
+INFO 2026-01-17 17:39:10,875 basehttp 1368 32276 "GET /admin/login/?next=/admin/catalog/book/ HTTP/1.1" 200 4187
+WARNING 2026-01-17 17:39:10,953 log 1368 5920 Not Found: /favicon.ico
+WARNING 2026-01-17 17:39:10,954 basehttp 1368 5920 "GET /favicon.ico HTTP/1.1" 404 3849
+INFO 2026-01-17 17:40:05,880 basehttp 1368 36068 "GET /admin/login/?next=/admin/catalog/book/ HTTP/1.1" 200 4187
+WARNING 2026-01-17 17:40:05,943 log 1368 7864 Not Found: /favicon.ico
+WARNING 2026-01-17 17:40:05,943 basehttp 1368 7864 "GET /favicon.ico HTTP/1.1" 404 3849
+INFO 2026-01-17 17:40:14,244 basehttp 1368 31404 "GET /admin/login/?next=/admin/catalog/book/ HTTP/1.1" 200 4187
+WARNING 2026-01-17 17:40:14,415 log 1368 36640 Not Found: /favicon.ico
+WARNING 2026-01-17 17:40:14,415 basehttp 1368 36640 "GET /favicon.ico HTTP/1.1" 404 3849
+INFO 2026-01-18 09:19:20,695 basehttp 1368 7892 "GET /admin/login/?next=/admin/catalog/book/ HTTP/1.1" 200 4187
+WARNING 2026-01-18 09:19:20,849 log 1368 7892 Not Found: /favicon.ico
+WARNING 2026-01-18 09:19:20,850 basehttp 1368 7892 "GET /favicon.ico HTTP/1.1" 404 3849

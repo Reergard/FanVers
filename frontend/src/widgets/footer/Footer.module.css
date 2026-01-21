@@ -159,28 +159,121 @@
   opacity: 0.75;
 }
 
+/* ===== 4K экраны: убираем липкий футер ===== */
+@media (min-width: 2560px) and (min-height: 1400px) {
+  .footer {
+    margin-top: 0;
+  }
+}
+
 /* ===== Tablet/Mobile ===== */
-@media (max-width: 1023px) {
+@media (max-width: 1024px) {
   .topGrid {
-    grid-template-columns: 1fr;
-    gap: 22px;
+    grid-template-columns: 1fr 140px 1fr;
+    gap: 18px;
+    align-items: start;
   }
 
   .vLine {
     display: none;
   }
 
+  .centerLogo {
+    padding-top: 0;
+  }
+
+  .logo {
+    width: 110px;
+    height: 110px;
+  }
+
+  .logoImg {
+    width: 90px;
+    height: 90px;
+  }
+
   .side {
-    justify-items: start;
+    grid-column: 1 / -1;
+    justify-items: center;
   }
 
   .age {
-    text-align: left;
+    text-align: center;
     max-width: 100%;
+    width: min(520px, 90%);
   }
 
   .bottomBar {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* ===== TABLET (768-1024): увеличенные размеры ===== */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .topGrid {
+    gap: 24px;
+  }
+
+  .logo {
+    width: 140px;
+    height: 140px;
+  }
+
+  .logoImg {
+    width: 115px;
+    height: 115px;
+  }
+  
+  .age {
+    font-size: 15px;
+  }
+}
+
+/* ===== MOBILE (до 480px): компактные размеры ===== */
+@media (max-width: 480px) {
+  .topGrid {
+    grid-template-columns: 1fr 100px 1fr;
+    gap: 12px;
+  }
+
+  .logo {
+    width: 85px;
+    height: 85px;
+  }
+
+  .logoImg {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .age {
+    font-size: 13px;
+    width: min(400px, 95%);
+  }
+
+  .bottomBar {
+    margin-top: 20px;
+  }
+}
+
+/* ===== MOBILE SMALL (до 360px) ===== */
+@media (max-width: 360px) {
+  .topGrid {
+    gap: 8px;
+  }
+
+  .logo {
+    width: 75px;
+    height: 75px;
+  }
+
+  .logoImg {
+    width: 62px;
+    height: 62px;
+  }
+  
+  .age {
+    font-size: 12px;
   }
 }

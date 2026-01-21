@@ -8,7 +8,7 @@
   padding-inline: 30px;
 
   /* ВАЖНО: фиксируем высоту, чтобы сверху/снизу всегда было одинаково */
-  height: clamp(44px, 4.2vw, 64px);
+  height: clamp(44px, calc(4.2 * var(--vwu)), 64px);
 
   text-decoration: none;
 
@@ -27,7 +27,7 @@
 
 .text {
   font-family: "Seminaria", sans-serif;
-  font-size: clamp(16px, 1.6vw, 24px);
+  font-size: clamp(16px, calc(1.6 * var(--vwu)), 24px);
 
   /* КЛЮЧ: убираем "плавание" по вертикали */
   line-height: 1;
@@ -38,4 +38,47 @@
 
   position: relative;
   z-index: 1;
+}
+
+/* Mobile/Tablet: оранжевый цвет навигации */
+@media (max-width: 1024px) {
+  .text {
+    color: #F58807;
+    text-shadow: 0 0 18px rgba(245, 136, 7, 0.18);
+  }
+}
+
+/* ===== TABLET (768-1024): комфортные размеры ===== */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .frameLink {
+    padding-inline: 15px;
+    height: 56px;
+  }
+  
+  .text {
+    font-size: clamp(18px, 4.4vw, 34px);
+  }
+}
+
+/* ===== MOBILE (до 480px): компактнее ===== */
+@media (max-width: 480px) {
+  .frameLink {
+    padding-inline: 15px;
+    height: clamp(38px, calc(4 * var(--vwu)), 50px);
+  }
+
+  .text {
+    font-size: clamp(14px, calc(1.5 * var(--vwu)), 17px);
+  }
+}
+
+@media (max-width: 360px) {
+  .frameLink {
+    padding-inline: 9px;
+    height: 36px;
+  }
+
+  .text {
+    font-size: 13px;
+  }
 }

@@ -1,6 +1,48 @@
 .container {
-    max-width: 1280px;
-    margin-inline: auto;
-    padding-inline: clamp(14px, 3vw, 28px);
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: clamp(8px, calc(2 * var(--vwu)), 28px);
+}
+
+/* ===== TABLET & MOBILE (до 1024px) ===== */
+@media (max-width: 1024px) {
+  .container {
+    padding-inline: 16px;
   }
+}
+
+/* ===== TABLET (768-1024): больше воздуха ===== */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .container {
+    padding-inline: 24px;
+  }
+}
+
+/* ===== MOBILE (до 480px) ===== */
+@media (max-width: 480px) {
+  .container {
+    padding-inline: 12px;
+  }
+}
+
+/* ===== MOBILE SMALL (до 360px) ===== */
+@media (max-width: 360px) {
+  .container {
+    padding-inline: 8px;
+  }
+}
+
+/* ===== LARGE DESKTOP ===== */
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1600px;
+  }
+}
+
+/* ===== 4K ===== */
+@media (min-width: 2560px) and (min-height: 1400px) {
+  .container {
+    max-width: 1680px;
+  }
+}
   

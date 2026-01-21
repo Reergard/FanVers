@@ -10,20 +10,24 @@ Vite + React + TypeScript
 
 2) Структура проекта и ответственность папок
 src/
-  api/            # работа с беком: axios instance, запросы, типы ответов
   app/            # общий layout приложения: Base.tsx + Base.module.css
-  routes/         # маршрутизация (React Router): список роутов/конфиг/обёртки
+  routes/         # маршрутизация (React Router): список роутов/конфиг/обёртки (пока пустая)
   main/           # страницы/фичи главной (HomePage.tsx + стили + локальные картинки)
-  shared/         # переиспользуемые "примитивы": Container, utils, types, hooks
+  users/          # страницы/фичи пользователей (Profile.tsx + стили)
+  shared/         # переиспользуемые "примитивы": Container, Icon, hooks, utils, types
   widgets/        # крупные блоки: header, footer (и дальше: sidebar, drawer и т.д.)
   assets/         # глобальные ассеты: icons, logos, backgrounds, fonts
+  docs/           # документация проекта (Concept.md, STRUCTURE.md)
 
-
-Правило: всё “глобальное” → assets/, всё “только для страницы” → main/.../images.
+Правило: всё "глобальное" → assets/, всё "только для страницы" → feature/images/.
 
 3) Base layout (обёртка приложения)
 
-app/Base.tsx — это “каркас”:
+app/Base.tsx — это "каркас":
+
+SvgSprite (глобальный спрайт иконок)
+
+ScrollIndicator (кастомный индикатор прокрутки)
 
 фиксированный фон (слои/градиенты)
 
@@ -34,7 +38,7 @@ Header
 Footer
 
 Нюанс: Base не выбирает страницы, он просто рендерит children.
-Выбор страницы делает роутер).
+Выбор страницы делает роутер (в App.tsx).
 
 4) Global CSS vs CSS Modules
 Global (src/main.css)
@@ -79,15 +83,17 @@ CSS Modules (*.module.css)
 
 6) Container (центральная колонка)
 
-shared/Container.tsx — “центрирование”:
+shared/Container.tsx — "центрирование":
 
-max-width: var(--container-max)
+max-width: var(--container-max) (1280px, на 4K — 1680px)
 
 margin-inline: auto
 
-padding-inline: var(--gutter) через clamp()
+padding-inline: var(--gutter) через clamp() с --vwu (ограничение vw на больших экранах)
 
-Важно: Container не обязателен “везде”.
+Поддерживает prop `as` для выбора тега (div, section, header, footer)
+
+Важно: Container не обязателен "везде".
 Используется точечно там, где контент должен быть в колонке.
 Full-width секции (hero/читатель/фоновые блоки) могут быть без Container.
 
@@ -156,13 +162,15 @@ input прозрачный без рамки
 
 План/правило:
 
-один набор иконок, не сотни отдельных файлов без нужды
+один набор иконок в public/sprite.svg (глобальный спрайт)
 
-предпочтительно: src/assets/icons/sprite.svg + <use href="#icon-name" />
+SvgSprite компонент (shared/SvgSprite.tsx) загружает спрайт один раз в Base
 
-декор-SVG (драконы/фоновые) — в assets/backgrounds/ или assets/icons/ (если это именно декор)
+Icon компонент (shared/Icon.tsx) использует <use href="#icon-name" /> для рендера иконок
 
-Нюанс: отдельные картинки (png/jpg/webp) для контента — не в спрайт.
+декор-SVG (драконы/фоновые) — в assets/backgrounds/ (например, menu_line.svg)
+
+Нюанс: отдельные картинки (png/jpg/webp) для контента — не в спрайт, импортируются напрямую.
 
 12) Шрифты: политика и нюансы
 
@@ -200,24 +208,39 @@ font-display: swap включен
 
 14) Routing (как страницы реально переключаются)
 
-Важно: Base оборачивает одну страницу за раз.
-Чтобы не показывалось сразу Home+Profile — нужен React Router:
+Реализовано в App.tsx:
 
-react-router-dom (а не react-router)
+react-router-dom (BrowserRouter, Routes, Route)
 
-<Routes><Route ... /></Routes> внутри Base
+Base оборачивает Routes, Routes содержит Route для каждой страницы
+
+Текущие маршруты: "/" (HomePage), "/profile" (Profile)
+
+Важно: Base оборачивает одну страницу за раз, роутер выбирает какую.
 
 15) Производительность: code-splitting
 
-План:
+План (пока не реализовано):
 
-“тяжёлые” страницы (каталог/кабинет/читалка) грузить лениво:
+"тяжёлые" страницы (каталог/кабинет/читалка) грузить лениво:
 
 React.lazy + Suspense
 
 Это уменьшает стартовый бандл и ускоряет первую загрузку.
 
-16) Общие правила верстки, чтобы не было “топорно”
+16) Shared компоненты и утилиты
+
+shared/Icon.tsx — компонент для рендера иконок из спрайта
+shared/FrameLink.tsx — стилизованная ссылка с рамкой для навигации
+shared/MenuPanel.tsx — панель меню с аватаром и списком
+shared/MenuList.tsx — список пунктов меню
+shared/AvatarOrbit.tsx — аватар с орбитой (декор)
+shared/ScrollIndicator/ — кастомный индикатор прокрутки (overlay)
+shared/hooks/useMedia.ts — хук для медиа-запросов
+shared/hooks/useScrollLock.ts — хук для блокировки скролла (iOS-safe)
+shared/menu/menuData.ts — единый источник данных для меню (USER_MENU, NAV_MENU)
+
+17) Общие правила верстки, чтобы не было "топорно"
 
 Grid/Flex — для раскладки блоков (кто слева/справа, колонки, зоны)
 
@@ -225,4 +248,28 @@ Grid/Flex — для раскладки блоков (кто слева/спра
 
 Не фиксировать высоты без необходимости: лучше padding + min-height
 
-Размеры и отступы лучше через clamp() (адаптив “плавно”, без ломания)
+Размеры и отступы лучше через clamp() (адаптив "плавно", без ломания)
+
+18) Адаптив для больших экранов (4K)
+
+В main.css и Base.module.css есть специальные правила для экранов >= 2560px:
+
+увеличение базового font-size
+
+zoom: 1.15 для body (fallback через font-size если zoom не поддерживается)
+
+увеличение padding-block в main
+
+Container увеличивает max-width до 1680px
+
+19) ScrollIndicator (кастомный индикатор прокрутки)
+
+Реализован как overlay (не влияет на layout)
+
+Управляется через CSS-переменные (--si-visible, --si-thumb-top, --si-thumb-height)
+
+Автоматически скрывается, если контент не требует скролла
+
+Активное состояние при скролле (is-scrolling класс на html)
+
+Поддержка prefers-reduced-motion
