@@ -8,6 +8,8 @@ type Props = {
   children: React.ReactNode;
   className?: string;
   ariaLabel?: string;
+  type?: "button" | "submit" | "reset";
+  disabled?: boolean;
 };
 
 export function ActionButton({
@@ -17,6 +19,8 @@ export function ActionButton({
   children,
   className,
   ariaLabel,
+  type = "button",
+  disabled,
 }: Props) {
   const cls = [styles.btn, className].filter(Boolean).join(" ");
 
@@ -29,7 +33,13 @@ export function ActionButton({
   }
 
   return (
-    <button type="button" className={cls} onClick={onClick} aria-label={ariaLabel}>
+    <button
+      type={type}
+      className={cls}
+      onClick={onClick}
+      aria-label={ariaLabel}
+      disabled={disabled}
+    >
       {children}
     </button>
   );

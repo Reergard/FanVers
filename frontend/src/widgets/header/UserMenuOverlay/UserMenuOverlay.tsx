@@ -1,10 +1,14 @@
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styles from "./UserMenuOverlay.module.css";
 import { MenuPanel } from "../../../shared/MenuPanel/MenuPanel";
 import { useMedia } from "../../../shared/hooks/useMedia";
 import { useScrollLock } from "../../../shared/hooks/useScrollLock";
 import type { MenuItem } from "../../../shared/menu/menuData";
+import { ActionButton } from "../../../shared/ActionButton/ActionButton";
+import { Modal } from "../../../shared/Modal/Modal";
+import { LoginForm } from "../../../auth/LoginForm";
+import { RegisterForm } from "../../../auth/RegisterForm";
 
 type Props = {
   open: boolean;
@@ -15,6 +19,7 @@ type Props = {
   menuId: string;
   name: string;
   avatarUrl?: string;
+  isAuthenticated: boolean;
 };
 
 export function UserMenuOverlay({
@@ -26,10 +31,13 @@ export function UserMenuOverlay({
   menuId,
   name,
   avatarUrl,
+  isAuthenticated,
 }: Props) {
   const location = useLocation();
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [registerModalOpen, setRegisterModalOpen] = useState(false);
 
   // Блокируем скролл только в drawer режиме
   useScrollLock(open && mode === "drawer");
@@ -92,28 +100,22 @@ export function UserMenuOverlay({
     };
   }, [open, anchorRef]);
 
-  // Закрытие по клику вне меню
+  // Закрытие по клику вне меню (только для popover режима)
+  // В drawer режиме закрытие делается только через overlay onClick и Esc
   useEffect(() => {
-    if (!open) return;
+    if (!open || mode === "drawer") return;
 
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
 
-      if (mode === "drawer") {
-        // В drawer режиме закрываем по клику на overlay
-        if (panelRef.current && !panelRef.current.contains(target)) {
-          onClose();
-        }
-      } else {
-        // В popover режиме закрываем по клику вне панели и вне якоря
-        if (
-          panelRef.current &&
-          !panelRef.current.contains(target) &&
-          anchorRef.current &&
-          !anchorRef.current.contains(target)
-        ) {
-          onClose();
-        }
+      // В popover режиме закрываем по клику вне панели и вне якоря
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(target) &&
+        anchorRef.current &&
+        !anchorRef.current.contains(target)
+      ) {
+        onClose();
       }
     };
 
@@ -132,38 +134,96 @@ export function UserMenuOverlay({
     onClose();
   }, [onClose]);
 
-  if (!open) return null;
+  const handleLoginSuccess = useCallback(() => {
+    setLoginModalOpen(false);
+    onClose();
+    // Состояние обновится реактивно через useAuth в Header
+  }, [onClose]);
+
+  const handleRegisterSuccess = useCallback(() => {
+    setRegisterModalOpen(false);
+    onClose();
+    // Состояние обновится реактивно через useAuth в Header
+  }, [onClose]);
 
   const isDrawer = mode === "drawer";
 
   return (
     <>
-      {/* Overlay для drawer */}
-      {isDrawer && (
-        <div
-          className={styles.overlay}
-          onClick={onClose}
-          aria-hidden="true"
-        />
+      {/* Overlay и панель меню - только когда open */}
+      {open && (
+        <>
+          {/* Overlay для drawer */}
+          {isDrawer && (
+            <div
+              className={styles.overlay}
+              onClick={onClose}
+              aria-hidden="true"
+            />
+          )}
+
+          {/* Панель меню */}
+          <div
+            ref={panelRef}
+            id={menuId}
+            className={`${styles.panel} ${isDrawer ? styles.panelDrawer : styles.panelPopover}`}
+            role={isDrawer ? "dialog" : "menu"}
+            aria-modal={isDrawer ? "true" : undefined}
+            aria-label="Меню користувача"
+            tabIndex={-1}
+          >
+            {isAuthenticated ? (
+              <MenuPanel
+                name={name}
+                avatarUrl={avatarUrl}
+                items={items}
+                onSelect={handleSelect}
+              />
+            ) : (
+              <div className={styles.authButtons}>
+                <div className={styles.authTitle}>Вхід / Реєстрація</div>
+                <div className={styles.authActions}>
+                  <ActionButton
+                    onClick={() => {
+                      setLoginModalOpen(true);
+                      onClose();
+                    }}
+                    className={styles.authButton}
+                  >
+                    Вхід
+                  </ActionButton>
+                  <ActionButton
+                    onClick={() => {
+                      setRegisterModalOpen(true);
+                      onClose();
+                    }}
+                    className={styles.authButton}
+                  >
+                    Реєстрація
+                  </ActionButton>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
-      {/* Панель меню */}
-      <div
-        ref={panelRef}
-        id={menuId}
-        className={`${styles.panel} ${isDrawer ? styles.panelDrawer : styles.panelPopover}`}
-        role={isDrawer ? "dialog" : "menu"}
-        aria-modal={isDrawer ? "true" : undefined}
-        aria-label="Меню користувача"
-        tabIndex={-1}
+      {/* Модалки логина и регистрации - всегда рендерятся, независимо от open */}
+      <Modal
+        open={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+        title="Вхід"
       >
-        <MenuPanel
-          name={name}
-          avatarUrl={avatarUrl}
-          items={items}
-          onSelect={handleSelect}
-        />
-      </div>
+        <LoginForm onSuccess={handleLoginSuccess} />
+      </Modal>
+
+      <Modal
+        open={registerModalOpen}
+        onClose={() => setRegisterModalOpen(false)}
+        title="Реєстрація"
+      >
+        <RegisterForm onSuccess={handleRegisterSuccess} />
+      </Modal>
     </>
   );
 }

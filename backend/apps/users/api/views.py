@@ -39,9 +39,11 @@ def _cookie_params():
     # Secure: только HTTPS в продакшене
     secure = not settings.DEBUG
     
-    # SameSite: берем из settings или env, по умолчанию None для кросс-сайт (Telegram/WebView)
+    # SameSite: берем из settings или env, по умолчанию Lax для dev, None для prod
     # Должно совпадать с CSRF_COOKIE_SAMESITE в settings.py
-    samesite = getattr(settings, 'CSRF_COOKIE_SAMESITE', os.getenv('SAME_SITE_COOKIE', 'None'))
+    samesite = getattr(settings, 'CSRF_COOKIE_SAMESITE', None)
+    if samesite is None:
+        samesite = os.getenv('SAME_SITE_COOKIE', 'Lax' if settings.DEBUG else 'None')
     
     # Domain: берем из settings или env, по умолчанию .fan-vers.com в prod
     # Должно совпадать с SESSION_COOKIE_DOMAIN и CSRF_COOKIE_DOMAIN в settings.py

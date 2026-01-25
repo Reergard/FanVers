@@ -9,6 +9,7 @@ import backBalance from "../../assets/backgrounds/back_balance.svg";
 import { UserMenuOverlay } from "./UserMenuOverlay/UserMenuOverlay";
 import { USER_MENU } from "../../shared/menu/menuData";
 import { useMedia } from "../../shared/hooks/useMedia";
+import { useAuth } from "../../auth/useAuth";
 
 // Single source of truth (Desktop)
 const NAV_MENU_OLD = [
@@ -36,9 +37,17 @@ const NAV_ROW_2 = [
 ];
 
 export function Header() {
+  // Реактивно отслеживаем состояние авторизации
+  const isAuthenticated = useAuth();
+  
+  // Логирование для отладки
+  useEffect(() => {
+    console.log("[Header] isAuthenticated изменился:", isAuthenticated);
+  }, [isAuthenticated]);
+
   // Потом сюда подцепишь реальные данные (store/api)
   const user = {
-    name: "Дмитро Подлуцьк",
+    name: isAuthenticated ? "Дмитро Подлуцьк" : "Гість",
     coins: "1959.5",
     notifications: 4,
     messages: 14,
@@ -123,20 +132,25 @@ export function Header() {
           </div>
 
           {/* ===== Compact LEFT: Avatar + (bell/mail) + FanCoins ===== */}
+          {/* Блок всегда рендерится для сохранения места в разметке */}
           <div className={[styles.left, styles.leftCompact].filter(Boolean).join(" ")}>
             <div className={styles.compactLeft}>
+              {/* Всегда рендерим структуру, но скрываем если не авторизован */}
               <div
                 className={styles.avatar}
-                style={user.avatarUrl ? { backgroundImage: `url(${user.avatarUrl})` } : undefined}
+                style={{
+                  ...(user.avatarUrl ? { backgroundImage: `url(${user.avatarUrl})` } : {}),
+                  visibility: isAuthenticated ? "visible" : "hidden",
+                }}
                 aria-hidden="true"
               />
 
-              <div className={styles.compactMeta}>
+              <div className={styles.compactMeta} style={{ visibility: isAuthenticated ? "visible" : "hidden" }}>
                 <div className={styles.compactActions} aria-label="Сповіщення та повідомлення">
-                  <button className={styles.iconBtn} type="button" aria-label="Сповіщення">
+                  <button className={styles.iconBtn} type="button" aria-label="Сповіщення" disabled={!isAuthenticated}>
                     <span className={styles.badgeWrap}>
                       <Icon name="bell" className={styles.icon} title="Сповіщення" />
-                      {user.notifications > 0 ? (
+                      {isAuthenticated && user.notifications > 0 ? (
                         <span className={styles.badge} aria-label={`${user.notifications} нових`}>
                           {user.notifications}
                         </span>
@@ -144,10 +158,10 @@ export function Header() {
                     </span>
                   </button>
 
-                  <button className={styles.iconBtn} type="button" aria-label="Повідомлення">
+                  <button className={styles.iconBtn} type="button" aria-label="Повідомлення" disabled={!isAuthenticated}>
                     <span className={styles.badgeWrap}>
                       <Icon name="mail" className={styles.icon} title="Повідомлення" />
-                      {user.messages > 0 ? (
+                      {isAuthenticated && user.messages > 0 ? (
                         <span className={styles.badge} aria-label={`${user.messages} нових`}>
                           {user.messages}
                         </span>
@@ -289,6 +303,7 @@ export function Header() {
         menuId={menuId}
         name={user.name}
         avatarUrl={user.avatarUrl}
+        isAuthenticated={isAuthenticated}
       />
     </header>
   );

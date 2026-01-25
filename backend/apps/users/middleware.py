@@ -34,8 +34,21 @@ class RequestMiddleware:
             request.path.startswith('/api/users/refresh/') or
             request.path.startswith('/api/users/logout/')):
             logger.info(f"🔍 [RequestMiddleware] Response status: {response.status_code}")
-            if response.status_code in [403, 401]:
+            
+            # Для refresh endpoint: 401 логируем как INFO, если нет Authorization заголовка (тихий запрос до логина)
+            # Если есть Authorization заголовок, значит пользователь был авторизован - это реальная ошибка
+            if response.status_code == 401 and request.path.startswith('/api/users/refresh/'):
+                has_auth_header = bool(request.headers.get('Authorization'))
+                if has_auth_header:
+                    # Пользователь был авторизован, но refresh не удался - это ошибка
+                    logger.error(f"🔍 [RequestMiddleware] 401 response! User was authenticated but refresh failed. Check refresh token.")
+                else:
+                    # Тихий запрос до логина - это нормально, логируем как info
+                    logger.info(f"🔍 [RequestMiddleware] 401 response (silent refresh before login) - это нормально для гостей")
+            elif response.status_code in [403, 401]:
+                # Для других endpoints или 403 - логируем как error
                 logger.error(f"🔍 [RequestMiddleware] {response.status_code} response! Check CSRF, permissions, or tokens")
+            
             logger.info(f"🔍 [RequestMiddleware] === END REQUEST ===")
         
         return response

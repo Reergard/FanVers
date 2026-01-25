@@ -1,20 +1,29 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosError } from "axios";
 import { getAccess } from "../auth/token";
 import { API } from "./endpoints";
 import { runSingleFlight } from "../auth/refreshMutex";
 import { doRefresh, doLogout } from "../auth/refreshCore";
 
+// В dev режиме используем прокси Vite (относительные пути)
+// В prod режиме используем полный URL из env
+const baseURL = import.meta.env.DEV 
+  ? (import.meta.env.VITE_API_BASE_URL || "") // Если не установлен, используем прокси (пустой baseURL)
+  : (import.meta.env.VITE_API_BASE_URL ?? "");
+console.log("[http.ts] baseURL:", baseURL || "(используется прокси Vite)", "DEV:", import.meta.env.DEV);
+
 export const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? "", // Например http://127.0.0.1:8000
+  baseURL,
   withCredentials: true, // КРИТИЧНО: чтобы cookie refresh_token летала на refresh/logout
 });
 
 // 1) Подставляем access в Authorization
-http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+http.interceptors.request.use((config) => {
   const token = getAccess();
-  if (token) {
+  if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  const fullUrl = config.url ? `${config.baseURL || ""}${config.url}` : "unknown";
+  console.log("[http] Request:", config.method?.toUpperCase(), fullUrl);
   return config;
 });
 
@@ -37,7 +46,8 @@ http.interceptors.response.use(
 
       try {
         // Используем doRefresh через mutex напрямую (без импорта service.ts)
-        await runSingleFlight(() => doRefresh());
+        // Явно указываем silent=false, так как это не тихий refresh
+        await runSingleFlight(() => doRefresh(false));
         return http(original); // Повтор исходного запроса 1 раз
       } catch {
         // Если refresh не удался:

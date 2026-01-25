@@ -108,3 +108,36 @@
 .panel::-webkit-scrollbar-thumb:hover {
   background: rgba(5, 180, 199, 0.5);
 }
+
+/* Стили для кнопок авторизации */
+.authButtons {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, calc(3 * var(--vwu)), 28px);
+  padding: clamp(20px, calc(3 * var(--vwu)), 28px);
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.authTitle {
+  font-size: clamp(18px, calc(2.5 * var(--vwu)), 24px);
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: "BadScript", sans-serif;
+  text-align: center;
+  text-shadow: 0 0 12px rgba(5, 180, 199, 0.2);
+}
+
+.authActions {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, calc(1.8 * var(--vwu)), 16px);
+  width: 100%;
+  max-width: 200px;
+}
+
+.authButton {
+  width: 100%;
+  justify-content: center;
+}

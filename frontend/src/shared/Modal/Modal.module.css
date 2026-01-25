@@ -1,0 +1,94 @@
+/* Overlay (backdrop) */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 2000;
+  pointer-events: auto;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Модальное окно */
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #050d11;
+  z-index: 2001;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 90vh;
+  max-width: min(90vw, 500px);
+  width: 100%;
+  /* РАМКА */
+  border: 1px solid rgba(5, 180, 199, 0.55);
+  /* мягкое свечение рамки */
+  box-shadow:
+    inset 0 0 0 1px rgba(5, 180, 199, 0.35),
+    0 0 24px rgba(5, 180, 199, 0.25);
+  border-radius: clamp(12px, calc(2 * var(--vwu)), 16px);
+  padding: clamp(24px, calc(4 * var(--vwu)), 32px);
+  animation: slideIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.title {
+  margin: 0 0 clamp(16px, calc(3 * var(--vwu)), 24px) 0;
+  font-size: clamp(20px, calc(3.5 * var(--vwu)), 28px);
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: "BadScript", sans-serif;
+  text-align: center;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, calc(2.5 * var(--vwu)), 20px);
+}
+
+/* Убираем анимацию для пользователей с prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .modal {
+    animation: none;
+  }
+}
+
+/* Скрываем скроллбар, но оставляем скролл */
+.modal::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: rgba(5, 180, 199, 0.3);
+  border-radius: 2px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(5, 180, 199, 0.5);
+}
