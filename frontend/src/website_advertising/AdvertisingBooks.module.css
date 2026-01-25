@@ -1,0 +1,213 @@
+.section{
+  padding-top: clamp(12px, calc(1.4 * var(--vwu)), 18px);
+  padding-bottom: clamp(12px, calc(1.4 * var(--vwu)), 18px);
+  
+}
+
+.head{
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: clamp(12px, calc(1.2 * var(--vwu)), 18px);
+  margin-bottom: clamp(14px, calc(1.6 * var(--vwu)), 20px);
+}
+
+.label{
+  font-family: "SofiaSansSemiCondensed", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: clamp(14px, calc(1.4 * var(--vwu)), 16px);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(0, 210, 255, .90);
+}
+
+
+.line{
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0,210,255,.55), rgba(0,210,255,0));
+}
+
+.carousel{
+  /* сколько карточек видно за раз */
+  --per-view: 5;
+  --gap: clamp(12px, 1.2vw, 20px);
+
+  display: flex;
+  gap: var(--gap);
+
+  overflow-x: auto;
+  overflow-y: visible;
+
+  padding: 0 2px clamp(10px, 1.2vw, 16px);
+  max-width: 100%;
+
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+
+  /* ПРОФИ: скрываем полосу скролла */
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE/Edge legacy */
+}
+.carousel::-webkit-scrollbar{
+  display: none;                  /* Chrome/Safari */
+}
+
+/* ширина "страницы" = ровно N карточек в контейнере */
+.carousel > div{
+  flex: 0 0 auto;
+  width: calc((100% - (var(--gap) * (var(--per-view) - 1))) / var(--per-view));
+  scroll-snap-align: start;
+}
+
+
+/* Навигация снизу */
+.nav{
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  justify-items: center;
+
+  gap: clamp(12px, 1.6vw, 18px);
+  margin-top: clamp(10px, 1.4vw, 18px);
+}
+
+.navBtn{
+  /* убираем рамки и фон */
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+
+  display: grid;
+  place-items: center;
+
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.navBtn:hover:not(:disabled){
+  opacity: 0.8;
+}
+
+.navBtn:active:not(:disabled){
+  transform: scale(0.95);
+}
+
+.navBtn:disabled{
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.navBtn img{
+  /* размеры стрелок: ПК 170x30, планшеты 155x27, телефоны 61x10 */
+  width: 170px;
+  height: 30px;
+  display: block;
+  object-fit: contain;
+}
+
+/* Звезда: ПК 27x27, планшеты 25x25, телефоны 10x10 */
+.stars{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 0.8vw, 10px);
+  min-height: 27px; /* чтобы не прыгало */
+}
+
+.starDot{
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+
+  display: grid;
+  place-items: center;
+
+  transition: transform 140ms ease, opacity 140ms ease;
+}
+.starDot:hover{ opacity: .85; }
+.starDot:active{ transform: scale(.95); }
+
+.starDot img{
+  width: 27px;
+  height: 27px;
+  display: block;
+  object-fit: contain;
+  opacity: 0.5;
+  transition: opacity 140ms ease, filter 140ms ease;
+}
+
+.starDotActive img{
+  opacity: 0.95;
+  filter: drop-shadow(0 0 10px rgba(245,136,7,.35));
+}
+
+
+@media (min-width: 2560px) and (min-height: 1400px) {
+  .section {
+    padding-top: clamp(12px, calc(1.4 * var(--vwu)), 18px);
+    padding-bottom: clamp(12px, calc(1.4 * var(--vwu)), 18px);
+  }
+}
+
+@media (min-width: 1920px) {
+  .section {
+    padding-top: clamp(12px, calc(1.4 * var(--vwu)), 18px);
+    padding-bottom: clamp(12px, calc(1.4 * var(--vwu)), 18px);
+  }
+}
+
+
+/* ===== Tablet/Mobile (до 1024): крупнее, но без "гигантов" ===== */
+@media (max-width: 1024px){
+  .carousel{
+    --per-view: 3;
+    --gap: 18px;
+
+    scroll-padding-left: 12px;
+    scroll-padding-right: 12px;
+  }
+
+  .carousel > div{
+    scroll-snap-align: center;
+  }
+
+  /* стрелки для планшетов: 155x27 */
+  .navBtn img{
+    width: 155px;
+    height: 27px;
+  }
+
+  /* звезда для планшетов: 25x25 */
+  .stars{
+    min-height: 25px;
+  }
+  
+  .starDot img{
+    width: 25px;
+    height: 25px;
+  }
+}
+
+/* ===== Узкие телефоны ===== */
+@media (max-width: 480px){
+  /* стрелки для телефонов: 61x10 */
+  .navBtn img{
+    width: 61px;
+    height: 10px;
+  }
+
+  /* звезда для телефонов: 10x10 */
+  .stars{
+    min-height: 10px;
+  }
+  
+  .starDot img{
+    width: 10px;
+    height: 10px;
+  }
+}
+
+
+
+

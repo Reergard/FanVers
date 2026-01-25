@@ -19,7 +19,6 @@ frontend/src/
 ├── app/
 │   ├── Base.tsx
 │   └── Base.module.css
-├── routes/                   # поки що порожня (маршрути в App.tsx)
 ├── main/
 │   ├── HomePage.tsx
 │   ├── HomePage.module.css
@@ -64,10 +63,11 @@ frontend/src/
 │       ├── Footer.tsx
 │       └── Footer.module.css
 ├── assets/                   # ГЛОБАЛЬНІ ресурси для всього сайту
-│   ├── icons/
 │   ├── logos/
 │   │   └── logo.png
 │   ├── backgrounds/
+│   │   ├── back_balance.svg
+│   │   ├── burger.svg
 │   │   └── menu_line.svg
 │   ├── fonts/
 │   │   ├── seminaria-normal.woff2
@@ -81,7 +81,8 @@ frontend/src/
 │   └── STRUCTURE.md
 ├── App.tsx
 ├── main.tsx
-└── main.css
+├── main.css
+└── responsive-variables.css
 ```
 
 ---

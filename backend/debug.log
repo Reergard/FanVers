@@ -433,3 +433,6 @@ WARNING 2026-01-17 17:40:14,415 basehttp 1368 36640 "GET /favicon.ico HTTP/1.1" 
 INFO 2026-01-18 09:19:20,695 basehttp 1368 7892 "GET /admin/login/?next=/admin/catalog/book/ HTTP/1.1" 200 4187
 WARNING 2026-01-18 09:19:20,849 log 1368 7892 Not Found: /favicon.ico
 WARNING 2026-01-18 09:19:20,850 basehttp 1368 7892 "GET /favicon.ico HTTP/1.1" 404 3849
+INFO 2026-01-23 18:55:32,592 basehttp 1368 20336 "GET /admin/login/?next=/admin/catalog/book/ HTTP/1.1" 200 4187
+WARNING 2026-01-23 18:55:32,716 log 1368 20336 Not Found: /favicon.ico
+WARNING 2026-01-23 18:55:32,717 basehttp 1368 20336 "GET /favicon.ico HTTP/1.1" 404 3849

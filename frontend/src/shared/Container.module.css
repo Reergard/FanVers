@@ -4,6 +4,22 @@
   padding-inline: clamp(8px, calc(2 * var(--vwu)), 28px);
 }
 
+
+/* 4K */
+@media (min-width: 2560px) and (min-height: 1400px) {
+  .content {
+    max-width: 1840px;
+  }
+}
+
+/* Large desktop */
+@media (min-width: 1920px) {
+  .content {
+    max-width: 1680px;
+  }
+}
+
+
 /* ===== TABLET & MOBILE (до 1024px) ===== */
 @media (max-width: 1024px) {
   .container {
