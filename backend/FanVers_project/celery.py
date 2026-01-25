@@ -18,11 +18,6 @@ app.conf.result_backend = 'redis://localhost:6379/0'
 app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
-    'update-trending-score': {
-        'task': 'catalog.tasks.update_trending_score',
-        'schedule': crontab(minute='*/1'),
-    },
-
     'send_abandoned_notification': {
         'task': 'apps.notification.tasks.send_abandoned_notification',
         'schedule': crontab(minute='*/1'),
@@ -30,11 +25,6 @@ app.conf.beat_schedule = {
 
     'check_abandoned_books': {
         'task': 'apps.notification.tasks.check_abandoned_books',
-        'schedule': crontab(minute='*/1'),
-    },
-
-    'simple_debug_task': {
-        'task': 'catalog.tasks.simple_debug_task',
         'schedule': crontab(minute='*/1'),
     },
 

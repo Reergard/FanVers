@@ -3,10 +3,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
-from ..models import Chat, Message
+from ..models import Chat, Message, ChatReadStatus
 from .serializers import ChatSerializer, MessageSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import AuthenticationFailed
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -23,7 +24,7 @@ class ChatViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         print("List method called")
         queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
     @action(detail=False, methods=['post'])
@@ -41,7 +42,6 @@ class ChatViewSet(viewsets.ModelViewSet):
             other_user = User.objects.get(username=username)
             print(f"Found other user: {other_user}")
             
-            # Проверяем существующий чат
             existing_chat = Chat.objects.filter(
                 participants=request.user
             ).filter(
@@ -54,11 +54,9 @@ class ChatViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Создаем новый чат
             chat = Chat.objects.create()
             chat.participants.add(request.user, other_user)
             
-            # Создаем первое сообщение, если оно есть
             if message:
                 Message.objects.create(
                     chat=chat,
@@ -68,7 +66,7 @@ class ChatViewSet(viewsets.ModelViewSet):
             
             print(f"Created chat: {chat}")
             return Response(
-                self.serializer_class(chat).data,
+                self.serializer_class(chat, context={'request': request}).data,
                 status=status.HTTP_201_CREATED
             )
         except User.DoesNotExist:
@@ -84,11 +82,66 @@ class ChatViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+    @action(detail=True, methods=['post'])
+    def send_message(self, request, pk=None):
+        if not request.user.is_authenticated:
+            raise AuthenticationFailed('User not authenticated')
+            
+        chat = self.get_object()
+        content = request.data.get('content')
+        
+        if not content:
+            return Response(
+                {'error': 'Повідомлення не може бути порожнім'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            message = Message.objects.create(
+                chat=chat,
+                sender=request.user,
+                content=content
+            )
+            
+            serializer = MessageSerializer(message)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            print(f"Error sending message: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
     @action(detail=True, methods=['get'])
     def messages(self, request, pk=None):
         chat = self.get_object()
         messages = chat.messages.all()
         return Response(MessageSerializer(messages, many=True).data)
+
+    @action(detail=True, methods=['post'])
+    def mark_as_read(self, request, pk=None):
+        """Отмечает чат как прочитанный пользователем"""
+        if not request.user.is_authenticated:
+            raise AuthenticationFailed('User not authenticated')
+            
+        chat = self.get_object()
+        
+        # Создаем или обновляем статус прочтения
+        read_status, created = ChatReadStatus.objects.get_or_create(
+            chat=chat,
+            user=request.user,
+            defaults={'last_read_at': timezone.now()}
+        )
+        
+        if not created:
+            # Обновляем время последнего прочтения
+            read_status.last_read_at = timezone.now()
+            read_status.save()
+        
+        return Response({
+            'message': 'Чат отмечен как прочитанный',
+            'last_read_at': read_status.last_read_at
+        })
 
     def destroy(self, request, *args, **kwargs):
         chat = self.get_object()

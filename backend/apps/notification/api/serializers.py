@@ -3,7 +3,7 @@ from ..models import Notification
 from apps.catalog.api.serializers import BookReaderSerializer
 
 class NotificationSerializer(serializers.ModelSerializer):
-    book = BookReaderSerializer()
+    book = BookReaderSerializer(allow_null=True, required=False)
     error_report_id = serializers.IntegerField(source='error_report.id', read_only=True, allow_null=True)
     reporter_username = serializers.CharField(source='error_report.user.username', read_only=True, allow_null=True)
     book_title = serializers.CharField(source='book.title', read_only=True, allow_null=True)
@@ -23,8 +23,18 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         try:
-            return super().to_representation(instance)
-        except Exception:
+            data = super().to_representation(instance)
+            # Обрабатываем случай, когда book может быть None
+            if not instance.book:
+                data['book'] = None
+                data['book_title'] = None
+            # Обрабатываем случай, когда error_report может быть None
+            if not instance.error_report:
+                data['error_report_id'] = None
+                data['reporter_username'] = None
+            return data
+        except Exception as e:
+            # Fallback для случаев ошибок сериализации
             return {
                 'id': instance.id,
                 'message': instance.message,

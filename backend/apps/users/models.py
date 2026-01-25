@@ -1,16 +1,23 @@
+import os
 import uuid
 from django.db import models, transaction
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils.translation import gettext_lazy as _
-from .managers import CustomUserManager
 from django.core.exceptions import ValidationError
 from .middleware import get_current_request
+from .managers import CustomUserManager
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Sum
 from django.core.cache import cache
 from django.db.models import Count, Q, F
+from django.contrib.staticfiles.storage import staticfiles_storage
+from datetime import datetime
+import logging
+from decimal import Decimal
+
+logger = logging.getLogger(__name__)
 
 
 def generate_token():
@@ -19,7 +26,7 @@ def generate_token():
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(_("Логін"), max_length=20, unique=True)
-    email = models.EmailField(_("Email"), max_length=254)
+    email = models.EmailField(_("Email"), max_length=254, unique=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
@@ -39,18 +46,34 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Profile(models.Model):
+    # def get_upload_to(self, instance, filename):
+    #     """Generate a dynamic path for profile images."""
+    #     ext = filename.split('.')[-1]  # Get file extension
+    #     filename = f"profile_{instance.user.id}.{ext}"  # Rename file
+    #     return os.path.join('users/profile_images/', filename)  # Return new path
+
+    def get_upload_to(self, instance):
+        """Генерує безпечний шлях для збереження аватара"""
+        basename = str(uuid.uuid4())
+        discard, ext = os.path.splitext(instance)
+        # Структура: avatars/{user_id}/{year}/{month}/{uuid}.webp
+        user_id = self.user.id if hasattr(self, 'user') else 'unknown'
+        year = datetime.now().year
+        month = datetime.now().month
+        return f'avatars/{user_id}/{year}/{month:02d}/{basename}.webp'
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     username = models.CharField(max_length=50, blank=True, null=True)
     email = models.EmailField(max_length=50, unique=True)
     about = models.TextField(blank=True, null=True)
-    image = models.ImageField(null=True, blank=True, default='users/profile_images/no_image.jpg', upload_to='users/profile_images/')
+    image = models.ImageField(upload_to=get_upload_to, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     token = models.CharField(max_length=255, default=generate_token)
     is_default = models.BooleanField(default=False)
     balance = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
-        default=0,
+        default=Decimal('0'),
         verbose_name='Баланс'
     )
     purchased_chapters = models.ManyToManyField('catalog.Chapter', blank=True, related_name='purchased_by')
@@ -62,13 +85,52 @@ class Profile(models.Model):
             ('Літератор', 'Літератор')
         ],
         default='Читач',
-        verbose_name='Роль користувача'
+        verbose_name='Роль користувача',
+        help_text='Оберіть роль користувача. Роль визначає права доступу та можливості користувача.',
+        blank=False,
+        null=False
     )
     commission = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=15.00,
+        default=Decimal('15.00'),
         verbose_name='Комісія (%)'
+    )
+    
+    # Настройки сповіщений
+    notifications_enabled = models.BooleanField(
+        default=True,
+        verbose_name='Сповіщення увімкнені'
+    )
+    hide_adult_content = models.BooleanField(
+        default=False,
+        verbose_name='Прибрати 18+ контент'
+    )
+    private_messages_enabled = models.BooleanField(
+        default=True,
+        verbose_name='Приватні повідомлення'
+    )
+    age_confirmed = models.BooleanField(
+        default=False,
+        verbose_name='Підтверджено вік 18+'
+    )
+    
+    # Детальні налаштування сповіщений
+    comment_notifications = models.BooleanField(
+        default=True,
+        verbose_name='Сповіщення про коментарі'
+    )
+    translation_status_notifications = models.BooleanField(
+        default=True,
+        verbose_name='Сповіщення про статус перекладу'
+    )
+    chapter_subscription_notifications = models.BooleanField(
+        default=True,
+        verbose_name='Сповіщення про передплату розділів'
+    )
+    chapter_comment_notifications = models.BooleanField(
+        default=True,
+        verbose_name='Сповіщення про коментарі до розділів'
     )
 
     class Meta:
@@ -80,6 +142,23 @@ class Profile(models.Model):
             return f"Id:{self.id}, {self.user.username}, Image:{self.image.url}"
         else:
             return f"Id:{self.id}, {self.user.username}"
+
+    def get_profile_image(self, size='default'):
+        """Отримання зображення профілю з fallback на ghost зображення"""
+        if self.has_custom_image():
+            return self.image.url
+        
+        # Fallback на ghost зображення залежно від розміру
+        if size == 'small':
+            return staticfiles_storage.url('images/icons/ghost.png')
+        elif size == 'large':
+            return staticfiles_storage.url('images/icons/ghost_full.png')
+        else:
+            return staticfiles_storage.url('images/icons/ghost.png')
+    
+    def has_custom_image(self):
+        """Перевірка чи є кастомне зображення"""
+        return bool(self.image and getattr(self.image, "name", None))
 
     def update_balance(self, amount, operation_type):
         with transaction.atomic():
@@ -124,20 +203,20 @@ class Profile(models.Model):
             logs = logs.filter(operation_type=operation_type)
         return logs
 
+    def clean(self, *args, **kwargs):
+        """Валідація профілю перед збереженням"""
+        from django.core.exceptions import ValidationError
+        
+        # Перевіряємо, що роль є допустимою
+        valid_roles = ['Читач', 'Перекладач', 'Літератор']
+        if self.role and self.role not in valid_roles:
+            raise ValidationError({
+                'role': f'Невірна роль: {self.role}. Дозволені ролі: {", ".join(valid_roles)}'
+            })
+        
+        super().clean(*args, **kwargs)
+
     def save(self, *args, **kwargs):
-        # Якщо це новий профіль без ролі, встановлюємо роль з групи
-        if not self.role:
-            groups = self.user.groups.all()
-            self.role = 'Перекладач' if groups.filter(name='Перекладач').exists() else 'Читач'
-        
-        # Якщо роль змінилася, оновлюємо групи
-        if self.pk:  # Якщо об'єкт вже існує
-            old_profile = Profile.objects.get(pk=self.pk)
-            if old_profile.role != self.role:
-                self.user.groups.clear()
-                group, _ = Group.objects.get_or_create(name=self.role)
-                self.user.groups.add(group)
-        
         super().save(*args, **kwargs)
 
     def update_commission(self):
@@ -206,7 +285,7 @@ class Profile(models.Model):
         return stats
 
     def clear_reading_stats_cache(self):
-        """Очищення кешу статистики читання"""
+        """Очищення кешу статистики при оновленні прогресу читання"""
         cache_key = f'user_reading_stats_{self.user.id}'
         cache.delete(cache_key)
 
@@ -254,13 +333,39 @@ def create_user_profile(sender, instance, created, **kwargs):
             username=instance.username,
             email=instance.email
         )
-        reader_group = Group.objects.get(name='Читач')
-        instance.groups.add(reader_group)
+
+
+# УБИРАЕМ ЛИШНИЙ СИГНАЛ - он делает profile.save() на каждый user.save()
+# @receiver(post_save, sender=User)
+# def save_user_profile(sender, instance, **kwargs):
+#     instance.profile.save()
 
 
 @receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
+def sync_user_email_to_profile(sender, instance, **kwargs):
+    """Синхронизация email из User в Profile (односторонняя)"""
+    try:
+        if hasattr(instance, 'profile') and instance.profile:
+            # Проверяем, изменился ли email
+            if instance.profile.email != instance.email:
+                instance.profile.email = instance.email
+                instance.profile.save(update_fields=['email'])
+    except Exception as e:
+        # Логируем ошибку без эмодзи для продакшена
+        pass
+
+
+# УБИРАЕМ ПРОБЛЕМНЫЙ СИГНАЛ - он перезаписывает User.email из Profile.email!
+# @receiver(post_save, sender=Profile)
+# def sync_profile_email_to_user(sender, instance, **kwargs):
+#     """Синхронизация email между Profile и User"""
+#     try:
+#         if instance.user and instance.user.email != instance.email:
+#             instance.user.email = instance.email
+#             instance.user.save(update_fields=['email'])
+#             print(f"🔵 Синхронизация email: Profile.email={instance.email} -> User.email={instance.user.email}")
+#     except Exception as e:
+#         print(f"🔴 Ошибка синхронизации email: {e}")
 
 
 @receiver(post_save, sender='catalog.Chapter')
@@ -272,6 +377,6 @@ def update_user_commission(sender, instance, **kwargs):
 
 @receiver(post_save, sender='monitoring.UserChapterProgress')
 def clear_reading_stats_cache(sender, instance, **kwargs):
-    """Очищення кешу статисти��и при оновленні прогресу читання"""
+    """Очищення кешу статистики при оновленні прогресу читання"""
     if instance.user and hasattr(instance.user, 'profile'):
         instance.user.profile.clear_reading_stats_cache()

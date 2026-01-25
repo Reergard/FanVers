@@ -10,29 +10,41 @@ from ..models import Advertisement
 from apps.users.models import User
 from dateutil import parser
 from zoneinfo import ZoneInfo
-from rest_framework.throttling import UserRateThrottle
 from django.db import transaction
 from django.core.exceptions import ValidationError
+from apps.core.smart_throttling import SmartThrottle
 
 
 logger = logging.getLogger(__name__)
 
-class AdvertisementThrottle(UserRateThrottle):
-    rate = '60/minute'
-
 class AdvertisementViewSet(viewsets.ModelViewSet):
     serializer_class = AdvertisementSerializer
-    # throttle_classes = [AdvertisementThrottle]  # Розкоментувати на продакшені
     queryset = Advertisement.objects.all()
     
     def get_permissions(self):
-        if self.action == 'main_page_ads':
-            return []  # Публічний доступ для main_page_ads
+        if self.action in ['main_page_ads', 'catalog_page_ads']:
+            return []  # Публічний доступ для получения рекламы
         return [IsAuthenticated()]  # Авторизація для інших дій
+    
+    def get_throttle_scope(self):
+        """
+        Применяем разные лимиты для разных операций
+        Понижаем скоп для подозрительных запросов
+        """
+        if self.action in ['list', 'retrieve', 'main_page_ads', 'catalog_page_ads']:
+            # Чтение рекламы - понижаем при подозрительности
+            if SmartThrottle.is_suspicious_request(self.request):
+                return 'rating'  # 30/min - мягко режем скорость
+            return 'read_light'  # 120/min - обычная скорость
+        elif self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return 'purchase'  # 10/hour - создание/изменение рекламы
+        return None
 
     def get_queryset(self):
-        logger.info(f"Отримання реклами для користувача: {self.request.user.id}")
-        return Advertisement.objects.filter(user=self.request.user)
+        if self.action in ['list', 'retrieve', 'user_advertisements']:
+            logger.info(f"Отримання реклами для користувача: {self.request.user.id}")
+            return Advertisement.objects.filter(user=self.request.user)
+        return Advertisement.objects.all()
 
     @action(detail=False, methods=['post'])
     def calculate_cost(self, request):

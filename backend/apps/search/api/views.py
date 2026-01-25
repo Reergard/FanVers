@@ -13,7 +13,11 @@ class BookSearchView(generics.ListAPIView):
     filterset_class = BookFilter
 
     def get_queryset(self):
+        # Базовый queryset с аннотацией количества глав
         queryset = Book.objects.annotate(chapter_count=Count('chapters'))
+        
+        # Применяем фильтры
         queryset = self.filter_queryset(queryset)
+        
         return queryset
 

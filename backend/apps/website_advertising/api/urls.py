@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import AdvertisementViewSet
 
 router = DefaultRouter()
-router.register('advertisements', AdvertisementViewSet, basename='advertisement')
+router.register('', AdvertisementViewSet, basename='advertisement')
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('advertisements/', include(router.urls)),
 ]

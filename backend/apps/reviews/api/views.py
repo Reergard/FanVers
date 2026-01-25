@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 import logging
 from rest_framework.exceptions import NotFound
 from rest_framework.decorators import action
+from apps.catalog.api.permissions import check_book_access_permission
 
 logger = logging.getLogger(__name__)
 
@@ -24,17 +25,43 @@ class BookCommentViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         logger.info(f"Received data: {request.data}")
-        serializer = self.get_serializer(data=request.data)
-        if not serializer.is_valid():
-            logger.error(f"Serializer errors: {serializer.errors}")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        if request.user.is_authenticated:
+        
+        try:
+            # Перевіряємо права доступу до коментування книги
+            book_slug = self.kwargs.get('slug')
+            book = get_object_or_404(Book, slug=book_slug)
+            
+            is_allowed, error_message = check_book_access_permission(
+                request.user, book, 'comment_book'
+            )
+            
+            if not is_allowed:
+                return Response(
+                    {"detail": error_message}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            if not request.user.is_authenticated:
+                return Response(
+                    {"detail": "Для додавання коментарів потрібна авторизація."}, 
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            
+            serializer = self.get_serializer(data=request.data)
+            if not serializer.is_valid():
+                logger.error(f"Serializer errors: {serializer.errors}")
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        else:
-            return Response({"detail": "Для додавання коментарів потрібна авторизація."}, 
-                          status=status.HTTP_403_FORBIDDEN)
+            
+        except Exception as e:
+            logger.error(f"Unexpected error in create comment: {str(e)}")
+            return Response(
+                {"detail": "Внутренняя ошибка сервера. Попробуйте позже."}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def perform_create(self, serializer):
         book_slug = self.kwargs.get('slug')
@@ -42,11 +69,18 @@ class BookCommentViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user, book=book)
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        if not queryset.exists():
-            return Response({'detail': 'Коментарів поки немає.'}, status=status.HTTP_200_OK)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        try:
+            queryset = self.get_queryset()
+            if not queryset.exists():
+                return Response({'detail': 'Коментарів поки немає.'}, status=status.HTTP_200_OK)
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Unexpected error in list comments: {str(e)}")
+            return Response(
+                {"detail": "Ошибка при загрузке комментариев. Попробуйте позже."}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def get_success_headers(self, data):
         try:
@@ -66,17 +100,44 @@ class ChapterCommentViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         logger.info(f"Received data: {request.data}")
-        serializer = self.get_serializer(data=request.data)
-        if not serializer.is_valid():
-            logger.error(f"Serializer errors: {serializer.errors}")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        if request.user.is_authenticated:
+        
+        try:
+            # Перевіряємо права доступу до коментування розділу
+            chapter_slug = self.kwargs.get('slug')
+            chapter = get_object_or_404(Chapter, slug=chapter_slug)
+            book = chapter.book
+            
+            is_allowed, error_message = check_book_access_permission(
+                request.user, book, 'comment_chapter'
+            )
+            
+            if not is_allowed:
+                return Response(
+                    {"detail": error_message}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            if not request.user.is_authenticated:
+                return Response(
+                    {"detail": "Для додавання коментарів потрібна авторизація."}, 
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            
+            serializer = self.get_serializer(data=request.data)
+            if not serializer.is_valid():
+                logger.error(f"Serializer errors: {serializer.errors}")
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        else:
-            return Response({"detail": "Для додавання коментарів потрібна авторизація."}, 
-                          status=status.HTTP_403_FORBIDDEN)
+            
+        except Exception as e:
+            logger.error(f"Unexpected error in create chapter comment: {str(e)}")
+            return Response(
+                {"detail": "Внутренняя ошибка сервера. Попробуйте позже."}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def perform_create(self, serializer):
         chapter_slug = self.kwargs.get('slug')
@@ -84,11 +145,18 @@ class ChapterCommentViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user, chapter=chapter)
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        if not queryset.exists():
-            return Response({'detail': 'Коментарів поки немає.'}, status=status.HTTP_200_OK)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        try:
+            queryset = self.get_queryset()
+            if not queryset.exists():
+                return Response({'detail': 'Коментарів поки немає.'}, status=status.HTTP_200_OK)
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Unexpected error in list chapter comments: {str(e)}")
+            return Response(
+                {"detail": "Ошибка при загрузке комментариев. Попробуйте позже."}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def get_success_headers(self, data):
         try:
@@ -113,44 +181,55 @@ class LikeDislikeViewSet(viewsets.ViewSet):
         logger.info(f"User: {request.user}")
         logger.info(f"Comment ID: {pk}")
         
-        comment_type = self.basename  # 'book-comment' або 'chapter-comment'
-        action = request.data.get('action')
-        
-        logger.info(f"Comment type: {comment_type}")
-        logger.info(f"Action: {action}")
+        try:
+            comment_type = self.basename  # 'book-comment' або 'chapter-comment'
+            action = request.data.get('action')
+            
+            logger.info(f"Comment type: {comment_type}")
+            logger.info(f"Action: {action}")
 
-        if comment_type == 'book-comment':
-            comment = get_object_or_404(BookComment, pk=pk)
-        elif comment_type == 'chapter-comment':
-            comment = get_object_or_404(ChapterComment, pk=pk)
-        else:
-            logger.error(f"Invalid comment type: {comment_type}")
-            return Response({'error': 'Невірний тип коментаря'}, status=status.HTTP_400_BAD_REQUEST)
-
-        user = request.user
-        if not user.is_authenticated:
-            logger.error("User is not authenticated")
-            return Response({'error': 'Користувач не авторизований'}, 
-                          status=status.HTTP_401_UNAUTHORIZED)
-
-        if action == 'like':
-            if user in comment.likes.all():
-                comment.likes.remove(user)
+            if comment_type == 'book-comment':
+                comment = get_object_or_404(BookComment, pk=pk)
+            elif comment_type == 'chapter-comment':
+                comment = get_object_or_404(ChapterComment, pk=pk)
             else:
-                comment.likes.add(user)
-                comment.dislikes.remove(user)
-        elif action == 'dislike':
-            if user in comment.dislikes.all():
-                comment.dislikes.remove(user)
-            else:
-                comment.dislikes.add(user)
-                comment.likes.remove(user)
-        else:
-            logger.error(f"Невірна дія: {action}")
-            return Response({'error': 'Невірна дія'}, status=status.HTTP_400_BAD_REQUEST)
+                logger.error(f"Invalid comment type: {comment_type}")
+                return Response({'error': 'Невірний тип коментаря'}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = ChapterCommentSerializer(comment, context={'request': request})
-        return Response(serializer.data)
+            user = request.user
+            if not user.is_authenticated:
+                logger.error("User is not authenticated")
+                return Response({'error': 'Користувач не авторизований'}, 
+                              status=status.HTTP_401_UNAUTHORIZED)
+
+            if action == 'like':
+                if user in comment.likes.all():
+                    comment.likes.remove(user)
+                else:
+                    comment.likes.add(user)
+                    comment.dislikes.remove(user)
+            elif action == 'dislike':
+                if user in comment.dislikes.all():
+                    comment.dislikes.remove(user)
+                else:
+                    comment.dislikes.add(user)
+                    comment.likes.remove(user)
+            else:
+                logger.error(f"Невірна дія: {action}")
+                return Response({'error': 'Невірна дія'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if comment_type == 'book-comment':
+                serializer = BookCommentSerializer(comment, context={'request': request})
+            else:
+                serializer = ChapterCommentSerializer(comment, context={'request': request})
+            return Response(serializer.data)
+            
+        except Exception as e:
+            logger.error(f"Unexpected error in update_reaction: {str(e)}")
+            return Response(
+                {'error': 'Внутренняя ошибка сервера. Попробуйте позже.'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=True, methods=['post'])
     def owner_like(self, request, pk=None):

@@ -2,6 +2,37 @@ from rest_framework import serializers
 from apps.catalog.models import Book, Chapter, Genres, Tag, Country, Fandom, Volume, ChapterOrder
 from apps.navigation.models import Bookmark 
 from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class GenresSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genres
+        fields = '__all__'
+        depth = 1
+
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = '__all__'
+        depth = 1
+
+
+class CountrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Country
+        fields = '__all__'
+        depth = 1
+
+
+class FandomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Fandom
+        fields = '__all__'
+        depth = 1
 
 
 class ChapterSerializer(serializers.ModelSerializer):
@@ -34,9 +65,9 @@ class ChapterSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'book', 'book_title', 'slug', 'file', 
             'is_paid', 'is_purchased', 'volume', 
-            'volume_title', 'position', 'book_slug', 'price'
+            'volume_title', 'position', 'book_slug', 'price', 'created_at'
         ]
-        read_only_fields = ['id', 'slug', 'is_purchased']
+        read_only_fields = ['id', 'slug', 'is_purchased', 'created_at']
 
     def get_book_slug(self, obj):
         return obj.book.slug if obj.book else None
@@ -100,6 +131,10 @@ class BookOwnerSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
+    genres = GenresSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True, read_only=True)
+    fandoms = FandomSerializer(many=True, read_only=True)
+    country = CountrySerializer(read_only=True)
 
     class Meta:
         model = Book
@@ -108,7 +143,9 @@ class BookOwnerSerializer(serializers.ModelSerializer):
             'translation_status', 'translation_status_display',
             'original_status', 'original_status_display',
             'country', 'slug', 'last_updated', 'owner', 'creator',
-            'adult_content', 'owner_username', 'creator_username', 'book_type'
+            'adult_content', 'owner_username', 'creator_username', 'book_type',
+            'genres', 'tags', 'fandoms', 'view_permission', 'comment_book_permission',
+            'comment_chapter_permission', 'download_permission', 'rate_permission'
         ]
         read_only_fields = ['slug', 'last_updated', 'owner', 'creator']
 
@@ -156,6 +193,10 @@ class BookReaderSerializer(serializers.ModelSerializer):
     translation_status = serializers.CharField(read_only=True)
     original_status = serializers.CharField(read_only=True)
     chapters_count = serializers.SerializerMethodField()
+    genres = GenresSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True, read_only=True)
+    fandoms = FandomSerializer(many=True, read_only=True)
+    country = CountrySerializer(read_only=True)
 
     class Meta:
         model = Book
@@ -165,7 +206,8 @@ class BookReaderSerializer(serializers.ModelSerializer):
             'original_status', 'original_status_display',
             'country', 'slug', 'last_updated', 'owner_username', 
             'creator_username', 'bookmark_status', 'bookmark_id', 
-            'adult_content', 'book_type', 'chapters_count'
+            'adult_content', 'book_type', 'chapters_count',
+            'genres', 'tags', 'fandoms'
         ]
         read_only_fields = fields
 
@@ -205,34 +247,6 @@ class BookReaderSerializer(serializers.ModelSerializer):
 
     def get_creator_username(self, obj):
         return obj.creator.username if obj.creator else None
-
-
-class GenresSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Genres
-        fields = '__all__'
-        depth = 1
-
-
-class TagSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tag
-        fields = '__all__'
-        depth = 1
-
-
-class CountrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Country
-        fields = '__all__'
-        depth = 1
-
-
-class FandomSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Fandom
-        fields = '__all__'
-        depth = 1
 
 
 class VolumeSerializer(serializers.ModelSerializer):
@@ -275,7 +289,9 @@ class BookCreateSerializer(serializers.ModelSerializer):
         fields = [
             'title', 'title_en', 'author', 'description', 'image',
             'translation_status', 'original_status', 'country',
-            'genres', 'tags', 'fandoms', 'adult_content', 'book_type'
+            'genres', 'tags', 'fandoms', 'adult_content', 'book_type',
+            'view_permission', 'comment_book_permission', 'comment_chapter_permission',
+            'download_permission', 'rate_permission'
         ]
 
     def validate(self, data):
@@ -284,13 +300,52 @@ class BookCreateSerializer(serializers.ModelSerializer):
         if book_type == 'AUTHOR':
             data['translation_status'] = None
         elif book_type == 'TRANSLATION':
-            data['translation_status'] = 'TRANSLATING'
+            current_status = data.get('translation_status')
+            data['translation_status'] = current_status or 'TRANSLATING'
             
+        # Детальная валидация обязательных полей
+        errors = {}
+        
         if not data.get('title'):
-            raise serializers.ValidationError({"title": "Назва книги обов'язкова"})
+            errors['title'] = "Назва книги обов'язкова"
             
         if not data.get('author'):
-            raise serializers.ValidationError({"author": "Ім'я автора обов'язкове"})
+            errors['author'] = "Ім'я автора обов'язкове"
+            
+        if not data.get('country'):
+            errors['country'] = "Країна обов'язкова"
+            
+        if not data.get('genres'):
+            errors['genres'] = "Виберіть хоча б один жанр"
+            
+        if book_type == 'TRANSLATION' and not data.get('translation_status'):
+            errors['translation_status'] = "Оберіть статус перекладу"
+        elif book_type == 'TRANSLATION' and data.get('translation_status'):
+            # Запрещаем создание книг с недопустимыми статусами
+            invalid_statuses = ['Перерва', 'Закінчено', 'Зупинено', 'ABANDONED', 'COMPLETED', 'STOPPED']
+            current_status = data.get('translation_status')
+            if current_status in invalid_statuses:
+                errors['translation_status'] = f"Не можна створити книгу зі статусом '{current_status}'. Для нових книг використовуйте статус 'Перекладається' або 'TRANSLATING'"
+        
+        if not data.get('original_status'):
+            errors['original_status'] = "Оберіть статус випуску оригіналу"
+        
+        # Дополнительные проверки
+        if data.get('title') and len(data.get('title', '').strip()) < 2:
+            errors['title'] = "Назва книги повинна містити мінімум 2 символи"
+            
+        if data.get('description') and len(data.get('description', '').strip()) < 10:
+            errors['description'] = "Опис повинен містити мінімум 10 символів"
+            
+        if data.get('genres') and len(data.get('genres', [])) > 5:
+            errors['genres'] = "Можна вибрати максимум 5 жанрів"
+            
+        if data.get('tags') and len(data.get('tags', [])) > 10:
+            errors['tags'] = "Можна вибрати максимум 10 тегів"
+        
+        if errors:
+            print(f"BookCreateSerializer.validate: Найдены ошибки валидации: {errors}")
+            raise serializers.ValidationError(errors)
             
         return data
 

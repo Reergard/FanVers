@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from ..models import Notification
 from .serializers import NotificationSerializer
 import time
@@ -64,6 +65,29 @@ class NotificationViewSet(viewsets.ModelViewSet):
                 'error': 'Internal server error',
                 'detail': str(e)
             }, status=500)
+
+    @action(detail=True, methods=['patch'])
+    def mark_as_read(self, request, pk=None):
+        """Пометить уведомление как прочитанное"""
+        try:
+            notification = self.get_object()
+            if notification.user != request.user:
+                return Response(
+                    {'error': 'У вас немає прав для зміни цього повідомлення'}, 
+                    status=403
+                )
+            
+            notification.is_read = True
+            notification.save(update_fields=['is_read'])
+            
+            serializer = self.get_serializer(notification)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            return Response(
+                {'error': 'Помилка при зміні статусу повідомлення', 'detail': str(e)}, 
+                status=500
+            )
 
     @transaction.atomic
     def destroy(self, request, *args, **kwargs):

@@ -35,3 +35,27 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender}: {self.content[:50]}"
+
+
+class ChatReadStatus(models.Model):
+    """Отслеживание времени последнего прочтения чата пользователем"""
+    chat = models.ForeignKey(
+        Chat,
+        on_delete=models.CASCADE,
+        related_name='read_statuses'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='chat_read_statuses'
+    )
+    last_read_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['chat', 'user']
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f"{self.user.username} read chat {self.chat.id} at {self.last_read_at}"

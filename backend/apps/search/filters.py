@@ -1,62 +1,49 @@
 import django_filters
+from django.db.models import Q
 
 from apps.catalog.models import Book, Genres, Tag, Fandom, Country
 
 
 class BookFilter(django_filters.FilterSet):
-    title = django_filters.CharFilter(field_name='title', lookup_expr='icontains')
+    title = django_filters.CharFilter(method='filter_title')
     genres = django_filters.ModelMultipleChoiceFilter(
-        field_name='genres__name',
-        to_field_name='name',
+        field_name='genres',
         queryset=Genres.objects.all()
     )
-    # countries = django_filters.CharFilter(field_name='country', lookup_expr='icontains')
     countries = django_filters.ModelMultipleChoiceFilter(
-        field_name='country__name',
-        to_field_name='name',
+        field_name='country',
         queryset=Country.objects.all()
     )
     min_chapters = django_filters.NumberFilter(field_name='chapter_count', lookup_expr='gte')
     max_chapters = django_filters.NumberFilter(field_name='chapter_count', lookup_expr='lte')
     tags = django_filters.ModelMultipleChoiceFilter(
-        field_name='tags__name',
-        to_field_name='name',
+        field_name='tags',
         queryset=Tag.objects.all()
     )
     fandoms = django_filters.ModelMultipleChoiceFilter(
-        field_name='fandoms__name',
-        to_field_name='name',
+        field_name='fandoms',
         queryset=Fandom.objects.all()
     )
     exclude_genres = django_filters.ModelMultipleChoiceFilter(
-        field_name='genres__name',
-        to_field_name='name',
+        field_name='genres',
         queryset=Genres.objects.all(),
         exclude=True
     )
     exclude_fandoms = django_filters.ModelMultipleChoiceFilter(
-        field_name='fandoms__name',
-        to_field_name='name',
+        field_name='fandoms',
         queryset=Fandom.objects.all(),
         exclude=True
     )
     exclude_tags = django_filters.ModelMultipleChoiceFilter(
-        field_name='tags__name',
-        to_field_name='name',
+        field_name='tags',
         queryset=Tag.objects.all(),
         exclude=True
     )
     order = django_filters.OrderingFilter(
         fields=(
             ('title', 'title'),
-            # ('pub_date', 'pub_date'),
             ('-last_updated', 'last_updated'),
-            # ('ratings', 'ratings'),
-            # ('views', 'views'),
-            # ('quality', 'quality'),
-            # ('free_pages', 'free_pages'),
-            # ('pages', 'pages'),
-            ('-chapter_count', 'chapter_count'),
+            ('chapter_count', 'chapter_count'),
         )
     )
 
@@ -73,3 +60,14 @@ class BookFilter(django_filters.FilterSet):
         if value:
             return queryset
         return queryset.filter(adult_content=False)
+
+    def filter_title(self, queryset, name, value):
+        """
+        Фильтр по названию книги - ищет как в title, так и в title_en
+        """
+        if not value:
+            return queryset
+        
+        return queryset.filter(
+            Q(title__icontains=value) | Q(title_en__icontains=value)
+        )

@@ -1,115 +1,250 @@
 import json
+import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import Chat, Message
-from django.utils import timezone
-from channels.auth import AuthMiddlewareStack
-from rest_framework_simplejwt.tokens import AccessToken
 from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from .models import Chat, Message
 from channels.middleware import BaseMiddleware
+
+User = get_user_model()
+logger = logging.getLogger(__name__)
+
+class TokenAuthMiddleware(BaseMiddleware):
+    """Middleware для аутентификации WebSocket соединений через JWT токены"""
+    
+    async def __call__(self, scope, receive, send):
+        print("🔐 [TokenAuthMiddleware] === START ===")
+        print(f"🔐 [TokenAuthMiddleware] Scope type: {scope['type']}")
+        print(f"🔐 [TokenAuthMiddleware] Scope path: {scope['path']}")
+        print(f"🔐 [TokenAuthMiddleware] Scope query_string: {scope.get('query_string', b'')}")
+        print(f"🔐 [TokenAuthMiddleware] Scope headers: {scope.get('headers', [])}")
+        
+        if scope['type'] == 'websocket':
+            # Извлекаем токен из query string
+            query_string = scope.get('query_string', b'').decode()
+            print(f"🔐 [TokenAuthMiddleware] Decoded query_string: {query_string}")
+            
+            token = None
+            if 'token=' in query_string:
+                token = query_string.split('token=')[-1]
+                print(f"🔐 [TokenAuthMiddleware] Extracted token: {token[:20]}...")
+            
+            if token:
+                print("🔐 [TokenAuthMiddleware] Validating token...")
+                try:
+                    access_token = AccessToken(token)
+                    user = await self.get_user_from_token(access_token)
+                    if user:
+                        scope['user'] = user
+                        print(f"🔐 [TokenAuthMiddleware] Found user: {user.username} (ID: {user.id})")
+                        print(f"🔐 [TokenAuthMiddleware] Final scope user: {user.email}")
+                    else:
+                        print("🔐 [TokenAuthMiddleware] User not found")
+                except (InvalidToken, TokenError) as e:
+                    print(f"🔐 [TokenAuthMiddleware] Token validation failed: {e}")
+                    scope['user'] = None
+            else:
+                print("🔐 [TokenAuthMiddleware] No token provided")
+                scope['user'] = None
+        
+        print("🔐 [TokenAuthMiddleware] === END ===")
+        return await super().__call__(scope, receive, send)
+    
+    @database_sync_to_async
+    def get_user_from_token(self, token):
+        try:
+            user_id = token['user_id']
+            return User.objects.get(id=user_id)
+        except (User.DoesNotExist, KeyError):
+            return None
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        try:
-            if self.scope["user"].is_anonymous:
-                await self.close()
-                return
-
-            self.room_name = self.scope['url_route']['kwargs']['room_name']
-            self.room_group_name = f'chat_{self.room_name}'
-
-            # Проверяем доступ к чату
-            chat_exists = await self.check_chat_access()
-            if not chat_exists:
-                await self.close()
-                return
-
-            # Добавляем в группу
-            await self.channel_layer.group_add(
-                self.room_group_name,
-                self.channel_name
-            )
-            
-            await self.accept()
-            print(f"WebSocket connected: {self.room_group_name}")
-            
-        except Exception as e:
-            print(f"WebSocket connection error: {e}")
+        self.chat_id = self.scope['url_route']['kwargs']['chat_id']
+        self.chat_group_name = f'chat_{self.chat_id}'
+        
+        # Получаем пользователя из middleware
+        self.user = self.scope.get('user')
+        if not self.user:
             await self.close()
+            return
+        
+        # Проверяем, что пользователь является участником чата
+        if not await self.is_chat_participant(self.chat_id, self.user):
+            await self.close()
+            return
+        
+        # Присоединяемся к группе чата
+        await self.channel_layer.group_add(
+            self.chat_group_name,
+            self.channel_name
+        )
+        
+        await self.accept()
+        logger.info(f"User {self.user.username} connected to chat {self.chat_id}")
 
     async def disconnect(self, close_code):
+        # Покидаем группу чата
+        await self.channel_layer.group_discard(
+            self.chat_group_name,
+            self.channel_name
+        )
+        logger.info(f"User {self.user.username} disconnected from chat {self.chat_id}")
+
+    async def receive(self, text_data):
         try:
-            if hasattr(self, 'room_group_name'):
-                await self.channel_layer.group_discard(
-                    self.room_group_name,
-                    self.channel_name
+            data = json.loads(text_data)
+            message = data.get('message', '').strip()
+            
+            if message:
+                # Сохраняем сообщение в базу данных
+                message_obj = await self.save_message(self.chat_id, self.user, message)
+                
+                # Отправляем сообщение всем участникам чата
+                await self.channel_layer.group_send(
+                    self.chat_group_name,
+                    {
+                        'type': 'chat_message',
+                        'message': message_obj['content'],
+                        'sender': {
+                            'username': self.user.username,
+                        },
+                        'timestamp': message_obj['created_at'],
+                        'id': message_obj['id']
+                    }
                 )
-            print(f"WebSocket disconnected: {close_code}")
+                
+                # Отправляем уведомление о счетчике всем участникам чата
+                await self.send_counter_updates(self.chat_id, message_obj, self.user)
+        except json.JSONDecodeError:
+            await self.send(text_data=json.dumps({'error': 'Invalid JSON'}))
         except Exception as e:
-            print(f"Error during disconnect: {e}")
+            logger.error(f"Error in receive: {e}")
+            await self.send(text_data=json.dumps({'error': 'Internal server error'}))
+
+    async def chat_message(self, event):
+        # Отправляем сообщение WebSocket клиенту
+        await self.send(text_data=json.dumps({
+            'id': event['id'],
+            'message': event['message'],
+            'sender': event['sender'],
+            'timestamp': event['timestamp']
+        }))
 
     @database_sync_to_async
-    def check_chat_access(self):
+    def get_user_from_token(self, token):
         try:
-            chat = Chat.objects.get(id=self.room_name)
-            return chat.participants.filter(id=self.scope["user"].id).exists()
+            user_id = token['user_id']
+            return User.objects.get(id=user_id)
+        except (User.DoesNotExist, KeyError):
+            return None
+
+    @database_sync_to_async
+    def is_chat_participant(self, chat_id, user):
+        try:
+            chat = Chat.objects.get(id=chat_id)
+            return user in chat.participants.all()
         except Chat.DoesNotExist:
             return False
 
     @database_sync_to_async
-    def save_message(self, message):
-        chat = Chat.objects.get(id=self.room_name)
-        return Message.objects.create(
-            chat=chat,
-            sender=self.scope["user"],
-            content=message
+    def save_message(self, chat_id, user, content):
+        try:
+            chat = Chat.objects.get(id=chat_id)
+            message = Message.objects.create(
+                chat=chat,
+                sender=user,
+                content=content
+            )
+            return {
+                'id': message.id,
+                'content': message.content,
+                'created_at': message.created_at.isoformat()
+            }
+        except Chat.DoesNotExist:
+            raise Exception("Chat not found")
+
+    async def send_counter_updates(self, chat_id, message_obj, sender):
+        """Отправляет уведомления о счетчике всем участникам чата"""
+        try:
+            chat = await self.get_chat(chat_id)
+            participants = await self.get_chat_participants(chat)
+            
+            for participant in participants:
+                if participant.id != sender.id:  # Не отправляем себе
+                    await self.channel_layer.group_send(
+                        f'counter_{participant.id}',
+                        {
+                            'type': 'counter_update',
+                            'id': message_obj['id'],
+                            'message': message_obj['content'],
+                            'sender': {
+                                'username': sender.username,
+                            },
+                            'timestamp': message_obj['created_at'],
+                            'chat_id': chat_id
+                        }
+                    )
+        except Exception as e:
+            logger.error(f"Error sending counter updates: {e}")
+
+    @database_sync_to_async
+    def get_chat(self, chat_id):
+        try:
+            return Chat.objects.get(id=chat_id)
+        except Chat.DoesNotExist:
+            return None
+
+    @database_sync_to_async
+    def get_chat_participants(self, chat):
+        if chat:
+            return list(chat.participants.all())
+        return []
+
+
+class CounterConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        # Получаем пользователя из middleware
+        self.user = self.scope.get('user')
+        if not self.user:
+            await self.close()
+            return
+        
+        # Присоединяемся к группе счетчиков пользователя
+        self.counter_group_name = f'counter_{self.user.id}'
+        await self.channel_layer.group_add(
+            self.counter_group_name,
+            self.channel_name
         )
+        
+        await self.accept()
+        logger.info(f"User {self.user.username} connected to counter WebSocket")
+
+    async def disconnect(self, close_code):
+        # Покидаем группу счетчиков
+        await self.channel_layer.group_discard(
+            self.counter_group_name,
+            self.channel_name
+        )
+        logger.info(f"User {self.user.username} disconnected from counter WebSocket")
 
     async def receive(self, text_data):
         try:
-            text_data_json = json.loads(text_data)
-            message = text_data_json['message']
-            
-            # Сохраняем сообщение в базу данных
-            saved_message = await self.save_message(message)
+            data = json.loads(text_data)
+            if data.get('type') == 'ping':
+                await self.send(text_data=json.dumps({'type': 'pong'}))
+        except json.JSONDecodeError:
+            await self.send(text_data=json.dumps({'error': 'Invalid JSON'}))
 
-            # Отправляем сообщение в группу
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    'type': 'chat_message',
-                    'id': saved_message.id,
-                    'message': message,
-                    'sender': self.scope["user"].username,
-                    'timestamp': timezone.now().isoformat()
-                }
-            )
-        except Exception as e:
-            print(f"Error in receive: {e}")
-
-    async def chat_message(self, event):
-        message_data = {
-            'id': event.get('id'),
+    async def counter_update(self, event):
+        # Отправляем обновление счетчика клиенту
+        await self.send(text_data=json.dumps({
+            'type': 'message',
+            'id': event['id'],
             'message': event['message'],
-            'sender': {
-                'username': event['sender']
-            },
-            'timestamp': event['timestamp']
-        }
-        await self.send(text_data=json.dumps(message_data))
-
-class TokenAuthMiddleware(BaseMiddleware):
-    async def __call__(self, scope, receive, send):
-        try:
-            query_string = scope["query_string"].decode()
-            token = dict(x.split('=') for x in query_string.split('&')).get('token', None)
-            if token:
-                access_token = AccessToken(token)
-                user = await database_sync_to_async(get_user_model().objects.get)(id=access_token["user_id"])
-                scope["user"] = user
-            else:
-                scope["user"] = None
-        except Exception as e:
-            print(f"WebSocket auth error: {e}")
-            scope["user"] = None
-        return await super().__call__(scope, receive, send)
+            'sender': event['sender'],
+            'timestamp': event['timestamp'],
+            'chat_id': event['chat_id']
+        }))

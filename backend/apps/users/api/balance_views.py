@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,7 +13,7 @@ from .serializers import (
     BalanceOperationSerializer
 )
 from .mixins import BalanceOperationMixin
-from .throttling import BalanceOperationThrottle
+# Удаляем импорт старых throttling классов
 from apps.catalog.models import Chapter
 from apps.monitoring.models import TransactionLog
 import logging
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class AddBalanceView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
-    #throttle_classes = [BalanceOperationThrottle]
+    throttle_scope = 'balance'  # Операции с балансом
 
     def post(self, request):
         serializer = UpdateBalanceSerializer(data=request.data)
@@ -41,8 +41,21 @@ class AddBalanceView(APIView):
                     'new_balance': new_balance
                 })
             except ValidationError as e:
+                # Улучшенные сообщения об ошибках для пользователя
+                error_message = str(e)
+                if "Недостатньо коштів" in error_message:
+                    error_message = "Вибачте, але на вашому балансі недостатньо коштів для цієї операції"
+                elif "Максимальний баланс" in error_message:
+                    error_message = "Максимальний баланс перевищено"
+                elif "Невірна сума операції" in error_message:
+                    error_message = "Невірна сума операції"
+                elif "Сума повинна бути більше нуля" in error_message:
+                    error_message = "Сума повинна бути більше нуля"
+                elif "Мінімальна сума поповнення" in error_message:
+                    error_message = "Мінімальна сума поповнення: 100 FanCoins"
+                
                 return Response(
-                    {'error': str(e)},
+                    {'error': error_message},
                     status=status.HTTP_400_BAD_REQUEST
                 )
         return Response(
@@ -53,7 +66,6 @@ class AddBalanceView(APIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-# @throttle_classes([BalanceOperationThrottle])  # Розкоментувати на продакшені
 def withdraw_balance(request):
     try:
         amount = float(request.data.get('amount', 0))
@@ -84,8 +96,21 @@ def withdraw_balance(request):
                 })
             except ValidationError as e:
                 logger.error(f"Помилка валідації: {str(e)}")
+                # Улучшенные сообщения об ошибках для пользователя
+                error_message = str(e)
+                if "Недостатньо коштів" in error_message:
+                    error_message = "Вибачте, але на вашому балансі недостатньо коштів для виведення"
+                elif "Максимальний баланс" in error_message:
+                    error_message = "Максимальний баланс перевищено"
+                elif "Невірна сума операції" in error_message:
+                    error_message = "Невірна сума операції"
+                elif "Сума повинна бути більше нуля" in error_message:
+                    error_message = "Сума повинна бути більше нуля"
+                elif "Мінімальна сума виведення" in error_message:
+                    error_message = "Мінімальна сума виведення: 1,000 FanCoins"
+                
                 return Response(
-                    {'error': str(e)},
+                    {'error': error_message},
                     status=status.HTTP_400_BAD_REQUEST
                 )
         else:
@@ -104,7 +129,6 @@ def withdraw_balance(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-@throttle_classes([BalanceOperationThrottle])
 def update_balance(request):
     serializer = UpdateBalanceSerializer(data=request.data)
     if serializer.is_valid():
@@ -121,8 +145,21 @@ def update_balance(request):
                 'new_balance': new_balance
             })
         except ValidationError as e:
+            # Улучшенные сообщения об ошибках для пользователя
+            error_message = str(e)
+            if "Недостатньо коштів" in error_message:
+                error_message = "Вибачте, але на вашому балансі недостатньо коштів для цієї операції"
+            elif "Максимальний баланс" in error_message:
+                error_message = "Максимальний баланс перевищено"
+            elif "Невірна сума операції" in error_message:
+                error_message = "Невірна сума операції"
+            elif "Сума повинна бути більше нуля" in error_message:
+                error_message = "Сума повинна бути більше нуля"
+            elif "Мінімальна сума поповнення" in error_message:
+                error_message = "Мінімальна сума поповнення: 100 FanCoins"
+            
             return Response(
-                {'error': str(e)},
+                {'error': error_message},
                 status=status.HTTP_400_BAD_REQUEST
             )
     return Response(
@@ -135,17 +172,63 @@ def update_balance(request):
 @permission_classes([IsAuthenticated])
 def purchase_chapter(request, chapter_id):
     try:
+        # Дополнительная проверка авторизации
+        if not request.user.is_authenticated:
+            return Response(
+                {'error': 'Необхідна авторизація для покупки глави'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
         chapter = get_object_or_404(Chapter, id=chapter_id)
-        buyer_profile = request.user.profile
-        owner_profile = chapter.book.owner.profile
         
+        # Проверяем существование профиля покупателя
+        try:
+            buyer_profile = request.user.profile
+        except Exception:
+            return Response(
+                {'error': 'Профіль користувача не знайдено'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        # Проверяем существование профиля владельца книги
+        try:
+            owner_profile = chapter.book.owner.profile
+        except Exception:
+            return Response(
+                {'error': 'Профіль власника книги не знайдено'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Проверяем, что пользователь не пытается купить свою собственную главу
+        if chapter.book.owner == request.user:
+            return Response(
+                {'error': 'Ви не можете купити власну главу'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Проверяем, что глава уже не куплена
         if buyer_profile.purchased_chapters.filter(id=chapter_id).exists():
             return Response(
-                {'message': 'Глава вже придбана'}, 
+                {'message': 'Глава вже придбана', 'is_purchased': True}, 
                 status=status.HTTP_200_OK
             )
 
+        # Проверяем, что глава платная
+        if not chapter.is_paid or chapter.price <= 0:
+            return Response(
+                {'error': 'Ця глава безкоштовна'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         chapter_price = chapter.price
+        
+        # Проверяем достаточность средств
+        if buyer_profile.balance < chapter_price:
+            return Response(
+                {'error': f'Недостатньо коштів. Потрібно: {chapter_price} FanCoins, доступно: {buyer_profile.balance} FanCoins'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         commission_amount = owner_profile.calculate_commission_amount(chapter_price)
         owner_amount = chapter_price - commission_amount
 
@@ -178,20 +261,49 @@ def purchase_chapter(request, chapter_id):
                 final_amount=owner_amount
             )
             
+            # Добавляем главу к купленным
             buyer_profile.purchased_chapters.add(chapter)
+            
+            # Обновляем прогресс чтения
+            from apps.monitoring.models import UserChapterProgress
+            progress, created = UserChapterProgress.objects.get_or_create(
+                user=request.user,
+                chapter=chapter,
+                defaults={'is_purchased': True}
+            )
+            if not created:
+                progress.is_purchased = True
+                progress.save()
 
         return Response({
             'message': 'Глава успішно придбана',
             'new_balance': float(buyer_result),
             'chapter_id': chapter_id,
-            'is_purchased': True
+            'is_purchased': True,
+            'chapter_title': chapter.title,
+            'price_paid': float(chapter_price)
         })
 
     except ValidationError as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        # Улучшенные сообщения об ошибках для пользователя
+        error_message = str(e)
+        if "Недостатньо коштів" in error_message:
+            error_message = "Вибачте, але на вашому балансі недостатньо коштів для цієї операції"
+        elif "Максимальний баланс" in error_message:
+            error_message = "Максимальний баланс перевищено"
+        elif "Невірна сума операції" in error_message:
+            error_message = "Невірна сума операції"
+        elif "Сума повинна бути більше нуля" in error_message:
+            error_message = "Сума повинна бути більше нуля"
+        elif "Мінімальна сума поповнення" in error_message:
+            error_message = "Мінімальна сума поповнення: 100 FanCoins"
+        elif "Мінімальна сума виведення" in error_message:
+            error_message = "Мінімальна сума виведення: 1,000 FanCoins"
+        
+        return Response({'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         logger.error(f"Помилка покупки: {str(e)}", exc_info=True)
         return Response(
-            {'error': 'Внутрішня помилка сервера'}, 
+            {'error': 'Внутрішня помилка сервера при покупці глави'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         ) 

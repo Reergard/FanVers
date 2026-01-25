@@ -1,13 +1,28 @@
+import os
+import io
+from PIL import Image, ImageOps
+from django.core.files.base import ContentFile
+from django.db import transaction
 from rest_framework import serializers
 from djoser.serializers import UserCreateSerializer
-from apps.users.models import User, Profile, BalanceLog
+from django.contrib.auth import get_user_model
+from apps.users.models import Profile, BalanceLog
 from apps.catalog.models import Chapter, Book
 from django.db import models
 import logging
 from django.conf import settings
 from decimal import Decimal
+from django.contrib.auth.password_validation import validate_password
+import uuid
+import time
 
 logger = logging.getLogger(__name__)
+
+# Захист від декомпресійних бомб в Pillow
+Image.MAX_IMAGE_PIXELS = 50_000_000  # Максимум 50MP для безпеки
+
+# Получаем модель User через get_user_model()
+User = get_user_model()
 
 
 class CreateUserSerializer(UserCreateSerializer):
@@ -15,12 +30,230 @@ class CreateUserSerializer(UserCreateSerializer):
         model = User
         fields = ('id', 'username', 'email', 'password')
         extra_kwargs = {'password': {'write_only': True}}
+    
+    def save(self, **kwargs):
+        logger.info(f"📧 [CreateUserSerializer] === START USER CREATION ===")
+        logger.info(f"📧 [CreateUserSerializer] Time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.info(f"📧 [CreateUserSerializer] Username: {self.validated_data.get('username', 'N/A')}")
+        logger.info(f"📧 [CreateUserSerializer] Email: {self.validated_data.get('email', 'N/A')}")
+        
+        try:
+            logger.info(f"📧 [CreateUserSerializer] Шаг 1: Вызываем родительский save() (Djoser отправит activation email)...")
+            user = super().save(**kwargs)
+            logger.info(f"📧 [CreateUserSerializer] Шаг 1: Пользователь создан: {user.username} (ID: {user.id})")
+            logger.info(f"📧 [CreateUserSerializer] Шаг 1: Email пользователя: {user.email}")
+            logger.info(f"📧 [CreateUserSerializer] Шаг 1: is_active: {user.is_active}")
+            
+            # Djoser автоматически отправляет activation email если SEND_ACTIVATION_EMAIL=True
+            # Логирование отправки будет в email backend
+            logger.info(f"📧 [CreateUserSerializer] Шаг 2: Djoser должен отправить activation email (если SEND_ACTIVATION_EMAIL=True)")
+            logger.info(f"📧 [CreateUserSerializer] === USER CREATION COMPLETE ===")
+            
+            return user
+        except Exception as e:
+            logger.error(f"📧 [CreateUserSerializer] Ошибка при создании пользователя: {str(e)}", exc_info=True)
+            raise
+
+
+class CurrentUserSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+    balance = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'balance', 'image')
+    
+    def get_username(self, obj):
+        return obj.profile.username
+
+    def get_balance(self, obj):
+        return obj.profile.balance
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        url = obj.profile.get_profile_image('small')
+        return request.build_absolute_uri(url) if request else url
 
 
 class BalanceLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = BalanceLog
         fields = ['amount', 'operation_type', 'created_at', 'status']
+
+
+class ProfileImageUploadSerializer(serializers.Serializer):
+    """Сериализатор для загрузки изображения профиля с максимальной безопасностью"""
+    image = serializers.ImageField(required=True)
+    
+    def validate_image(self, value):
+        # 1. Жесткая проверка размера файла (максимум 5MB)
+        if value.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError("Розмір файлу не може перевищувати 5MB")
+        
+        # 2. Жесткая проверка формата файла
+        allowed_formats = ['image/jpeg', 'image/png', 'image/webp']
+        if value.content_type not in allowed_formats:
+            raise serializers.ValidationError("Підтримуються тільки формати: JPEG, PNG, WebP")
+        
+        # 3. Проверяем magic bytes для дополнительной безопасности
+        try:
+            # Читаем первые 12 байт для проверки сигнатур
+            value.seek(0)
+            header = value.read(12)
+            value.seek(0)
+            
+            # Проверяем сигнатуры файлов
+            is_valid = False
+            
+            # JPEG: FF D8 FF
+            if header[:3] == b'\xff\xd8\xff':
+                is_valid = True
+            # PNG: 89 50 4E 47
+            elif header[:4] == b'\x89PNG':
+                is_valid = True
+            # WebP: RIFF....WEBP
+            elif header[:4] == b'RIFF' and header[8:12] == b'WEBP':
+                is_valid = True
+            
+            if not is_valid:
+                raise serializers.ValidationError("Невірний формат файлу або файл пошкоджений")
+                
+        except Exception as e:
+            logger.error(f"Ошибка при проверке magic bytes: {str(e)}")
+            raise serializers.ValidationError("Помилка при перевірці файлу")
+        
+        # 4. Обрабатываем изображение через Pillow для максимальной безопасности
+        try:
+            # Открываем изображение
+            img = Image.open(value)
+            
+            # Проверяем целостность
+            img.verify()
+            
+            # Повторно открываем для обработки
+            value.seek(0)
+            img = Image.open(value)
+            
+            # Убираем EXIF данные и метаданные
+            img = ImageOps.exif_transpose(img)
+            
+            # Ограничиваем максимальный размер (4096x4096)
+            if img.width > 4096 or img.height > 4096:
+                img.thumbnail((4096, 4096), Image.Resampling.LANCZOS)
+            
+            # Конвертируем в RGB если нужно
+            if img.mode not in ('RGB', 'RGBA'):
+                img = img.convert('RGB')
+            
+            # Сохраняем в безопасном формате (WebP для лучшего сжатия и безопасности)
+            # Создаем буфер для сохранения
+            buffer = io.BytesIO()
+            
+            # Сохраняем в WebP с максимальным качеством и безопасностью
+            img.save(buffer, format='WEBP', method=6, quality=85, lossless=False)
+            
+            buffer.seek(0)
+            
+            # Проверяем размер после обработки
+            processed_size = len(buffer.getvalue())
+            if processed_size > 5 * 1024 * 1024:
+                raise serializers.ValidationError("Файл після обробки все ще завеликий")
+            
+            # Создаем новое поле файла с безопасным путем
+            filename = f"profile_{uuid.uuid4()}.webp"
+            processed_file = ContentFile(buffer.getvalue(), name=filename)
+            
+            return processed_file
+            
+        except Image.DecompressionBombError:
+            logger.error(f"Обнаружена декомпресійна бомба в файлі: {value.name}")
+            raise serializers.ValidationError("Файл занадто великий або пошкоджений (декомпресійна бомба)")
+        except Exception as e:
+            logger.error(f"Ошибка при обработке изображения: {str(e)}")
+            raise serializers.ValidationError("Помилка при обробці зображення")
+    
+    def save(self, **kwargs):
+        user = self.context['request'].user
+        profile = user.profile
+        
+        # Atomic-збереження: спочатку зберігаємо нове, потім видаляємо старе
+        with transaction.atomic():
+            # Зберігаємо ім'я старого файлу
+            old_name = profile.image.name if profile.image else None
+            
+            # Сохраняем новое изображение
+            profile.image = self.validated_data['image']
+            profile.save(update_fields=['image'])
+            
+            # Тепер удаляем старое изображение через storage з поля моделі
+            if old_name:
+                try:
+                    # Беремо storage з поля моделі для надійності
+                    field_storage = Profile._meta.get_field('image').storage
+                    if field_storage.exists(old_name):
+                        field_storage.delete(old_name)
+                        logger.info(f"Старое изображение профиля удалено через storage: {old_name}")
+                except Exception as e:
+                    logger.warning(f"Не удалось удалить старое изображение через storage: {e}")
+            
+            logger.info(f"Новое изображение профиля сохранено для пользователя {user.id}")
+        
+        return profile
+
+
+class EmailUpdateSerializer(serializers.Serializer):
+    """Сериализатор для обновления email"""
+    new_email = serializers.EmailField(required=True)
+    
+    def validate_new_email(self, value):
+        user = self.context['request'].user
+        # 1) уникальность среди пользователей
+        if User.objects.filter(email=value).exclude(id=user.id).exists():
+            raise serializers.ValidationError("Цей email вже використовується іншим користувачем")
+        # 2) уникальность среди профилей
+        if Profile.objects.filter(email=value).exclude(user_id=user.id).exists():
+            raise serializers.ValidationError("Цей email вже використовується іншим користувачем (профіль)")
+        return value
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    """Сериализатор для смены пароля"""
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(required=True)
+    
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Невірний поточний пароль")
+        return value
+    
+    def validate_new_password(self, value):
+        # Валидация нового пароля
+        validate_password(value, self.context['request'].user)
+        return value
+    
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError("Новий пароль та підтвердження не співпадають")
+        return data
+
+
+class NotificationSettingsSerializer(serializers.ModelSerializer):
+    """Сериализатор для настроек сповіщений"""
+    class Meta:
+        model = Profile
+        fields = [
+            'notifications_enabled',
+            'hide_adult_content', 
+            'private_messages_enabled',
+            'age_confirmed',
+            'comment_notifications',
+            'translation_status_notifications',
+            'chapter_subscription_notifications',
+            'chapter_comment_notifications'
+        ]
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -36,13 +269,20 @@ class ProfileSerializer(serializers.ModelSerializer):
     read_chapters = serializers.SerializerMethodField()
     purchased_chapters = serializers.SerializerMethodField()
     completed_books = serializers.SerializerMethodField()
+    profile_image_small = serializers.SerializerMethodField()
+    profile_image_large = serializers.SerializerMethodField()
+    has_custom_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
         fields = ['id', 'username', 'about', 'image', 'role',
                  'total_characters', 'total_chapters', 'free_chapters', 
                  'total_author', 'total_translations', 'is_owner', 'balance_history', 'commission',
-                 'read_chapters', 'purchased_chapters', 'completed_books']
+                 'read_chapters', 'purchased_chapters', 'completed_books',
+                 'profile_image_small', 'profile_image_large', 'has_custom_image',
+                 'notifications_enabled', 'hide_adult_content', 'private_messages_enabled', 'age_confirmed',
+                 'comment_notifications', 'translation_status_notifications', 
+                 'chapter_subscription_notifications', 'chapter_comment_notifications']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -69,6 +309,24 @@ class ProfileSerializer(serializers.ModelSerializer):
             ).data
         return None
 
+    def get_profile_image_small(self, obj):
+        """Отримання маленького зображення профілю з fallback"""
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(obj.get_profile_image('small'))
+        return obj.get_profile_image('small')
+    
+    def get_profile_image_large(self, obj):
+        """Отримання великого зображення профілю з fallback"""
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(obj.get_profile_image('large'))
+        return obj.get_profile_image('large')
+    
+    def get_has_custom_image(self, obj):
+        """Перевірка чи є кастомне зображення"""
+        return obj.has_custom_image()
+
     def get_total_characters(self, obj):
         return Chapter.objects.filter(book__owner=obj.user).aggregate(
             total=models.Sum('characters_count'))['total'] or 0
@@ -86,10 +344,8 @@ class ProfileSerializer(serializers.ModelSerializer):
         ).count()
 
     def get_role(self, obj):
-        user_groups = obj.user.groups.all()
-        if user_groups.filter(name='Перекладач').exists():
-            return 'Перекладач'
-        return 'Читач'
+        # Використовуємо поле role з моделі Profile замість груп
+        return obj.role
 
     def get_total_translations(self, obj):
         return Book.objects.filter(
@@ -113,7 +369,6 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def get_completed_books(self, obj):
         from django.db.models import Count, Q, F
-        from apps.catalog.models import Book
         
         books = Book.objects.annotate(
             total_chapters=Count('chapters'),
@@ -143,21 +398,103 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class TranslatorListSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username')
+    nickname = serializers.CharField(source='user.username')
     image = serializers.ImageField(required=False, allow_null=True)
-    translation_books_count = serializers.SerializerMethodField()
+    books_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
+    last_visit = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ['id', 'username', 'role', 'image', 'translation_books_count']
+        fields = ['id', 'username', 'nickname', 'role', 'image', 'books_count', 'comments_count', 'last_visit']
 
-    def get_translation_books_count(self, obj):
+    def get_books_count(self, obj):
+        """Кількість книг перекладів користувача (тільки TRANSLATION)"""
         return obj.user.owned_books.filter(book_type='TRANSLATION').count()
+
+    def get_comments_count(self, obj):
+        """Кількість коментарів в книгах користувача"""
+        from apps.analytics_books.models import BookAnalytics
+        from django.db.models import Q
+        
+        # Отримуємо всі книги користувача (як автор або власник)
+        user_books = Book.objects.filter(
+            Q(creator=obj.user) | Q(owner=obj.user)
+        )
+        
+        # Підраховуємо загальну кількість коментарів через аналітику
+        total_comments = 0
+        for book in user_books:
+            try:
+                analytics = book.analytics
+                if analytics:
+                    total_comments += analytics.comments_count
+            except BookAnalytics.DoesNotExist:
+                # Якщо аналітика не існує, пропускаємо
+                continue
+        
+        return total_comments
+
+    def get_last_visit(self, obj):
+        """Дата останнього відвідування"""
+        # Використовуємо дату створення профілю як приблизну дату останнього відвідування
+        # В майбутньому можна додати поле last_login або last_activity
+        if obj.user.is_active:
+            return obj.created.strftime('%d.%m.%Y')
+        return 'Н/Д'
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if instance.image:
             data['image'] = instance.image.url if instance.image else None
         return data
+
+
+class AuthorListSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username')
+    nickname = serializers.CharField(source='user.username')
+    books_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
+    last_visit = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = ['id', 'username', 'nickname', 'books_count', 'comments_count', 'last_visit']
+
+    def get_books_count(self, obj):
+        """Кількість авторських книг користувача"""
+        return obj.user.created_books.filter(book_type='AUTHOR').count()
+
+    def get_comments_count(self, obj):
+        """Кількість коментарів в книгах користувача"""
+        from apps.analytics_books.models import BookAnalytics
+        from django.db.models import Q
+        
+        # Отримуємо всі книги користувача (як автор або власник)
+        user_books = Book.objects.filter(
+            Q(creator=obj.user) | Q(owner=obj.user)
+        )
+        
+        # Підраховуємо загальну кількість коментарів через аналітику
+        total_comments = 0
+        for book in user_books:
+            try:
+                analytics = book.analytics
+                if analytics:
+                    total_comments += analytics.comments_count
+            except BookAnalytics.DoesNotExist:
+                # Якщо аналітика не існує, пропускаємо
+                continue
+        
+        return total_comments
+
+    def get_last_visit(self, obj):
+        """Дата останнього відвідування"""
+        # Використовуємо дату створення профілю як приблизну дату останнього відвідування
+        # В майбутньому можна додати поле last_login або last_activity
+        if obj.user.is_active:
+            return obj.created.strftime('%d.%m.%Y')
+        return 'Н/Д'
 
 
 class UsersProfilesSerializer(serializers.ModelSerializer):

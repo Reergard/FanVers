@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from apps.monitoring.models import UserChapterProgress
+from apps.monitoring.models import UserChapterProgress, AuthorThanks
+from decimal import Decimal
 
 class UserChapterProgressSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,4 +11,28 @@ class UserChapterProgressSerializer(serializers.ModelSerializer):
 class UserReadingStatsSerializer(serializers.Serializer):
     read_chapters = serializers.IntegerField()
     purchased_chapters = serializers.IntegerField()
-    completed_books = serializers.IntegerField() 
+    completed_books = serializers.IntegerField()
+
+class AuthorThanksSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AuthorThanks
+        fields = ['id', 'giver', 'receiver', 'book', 'amount', 'message', 'created_at']
+        read_only_fields = ['id', 'giver', 'receiver', 'book', 'created_at']
+
+class CreateAuthorThanksSerializer(serializers.Serializer):
+    book_id = serializers.IntegerField(min_value=1)
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('10'), max_value=Decimal('10000'))
+    message = serializers.CharField(max_length=500, required=False, allow_blank=True)
+    
+    def validate_book_id(self, value):
+        """Проверяем существование книги"""
+        from apps.catalog.models import Book
+        if not Book.objects.filter(id=value).exists():
+            raise serializers.ValidationError("Книга не знайдена")
+        return value
+    
+    def validate_message(self, value):
+        """Валидация сообщения"""
+        if value and len(value.strip()) > 500:
+            raise serializers.ValidationError("Повідомлення не може перевищувати 500 символів")
+        return value.strip() if value else "" 

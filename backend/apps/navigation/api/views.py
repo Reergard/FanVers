@@ -95,6 +95,21 @@ class BookmarkViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Bookmark.objects.filter(user=self.request.user).select_related('book')
 
+    def list(self, request, *args, **kwargs):
+        """Отримання всіх закладок користувача з можливістю фільтрації"""
+        queryset = self.get_queryset()
+        
+        # Фільтрація за статусом якщо передано
+        status_filter = request.query_params.get('status')
+        if status_filter and status_filter != 'all':
+            queryset = queryset.filter(status=status_filter)
+        
+        # Сортування за датою оновлення (найновіші спочатку)
+        queryset = queryset.order_by('-updated_at')
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     def perform_create(self, serializer):
         # Перевіряємо, чи існує вже закладка
         existing_bookmark = Bookmark.objects.filter(

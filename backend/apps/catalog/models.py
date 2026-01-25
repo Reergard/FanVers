@@ -10,6 +10,7 @@ from unidecode import unidecode
 import re
 from datetime import timedelta
 import logging
+from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -179,7 +180,6 @@ class Book(models.Model):
         auto_now=True,
         verbose_name='Останнє оновлення'
     )
-    adult_content = models.BooleanField(default=False)
     translation_status = models.CharField(
         max_length=20,
         choices=TRANSLATION_STATUSES,
@@ -191,6 +191,7 @@ class Book(models.Model):
     original_status = models.CharField(
         max_length=20,
         choices=ORIGINAL_STATUS_CHOICES,
+        default='ONGOING',
         verbose_name='Статус випуску оригіналу'
     )
 
@@ -200,17 +201,66 @@ class Book(models.Model):
     )
     adult_content = models.BooleanField(default=False, verbose_name='Контент 18+')
     
+    # Налаштування доступу до книги
+    ACCESS_CHOICES = [
+        ('all', 'Усі'),
+        ('bookmarked', 'У кого в закладках'),
+        ('none', 'Ніхто'),
+    ]
+    
+    # Права доступу
+    view_permission = models.CharField(
+        max_length=20,
+        choices=ACCESS_CHOICES,
+        default='all',
+        verbose_name='Увійти на сторінку книги'
+    )
+    comment_book_permission = models.CharField(
+        max_length=20,
+        choices=ACCESS_CHOICES,
+        default='all',
+        verbose_name='Коментувати книгу'
+    )
+    comment_chapter_permission = models.CharField(
+        max_length=20,
+        choices=ACCESS_CHOICES,
+        default='all',
+        verbose_name='Коментувати розділ'
+    )
+    download_permission = models.CharField(
+        max_length=20,
+        choices=ACCESS_CHOICES,
+        default='all',
+        verbose_name='Завантажити'
+    )
+    rate_permission = models.CharField(
+        max_length=20,
+        choices=ACCESS_CHOICES,
+        default='all',
+        verbose_name='Оцінити'
+    )
 
     
 
     def generate_unique_slug(self):
         """Генерує унікальний слаг для книги"""
+        # Проверяем наличие title
+        if not self.title:
+            # Если нет title, создаем временный slug
+            return f"book-{timezone.now().timestamp()}"
+        
         # Транслітерація та базове очищення
         slug = slugify(unidecode(self.title))
         
+        # Если slug пустой после обработки, создаем временный
+        if not slug:
+            slug = f"book-{timezone.now().timestamp()}"
+        
         # Якщо title_en існує, використовуємо його як основу
         if self.title_en:
-            slug = slugify(unidecode(self.title_en))
+            title_en_slug = slugify(unidecode(self.title_en))
+            if title_en_slug:
+                slug = title_en_slug
             
         # Видаляємо всі спеціальні символи крім дефісу
         slug = re.sub(r'[^a-zA-Z0-9-]', '', slug)
@@ -237,19 +287,51 @@ class Book(models.Model):
 
     def clean(self):
         """Валідація моделі"""
+        from django.core.exceptions import ValidationError
+        
         super().clean()
-        if not self.slug:
+        
+        # Валидация обязательных полей (только если объект уже имеет данные)
+        # Не валидируем при создании через админку, так как форма сама это делает
+        if self.title and not self.title.strip():
+            raise ValidationError({'title': "Поле 'title' не может быть пустым"})
+        if self.author and not self.author.strip():
+            raise ValidationError({'author': "Поле 'author' не может быть пустым"})
+        
+        # Генерируем slug если его нет и есть title
+        if not self.slug and self.title:
             self.slug = self.generate_unique_slug()
 
     def save(self, *args, **kwargs):
         """Збереження моделі"""
-        if self.book_type == 'AUTHOR':
-            self.translation_status = None
-        elif self.book_type == 'TRANSLATION':
-            self.translation_status = 'TRANSLATING'
-            
-        if not self.slug:
+        # Проверяем, создается ли новая книга или редактируется существующая
+        is_new_book = self.pk is None
+        
+        # Валидация обязательных полей (ошибки будут показаны через clean())
+        # Не поднимаем исключения здесь, чтобы админка могла показать ошибки формы
+        
+        if is_new_book:
+            # Для новых книг устанавливаем статус по умолчанию
+            if self.book_type == 'AUTHOR':
+                self.translation_status = None
+            elif self.book_type == 'TRANSLATION':
+                if not self.translation_status:
+                    self.translation_status = 'TRANSLATING'
+        else:
+            # Для существующих книг проверяем валидность
+            if self.book_type == 'AUTHOR' and self.translation_status is not None:
+                # Авторские книги не могут иметь статус перевода
+                self.translation_status = None
+            elif self.book_type == 'TRANSLATION' and self.translation_status is None:
+                # Переводы должны иметь статус
+                self.translation_status = 'TRANSLATING'
+        
+        # Генерируем slug только если его нет и есть title
+        if not self.slug and self.title:
             self.slug = self.generate_unique_slug()
+        elif not self.slug:
+            # Если нет title, создаем временный slug
+            self.slug = f"book-{timezone.now().timestamp()}"
             
         super().save(*args, **kwargs)
 
@@ -313,7 +395,7 @@ class Chapter(models.Model):
     _position = models.DecimalField(
         max_digits=10, 
         decimal_places=1, 
-        default=0,
+        default=Decimal('0'),
         db_column='position'
     )
     characters_count = models.IntegerField(default=0, verbose_name='Кількість символів')
@@ -322,7 +404,7 @@ class Chapter(models.Model):
     price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=1.00,
+        default=Decimal('1.00'),
         verbose_name='Вартість розділу'
     )
     reading_time = models.IntegerField(default=0)  # час у секундах
@@ -360,13 +442,14 @@ class Chapter(models.Model):
         if not self.slug:
             self.slug = self.generate_unique_slug()    
         
-        # Оновлення часу
-        if not self.pk or kwargs.get('update_fields') is None:
+        # Оновлення часу (только для новых глав)
+        if not self.pk:
             self.last_updated = timezone.now()
             
         # Підрахунок символів та часу читання
         if self.html_content:
             self.character_count = len(self.html_content)
+            self.characters_count = len(self.html_content)  # Дублируем для совместимости
             # 3 хвилини на 1000 символів = 180 секунд на 1000 символів
             self.reading_time = (self.character_count / 1000) * 180
             self.min_reading_time = self.reading_time * 0.75
@@ -402,7 +485,10 @@ class Chapter(models.Model):
             
             self.html_file_path = self.generate_html_filename()
             self.html_content = html_content
-            self.save(update_fields=['html_file_path', 'html_content'])
+            # Обновляем поля символов
+            self.character_count = len(html_content)
+            self.characters_count = len(html_content)
+            self.save(update_fields=['html_file_path', 'html_content', 'character_count', 'characters_count'])
         except Exception as e:
             raise
 
@@ -447,7 +533,7 @@ class Chapter(models.Model):
 class ChapterOrder(models.Model):
     volume = models.ForeignKey(Volume, on_delete=models.CASCADE)
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE)
-    position = models.DecimalField(max_digits=10, decimal_places=1, default=0)
+    position = models.DecimalField(max_digits=10, decimal_places=1, default=Decimal('0'))
 
     class Meta:
         ordering = ['position']

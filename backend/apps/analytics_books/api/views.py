@@ -115,12 +115,12 @@ class TrendingBooksView(APIView):
 
 class UpdateAnalyticsView(APIView):
     def post(self, request):
-        book_slug = request.data.get('book_id')
+        book_id_or_slug = request.data.get('book_id')
         action_type = request.data.get('action_type')
         
-        print(f"Получен запрос на обновление аналитики: book_slug={book_slug}, action_type={action_type}")
+        print(f"Получен запрос на обновление аналитики: book_id_or_slug={book_id_or_slug}, action_type={action_type}")
         
-        if not book_slug or not action_type:
+        if not book_id_or_slug or not action_type:
             print("Ошибка: отсутствуют обязательные параметры")
             return Response(
                 {'error': 'Missing required parameters'},
@@ -128,10 +128,14 @@ class UpdateAnalyticsView(APIView):
             )
             
         try:
-            book = Book.objects.get(slug=book_slug)
-            print(f"Найдена книга: {book.title} (slug: {book.slug})")
+            # Пробуем найти книгу по ID или slug
+            if book_id_or_slug.isdigit():
+                book = Book.objects.get(id=book_id_or_slug)
+            else:
+                book = Book.objects.get(slug=book_id_or_slug)
+            print(f"Найдена книга: {book.title} (ID: {book.id}, slug: {book.slug})")
         except Book.DoesNotExist:
-            print(f"Ошибка: книга не найдена (slug: {book_slug})")
+            print(f"Ошибка: книга не найдена (ID/slug: {book_id_or_slug})")
             return Response(
                 {'error': 'Book not found'},
                 status=status.HTTP_404_NOT_FOUND

@@ -16,3 +16,6 @@ __pycache__/
 .venv
 env/
 ENV/
+debug.log
+dump.rdb
+*.rdb

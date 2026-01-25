@@ -178,3 +178,91 @@ class AdvertisingLog(models.Model):
 
     def __str__(self):
         return f"Реклама книги {self.book.title} від {self.user.username}"
+
+
+class BookView(models.Model):
+    """Модель для отслеживания уникальных просмотров книг"""
+    user = models.ForeignKey(
+        'users.User',
+        on_delete=models.CASCADE,
+        related_name='book_views'
+    )
+    book = models.ForeignKey(
+        'catalog.Book',
+        on_delete=models.CASCADE,
+        related_name='user_views'
+    )
+    viewed_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name = 'Перегляд книги'
+        verbose_name_plural = 'Перегляди книг'
+        indexes = [
+            models.Index(fields=['book', 'viewed_at']),
+            models.Index(fields=['user', 'viewed_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} переглянув {self.book.title} {self.viewed_at.date()}"
+    
+    @classmethod
+    def get_daily_views(cls, book, date=None):
+        """Получение количества уникальных просмотров книги за день"""
+        from django.utils import timezone
+        if date is None:
+            date = timezone.now().date()
+        
+        return cls.objects.filter(
+            book=book,
+            viewed_at__date=date
+        ).values('user').distinct().count()
+
+
+class AuthorThanks(models.Model):
+    """Модель для благодарностей авторам/переводчикам"""
+    giver = models.ForeignKey(
+        'users.User',
+        on_delete=models.CASCADE,
+        related_name='given_thanks',
+        verbose_name='Хто подякував'
+    )
+    receiver = models.ForeignKey(
+        'users.User',
+        on_delete=models.CASCADE,
+        related_name='received_thanks',
+        verbose_name='Кому подякували'
+    )
+    book = models.ForeignKey(
+        'catalog.Book',
+        on_delete=models.CASCADE,
+        related_name='thanks_received',
+        verbose_name='Книга'
+    )
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name='Сума подяки'
+    )
+    message = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Повідомлення'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата подяки'
+    )
+    
+    class Meta:
+        verbose_name = 'Подяка авторові'
+        verbose_name_plural = 'Подяки авторам'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['giver', 'created_at']),
+            models.Index(fields=['receiver', 'created_at']),
+            models.Index(fields=['book', 'created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.giver.username} подякував {self.receiver.username} за {self.book.title} на {self.amount} FanCoins"
