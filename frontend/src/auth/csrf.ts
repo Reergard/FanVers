@@ -8,15 +8,22 @@ export async function fetchCsrfToken() {
     ? (import.meta.env.VITE_API_BASE_URL || "")
     : (import.meta.env.VITE_API_BASE_URL ?? "");
   const fullUrl = `${baseURL}${API.csrf}`;
-  console.log("[csrf.ts] GET", fullUrl, "baseURL:", baseURL || "(используется прокси Vite)");
+  const AUTH_DEBUG = import.meta.env.VITE_AUTH_DEBUG === "true";
+  if (AUTH_DEBUG) {
+    console.log("[csrf.ts] GET", fullUrl, "baseURL:", baseURL || "(используется прокси Vite)");
+  }
   
   try {
     const { data } = await httpRaw.get(API.csrf, { withCredentials: true });
-    console.log("[csrf.ts] Response:", data);
+    if (AUTH_DEBUG) {
+      console.log("[csrf.ts] Response:", data);
+    }
     setCsrf(data.csrfToken);
     return data.csrfToken as string;
   } catch (error: any) {
-    console.error("[csrf.ts] Error:", error.message, "URL:", fullUrl);
+    if (AUTH_DEBUG) {
+      console.error("[csrf.ts] Error:", error.message, "URL:", fullUrl);
+    }
     throw error;
   }
 }

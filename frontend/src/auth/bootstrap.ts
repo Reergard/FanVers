@@ -1,22 +1,26 @@
 import { fetchCsrfToken } from "./csrf";
 import { refreshSessionSilent } from "./service";
 import { markBootstrapped } from "./store";
+import { authSelfTest } from "./authSelfTest";
 
 export async function bootstrapAuth() {
-  console.log("[bootstrap.ts] Начало bootstrap авторизации");
+  if (import.meta.env.DEV && import.meta.env.VITE_AUTH_DEBUG === "true") {
+    console.log("[bootstrap] start (AUTH_DEBUG)");
+  }
   try {
-    console.log("[bootstrap.ts] Получение CSRF токена...");
     await fetchCsrfToken();
-    // Попытка восстановить access по refresh cookie (тихий режим - не логируем 401 как error)
-    console.log("[bootstrap.ts] Попытка восстановить access через refresh (тихий режим)...");
     await refreshSessionSilent();
-    console.log("[bootstrap.ts] Bootstrap успешен, пользователь авторизован");
   } catch (error: any) {
-    // Ок: пользователь гость или refresh истёк (7 дней) - это нормально, не логируем как error
-    console.log("[bootstrap.ts] Bootstrap завершён (гость или refresh истёк):", error.response?.status === 401 ? "401 - гость" : error.message);
+    // Ок: гость или refresh истёк
+    if (import.meta.env.DEV && import.meta.env.VITE_AUTH_DEBUG === "true") {
+      console.log("[bootstrap] guest or refresh expired", error.response?.status === 401 ? "401" : error.message);
+    }
   } finally {
     markBootstrapped();
-    console.log("[bootstrap.ts] Bootstrap завершён");
+    if (import.meta.env.DEV && import.meta.env.VITE_AUTH_SELFTEST === "true") {
+      const { ok, steps } = await authSelfTest();
+      console.log("[bootstrap] authSelfTest", ok ? "PASS" : "FAIL", steps);
+    }
   }
 }
 

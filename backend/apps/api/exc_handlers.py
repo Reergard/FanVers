@@ -1,6 +1,7 @@
 from rest_framework.views import exception_handler
 from rest_framework.exceptions import Throttled, PermissionDenied
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
+from django.conf import settings
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,8 @@ def drf_exception_handler(exc, context):
         logger.error(f"🚫 [ExceptionHandler] Method: {request.method if request else 'N/A'}")
         logger.error(f"🚫 [ExceptionHandler] View: {view.__class__.__name__ if view else 'N/A'}")
         logger.error(f"🚫 [ExceptionHandler] User: {request.user if request and hasattr(request, 'user') else 'N/A'}")
-        logger.error(f"🚫 [ExceptionHandler] Headers: {dict(request.headers) if request else 'N/A'}")
+        if settings.DEBUG:
+            logger.error(f"🚫 [ExceptionHandler] Headers: {dict(request.headers) if request else 'N/A'}")
         logger.error(f"🚫 [ExceptionHandler] Exception type: {type(exc).__name__}")
         logger.error(f"🚫 [ExceptionHandler] Exception message: {str(exc)}")
     

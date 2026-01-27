@@ -10,7 +10,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.exceptions import AuthenticationFailed
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.utils.decorators import method_decorator
 # CSRF защита:
 # - LoginView и RegisterView используют @csrf_exempt (не требуют CSRF)
@@ -51,7 +51,8 @@ def _cookie_params():
     if not settings.DEBUG:
         domain = getattr(settings, 'SESSION_COOKIE_DOMAIN', os.getenv('SESSION_COOKIE_DOMAIN', '.fan-vers.com'))
     
-    logger.info(f"🔐 [CookieParams] Cookie parameters: secure={secure}, samesite={samesite}, domain={domain or 'None'}")
+    if settings.DEBUG:
+        logger.info(f"🔐 [CookieParams] Cookie parameters: secure={secure}, samesite={samesite}, domain={domain or 'None'}")
     
     return dict(
         httponly=True,
@@ -65,12 +66,14 @@ def _cookie_params():
 def set_refresh_cookie(response, refresh_str: str):
     """Встановити refresh cookie"""
     params = _cookie_params()
-    logger.info(f"🍪 [set_refresh_cookie] Устанавливаем refresh cookie...")
-    logger.info(f"🍪 [set_refresh_cookie] Cookie name: {REFRESH_COOKIE_NAME}")
-    logger.info(f"🍪 [set_refresh_cookie] Cookie params: {params}")
-    logger.info(f"🍪 [set_refresh_cookie] Refresh token length: {len(refresh_str)}")
+    if settings.DEBUG:
+        logger.info(f"🍪 [set_refresh_cookie] Устанавливаем refresh cookie...")
+        logger.info(f"🍪 [set_refresh_cookie] Cookie name: {REFRESH_COOKIE_NAME}")
+        logger.info(f"🍪 [set_refresh_cookie] Cookie params: {params}")
+        logger.info(f"🍪 [set_refresh_cookie] Refresh token length: {len(refresh_str)}")
     response.set_cookie(REFRESH_COOKIE_NAME, refresh_str, **params)
-    logger.info(f"🍪 [set_refresh_cookie] Refresh cookie установлена")
+    if settings.DEBUG:
+        logger.info(f"🍪 [set_refresh_cookie] Refresh cookie установлена")
 
 def del_refresh_cookie(response):
     """Видалити refresh cookie
@@ -78,9 +81,10 @@ def del_refresh_cookie(response):
     иначе браузер не удалит старую куку
     """
     params = _cookie_params()
-    logger.info(f"🍪 [del_refresh_cookie] Удаляем refresh cookie...")
-    logger.info(f"🍪 [del_refresh_cookie] Cookie name: {REFRESH_COOKIE_NAME}")
-    logger.info(f"🍪 [del_refresh_cookie] Cookie params: path={params['path']}, domain={params.get('domain', 'None')}, samesite={params.get('samesite', 'None')}")
+    if settings.DEBUG:
+        logger.info(f"🍪 [del_refresh_cookie] Удаляем refresh cookie...")
+        logger.info(f"🍪 [del_refresh_cookie] Cookie name: {REFRESH_COOKIE_NAME}")
+        logger.info(f"🍪 [del_refresh_cookie] Cookie params: path={params['path']}, domain={params.get('domain', 'None')}, samesite={params.get('samesite', 'None')}")
     # delete_cookie требует те же параметры, что и set_cookie
     response.delete_cookie(
         REFRESH_COOKIE_NAME,
@@ -88,7 +92,8 @@ def del_refresh_cookie(response):
         domain=params.get("domain"),  # Может быть None
         samesite=params.get("samesite", "None")
     )
-    logger.info(f"🍪 [del_refresh_cookie] Refresh cookie удалена")
+    if settings.DEBUG:
+        logger.info(f"🍪 [del_refresh_cookie] Refresh cookie удалена")
 
 from apps.users.api.serializers import (
     ProfileSerializer, 
@@ -125,17 +130,19 @@ def get_csrf_token(request):
     - Получает токен из ответа и сохраняет в памяти
     - Отправляет токен в заголовке X-CSRFToken для всех POST/PUT/PATCH/DELETE запросов
     """
-    logger.info(f"🛡️ [get_csrf_token] === START ===")
-    logger.info(f"🛡️ [get_csrf_token] Method: {request.method}")
-    logger.info(f"🛡️ [get_csrf_token] Path: {request.path}")
-    logger.info(f"🛡️ [get_csrf_token] CSRF cookie в запросе: {request.COOKIES.get('csrftoken', 'NOT SET')[:50] if request.COOKIES.get('csrftoken') else 'NOT SET'}")
+    if settings.DEBUG:
+        logger.info(f"🛡️ [get_csrf_token] === START ===")
+        logger.info(f"🛡️ [get_csrf_token] Method: {request.method}")
+        logger.info(f"🛡️ [get_csrf_token] Path: {request.path}")
+        logger.info(f"🛡️ [get_csrf_token] CSRF cookie в запросе: {request.COOKIES.get('csrftoken', 'NOT SET')[:50] if request.COOKIES.get('csrftoken') else 'NOT SET'}")
     
     from django.middleware.csrf import get_token
     csrf_token = get_token(request)
     
-    logger.info(f"🛡️ [get_csrf_token] CSRF token получен: {csrf_token[:50] if csrf_token else 'NULL'}...")
-    logger.info(f"🛡️ [get_csrf_token] CSRF token length: {len(csrf_token) if csrf_token else 0}")
-    logger.info(f"🛡️ [get_csrf_token] === SUCCESS ===")
+    if settings.DEBUG:
+        logger.info(f"🛡️ [get_csrf_token] CSRF token получен: {csrf_token[:50] if csrf_token else 'NULL'}...")
+        logger.info(f"🛡️ [get_csrf_token] CSRF token length: {len(csrf_token) if csrf_token else 0}")
+        logger.info(f"🛡️ [get_csrf_token] === SUCCESS ===")
     
     return Response({"csrfToken": csrf_token})
 
@@ -168,7 +175,8 @@ class RegisterView(APIView):
         logger.info(f"📝 [RegisterView] === START REGISTER ===")
         logger.info(f"📝 [RegisterView] Method: {request.method}")
         logger.info(f"📝 [RegisterView] Path: {request.path}")
-        logger.info(f"📝 [RegisterView] Headers: {dict(request.headers)}")
+        if settings.DEBUG:
+            logger.info(f"📝 [RegisterView] Headers: {dict(request.headers)}")
         logger.info(f"📝 [RegisterView] Data: username={request.data.get('username', 'N/A')}, email={request.data.get('email', 'N/A')}")
         logger.info(f"📝 [RegisterView] META REMOTE_ADDR: {request.META.get('REMOTE_ADDR')}")
         logger.info(f"📝 [RegisterView] META HTTP_ORIGIN: {request.META.get('HTTP_ORIGIN')}")
@@ -215,14 +223,16 @@ class LoginView(APIView):
         logger.info(f"🔐 [LoginView] === START LOGIN REQUEST ===")
         logger.info(f"🔐 [LoginView] Method: {request.method}")
         logger.info(f"🔐 [LoginView] Path: {request.path}")
-        logger.info(f"🔐 [LoginView] Headers: {dict(request.headers)}")
+        if settings.DEBUG:
+            logger.info(f"🔐 [LoginView] Headers: {dict(request.headers)}")
         logger.info(f"🔐 [LoginView] META REMOTE_ADDR: {request.META.get('REMOTE_ADDR')}")
         logger.info(f"🔐 [LoginView] META HTTP_X_FORWARDED_FOR: {request.META.get('HTTP_X_FORWARDED_FOR')}")
         logger.info(f"🔐 [LoginView] META HTTP_ORIGIN: {request.META.get('HTTP_ORIGIN')}")
         logger.info(f"🔐 [LoginView] META HTTP_REFERER: {request.META.get('HTTP_REFERER')}")
-        logger.info(f"🔐 [LoginView] CSRF token in cookies: {request.COOKIES.get('csrftoken', 'NOT SET')[:50] if request.COOKIES.get('csrftoken') else 'NOT SET'}")
-        logger.info(f"🔐 [LoginView] X-CSRFToken header: {request.headers.get('X-CSRFToken', 'NOT SET')[:50] if request.headers.get('X-CSRFToken') else 'NOT SET'}")
-        logger.info(f"🔐 [LoginView] X-Requested-With header: {request.headers.get('X-Requested-With', 'NOT SET')}")
+        if settings.DEBUG:
+            logger.info(f"🔐 [LoginView] CSRF token in cookies: {request.COOKIES.get('csrftoken', 'NOT SET')[:50] if request.COOKIES.get('csrftoken') else 'NOT SET'}")
+            logger.info(f"🔐 [LoginView] X-CSRFToken header: {request.headers.get('X-CSRFToken', 'NOT SET')[:50] if request.headers.get('X-CSRFToken') else 'NOT SET'}")
+            logger.info(f"🔐 [LoginView] X-Requested-With header: {request.headers.get('X-Requested-With', 'NOT SET')}")
         
         username = request.data.get('username')
         password = request.data.get('password')
@@ -270,6 +280,7 @@ class LoginView(APIView):
             raise
 
 
+@method_decorator(csrf_protect, name="dispatch")
 class LogoutView(APIView):
     """
     Выход из системы.
@@ -283,13 +294,16 @@ class LogoutView(APIView):
         logger.info(f"🚪 [LogoutView] === START LOGOUT ===")
         logger.info(f"🚪 [LogoutView] Method: {request.method}")
         logger.info(f"🚪 [LogoutView] Path: {request.path}")
-        logger.info(f"🚪 [LogoutView] Headers: X-CSRFToken={request.headers.get('X-CSRFToken', 'NOT SET')[:50] if request.headers.get('X-CSRFToken') else 'NOT SET'}")
-        logger.info(f"🚪 [LogoutView] CSRF token проверен Django middleware - запрос дошел до view")
+        if settings.DEBUG:
+            logger.info(f"🚪 [LogoutView] Headers: X-CSRFToken={request.headers.get('X-CSRFToken', 'NOT SET')[:50] if request.headers.get('X-CSRFToken') else 'NOT SET'}")
+            logger.info(f"🚪 [LogoutView] CSRF token проверен Django middleware - запрос дошел до view")
         
         # Пытаемся заблэклистить refresh из cookie
-        logger.info(f"🚪 [LogoutView] Шаг 1: Проверяем refresh cookie...")
+        if settings.DEBUG:
+            logger.info(f"🚪 [LogoutView] Шаг 1: Проверяем refresh cookie...")
         refresh_cookie = request.COOKIES.get(REFRESH_COOKIE_NAME)
-        logger.info(f"🚪 [LogoutView] Шаг 1: Refresh cookie: {'PRESENT' if refresh_cookie else 'NOT SET'}")
+        if settings.DEBUG:
+            logger.info(f"🚪 [LogoutView] Шаг 1: Refresh cookie: {'PRESENT' if refresh_cookie else 'NOT SET'}")
         
         if refresh_cookie:
             try:
@@ -308,11 +322,12 @@ class LogoutView(APIView):
         return resp
 
 
+@method_decorator(csrf_protect, name="dispatch")
 class CookieTokenRefreshView(APIView):
     """
     Обновление access токена через refresh cookie.
     CSRF защита включена - использует refresh cookie, поэтому нужна защита.
-    Django CsrfViewMiddleware автоматически проверит CSRF token из заголовка X-CSRFToken.
+    @method_decorator(csrf_protect) принудительно включает проверку CSRF независимо от DRF auth классов.
     """
     permission_classes = [AllowAny]
     throttle_classes = [ScopedRateThrottle]
@@ -322,14 +337,17 @@ class CookieTokenRefreshView(APIView):
         logger.info(f"🔐 [CookieTokenRefreshView] === START REFRESH REQUEST ===")
         logger.info(f"🔐 [CookieTokenRefreshView] Method: {request.method}")
         logger.info(f"🔐 [CookieTokenRefreshView] Path: {request.path}")
-        logger.info(f"🔐 [CookieTokenRefreshView] Headers: {dict(request.headers)}")
-        logger.info(f"🔐 [CookieTokenRefreshView] X-CSRFToken header: {request.headers.get('X-CSRFToken', 'NOT SET')[:50] if request.headers.get('X-CSRFToken') else 'NOT SET'}")
-        logger.info(f"🔐 [CookieTokenRefreshView] CSRF token in cookies: {request.COOKIES.get('csrftoken', 'NOT SET')[:50] if request.COOKIES.get('csrftoken') else 'NOT SET'}")
-        logger.info(f"🔐 [CookieTokenRefreshView] CSRF token проверен Django middleware - запрос дошел до view")
+        if settings.DEBUG:
+            logger.info(f"🔐 [CookieTokenRefreshView] Headers: {dict(request.headers)}")
+            logger.info(f"🔐 [CookieTokenRefreshView] X-CSRFToken header: {request.headers.get('X-CSRFToken', 'NOT SET')[:50] if request.headers.get('X-CSRFToken') else 'NOT SET'}")
+            logger.info(f"🔐 [CookieTokenRefreshView] CSRF token in cookies: {request.COOKIES.get('csrftoken', 'NOT SET')[:50] if request.COOKIES.get('csrftoken') else 'NOT SET'}")
+            logger.info(f"🔐 [CookieTokenRefreshView] CSRF token проверен Django middleware - запрос дошел до view")
         
-        logger.info(f"🔐 [CookieTokenRefreshView] Шаг 1: Проверяем refresh cookie...")
+        if settings.DEBUG:
+            logger.info(f"🔐 [CookieTokenRefreshView] Шаг 1: Проверяем refresh cookie...")
         refresh_cookie = request.COOKIES.get(REFRESH_COOKIE_NAME)
-        logger.info(f"🔐 [CookieTokenRefreshView] Шаг 1: Refresh cookie: {'PRESENT' if refresh_cookie else 'NOT SET'}")
+        if settings.DEBUG:
+            logger.info(f"🔐 [CookieTokenRefreshView] Шаг 1: Refresh cookie: {'PRESENT' if refresh_cookie else 'NOT SET'}")
         
         if not refresh_cookie:
             logger.warning(f"🔐 [CookieTokenRefreshView] Шаг 1: No refresh cookie")
@@ -383,7 +401,8 @@ class UserProfileView(APIView):
         logger.info(f"👤 [UserProfileView] === START GET PROFILE ===")
         logger.info(f"👤 [UserProfileView] User: {request.user.username if request.user.is_authenticated else 'NOT AUTHENTICATED'}")
         logger.info(f"👤 [UserProfileView] User ID: {request.user.id if request.user.is_authenticated else 'N/A'}")
-        logger.info(f"👤 [UserProfileView] Headers: Authorization={request.headers.get('Authorization', 'NOT SET')[:50] if request.headers.get('Authorization') else 'NOT SET'}")
+        if settings.DEBUG:
+            logger.info(f"👤 [UserProfileView] Headers: Authorization={request.headers.get('Authorization', 'NOT SET')[:50] if request.headers.get('Authorization') else 'NOT SET'}")
         logger.info(f"👤 [UserProfileView] Query params: {dict(request.query_params)}")
         
         try:

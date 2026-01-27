@@ -1,43 +1,36 @@
 let accessToken: string | null = null;
-const listeners = new Set<() => void>();
 
-export function setAccess(token: string | null) {
-  const changed = accessToken !== token;
-  const oldToken = accessToken;
-  accessToken = token;
-  console.log("[token.ts] setAccess:", { 
-    old: oldToken ? "есть" : "null", 
-    new: token ? "есть" : "null", 
-    changed,
-    listenersCount: listeners.size 
-  });
-  if (changed) {
-    // Уведомляем всех подписчиков об изменении
-    console.log("[token.ts] Уведомляем подписчиков об изменении токена");
-    listeners.forEach((listener) => listener());
-  }
-}
+type Listener = (token: string | null) => void;
+const listeners = new Set<Listener>();
 
-export function getAccess() {
+export function getAccess(): string | null {
   return accessToken;
 }
 
-/**
- * Подписка на изменения access токена
- * @returns функция отписки
- */
-export function subscribeAccessToken(callback: () => void) {
-  listeners.add(callback);
-  return () => {
-    listeners.delete(callback);
-  };
+export function setAccess(token: string | null): void {
+  if (accessToken === token) return;
+  accessToken = token;
+  for (const cb of listeners) cb(accessToken);
 }
 
-// Опционально: проверить exp без запросов (JWT payload)
+export function clearAccess(): void {
+  setAccess(null);
+}
+
+export function subscribeAccessToken(cb: Listener): () => void {
+  listeners.add(cb);
+  return () => listeners.delete(cb);
+}
+
+/** exp из JWT (мс), без валидации подписи — только для решения «скоро истекает или нет». */
 export function getJwtExpMs(token: string): number | null {
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    if (!payload?.exp) return null;
+    const part = token.split(".")[1];
+    if (!part) return null;
+    const normalized = part.replace(/-/g, "+").replace(/_/g, "/");
+    const padding = "=".repeat((4 - (normalized.length % 4)) % 4);
+    const payload = JSON.parse(atob(normalized + padding));
+    if (payload?.exp == null) return null;
     return payload.exp * 1000;
   } catch {
     return null;

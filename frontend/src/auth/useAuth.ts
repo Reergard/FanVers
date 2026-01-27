@@ -6,24 +6,10 @@ import { getAccess, subscribeAccessToken } from "./token";
  * Обновляется при изменении access токена через setAccess()
  */
 export function useAuth() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    const hasToken = getAccess() !== null;
-    console.log("[useAuth] Initial state:", hasToken);
-    return hasToken;
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(() => getAccess() !== null);
 
   useEffect(() => {
-    // Обновляем состояние при изменении токена
-    const updateAuth = () => {
-      const hasToken = getAccess() !== null;
-      console.log("[useAuth] updateAuth вызван, новый статус:", hasToken);
-      setIsAuthenticated(hasToken);
-    };
-
-    // Подписываемся на изменения
-    const unsubscribe = subscribeAccessToken(updateAuth);
-    console.log("[useAuth] Подписка создана");
-
+    const unsubscribe = subscribeAccessToken((token) => setIsAuthenticated(token !== null));
     return unsubscribe;
   }, []);
 

@@ -1,6 +1,7 @@
 from threading import local
 import logging
 import time
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 _thread_locals = local()
@@ -10,11 +11,13 @@ class RequestMiddleware:
         self.get_response = get_response
         
     def __call__(self, request):
-        # Логируем для auth endpoints для диагностики
-        if (request.path.startswith('/api/users/login/') or 
+        # Логируем для auth endpoints только в DEBUG (в проде не светим токены/куки/заголовки)
+        if settings.DEBUG and (
+            request.path.startswith('/api/users/login/') or 
             request.path.startswith('/api/users/register/') or
             request.path.startswith('/api/users/refresh/') or
-            request.path.startswith('/api/users/logout/')):
+            request.path.startswith('/api/users/logout/')
+        ):
             logger.info(f"🔍 [RequestMiddleware] === START REQUEST ===")
             logger.info(f"🔍 [RequestMiddleware] Time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
             logger.info(f"🔍 [RequestMiddleware] Method: {request.method}")
@@ -28,11 +31,13 @@ class RequestMiddleware:
         _thread_locals.request = request
         response = self.get_response(request)
         
-        # Логируем ответ для auth endpoints
-        if (request.path.startswith('/api/users/login/') or 
+        # Логируем ответ для auth endpoints только в DEBUG
+        if settings.DEBUG and (
+            request.path.startswith('/api/users/login/') or 
             request.path.startswith('/api/users/register/') or
             request.path.startswith('/api/users/refresh/') or
-            request.path.startswith('/api/users/logout/')):
+            request.path.startswith('/api/users/logout/')
+        ):
             logger.info(f"🔍 [RequestMiddleware] Response status: {response.status_code}")
             
             # Для refresh endpoint: 401 логируем как INFO, если нет Authorization заголовка (тихий запрос до логина)

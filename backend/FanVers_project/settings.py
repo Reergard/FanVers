@@ -30,7 +30,10 @@ SIGNING_KEY = env("SIGNING_KEY", default=SECRET_KEY)
 DEBUG = env('DEBUG')
 
 # Hosts
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
+if DEBUG:
+    ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost'])
+else:
+    ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['fan-vers.com', 'www.fan-vers.com'])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -170,11 +173,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'FanVers_project.wsgi.application'
 
+DEFAULT_AUTH_CLASSES = [
+    'rest_framework_simplejwt.authentication.JWTAuthentication',
+]
+if DEBUG:
+    DEFAULT_AUTH_CLASSES.append('rest_framework.authentication.SessionAuthentication')
+
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': DEFAULT_AUTH_CLASSES,
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny', 
     ],
