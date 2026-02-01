@@ -37,18 +37,11 @@ const NAV_ROW_2 = [
 ];
 
 export function Header() {
-  // Реактивно отслеживаем состояние авторизации
-  const isAuthenticated = useAuth();
-  
-  // Логирование для отладки
-  useEffect(() => {
-    console.log("[Header] isAuthenticated изменился:", isAuthenticated);
-  }, [isAuthenticated]);
+  const { isAuthenticated, username, balance } = useAuth();
 
-  // Потом сюда подцепишь реальные данные (store/api)
   const user = {
-    name: isAuthenticated ? "Дмитро Подлуцьк" : "Гість",
-    coins: "1959.5",
+    name: isAuthenticated ? (username ?? "Користувач") : "Гість",
+    coins: isAuthenticated ? (balance ?? "0") : "0",
     notifications: 4,
     messages: 14,
     avatarUrl: "",
@@ -188,14 +181,24 @@ export function Header() {
 
           {/* ===== Desktop RIGHT: bell/mail + user dropdown ===== */}
           <div className={[styles.right, styles.rightDesktop].filter(Boolean).join(" ")}>
-            <button className={styles.iconBtn} type="button" aria-label="Сповіщення">
+            <button
+              className={styles.iconBtn}
+              type="button"
+              aria-label="Сповіщення"
+              style={{ visibility: isAuthenticated ? "visible" : "hidden" }}
+            >
               <span className={styles.badgeWrap}>
                 <Icon name="bell" className={styles.icon} title="Сповіщення" />
                 {user.notifications > 0 ? <span className={styles.badge}>{user.notifications}</span> : null}
               </span>
             </button>
 
-            <button className={styles.iconBtn} type="button" aria-label="Повідомлення">
+            <button
+              className={styles.iconBtn}
+              type="button"
+              aria-label="Повідомлення"
+              style={{ visibility: isAuthenticated ? "visible" : "hidden" }}
+            >
               <span className={styles.badgeWrap}>
                 <Icon name="mail" className={styles.icon} title="Повідомлення" />
                 {user.messages > 0 ? <span className={styles.badge}>{user.messages}</span> : null}

@@ -828,7 +828,16 @@ class AuthStatusView(APIView):
 
     def get(self, request):
         # Если дошли сюда - значит access токен валиден и пользователь аутентифицирован
-        return Response({'isAuthenticated': True})
+        try:
+            balance = str(request.user.profile.balance)
+        except (Profile.DoesNotExist, AttributeError):
+            balance = '0'
+        return Response({
+            'isAuthenticated': True,
+            'userId': request.user.id,
+            'username': request.user.username,
+            'balance': balance,
+        })
 
 
 @api_view(['GET'])
