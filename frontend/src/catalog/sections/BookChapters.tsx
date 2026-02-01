@@ -1,3 +1,4 @@
+import { ActionButton } from "../../shared/ActionButton/ActionButton";
 import styles from "../styles/BookDetail.module.css";
 import type { Chapter } from "../../api/catalogApi";
 
@@ -29,22 +30,18 @@ export function BookChapters({
   const sorted = [...chapters].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 
   return (
-    <section className={styles.chapters} aria-labelledby="chapters-heading">
+    <section className={styles.chapters} aria-label="Розділи">
       <header className={styles.chaptersHeader}>
-        <h3 id="chapters-heading">Розділи</h3>
-
         {isOwner && (
-          <div className={styles.chapterActions}>
-            <button type="button" onClick={onAddChapter}>
-              Додати розділ
-            </button>
-            <button type="button" onClick={onCreateVolume}>
-              Створити том
-            </button>
-            <button type="button" onClick={onChangeOrder}>
-              Змінити порядок розділів
-            </button>
-          </div>
+          <>
+            <div className={styles.chapterActions}>
+              <ActionButton variant="primary" onClick={onAddChapter}>Додати розділ</ActionButton>
+              <ActionButton variant="primary" onClick={onCreateVolume}>Створити том</ActionButton>
+            </div>
+            <div className={styles.chapterActionsRight}>
+              <ActionButton variant="primary" onClick={onChangeOrder}>Змінити порядок розділів</ActionButton>
+            </div>
+          </>
         )}
       </header>
 

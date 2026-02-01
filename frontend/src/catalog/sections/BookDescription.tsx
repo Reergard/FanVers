@@ -19,7 +19,10 @@ export function BookDescription({ description }: BookDescriptionProps) {
 
   return (
     <section className={styles.description} aria-labelledby="book-description-heading">
-      <h3 id="book-description-heading">Опис книги:</h3>
+      <div className={styles.headingWithLine}>
+        <h3 id="book-description-heading">Опис книги:</h3>
+        <span className={styles.headingLine} aria-hidden="true" />
+      </div>
       <div className={styles.text}>
         {paragraphs.length > 0 ? (
           paragraphs.map((p, i) => <p key={i}>{p}</p>)

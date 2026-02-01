@@ -16,12 +16,12 @@ BookDetailRouter (book, volumes, chapters з React Query)
 BookDetailOwner | BookDetailReader
        │
        ├── Формують metaRows, description, props для секцій
-       ├── Використовують book.* (API + розширені поля), chapters, volumes
+       ├── Використовують book.* (поля з API після normalizeBook), chapters, volumes
        │
        ▼
 BookDetailLayout(hero, description, authorWorks, chapters, comments)
        │
-       ├── hero      → BookHero(title, metaRows, coverImageUrl, …)
+       ├── hero      → BookHero(title, titleSecondary, metaRows, coverImageUrl, showAgeBadge, authorMarkText, …)
        ├── description → BookDescription(description)
        ├── authorWorks → AuthorWorks(children)
        ├── chapters  → BookChapters(chapters, isOwner, callbacks)
@@ -43,10 +43,10 @@ BookDetailLayout(hero, description, authorWorks, chapters, comments)
 | `catalog/BookDetailOwner.tsx` | Режим власника: отримує `book`, `volumes`, `chapters`; обчислює `metaRows` з полів book + chapters; передає в `BookDetailLayout` hero, description, authorWorks, chapters, comments. Джерело даних для UI — ті самі пропси + локальний state (reorderMode, saveError). |
 | `catalog/BookDetailReader.tsx` | Режим читача: отримує `book`, `volumes`, `chapters`; аналогічно формує `metaRows` і пропси для Layout; не показує кнопки власника (isOwner=false). Джерело даних — тільки пропси + `useAuth()`. |
 | `catalog/BookDetailLayout.tsx` | Каркас сторінки: приймає `hero`, `description`, `authorWorks`, `chapters`, `comments` як `React.ReactNode`; рендерить `<article>` з hero (full-width) і `<section class="content">` з рештою блоків. Не знає про API — тільки про розмітку. |
-| `catalog/sections/BookHero.tsx` | Hero-блок: обкладинка, 18+, «Авторська книга», кнопки під обкладинкою, назва, мета-таблиця, рейтинг, «подякувати автору», кнопка «Стати новим перекладачем». Дані: пропси з Owner/Reader (title, metaRows, coverImageUrl, ratingValue тощо). |
-| `catalog/sections/BookMeta.tsx` | Таблиця мета-інформації: рядки `{ label, value }`. Дані: масив `metaRows`, який Owner/Reader збирають з `book` (і при потребі з chapters). |
+| `catalog/sections/BookHero.tsx` | Hero-блок: title bar (UA назва над обкладинкою + EN назва справа зі слешем /), сітка 3 колонки — обкладинка + кнопки, мета-таблиця (характеристики), права колонка (подякувати автору, 2 рейтинги, «Авторська книга», кнопка «Стати новим перекладачем»). Дані: пропси з Owner/Reader (title, titleSecondary, metaRows, coverImageUrl, showAgeBadge, authorMarkText, ratingValue тощо). |
+| `catalog/sections/BookMeta.tsx` | Таблиця мета-інформації: рядки `{ label, value }`. Дані: масив `metaRows`, який Owner/Reader збирають з `book` (author, creator_username, genres, tags, fandoms, country, translation_status_display, original_status_display, chapters_count) і chapters.length. |
 | `catalog/sections/BookActions.tsx` | Дві кнопки під обкладинкою: «В закладки», «Налаштування перекладу». Дані: колбеки `onBookmark`, `onTranslationSettings` з Owner/Reader. |
-| `catalog/sections/BookDescription.tsx` | Секція «Опис книги»: заголовок + абзаци. Дані: `description` — рядок з пропсів; Owner/Reader беруть його з `book` (розширене поле або майбутнє API). |
+| `catalog/sections/BookDescription.tsx` | Секція «Опис книги»: заголовок + абзаци. Дані: `description` — рядок з пропсів; Owner/Reader беруть з `book.description` (API: GET /books/info/:slug/ повертає description). |
 | `catalog/sections/AuthorWorks.tsx` | Секція «Інші роботи автора»: заголовок + контент (children). Дані: зараз порожній блок; майбутнє — список книг автора з окремого API або пропсів. |
 | `catalog/sections/BookChapters.tsx` | Секція «Розділи»: заголовок, кнопки (для owner), таблиця глав. Дані: `chapters` з пропсів; `isOwner` з useAuth + book.ownerId; ціна/дата — колбеки або майбутні поля Chapter. |
 | `catalog/sections/BookComments.tsx` | Секція «Коментарі»: форма + список коментарів. Дані: масив `comments` і колбеки `onSubmit`, `onReply`, `onDelete`; зараз comments порожній, джерело — майбутній API або локальний state. |
@@ -61,11 +61,12 @@ BookDetailLayout(hero, description, authorWorks, chapters, comments)
 | Елемент | Джерело |
 |--------|---------|
 | `title` | `book.title` (API: GET /api/catalog/books/info/:slug/) |
-| `titleSecondary` | Розширене поле `book` (майбутнє API або приведення типу) |
-| `coverImageUrl` | Розширене поле `book` (майбутнє API) |
-| 18+, «Авторська книга» | `showAgeBadge`, `authorMarkText` — розширені поля `book` або дефолти |
-| `metaRows` | Формуються в Owner/Reader: лейбли + значення з `book` (chapters_count, isPublic) і заглушки «—» для автор/перекладач/жанр тощо, поки API не віддає ці поля |
-| Рейтинг, «подякувати автору» | Розширені поля `book` (ratingValue, ratingCount, thankAuthorCoins) або null/заглушки |
+| `titleSecondary` | `book.titleSecondary` (API: title_en), відображається справа під UA зі слешем / |
+| `coverImageUrl` | `book.image` (API: image — URL обкладинки) |
+| 18+ | `showAgeBadge` ← `book.adult_content` (API: adult_content) |
+| «Авторська книга» | `authorMarkText` ← тільки якщо `book.book_type === "AUTHOR"` (API: book_type) |
+| `metaRows` | Формуються в Owner/Reader з `book`: author, creator_username, genres (масив → рядок через кому), tags, fandoms, country.name, translation_status_display, original_status_display, chapters_count / chapters.length; при відсутності — «—» |
+| Рейтинг, «подякувати автору» | `book.ratingValue`, `book.ratingCount`, `book.thankAuthorCoins` (опційні, майбутнє API) або заглушки |
 | Кнопки «В закладки», «Налаштування перекладу» | Колбеки з Owner/Reader (поки заглушки) |
 | Кнопка «Стати новим перекладачем» | Колбек `onBecomeTranslator`; у Reader показується тільки при `isAuthenticated` (useAuth) |
 
@@ -73,7 +74,7 @@ BookDetailLayout(hero, description, authorWorks, chapters, comments)
 
 | Елемент | Джерело |
 |--------|---------|
-| Текст опису | `(book as Book & { description?: string }).description` — розширене поле; зараз null, далі — API або окремий ендпоінт |
+| Текст опису | `book.description` (API: GET /books/info/:slug/ повертає description). Нормалізація в catalogApi.normalizeBook(); якщо null або порожній — секція не рендериться. |
 
 ### Інші роботи автора
 
@@ -100,20 +101,15 @@ BookDetailLayout(hero, description, authorWorks, chapters, comments)
 
 ---
 
-## Контракт даних (API + розширення для UI)
+## Контракт даних (API + UI)
 
-**Базовий тип Book** (api/catalogApi.ts):  
-`id`, `slug`, `title`, `owner`, `ownerId?`, `isPublic?`, `chapters_count?`
+**Тип Book** (api/catalogApi.ts) — усі поля нормалізуються з відповіді GET /api/catalog/books/info/:slug/:
 
-**Розширені поля для дизайну** (передаються через приведення типу в Owner/Reader, поки бекенд їх не віддає):
+- Базові: `id`, `slug`, `title`, `owner`, `ownerId?`, `isPublic?`, `chapters_count?`
+- З API: `description?`, `titleSecondary?` (API: title_en), `image?` (URL обкладинки), `author?`, `adult_content?`, `translation_status_display?`, `original_status_display?`, `country?` (id, name), `genres?` / `tags?` / `fandoms?` (масиви `{ id, name }`), `book_type?`, `owner_username?`, `creator_username?`
+- Опційні (майбутнє API): `ratingValue?`, `ratingCount?`, `thankAuthorCoins?`
 
-- `description?: string` — текст опису книги  
-- `titleSecondary?: string` — підзаголовок (наприклад, трансліт)  
-- `coverImageUrl?: string` — URL обкладинки  
-- `ageRestriction?: boolean` — показувати 18+  
-- `authorMark?: string` — напис типу «Авторська книга»  
-- `ratingValue?: number`, `ratingCount?: number` — рейтинг і кількість оцінок  
-- `thankAuthorCoins?: number` — напис «N FanCoins», «подякувати автору»
+Owner/Reader передають у Hero: `coverImageUrl={book.image}`, `showAgeBadge={book.adult_content}`, `authorMarkText` лише при `book.book_type === "AUTHOR"`, `metaRows` з полів book вище.
 
 **Chapter** (catalogApi):  
 `id`, `title`, `position`, `volume?`, `volumeId?`  

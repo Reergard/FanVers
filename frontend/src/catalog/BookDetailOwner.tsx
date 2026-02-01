@@ -40,20 +40,50 @@ export default function BookDetailOwner({
 
   const metaRows = useMemo(
     () => [
-      { label: "Автор:", value: "—" },
-      { label: "Перекладач:", value: "—" },
+      { label: "Автор:", value: book.author ?? "—" },
+      { label: "Перекладач:", value: book.creator_username ?? "—" },
       { label: "Розділів:", value: String(book.chapters_count ?? chapters.length) },
-      { label: "Жанр:", value: "—" },
-      { label: "Теги:", value: "—" },
-      { label: "Фендом:", value: "—" },
-      { label: "Країна:", value: "—" },
-      { label: "Статус перекладу:", value: book.isPublic ? "Публічна" : "Перекладається" },
-      { label: "Статус випуску твору:", value: "Виходить" },
+      {
+        label: "Жанр:",
+        value: book.genres?.length ? book.genres.map((g) => g.name).join(", ") : "—",
+      },
+      {
+        label: "Теги:",
+        value: book.tags?.length ? book.tags.map((t) => t.name).join(", ") : "—",
+      },
+      {
+        label: "Фендом:",
+        value: book.fandoms?.length ? book.fandoms.map((f) => f.name).join(", ") : "—",
+      },
+      { label: "Країна:", value: book.country?.name ?? "—" },
+      {
+        label: "Статус перекладу:",
+        value: book.translation_status_display ?? (book.isPublic ? "Публічна" : "Перекладається"),
+      },
+      {
+        label: "Статус випуску твору:",
+        value: book.original_status_display ?? "Виходить",
+      },
     ],
-    [book.chapters_count, book.isPublic, chapters.length]
+    [
+      book.author,
+      book.creator_username,
+      book.chapters_count,
+      chapters.length,
+      book.genres,
+      book.tags,
+      book.fandoms,
+      book.country,
+      book.translation_status_display,
+      book.original_status_display,
+      book.isPublic,
+    ]
   );
 
-  const description = (book as Book & { description?: string }).description ?? null;
+  const authorMarkText =
+    book.book_type === "AUTHOR" ? "Авторська книга" : book.book_type === "TRANSLATION" ? null : null;
+
+  const description = book.description ?? null;
 
   if (!isOwner) {
     return <div>Немає прав (тільки власник).</div>;
@@ -105,14 +135,14 @@ export default function BookDetailOwner({
       hero={
         <BookHero
           title={book.title}
-          titleSecondary={(book as Book & { titleSecondary?: string }).titleSecondary ?? undefined}
-          coverImageUrl={(book as Book & { coverImageUrl?: string }).coverImageUrl ?? null}
-          showAgeBadge={(book as Book & { ageRestriction?: boolean }).ageRestriction ?? false}
-          authorMarkText={(book as Book & { authorMark?: string }).authorMark ?? "Авторська книга"}
+          titleSecondary={book.titleSecondary ?? undefined}
+          coverImageUrl={book.image ?? null}
+          showAgeBadge={book.adult_content === true}
+          authorMarkText={authorMarkText ?? undefined}
           metaRows={metaRows}
-          ratingValue={(book as Book & { ratingValue?: number }).ratingValue ?? null}
-          ratingCount={(book as Book & { ratingCount?: number }).ratingCount ?? null}
-          thankAuthorCoins={(book as Book & { thankAuthorCoins?: number }).thankAuthorCoins ?? 10}
+          ratingValue={book.ratingValue ?? null}
+          ratingCount={book.ratingCount ?? null}
+          thankAuthorCoins={book.thankAuthorCoins ?? 10}
           onBookmark={() => {}}
           onTranslationSettings={() => {}}
           onBecomeTranslator={() => {}}

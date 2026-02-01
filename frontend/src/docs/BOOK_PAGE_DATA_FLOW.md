@@ -53,7 +53,7 @@ BookDetailRouter
 
 | Данные | Эндпоинт | Backend (apps/catalog, apps/editors) |
 |--------|----------|--------------------------------------|
-| Книга по slug | `GET /api/catalog/books/info/<slug>/` | `BookInfoView` (RetrieveAPIView), сериализатор с полями id, title, slug, owner, … |
+| Книга по slug | `GET /api/catalog/books/info/<slug>/` | `BookInfoView` (RetrieveAPIView), сериализатор: id, title, title_en, author, description, image, translation_status_display, original_status_display, country, genres, tags, fandoms, adult_content, book_type, owner_username, creator_username, view_permission, … |
 | Список томов | `GET /api/catalog/books/<slug>/volumes/` | `volume_list` → `VolumeSerializer` (id, title, book) |
 | Список глав | `GET /api/catalog/books/<slug>/chapters/` | `chapter_list` → `ChapterSerializer` (id, title, position, volume, …) |
 | Создание тома (owner) | `POST /api/catalog/books/<slug>/create-volume/` | `create_volume` (IsAuthenticated, проверка владельца) |
@@ -64,11 +64,11 @@ BookDetailRouter
 
 ## Контракты данных (catalogApi)
 
-- **Book:** id, slug, title, owner / ownerId, isPublic?, chapters_count?
+- **Book:** id, slug, title, owner / ownerId, isPublic?, chapters_count?, description?, titleSecondary? (API: title_en), image? (URL обложки), author?, adult_content?, translation_status_display?, original_status_display?, country? (id, name), genres? / tags? / fandoms? (массивы { id, name }), book_type?, owner_username?, creator_username?, ratingValue?, ratingCount?, thankAuthorCoins?
 - **Chapter:** id, title, position, volumeId? / volume?
 - **Volume:** id, title, book?, position?
 
-Ответы бэкенда нормализуются в `catalogApi.ts` (например, `owner` → `ownerId`), чтобы компоненты работали с единым форматом.
+Ответы бэкенда нормализуются в `catalogApi.ts`: `normalizeBook()` маппит поля API (image, title_en → titleSecondary, author, genres, tags, fandoms, country, translation_status_display, original_status_display, adult_content, book_type, owner_username, creator_username) в тип `Book`. Компоненты работают только с нормализованным объектом.
 
 ## Ошибки на странице книги
 

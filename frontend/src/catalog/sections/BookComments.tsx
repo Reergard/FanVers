@@ -39,7 +39,10 @@ export function BookComments({
 
   return (
     <section className={styles.comments} aria-labelledby="comments-heading">
-      <h3 id="comments-heading">Коментарі</h3>
+      <div className={styles.headingWithLine}>
+        <h3 id="comments-heading">Коментарі</h3>
+        <span className={styles.headingLine} aria-hidden="true" />
+      </div>
 
       <form className={styles.commentForm} onSubmit={handleSubmit} aria-label="Додати коментар">
         <input
