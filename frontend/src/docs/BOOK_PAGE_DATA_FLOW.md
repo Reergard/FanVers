@@ -1,5 +1,7 @@
 # Данные на странице книги (Frontend)
 
+Документ описує **завантаження даних** (API, React Query, режим owner/reader). Як саме ці дані використовуються для відображення блоків сторінки (Layout, секції, звідки береться кожен елемент UI) — див. [BOOK_PAGE_DESIGN_DATA_FLOW.md](./BOOK_PAGE_DESIGN_DATA_FLOW.md).
+
 ## Маршрут
 
 - **URL:** `/books/:slug`
