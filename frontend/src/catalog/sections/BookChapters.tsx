@@ -1,6 +1,13 @@
+import { useState } from "react";
 import { ActionButton } from "../../shared/ActionButton/ActionButton";
 import styles from "../styles/BookDetail.module.css";
 import type { Chapter } from "../../api/catalogApi";
+import checkIcon from "../assets/icons/check.svg";
+import deleteIcon from "../assets/icons/Delete.svg";
+import editIcon from "../assets/icons/Edit.svg";
+import readIcon from "../assets/icons/read.svg";
+import downIcon from "../assets/icons/down.svg";
+import upIcon from "../assets/icons/up.svg";
 
 export type BookChaptersProps = {
   chapters: Chapter[];
@@ -8,6 +15,8 @@ export type BookChaptersProps = {
   onAddChapter?: () => void;
   onCreateVolume?: () => void;
   onChangeOrder?: () => void;
+  onMoveUp?: (chapter: Chapter) => void;
+  onMoveDown?: (chapter: Chapter) => void;
   onRead?: (chapter: Chapter) => void;
   onEdit?: (chapter: Chapter) => void;
   onDelete?: (chapter: Chapter) => void;
@@ -21,13 +30,25 @@ export function BookChapters({
   onAddChapter,
   onCreateVolume,
   onChangeOrder,
+  onMoveUp,
+  onMoveDown,
   onRead,
   onEdit,
   onDelete,
   getChapterPrice = () => "—",
   getChapterDate = () => "—",
 }: BookChaptersProps) {
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const sorted = [...chapters].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+
+  function toggleSelected(id: number) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   return (
     <section className={styles.chapters} aria-label="Розділи">
@@ -47,26 +68,67 @@ export function BookChapters({
 
       <div className={styles.chapterTable} role="table" aria-label="Список розділів">
         <div className={styles.chapterTableHeader} role="row">
-          <span role="columnheader">Назва</span>
-          <span role="columnheader">Вартість</span>
-          <span role="columnheader">Створено</span>
-          <span role="columnheader" aria-label="Дії" />
+          <span className={styles.chapterHeaderName} role="columnheader">Назва</span>
+          <span className={styles.chapterHeaderPrice} role="columnheader">Вартість</span>
+          <span className={styles.chapterHeaderDate} role="columnheader">Створено</span>
         </div>
         {sorted.map((chapter) => (
           <div key={chapter.id} className={styles.chapterRow} role="row">
-            <div className={styles.chapterTitle} role="cell">
-              Розділ {chapter.position ?? chapter.id}: {chapter.title}
-              {isOwner && onEdit && (
-                <>
-                  {" "}
+            <div className={styles.chapterRowName} role="cell">
+              <label className={styles.chapterCheckboxWrap}>
+                <input
+                  type="checkbox"
+                  className={styles.chapterCheckboxInput}
+                  checked={selectedIds.has(chapter.id)}
+                  onChange={() => toggleSelected(chapter.id)}
+                  aria-label={`Обрати розділ ${chapter.position ?? chapter.id}`}
+                />
+                <span className={styles.chapterCheckboxBox}>
+                  {selectedIds.has(chapter.id) && <img src={checkIcon} alt="" className={styles.chapterCheckIcon} aria-hidden />}
+                </span>
+              </label>
+              <div className={styles.chapterPositionWrap}>
+                <input
+                  type="text"
+                  className={styles.chapterPositionInput}
+                  data-digits={Math.min(4, String(chapter.position ?? chapter.id).length) || 1}
+                  value={chapter.position ?? chapter.id}
+                  readOnly
+                  aria-label="Позиція"
+                />
+                <div className={styles.chapterPositionArrows}>
                   <button
                     type="button"
-                    className={styles.editLink}
-                    onClick={() => onEdit(chapter)}
+                    className={styles.chapterPositionBtn}
+                    onClick={() => onMoveUp?.(chapter)}
+                    disabled={onMoveUp == null}
+                    aria-label="Вгору"
                   >
-                    Редагувати
+                    <img src={upIcon} alt="" className={styles.chapterPositionArrowIcon} aria-hidden />
                   </button>
-                </>
+                  <button
+                    type="button"
+                    className={styles.chapterPositionBtn}
+                    onClick={() => onMoveDown?.(chapter)}
+                    disabled={onMoveDown == null}
+                    aria-label="Вниз"
+                  >
+                    <img src={downIcon} alt="" className={styles.chapterPositionArrowIcon} aria-hidden />
+                  </button>
+                </div>
+              </div>
+              <span className={styles.chapterTitleText}>
+                Розділ {chapter.position ?? chapter.id}: {chapter.title}
+              </span>
+              {isOwner && onEdit && (
+                <button
+                  type="button"
+                  className={styles.chapterEditBtn}
+                  onClick={() => onEdit(chapter)}
+                >
+                  <img src={editIcon} alt="" className={styles.chapterActionIcon} aria-hidden />
+                  Редагувати
+                </button>
               )}
             </div>
             <div className={styles.chapterPrice} role="cell">
@@ -77,16 +139,18 @@ export function BookChapters({
             </div>
             <div className={styles.chapterRowActions} role="cell">
               {onRead && (
-                <button type="button" onClick={() => onRead(chapter)}>
+                <button type="button" className={styles.chapterReadBtn} onClick={() => onRead(chapter)}>
+                  <img src={readIcon} alt="" className={styles.chapterActionIcon} aria-hidden />
                   Читати
                 </button>
               )}
               {isOwner && onDelete && (
                 <button
                   type="button"
-                  className={styles.delete}
+                  className={styles.chapterDeleteBtn}
                   onClick={() => onDelete(chapter)}
                 >
+                  <img src={deleteIcon} alt="" className={styles.chapterActionIcon} aria-hidden />
                   Видалити
                 </button>
               )}

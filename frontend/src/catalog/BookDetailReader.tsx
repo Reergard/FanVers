@@ -6,7 +6,7 @@ import { BookHero } from "./sections/BookHero";
 import { BookDescription } from "./sections/BookDescription";
 import { AuthorWorks } from "./sections/AuthorWorks";
 import { BookChapters } from "./sections/BookChapters";
-import { BookComments } from "./sections/BookComments";
+import { BookComments, MOCK_COMMENTS } from "./sections/BookComments";
 
 interface BookDetailReaderProps {
   book: Book;
@@ -97,7 +97,7 @@ export default function BookDetailReader({
           getChapterDate={() => "13.02.2023"}
         />
       }
-      comments={<BookComments comments={[]} />}
+      comments={<BookComments comments={MOCK_COMMENTS} />}
     />
   );
 }

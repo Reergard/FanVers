@@ -134,8 +134,8 @@
   position: absolute;
   top: 0;
   right: 10px;
-  width: clamp(44px, calc(6.3 * var(--vwu)), 86px);
-  height: clamp(44px, calc(6.3 * var(--vwu)), 86px);
+  width: clamp(39px, calc(6.3 * var(--vwu)), 75px);
+  height: clamp(39px, calc(6.3 * var(--vwu)), 75px);
   object-fit: contain;
   object-position: top right;
   pointer-events: none;
@@ -145,6 +145,7 @@
   position: absolute;
   bottom: clamp(8px, calc(1.2 * var(--vwu)), 16px);
   right: 25px;
+  font-family: "WindSong", cursive;
   font-size: clamp(22px, calc(3 * var(--vwu)), 42px);
   font-weight: 700;
   color: #00eafd;
@@ -157,6 +158,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: clamp(8px, calc(1.5 * var(--vwu)), 12px);
+  font-family: "Seminaria", serif;
+}
+
+.coverActions button {
+  font-family: "Seminaria", serif;
 }
 
 .metaCol {
@@ -217,12 +223,14 @@
 .thankAuthorCoins p {
   margin: 0;
   line-height: 1.2;
+  font-family: "Seminaria", serif;
 }
 
 .thankAuthorLabel {
   font-size: 13px;
   color: rgba(212, 168, 75, 0.95);
   text-align: center;
+  font-family: "Seminaria", serif;
 }
 
 /* Ratings */
@@ -247,6 +255,7 @@
   letter-spacing: 0.04em;
   color: rgba(245, 136, 7, 0.9);
   text-transform: uppercase;
+  font-family: "Seminaria", serif;
 }
 
 .ratingStars {
@@ -256,6 +265,7 @@
   font-size: 18px;
   line-height: 1;
   color: #f0d34a;
+  font-family: "Seminaria", serif;
 }
 
 .ratingHint {
@@ -336,6 +346,7 @@
 .metaValue {
   color: #05b4c7;
   font-size: clamp(13px, 1.2vw, 14px);
+  font-family: "Inter", sans-serif;
 }
 
 .metaTags {
@@ -361,6 +372,7 @@
   min-width: 0;
   max-width: 100%;
   overflow-wrap: break-word;
+  font-family: "Inter", sans-serif;
 }
 
 .headingWithLine {
@@ -378,6 +390,7 @@
   text-transform: uppercase;
   letter-spacing: 0.02em;
   text-align: left;
+  font-family: "Inter", sans-serif;
 }
 
 .headingLine {
@@ -400,6 +413,7 @@
   color: var(--text);
   font-size: clamp(14px, 1.2vw, 15px);
   line-height: 1.6;
+  font-family: "Inter", sans-serif;
 }
 
 .description .text p {
@@ -454,172 +468,422 @@
   display: flex;
   flex-wrap: wrap;
   gap: clamp(8px, calc(1.5 * var(--vwu)), 12px);
+  font-family: "Seminaria", serif;
+}
+
+.chapterActions button,
+.chapterActionsRight button {
+  font-family: "Seminaria", serif;
 }
 
 .chapterActionsRight {
   margin-left: auto;
+  font-family: "Seminaria", serif;
 }
 
+/* Без рамки блоку глав */
 .chapterTable {
   display: flex;
   flex-direction: column;
   gap: 0;
-  background: var(--book-card-bg);
-  border-radius: 8px;
-  border: 1px solid var(--book-border);
-  overflow: hidden;
 }
 
 .chapterTableHeader {
   display: grid;
-  grid-template-columns: 1fr auto auto minmax(80px, auto);
-  gap: clamp(12px, 2vw, 16px);
-  padding: clamp(12px, 1.5vw, 16px) clamp(16px, 2vw, 24px);
-  background: rgba(255, 255, 255, 0.04);
+  grid-template-columns: 1fr auto auto minmax(120px, auto);
+  gap: clamp(12px, 2vw, 20px);
+  align-items: center;
+  padding: clamp(10px, 1.2vw, 14px) 0;
   font-size: clamp(12px, 1.1vw, 13px);
-  color: var(--muted);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  color: #f58807;
 }
 
+.chapterHeaderName {
+  text-align: left;
+  font-family: "Seminaria", serif;
+}
+
+.chapterHeaderPrice {
+  text-align: center;
+  font-family: "Seminaria", serif;
+}
+
+.chapterHeaderDate {
+  text-align: center;
+  font-family: "Seminaria", serif;
+}
+
+/* Перша лінія (між заголовком і першим рядком) — без бордера; між главами — біла 0.5px */
 .chapterRow {
   display: grid;
-  grid-template-columns: 1fr auto auto minmax(80px, auto);
-  gap: clamp(12px, 2vw, 16px);
+  grid-template-columns: 1fr auto auto minmax(120px, auto);
+  gap: clamp(12px, 2vw, 20px);
   align-items: center;
-  padding: clamp(12px, 1.5vw, 16px) clamp(16px, 2vw, 24px);
-  border-top: 1px solid var(--book-border);
+  padding: clamp(12px, 1.5vw, 16px) 0;
+  border-top: none;
   font-size: clamp(13px, 1.2vw, 14px);
   color: var(--text);
 }
 
-.chapterTitle {
+.chapterRow + .chapterRow {
+  border-top: 0.5px solid #ffffff;
+}
+
+.chapterRowName {
   min-width: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: clamp(8px, 1.2vw, 12px);
 }
 
-.chapterTitle a {
-  color: var(--book-accent);
-  text-decoration: none;
-}
-
-.chapterTitle a:hover {
-  text-decoration: underline;
-}
-
-.chapterTitle .editLink,
-.editLink {
-  color: var(--book-accent);
-  background: none;
-  border: none;
-  padding: 0;
-  margin-left: 8px;
-  font: inherit;
+/* Кастомний чекбокс з check.svg */
+.chapterCheckboxWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  flex-shrink: 0;
+}
+
+.chapterCheckboxInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chapterCheckboxBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f58807;
+  border-radius: 2px;
+  background: transparent;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.chapterCheckboxInput:checked + .chapterCheckboxBox {
+  background: transparent;
+}
+
+/* Галочка трохи виходить за межі квадрата (як на макеті) */
+.chapterCheckIcon {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
+  display: block;
+  object-fit: contain;
+  margin: -2px -2px 0 0;
+}
+
+.chapterPositionWrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Рамка тільки біла лінія, цифра по центру */
+.chapterPositionInput {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  width: 22px;
+  height: 22px;
+  border: 1px solid white;
+  border-radius: 3.5px;
+  background: transparent;
+  color: var(--text);
+  font-family: "Seminaria", serif;
+  font-size: clamp(13px, 1.1vw, 14px);
+  font-weight: inherit;
+  line-height: 22px;
+  text-align: center;
+  box-shadow: none;
+  outline: none;
+  appearance: none;
+}
+
+.chapterPositionInput:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Ширина залежить від кількості цифр: 1 — квадрат, 2–4 — розтягується */
+.chapterPositionInput[data-digits="1"] {
+  width: 22px;
+  min-width: 22px;
+}
+
+.chapterPositionInput[data-digits="2"] {
+  width: 36px;
+  min-width: 36px;
+}
+
+.chapterPositionInput[data-digits="3"] {
+  width: 46px;
+  min-width: 46px;
+}
+
+.chapterPositionInput[data-digits="4"] {
+  width: 56px;
+  min-width: 56px;
+}
+
+.chapterPositionArrows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.chapterPositionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 6px;
+  min-height: 10px;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  filter: none;
+}
+
+.chapterPositionBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* up.svg / down.svg — розмір 6×10, без сірого відтінку */
+.chapterPositionArrowIcon,
+.chapterPositionBtn img {
+  width: 6px;
+  height: 10px;
+  min-width: 6px;
+  min-height: 10px;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  filter: none;
+  vertical-align: middle;
+}
+
+.chapterTitleText {
+  color: var(--text);
+  font-family: "Seminaria", serif;
+}
+
+.chapterEditBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: inherit;
+  color: #069403;
   text-decoration: none;
 }
 
-.chapterTitle .editLink:hover,
-.editLink:hover {
+.chapterEditBtn:hover {
   text-decoration: underline;
 }
 
 .chapterPrice {
   color: var(--text);
   white-space: nowrap;
+  font-family: "Seminaria", serif;
+  font-size: clamp(13px, 1.1vw, 14px);
 }
 
 .chapterDate {
-  color: var(--muted);
-  font-size: clamp(12px, 1.1vw, 13px);
+  color: var(--text);
+  white-space: nowrap;
+  font-family: "Seminaria", serif;
+  font-size: clamp(13px, 1.1vw, 14px);
 }
 
 .chapterRowActions {
   display: flex;
   flex-wrap: wrap;
-  gap: clamp(8px, 1.2vw, 12px);
+  gap: clamp(10px, 1.5vw, 16px);
   align-items: center;
 }
 
-.chapterRowActions a,
-.chapterRowActions button {
-  font-size: clamp(12px, 1.1vw, 13px);
-  color: var(--book-accent);
-  background: none;
-  border: none;
-  cursor: pointer;
+.chapterReadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 0;
-  font: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: clamp(12px, 1.1vw, 13px);
+  color: var(--text);
   text-decoration: none;
 }
 
-.chapterRowActions a:hover,
-.chapterRowActions button:hover {
+.chapterReadBtn:hover {
   text-decoration: underline;
 }
 
-.chapterRowActions .delete {
-  color: #e74c3c;
+.chapterDeleteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: clamp(12px, 1.1vw, 13px);
+  color: #ef1b1b;
+  text-decoration: underline;
+}
+
+.chapterDeleteBtn:hover {
+  text-decoration: none;
+}
+
+.chapterActionIcon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 /* ===== КОМЕНТАРІ ===== */
 .comments {
-  margin-block: clamp(32px, 5vw, 64px);
+  --comment-accent: #f58807;
+  margin-block: clamp(28px, 4vw, 56px);
+  position: relative;
 }
 
-.comments .headingWithLine {
+/* Кристали в кінці блоку: залазять трохи на коментарі */
+.commentsCrystalLeft {
+  position: absolute;
+  left: -50px;
+  bottom: -79px;
+  width: 144px;
+  height: 197px;
+  object-fit: contain;
+  object-position: left bottom;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.commentsCrystalRight {
+  position: absolute;
+  right: 50px;
+  bottom: -95px;
+  width: 81px;
+  height: 129px;
+  object-fit: contain;
+  object-position: right bottom;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.commentsHeadingWrap {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.2vw, 12px);
   margin-bottom: clamp(16px, 2.5vw, 24px);
 }
 
-.commentForm {
-  display: flex;
-  gap: clamp(8px, 1.5vw, 12px);
-  margin-bottom: clamp(20px, 3vw, 32px);
-  max-width: 100%;
+.commentsTitle {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
-.commentForm input {
+.commentsHeadingLine {
   flex: 1;
   min-width: 0;
-  padding: clamp(12px, 1.5vw, 16px) clamp(16px, 2vw, 20px);
-  border: 1px solid var(--book-border);
-  border-radius: 8px;
-  background: var(--book-card-bg);
-  color: var(--text);
-  font-size: clamp(14px, 1.2vw, 15px);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  height: 0;
+  border-bottom: 1px solid var(--comment-accent);
+  align-self: center;
 }
 
-.commentForm input::placeholder {
-  color: var(--muted);
+.commentForm {
+  /* было: margin-bottom: 20-32 */
+  margin-bottom: clamp(14px, 2vw, 20px);
+  /* довжина поля вводу 750px при 1366 */
+  max-width: 750px;
+  margin-inline: auto;
 }
 
-.commentForm input:focus {
-  outline: none;
-  border-color: var(--book-accent-muted);
-  box-shadow: 0 0 0 2px rgba(212, 168, 75, 0.2);
-}
-
-.commentForm button {
-  flex-shrink: 0;
-  width: clamp(44px, 5vw, 52px);
-  height: clamp(44px, 5vw, 52px);
-  border-radius: 50%;
-  border: 2px solid var(--book-accent);
+.commentInputWrap {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--comment-accent);
+  border-radius: 9999px;
   background: transparent;
-  color: var(--book-accent);
-  font-size: 1.25rem;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  overflow: hidden;
 }
 
-.commentForm button:hover {
-  background: var(--book-accent);
-  color: #0a0a0a;
+/* меньше вертикальная высота */
+.commentInput {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 18px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-family: "Seminaria", serif;
+  outline: none;
+}
+
+.commentInputWrap:focus-within {
+  box-shadow: 0 0 0 2px rgba(245, 136, 7, 0.25);
+}
+
+.commentInput::placeholder {
+  color: rgba(245, 136, 7, 0.85);
+}
+
+.commentSubmitBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(44px, 5vw, 52px);
+  padding: 0 clamp(10px, 1.2vw, 14px);
+  border: none;
+  /* Без разделителя/рамки — только SVG стрелка */
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.commentSubmitBtn:hover {
+  opacity: 0.9;
+}
+
+.commentSubmitBtn:active {
+  transform: translateX(1px);
+}
+
+.commentSubmitIcon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 
 .commentList {
@@ -628,31 +892,47 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: clamp(16px, 2.5vw, 24px);
+  gap: 0;
+  /* трохи зменшена ширина блоку списку */
+  max-width: 1000px;
+  margin-inline: auto;
+}
+
+.commentListWithItems {
+  padding-top: 14px;
+  border-top: 1px solid var(--comment-accent);
 }
 
 .commentItem {
-  padding: clamp(14px, 2vw, 20px);
-  background: var(--book-card-bg);
-  border-radius: 8px;
-  border: 1px solid var(--book-border);
+  padding: 14px 0;
+}
+
+.commentList > .commentItem:first-child {
+  padding-top: 0;
+}
+
+.commentList > .commentItem + .commentItem {
+  border-top: 1px solid var(--comment-accent);
 }
 
 .commentItem header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: clamp(8px, 1.5vw, 12px);
-  margin-bottom: 8px;
+  gap: 10px;
+  margin-bottom: 6px;
 }
 
 .commentAvatar {
-  width: clamp(32px, 4vw, 40px);
-  height: clamp(32px, 4vw, 40px);
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: var(--book-border);
+  background: rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .commentAvatar img {
@@ -661,60 +941,122 @@
   object-fit: cover;
 }
 
+.commentAvatarPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(5, 180, 199, 0.4), rgba(212, 168, 75, 0.35));
+}
+
 .commentAuthor {
-  font-size: clamp(13px, 1.2vw, 14px);
+  font-size: clamp(14px, 1.2vw, 15px);
   font-weight: 600;
-  color: var(--text);
+  color: #fff;
 }
 
 .commentTime {
   font-size: clamp(12px, 1.1vw, 13px);
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.commentItem p {
-  margin: 0 0 8px 0;
+.commentText {
+  margin: 0 0 10px 0;
   font-size: clamp(13px, 1.2vw, 14px);
-  line-height: 1.5;
-  color: var(--text);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.9);
 }
 
-.commentItem footer {
+.commentFooter {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: clamp(12px, 2vw, 16px);
+  justify-content: space-between;
+  gap: clamp(12px, 2vw, 20px);
   font-size: clamp(12px, 1.1vw, 13px);
 }
 
-.commentItem footer button,
-.commentItem footer a {
+.commentFooterLeft {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(12px, 2vw, 20px);
+}
+
+.commentFooterRight {
+  display: inline-flex;
+  align-items: center;
+}
+
+.commentReactions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.commentLike {
+  color: #ef1b1b;
+}
+
+.commentDislike {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.commentReplyBtn {
   background: none;
   border: none;
   padding: 0;
   font: inherit;
-  color: var(--book-accent);
+  color: #069403;
   cursor: pointer;
   text-decoration: none;
 }
 
-.commentItem footer button:hover,
-.commentItem footer a:hover {
+.commentReplyBtn:hover {
   text-decoration: underline;
 }
 
-.commentItem footer .delete {
-  color: #e74c3c;
+.commentDeleteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: #ef1b1b;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.commentDeleteBtn:hover {
+  text-decoration: underline;
+}
+
+.commentDeleteIcon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
 }
 
 .commentReplies {
-  margin-top: clamp(12px, 2vw, 16px);
-  padding-left: clamp(24px, 4vw, 40px);
-  border-left: 2px solid var(--book-border);
+  margin-top: 10px;
+  margin-left: 0;
+
+  /* ВАЖНО: сдвиг вправо, чтобы ответы выглядели вложенными */
+  padding-left: clamp(54px, 5.5vw, 90px);
+
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: clamp(12px, 1.5vw, 16px);
+  gap: 0;
+
+  border-top: 1px solid var(--comment-accent);
+}
+
+.commentReplies .commentItem {
+  border-top: none;
+  padding: 12px 0;
+}
+
+.commentReplies .commentItem + .commentItem {
+  border-top: 1px solid var(--comment-accent);
 }
 
 /* ===== АДАПТИВ ===== */
@@ -773,7 +1115,7 @@
     gap: 8px;
   }
 
-  .chapterRow .chapterTitle {
+  .chapterRow .chapterRowName {
     grid-column: 1;
   }
 

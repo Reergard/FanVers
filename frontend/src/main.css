@@ -60,6 +60,15 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Inter";
+  src: url("./assets/fonts/Inter-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+
 *{ box-sizing: border-box; }
 
 html {
@@ -71,6 +80,7 @@ body {
   color: var(--text);
   background: #020a0b; /* простой fallback */
   overflow-x: hidden; /* предотвращаем автозум на мобильных */
+  font-family: "Inter", sans-serif;
 }
 
 /* Скрываем нативную полосу прокрутки, но оставляем нативный скролл */
