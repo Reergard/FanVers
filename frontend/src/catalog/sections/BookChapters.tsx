@@ -12,6 +12,7 @@ import upIcon from "../assets/icons/up.svg";
 export type BookChaptersProps = {
   chapters: Chapter[];
   isOwner?: boolean;
+  loading?: boolean;
   onAddChapter?: () => void;
   onCreateVolume?: () => void;
   onChangeOrder?: () => void;
@@ -27,6 +28,7 @@ export type BookChaptersProps = {
 export function BookChapters({
   chapters,
   isOwner = false,
+  loading = false,
   onAddChapter,
   onCreateVolume,
   onChangeOrder,
@@ -72,7 +74,12 @@ export function BookChapters({
           <span className={styles.chapterHeaderPrice} role="columnheader">Вартість</span>
           <span className={styles.chapterHeaderDate} role="columnheader">Створено</span>
         </div>
-        {sorted.map((chapter) => (
+        {loading ? (
+          [1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className={styles.skeletonChapterRow} role="row" aria-hidden="true" />
+          ))
+        ) : (
+        sorted.map((chapter) => (
           <div key={chapter.id} className={styles.chapterRow} role="row">
             <div className={styles.chapterRowName} role="cell">
               <label className={styles.chapterCheckboxWrap}>
@@ -156,7 +163,8 @@ export function BookChapters({
               )}
             </div>
           </div>
-        ))}
+        ))
+        )}
       </div>
     </section>
   );

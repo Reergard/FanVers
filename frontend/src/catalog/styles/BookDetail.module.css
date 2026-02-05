@@ -1125,3 +1125,99 @@
     grid-column: 1;
   }
 }
+
+/* ===== Skeleton (loading state) ===== */
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+.skeletonPulse {
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.skeletonHero {
+  position: relative;
+  padding-inline: var(--gutter);
+}
+
+.skeletonHeroInner {
+  max-width: var(--container-max, 1280px);
+  margin-inline: auto;
+}
+
+.skeletonTitleBar {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) 1fr;
+  column-gap: clamp(18px, calc(3 * var(--vwu)), 42px);
+  align-items: end;
+  margin-bottom: clamp(14px, calc(2.5 * var(--vwu)), 22px);
+}
+
+.skeletonTitle {
+  height: clamp(1.9rem, calc(3.2 * var(--vwu)), 2.7rem);
+  width: 70%;
+  max-width: 320px;
+  background: var(--book-card-bg);
+  border-radius: 4px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) 1fr minmax(220px, 280px);
+  gap: clamp(18px, calc(3 * var(--vwu)), 44px);
+  align-items: start;
+}
+
+.skeletonCover {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  min-height: clamp(200px, calc(20 * var(--vwu)), 280px);
+  background: var(--book-card-bg);
+  border-radius: 0 clamp(40px, calc(5.5 * var(--vwu)), 55px) clamp(40px, calc(5.5 * var(--vwu)), 55px) 0;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.skeletonMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: clamp(48px, calc(6 * var(--vwu)), 88px);
+}
+
+.skeletonMetaRow {
+  height: 1rem;
+  width: 100%;
+  max-width: 200px;
+  background: var(--book-card-bg);
+  border-radius: 4px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.skeletonBlock {
+  min-height: 60px;
+  background: var(--book-card-bg);
+  border-radius: 8px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.skeletonChapters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeletonChapterRow {
+  height: 48px;
+  background: var(--book-card-bg);
+  border-radius: 8px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.skeletonComments {
+  min-height: 120px;
+  background: var(--book-card-bg);
+  border-radius: 8px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}

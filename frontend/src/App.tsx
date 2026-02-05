@@ -6,6 +6,7 @@ import HomePage from "./main/HomePage";
 import Profile from "./users/Profile";
 import { bootstrapAuth, attachAuthAutoRefresh } from "./auth/bootstrap";
 import { NotificationProvider } from "./shared/NotificationModal/NotificationProvider";
+import BookDetailSkeleton from "./catalog/BookDetailSkeleton";
 
 const BookDetailRouter = lazy(() => import("./catalog/BookDetailRouter"));
 
@@ -29,7 +30,7 @@ export default function App() {
               <Route
                 path="/books/:slug"
                 element={
-                  <Suspense fallback={<div>Завантаження…</div>}>
+                  <Suspense fallback={<BookDetailSkeleton />}>
                     <BookDetailRouter />
                   </Suspense>
                 }

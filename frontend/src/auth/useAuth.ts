@@ -1,54 +1,32 @@
-import { useState, useEffect, useCallback } from "react";
-import { getAccess, subscribeAccessToken } from "./token";
-import { authStatus } from "./service";
+import { useSyncExternalStore } from "react";
+import { authStore, subscribeAuth } from "./store";
 
 export type AuthState = {
   isAuthenticated: boolean;
   userId: number | null;
   username: string | null;
   balance: string | null;
+  authReady: boolean;
 };
 
+function getSnapshot() {
+  return authStore;
+}
+
 /**
- * Реактивный хук для отслеживания состояния авторизации, ника и баланса пользователя
+ * Подписка на единый auth store. Не вызывает authStatus() — данные поднимает bootstrap.
  */
 export function useAuth(): AuthState {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => getAccess() !== null);
-  const [userId, setUserId] = useState<number | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  const [balance, setBalance] = useState<string | null>(null);
+  const s = useSyncExternalStore(subscribeAuth, getSnapshot, getSnapshot);
 
-  const fetchUserData = useCallback(async () => {
-    try {
-      const data = await authStatus();
-      setUserId(data?.userId ?? null);
-      setUsername(data?.username ?? null);
-      setBalance(data?.balance ?? null);
-    } catch {
-      setUserId(null);
-      setUsername(null);
-      setBalance(null);
-    }
-  }, []);
+  const isAuthenticated = s.status === "authenticated";
+  const authReady = s.status !== "unknown";
 
-  useEffect(() => {
-    const unsubscribe = subscribeAccessToken((token) => {
-      const auth = token !== null;
-      setIsAuthenticated(auth);
-      if (!auth) {
-        setUserId(null);
-        setUsername(null);
-        setBalance(null);
-      }
-    });
-    return unsubscribe;
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated && username === null) {
-      fetchUserData();
-    }
-  }, [isAuthenticated, username, fetchUserData]);
-
-  return { isAuthenticated, userId, username, balance };
+  return {
+    isAuthenticated,
+    userId: s.user.userId,
+    username: s.user.username,
+    balance: s.user.balance,
+    authReady,
+  };
 }

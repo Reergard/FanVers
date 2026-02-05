@@ -12,12 +12,16 @@ interface BookDetailReaderProps {
   book: Book;
   volumes: Volume[];
   chapters: Chapter[];
+  chaptersLoading?: boolean;
+  volumesLoading?: boolean;
 }
 
 export default function BookDetailReader({
   book,
-  volumes,
+  volumes: _volumes,
   chapters,
+  chaptersLoading = false,
+  volumesLoading: _volumesLoading,
 }: BookDetailReaderProps) {
   const { isAuthenticated } = useAuth();
 
@@ -90,6 +94,7 @@ export default function BookDetailReader({
         <BookChapters
           chapters={chapters}
           isOwner={false}
+          loading={chaptersLoading}
           onRead={(ch) => {
             /* TODO: navigate to chapter */
           }}

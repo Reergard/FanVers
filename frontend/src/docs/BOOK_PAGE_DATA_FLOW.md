@@ -17,35 +17,41 @@ URL (/books/:slug)
 BookDetailRouter
        │
        ├── useParams() → slug
-       ├── useAuth()   → isAuthenticated, userId (см. USER_DATA_FLOW.md)
+       ├── useAuth()   → isAuthenticated, userId, authReady (см. AUTHENTICATION_FRONTEND.md)
+       │
+       ├── bookQ.isLoading → BookDetailSkeleton (сразу дизайн, без текста)
+       ├── !authReady      → BookDetailSkeleton (режим owner/reader не выбирается до bootstrap)
        │
        ├── useQuery(["book", slug])           → catalogApi.getBook(slug)           → GET /api/catalog/books/info/:slug/
        ├── useQuery(["book-volumes", slug])  → catalogApi.getVolumes(slug)        → GET /api/catalog/books/:slug/volumes/
        └── useQuery(["book-chapters", slug]) → catalogApi.getChapters(slug)       → GET /api/catalog/books/:slug/chapters/
        │
-       ├── mode = (book.ownerId === userId) ? "owner" : "reader"
+       ├── isOwner = authReady && (book.ownerId === userId)
        │
-       ├── mode === "owner" → BookDetailOwner(book, volumes, chapters)
-       └── mode === "reader" → BookDetailReader(book, volumes, chapters)
+       ├── isOwner → BookDetailOwner(book, volumes, chapters, chaptersLoading, volumesLoading)
+       └── !isOwner → BookDetailReader(book, volumes, chapters, chaptersLoading, volumesLoading)
 ```
 
 ## Файлы и роли
 
 | Файл | Назначение |
 |------|------------|
-| `App.tsx` | Маршрут `/books/:slug` → `BookDetailRouter`; оборачивает приложение в `QueryClientProvider` (React Query). |
-| `catalog/BookDetailRouter.tsx` | Точка входа: берёт `slug` из URL; через React Query загружает book, затем volumes и chapters; по `useAuth().userId` и `book.ownerId` определяет режим (owner/reader); отдаёт данные в `BookDetailOwner` или `BookDetailReader`; обрабатывает 404/403 и общие ошибки. |
-| `catalog/BookDetailOwner.tsx` | Режим владельца: получает `book`, `volumes`, `chapters` пропсами; повторно проверяет `isOwner`; операции: reorder глав, createVolume, saveOrder (через `catalogApi`). После createVolume инвалидирует только `["book-volumes", slug]`; после saveOrder — только `["book-chapters", slug]`. |
-| `catalog/BookDetailReader.tsx` | Режим читателя: получает `book`, `volumes`, `chapters` пропсами; отображает данные; не определяет авторизацию сам — только через `useAuth()`. |
+| `App.tsx` | Маршрут `/books/:slug` → `BookDetailRouter`; Suspense fallback = `BookDetailSkeleton` (сразу дизайн при lazy-load). |
+| `catalog/BookDetailRouter.tsx` | Точка входа: берёт `slug` из URL; при `bookQ.isLoading` или `!authReady` показывает `BookDetailSkeleton`; через React Query загружает book, volumes, chapters; по `useAuth().userId` и `book.ownerId` определяет owner/reader только когда `authReady`; отдаёт данные в `BookDetailOwner` или `BookDetailReader`; обрабатывает 404/403 и общие ошибки. |
+| `catalog/BookDetailSkeleton.tsx` | Skeleton страницы книги: тот же `BookDetailLayout` с placeholder-блоками; используется как Suspense fallback и при загрузке book/auth. |
+| `catalog/BookDetailOwner.tsx` | Режим владельца: получает `book`, `volumes`, `chapters`, `chaptersLoading`, `volumesLoading` пропсами; Router уже выбрал owner — повторной проверки нет; операции: reorder глав, createVolume, saveOrder (через `catalogApi`). |
+| `catalog/BookDetailReader.tsx` | Режим читателя: получает `book`, `volumes`, `chapters`, `chaptersLoading`, `volumesLoading` пропсами; `useAuth()` только для `isAuthenticated` (кнопка «Стати перекладачем»). |
 | `api/catalogApi.ts` | Типы `Book`, `Chapter`, `Volume`; нормализация ответов бэкенда; объект `catalogApi`: getBook, getChapters, getVolumes, createVolume, updateChapterOrder, updateChapterOrderNoVolume; все запросы через `http` (см. USER_DATA_FLOW.md). Query keys: `catalogKeys.book(slug)`, `catalogKeys.volumes(slug)`, `catalogKeys.chapters(slug)`. |
 | `api/http.ts` | Общий Axios-клиент для API: подставляет Bearer token, при 401 — refresh и retry (см. USER_DATA_FLOW.md). |
-| `auth/useAuth.ts` | Хук: даёт `isAuthenticated`, `userId`, `username`, `balance`. На странице книги используются `isAuthenticated` и `userId` для выбора owner vs reader. |
+| `auth/useAuth.ts` | Хук: подписка на auth store; даёт `isAuthenticated`, `userId`, `username`, `balance`, `authReady`. На странице книги используются `isAuthenticated`, `userId`, `authReady` для выбора owner vs reader. Не вызывает `authStatus()` — данные из bootstrap. |
 
 ## Порядок загрузки
 
-1. **Book** — запрос сразу при наличии `slug`; ключ кэша `["book", slug]`; staleTime 2 мин.
-2. **Volumes и Chapters** — запросы включаются только после успешной загрузки book (`enabled: Boolean(slug) && Boolean(book)`); ключи `["book-volumes", slug]` и `["book-chapters", slug]`.
-3. Режим **owner/reader** вычисляется по `book.ownerId === useAuth().userId` (при авторизованном пользователе).
+1. **Suspense** — при lazy-load `BookDetailRouter` показывается `BookDetailSkeleton` (не текст «Завантаження»).
+2. **Book** — запрос сразу при наличии `slug`; пока `bookQ.isLoading` — `BookDetailSkeleton`.
+3. **Auth** — Router ждёт `authReady` (bootstrap завершён); пока `!authReady` — `BookDetailSkeleton` (режим owner/reader не выбирается).
+4. **Volumes и Chapters** — запросы включаются только после успешной загрузки book (`enabled: Boolean(slug) && Boolean(book)`); ключи `["book-volumes", slug]` и `["book-chapters", slug]`.
+5. Режим **owner/reader** вычисляется по `book.ownerId === useAuth().userId` только когда `authReady === true`.
 
 Данные вниз передаются только пропсами: Owner и Reader не дергают API за book/volumes/chapters сами, чтобы не дублировать запросы и не ломать кэш.
 
@@ -78,6 +84,6 @@ BookDetailRouter
 
 Обработка только в `BookDetailRouter`; до ренера Owner/Reader страница не переходит.
 
-## Связь с USER_DATA_FLOW.md
+## Связь с AUTHENTICATION_FRONTEND.md
 
-Режим владельца страницы книги зависит от **userId** из `useAuth()`, который приходит из того же потока: Backend AuthStatusView → authStatus() → useAuth(). Без корректного `userId` в ответе auth-status определение owner/reader невозможно. См. USER_DATA_FLOW.md.
+Режим владельца страницы книги зависит от **userId** из `useAuth()`, который приходит из единого auth store. `authStatus()` вызывается один раз в `bootstrapAuth()` (и при login/register); `useAuth()` только подписывается на store и не делает сетевых запросов. Router ждёт `authReady` перед выбором owner/reader, чтобы избежать мигания «Немає прав».

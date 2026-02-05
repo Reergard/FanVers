@@ -9,8 +9,9 @@
 ```
 BookDetailRouter (book, volumes, chapters з React Query)
        │
-       ├── useAuth() → isAuthenticated, userId (див. USER_DATA_FLOW.md)
-       ├── mode = owner | reader
+       ├── useAuth() → isAuthenticated, userId, authReady (див. AUTHENTICATION_FRONTEND.md)
+       ├── bookQ.isLoading або !authReady → BookDetailSkeleton
+       ├── mode = owner | reader (тільки коли authReady)
        │
        ▼
 BookDetailOwner | BookDetailReader
@@ -24,7 +25,7 @@ BookDetailLayout(hero, description, authorWorks, chapters, comments)
        ├── hero      → BookHero(title, titleSecondary, metaRows, coverImageUrl, showAgeBadge, authorMarkText, …)
        ├── description → BookDescription(description)
        ├── authorWorks → AuthorWorks(children)
-       ├── chapters  → BookChapters(chapters, isOwner, callbacks)
+       ├── chapters  → BookChapters(chapters, isOwner, loading?, callbacks)
        └── comments  → BookComments(comments, onSubmit, …)
               │
               ▼
@@ -39,16 +40,17 @@ BookDetailLayout(hero, description, authorWorks, chapters, comments)
 
 | Файл | Назначення |
 |------|------------|
-| `catalog/BookDetailRouter.tsx` | Точка входу: завантажує book, volumes, chapters (React Query); визначає mode (owner/reader); рендерить `BookDetailOwner` або `BookDetailReader` з пропсами `book`, `volumes`, `chapters`. Дані з API не міняються тут — лише передаються вниз. |
-| `catalog/BookDetailOwner.tsx` | Режим власника: отримує `book`, `volumes`, `chapters`; обчислює `metaRows` з полів book + chapters; передає в `BookDetailLayout` hero, description, authorWorks, chapters, comments. Джерело даних для UI — ті самі пропси + локальний state (reorderMode, saveError). |
-| `catalog/BookDetailReader.tsx` | Режим читача: отримує `book`, `volumes`, `chapters`; аналогічно формує `metaRows` і пропси для Layout; не показує кнопки власника (isOwner=false). Джерело даних — тільки пропси + `useAuth()`. |
+| `catalog/BookDetailRouter.tsx` | Точка входу: при завантаженні book або !authReady показує `BookDetailSkeleton`; завантажує book, volumes, chapters (React Query); визначає mode (owner/reader) тільки коли authReady; рендерить `BookDetailOwner` або `BookDetailReader` з пропсами `book`, `volumes`, `chapters`, `chaptersLoading`, `volumesLoading`. |
+| `catalog/BookDetailSkeleton.tsx` | Skeleton сторінки книги: той самий `BookDetailLayout` з placeholder-блоками; використовується як Suspense fallback і при завантаженні book/auth. |
+| `catalog/BookDetailOwner.tsx` | Режим власника: отримує `book`, `volumes`, `chapters`, `chaptersLoading`, `volumesLoading`; обчислює `metaRows` з полів book + chapters; передає в `BookDetailLayout` hero, description, authorWorks, chapters, comments. Router вже вибрав owner — повторної перевірки немає. |
+| `catalog/BookDetailReader.tsx` | Режим читача: отримує `book`, `volumes`, `chapters`, `chaptersLoading`, `volumesLoading`; аналогічно формує `metaRows` і пропси для Layout; не показує кнопки власника (isOwner=false). `useAuth()` тільки для `isAuthenticated` (кнопка «Стати перекладачем»). |
 | `catalog/BookDetailLayout.tsx` | Каркас сторінки: приймає `hero`, `description`, `authorWorks`, `chapters`, `comments` як `React.ReactNode`; рендерить `<article>` з hero (full-width) і `<section class="content">` з рештою блоків. Не знає про API — тільки про розмітку. |
 | `catalog/sections/BookHero.tsx` | Hero-блок: title bar (UA назва над обкладинкою + EN назва справа зі слешем /), сітка 3 колонки — обкладинка + кнопки, мета-таблиця (характеристики), права колонка (подякувати автору, 2 рейтинги, «Авторська книга», кнопка «Стати новим перекладачем»). Дані: пропси з Owner/Reader (title, titleSecondary, metaRows, coverImageUrl, showAgeBadge, authorMarkText, ratingValue тощо). |
 | `catalog/sections/BookMeta.tsx` | Таблиця мета-інформації: рядки `{ label, value }`. Дані: масив `metaRows`, який Owner/Reader збирають з `book` (author, creator_username, genres, tags, fandoms, country, translation_status_display, original_status_display, chapters_count) і chapters.length. |
 | `catalog/sections/BookActions.tsx` | Дві кнопки під обкладинкою: «В закладки», «Налаштування перекладу». Дані: колбеки `onBookmark`, `onTranslationSettings` з Owner/Reader. |
 | `catalog/sections/BookDescription.tsx` | Секція «Опис книги»: заголовок + абзаци. Дані: `description` — рядок з пропсів; Owner/Reader беруть з `book.description` (API: GET /books/info/:slug/ повертає description). |
 | `catalog/sections/AuthorWorks.tsx` | Секція «Інші роботи автора»: заголовок + контент (children). Дані: зараз порожній блок; майбутнє — список книг автора з окремого API або пропсів. |
-| `catalog/sections/BookChapters.tsx` | Секція «Розділи»: заголовок, кнопки (для owner), таблиця глав. Дані: `chapters` з пропсів; `isOwner` з useAuth + book.ownerId; ціна/дата — колбеки або майбутні поля Chapter. |
+| `catalog/sections/BookChapters.tsx` | Секція «Розділи»: заголовок, кнопки (для owner), таблиця глав. Дані: `chapters` з пропсів; `isOwner` з Router; `loading` — skeleton-рядки при завантаженні chapters; ціна/дата — колбеки або майбутні поля Chapter. |
 | `catalog/sections/BookComments.tsx` | Секція «Коментарі»: форма + список коментарів. Дані: масив `comments` і колбеки `onSubmit`, `onReply`, `onDelete`; зараз comments порожній, джерело — майбутній API або локальний state. |
 | `catalog/styles/BookDetail.module.css` | Стилі сторінки книги: токени (--book-accent, --book-age-bg, …), сітка hero, мета-рядки, таблиця глав, форма коментарів, адаптив. Не містить логіки даних. |
 
@@ -125,4 +127,4 @@ Owner/Reader передають у Hero: `coverImageUrl={book.image}`, `showAgeB
 2. **Owner і Reader** не викликають getBook/getChapters/getVolumes самостійно — тільки отримують дані пропсами і формують з них `metaRows`, `description`, пропси для секцій.
 3. **Layout і секції** не знають про API: вони отримують уже готові пропси (рядки, масиви, колбеки). Джерело даних для дизайну — завжди Owner/Reader.
 
-Таким чином, дані для сторінки книги йдуть по схемі: **Backend → React Query (Router) → Owner/Reader → Layout → секції**; useAuth використовується тільки для mode і isOwner (див. USER_DATA_FLOW.md).
+Таким чином, дані для сторінки книги йдуть по схемі: **Backend → React Query (Router) → Owner/Reader → Layout → секції**; useAuth використовується тільки для mode (Router) і isAuthenticated (Reader); Router чекає authReady перед вибором owner/reader (див. AUTHENTICATION_FRONTEND.md).

@@ -1,6 +1,7 @@
 import { fetchCsrfToken } from "./csrf";
-import { refreshSessionSilent } from "./service";
-import { markBootstrapped } from "./store";
+import { refreshSessionSilent, authStatus } from "./service";
+import { markBootstrapped, setAuthAnonymous, setAuthAuthenticated } from "./store";
+import { getAccess } from "./token";
 import { authSelfTest } from "./authSelfTest";
 
 export async function bootstrapAuth() {
@@ -9,11 +10,36 @@ export async function bootstrapAuth() {
   }
   try {
     await fetchCsrfToken();
-    await refreshSessionSilent();
+    try {
+      await refreshSessionSilent();
+    } catch (error: any) {
+      if (import.meta.env.DEV && import.meta.env.VITE_AUTH_DEBUG === "true") {
+        console.log(
+          "[bootstrap] guest or refresh expired",
+          error.response?.status === 401 ? "401" : error.message
+        );
+      }
+    }
+
+    const token = getAccess();
+    if (token) {
+      try {
+        const data = await authStatus();
+        setAuthAuthenticated({
+          userId: data?.userId ?? null,
+          username: data?.username ?? null,
+          balance: data?.balance ?? null,
+        });
+      } catch {
+        setAuthAnonymous();
+      }
+    } else {
+      setAuthAnonymous();
+    }
   } catch (error: any) {
-    // Ок: гость или refresh истёк
+    setAuthAnonymous();
     if (import.meta.env.DEV && import.meta.env.VITE_AUTH_DEBUG === "true") {
-      console.log("[bootstrap] guest or refresh expired", error.response?.status === 401 ? "401" : error.message);
+      console.log("[bootstrap] error", error.message);
     }
   } finally {
     markBootstrapped();
@@ -25,7 +51,6 @@ export async function bootstrapAuth() {
 }
 
 export function attachAuthAutoRefresh() {
-  // Тихий refresh для onFocus/onVisibility - не логируем ошибки как error
   const safeRefresh = () => refreshSessionSilent().catch(() => {});
 
   const onFocus = () => safeRefresh();

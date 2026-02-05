@@ -1,17 +1,17 @@
-import { useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { catalogApi, type Book, type Chapter, type Volume } from "../api/catalogApi";
 import { useAuth } from "../auth/useAuth";
 import BookDetailOwner from "./BookDetailOwner";
 import BookDetailReader from "./BookDetailReader";
+import BookDetailSkeleton from "./BookDetailSkeleton";
 import { AxiosError } from "axios";
 
 const STALE_TIME = 2 * 60_000;
 
 export default function BookDetailRouter() {
   const { slug = "" } = useParams<{ slug: string }>();
-  const { isAuthenticated, userId } = useAuth();
+  const { isAuthenticated, userId, authReady } = useAuth();
 
   const bookQ = useQuery({
     queryKey: ["book", slug],
@@ -39,15 +39,8 @@ export default function BookDetailRouter() {
     refetchOnWindowFocus: false,
   });
 
-  const mode = useMemo<"owner" | "reader" | null>(() => {
-    if (!book) return null;
-    const ownerId = book.ownerId ?? book.owner;
-    const isOwner =
-      isAuthenticated && userId != null && ownerId !== undefined && ownerId === userId;
-    return isOwner ? "owner" : "reader";
-  }, [book, isAuthenticated, userId]);
+  if (bookQ.isLoading) return <BookDetailSkeleton />;
 
-  if (bookQ.isLoading) return <div>Loading book…</div>;
   if (bookQ.isError) {
     const err = bookQ.error as AxiosError;
     const status = err.response?.status;
@@ -64,21 +57,37 @@ export default function BookDetailRouter() {
 
   const volumes: Volume[] = volumesQ.data ?? [];
   const chapters: Chapter[] = chaptersQ.data ?? [];
+  const ownerId = book.ownerId ?? book.owner;
 
-  if (mode === "owner") {
+  if (!authReady) {
+    return <BookDetailSkeleton />;
+  }
+
+  const isOwner =
+    isAuthenticated &&
+    userId != null &&
+    ownerId !== undefined &&
+    ownerId === userId;
+
+  if (isOwner) {
     return (
       <BookDetailOwner
         book={book as Book}
         volumes={volumes}
         chapters={chapters}
+        chaptersLoading={chaptersQ.isLoading}
+        volumesLoading={volumesQ.isLoading}
       />
     );
   }
+
   return (
     <BookDetailReader
       book={book as Book}
       volumes={volumes}
       chapters={chapters}
+      chaptersLoading={chaptersQ.isLoading}
+      volumesLoading={volumesQ.isLoading}
     />
   );
 }

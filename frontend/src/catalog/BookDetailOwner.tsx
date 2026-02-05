@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { catalogApi, type Book, type Chapter, type Volume } from "../api/catalogApi";
-import { useAuth } from "../auth/useAuth";
 import { BookDetailLayout } from "./BookDetailLayout";
 import { BookHero } from "./sections/BookHero";
 import { BookDescription } from "./sections/BookDescription";
@@ -13,26 +12,18 @@ interface BookDetailOwnerProps {
   book: Book;
   volumes: Volume[];
   chapters: Chapter[];
+  chaptersLoading?: boolean;
+  volumesLoading?: boolean;
 }
 
 export default function BookDetailOwner({
   book,
-  volumes,
+  volumes: _volumes,
   chapters,
+  chaptersLoading = false,
+  volumesLoading: _volumesLoading,
 }: BookDetailOwnerProps) {
   const qc = useQueryClient();
-  const { isAuthenticated, userId } = useAuth();
-
-  const isOwner = useMemo(
-    () =>
-      Boolean(
-        isAuthenticated &&
-          userId != null &&
-          (book.ownerId ?? book.owner) !== undefined &&
-          (book.ownerId ?? book.owner) === userId
-      ),
-    [isAuthenticated, userId, book.ownerId, book.owner]
-  );
 
   const [reorderMode, setReorderMode] = useState(false);
   const [chapterPositions, setChapterPositions] = useState<Record<number, number>>({});
@@ -84,10 +75,6 @@ export default function BookDetailOwner({
     book.book_type === "AUTHOR" ? "Авторська книга" : book.book_type === "TRANSLATION" ? null : null;
 
   const description = book.description ?? null;
-
-  if (!isOwner) {
-    return <div>Немає прав (тільки власник).</div>;
-  }
 
   function enterReorderMode() {
     const map: Record<number, number> = {};
@@ -157,6 +144,7 @@ export default function BookDetailOwner({
             <BookChapters
               chapters={chapters}
               isOwner
+              loading={chaptersLoading}
               onAddChapter={() => {}}
               onCreateVolume={() => handleCreateVolume("Новий том")}
               onChangeOrder={enterReorderMode}

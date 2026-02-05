@@ -3,6 +3,7 @@ import { API } from "../api/endpoints";
 import { setAccess, getAccess, getJwtExpMs } from "./token";
 import { runSingleFlight } from "./refreshMutex";
 import { doRefresh, doLogout, refreshSessionForce } from "./refreshCore";
+import { setAuthAnonymous, setAuthAuthenticated } from "./store";
 import { authLog } from "./authLogger";
 
 // ВАЖНО: login/register — csrf_exempt, но refresh/logout — требуют CSRF
@@ -33,6 +34,16 @@ export async function loginSession(payload: { username: string; password: string
     const { data } = await http.post(API.login, payload, { withCredentials: true });
     setAccess(data.access);
     authLog("LOGIN_OK", { hasAccess: !!data?.access });
+    try {
+      const userData = await authStatus();
+      setAuthAuthenticated({
+        userId: userData?.userId ?? null,
+        username: userData?.username ?? null,
+        balance: userData?.balance ?? null,
+      });
+    } catch {
+      setAuthAnonymous();
+    }
     return data;
   } catch (error: any) {
     console.error("[service] login error", error.message, "status:", error.response?.status);
@@ -51,6 +62,16 @@ export async function registerSession(payload: {
     if (data?.access) {
       setAccess(data.access);
       authLog("LOGIN_OK", { source: "register", hasAccess: true });
+      try {
+        const userData = await authStatus();
+        setAuthAuthenticated({
+          userId: userData?.userId ?? null,
+          username: userData?.username ?? null,
+          balance: userData?.balance ?? null,
+        });
+      } catch {
+        setAuthAnonymous();
+      }
     }
     return data;
   } catch (error: any) {
