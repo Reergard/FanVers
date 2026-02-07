@@ -20,7 +20,7 @@ export function useAuth(): AuthState {
   const s = useSyncExternalStore(subscribeAuth, getSnapshot, getSnapshot);
 
   const isAuthenticated = s.status === "authenticated";
-  const authReady = s.status !== "unknown";
+  const authReady = s.bootstrapped && s.status !== "unknown";
 
   return {
     isAuthenticated,

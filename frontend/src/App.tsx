@@ -1,4 +1,4 @@
-import { useEffect, Suspense, lazy } from "react";
+import { useEffect, useState, Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Base } from "./app/Base";
@@ -13,11 +13,23 @@ const BookDetailRouter = lazy(() => import("./catalog/BookDetailRouter"));
 const queryClient = new QueryClient();
 
 export default function App() {
+  const [bootstrapDone, setBootstrapDone] = useState(false);
+
   useEffect(() => {
-    bootstrapAuth();
+    bootstrapAuth()
+      .finally(() => setBootstrapDone(true));
     const detach = attachAuthAutoRefresh();
     return detach;
   }, []);
+
+  // Не рендерим Routes до завершения bootstrap — избегаем мигания "Увійдіть" при F5
+  if (!bootstrapDone) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.8)" }}>
+        Завантаження…
+      </div>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

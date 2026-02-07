@@ -1,6 +1,6 @@
 import { fetchCsrfToken } from "./csrf";
 import { refreshSessionSilent, authStatus } from "./service";
-import { markBootstrapped, setAuthAnonymous, setAuthAuthenticated } from "./store";
+import { markBootstrapped, setAuthAnonymous, setAuthAuthenticated, clearAuth } from "./store";
 import { getAccess } from "./token";
 import { authSelfTest } from "./authSelfTest";
 
@@ -11,7 +11,7 @@ export async function bootstrapAuth() {
   try {
     await fetchCsrfToken();
     try {
-      await refreshSessionSilent();
+      await refreshSessionSilent({ fromBootstrap: true });
     } catch (error: any) {
       if (import.meta.env.DEV && import.meta.env.VITE_AUTH_DEBUG === "true") {
         console.log(
@@ -31,13 +31,17 @@ export async function bootstrapAuth() {
           balance: data?.balance ?? null,
         });
       } catch {
-        setAuthAnonymous();
+        // authStatus неуспешен — очищаем всё (токен мог быть невалидным)
+        clearAuth();
       }
     } else {
       setAuthAnonymous();
     }
   } catch (error: any) {
-    setAuthAnonymous();
+    // Не перезаписываем authenticated, если токен уже есть (StrictMode: второй run мог упасть, первый — успел)
+    if (!getAccess()) {
+      setAuthAnonymous();
+    }
     if (import.meta.env.DEV && import.meta.env.VITE_AUTH_DEBUG === "true") {
       console.log("[bootstrap] error", error.message);
     }

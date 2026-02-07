@@ -14,10 +14,10 @@ let lastProactiveRefreshAt = 0;
 
 function shouldProactivelyRefresh(): boolean {
   const now = Date.now();
-  if (now - lastProactiveRefreshAt < COOLDOWN_MS) return false;
-
   const access = getAccess();
-  if (!access) return true;
+  if (!access) return true; // bootstrap: F5 без access — всегда пробуем refresh
+
+  if (now - lastProactiveRefreshAt < COOLDOWN_MS) return false;
 
   const expMs = getJwtExpMs(access);
   if (expMs == null) return true;
@@ -85,7 +85,9 @@ export async function registerSession(payload: {
 // ============================================================================
 
 // Proactive: уважает cooldown и exp (bootstrap / onFocus / visibility)
-export function refreshSessionSilent(): Promise<string | null> {
+export function refreshSessionSilent(opts?: { fromBootstrap?: boolean }): Promise<string | null> {
+  // Для гостей (focus/visibility) не дёргаем /refresh/ — bootstrap уже пробовал
+  if (!opts?.fromBootstrap && !getAccess()) return Promise.resolve(null);
   if (!shouldProactivelyRefresh()) return Promise.resolve(null);
 
   return runSingleFlight(async () => {
@@ -112,4 +114,20 @@ export async function logoutSession() {
 export async function authStatus() {
   const { data } = await http.get(API.authStatus, { withCredentials: true });
   return data;
+}
+
+/** Принудительно обновить auth store (username, balance) — после deposit/withdraw */
+export async function refreshAuthStatus(): Promise<void> {
+  const token = getAccess();
+  if (!token) return;
+  try {
+    const userData = await authStatus();
+    setAuthAuthenticated({
+      userId: userData?.userId ?? null,
+      username: userData?.username ?? null,
+      balance: userData?.balance ?? null,
+    });
+  } catch {
+    // Ignore — не сбрасываем, если сервер временно недоступен
+  }
 }

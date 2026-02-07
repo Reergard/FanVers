@@ -5,6 +5,66 @@
   color: rgba(255, 255, 255, 0.92);
 }
 
+.loading,
+.authRequired {
+  text-align: center;
+  padding: clamp(24px, 4vw, 48px);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.authRequired {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, 2vw, 20px);
+}
+
+.authRequired .linkCyan {
+  font-size: clamp(14px, 1.2vw, 16px);
+}
+
+.linkCyanBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: #05B4C7;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.linkCyanBtn:hover {
+  text-decoration: underline;
+}
+
+.linkCyanBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modalForm {
+  display: grid;
+  gap: clamp(12px, 2vw, 18px);
+}
+
+.modalHint {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: clamp(12px, 1.05vw, 14px);
+}
+
+.transactionHistory ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.transactionHistory li {
+  padding: clamp(6px, 1vw, 10px) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: clamp(12px, 1.05vw, 14px);
+}
+
 .wrap {
   max-width: min(1280px, calc(100% - clamp(18px, 3.2vw, 48px) * 2));
   margin-inline: auto;
