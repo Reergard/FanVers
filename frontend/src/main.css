@@ -2,6 +2,7 @@
 
 :root{
   --container-max: 1280px;
+  --font-decor: "Seminaria", serif;
   /* ограничиваем влияние vw на больших экранах */
   --vw-cap: 1440; /* точка, после которой "vw" перестаёт расти */
   --vwu: min(1vw, calc(var(--vw-cap) * 1px / 100));

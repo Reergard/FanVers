@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Base } from "./app/Base";
 import HomePage from "./main/HomePage";
-import Profile from "./users/Profile";
+const Profile = lazy(() => import("./users/Profile"));
 import { bootstrapAuth, attachAuthAutoRefresh } from "./auth/bootstrap";
 import { NotificationProvider } from "./shared/NotificationModal/NotificationProvider";
 import BookDetailSkeleton from "./catalog/BookDetailSkeleton";
@@ -26,7 +26,14 @@ export default function App() {
           <Base>
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/profile" element={<Profile />} />
+              <Route
+                path="/profile"
+                element={
+                  <Suspense fallback={<div />}>
+                    <Profile />
+                  </Suspense>
+                }
+              />
               <Route
                 path="/books/:slug"
                 element={
