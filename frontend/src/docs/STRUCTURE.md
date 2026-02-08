@@ -16,9 +16,37 @@
 
 ```txt
 frontend/src/
+├── api/
+│   ├── catalogApi.ts
+│   ├── endpoints.ts
+│   ├── http.ts
+│   └── httpRaw.ts
 ├── app/
 │   ├── Base.tsx
 │   └── Base.module.css
+├── auth/
+│   ├── bootstrap.ts
+│   ├── csrf.ts
+│   ├── LoginForm.tsx
+│   ├── RegisterForm.tsx
+│   ├── RequireAuth.tsx
+│   ├── service.ts
+│   ├── store.ts
+│   ├── token.ts
+│   ├── useAuth.ts
+│   ├── refreshCore.ts
+│   ├── refreshMutex.ts
+│   ├── authLogger.ts
+│   └── authSelfTest.ts
+├── catalog/
+│   ├── BookDetailLayout.tsx
+│   ├── BookDetailOwner.tsx
+│   ├── BookDetailReader.tsx
+│   ├── BookDetailRouter.tsx
+│   ├── BookDetailSkeleton.tsx
+│   ├── sections/
+│   ├── assets/
+│   └── styles/
 ├── main/
 │   ├── HomePage.tsx
 │   ├── HomePage.module.css
@@ -27,56 +55,50 @@ frontend/src/
 │   └── HomePage3.tsx
 ├── users/
 │   ├── Profile.tsx
-│   └── Profile.module.css
+│   ├── Profile.module.css
+│   ├── profileService.ts
+│   ├── types.ts
+│   └── assets/
+├── website_advertising/
+│   ├── AdvertisingBooks.tsx
+│   └── BookAdCard/
 ├── shared/
 │   ├── Container.tsx
 │   ├── Container.module.css
 │   ├── Icon.tsx
 │   ├── SvgSprite.tsx
 │   ├── FrameLink/
-│   │   ├── FrameLink.tsx
-│   │   └── FrameLink.module.css
 │   ├── MenuPanel/
-│   │   ├── MenuPanel.tsx
-│   │   └── MenuPanel.module.css
 │   ├── MenuList/
-│   │   ├── MenuList.tsx
-│   │   └── MenuList.module.css
 │   ├── AvatarOrbit/
-│   │   ├── AvatarOrbit.tsx
-│   │   └── AvatarOrbit.module.css
 │   ├── ScrollIndicator/
-│   │   └── ScrollIndicator.tsx
+│   ├── ActionButton/
+│   ├── Modal/
+│   ├── NotificationModal/
+│   ├── NotificationProvider.tsx
 │   ├── hooks/
-│   │   ├── useMedia.ts
-│   │   └── useScrollLock.ts
-│   └── menu/
-│       └── menuData.ts
+│   ├── menu/
+│   └── utils/
 ├── widgets/
 │   ├── header/
 │   │   ├── Header.tsx
 │   │   ├── Header.module.css
 │   │   └── UserMenuOverlay/
-│   │       ├── UserMenuOverlay.tsx
-│   │       └── UserMenuOverlay.module.css
 │   └── footer/
 │       ├── Footer.tsx
 │       └── Footer.module.css
-├── assets/                   # ГЛОБАЛЬНІ ресурси для всього сайту
+├── assets/
 │   ├── logos/
-│   │   └── logo.png
 │   ├── backgrounds/
-│   │   ├── back_balance.svg
-│   │   ├── burger.svg
-│   │   └── menu_line.svg
 │   ├── fonts/
-│   │   ├── seminaria-normal.woff2
-│   │   ├── SofiaSansSemiCondensedRegular.woff2
-│   │   ├── BadScript-Regular.woff2
-│   │   ├── Arizonia-Regular.woff2
-│   │   └── AlleycatICG.woff2
-│   └── 5VgZtO9jy5g.jpg
+│   └── ...
 ├── docs/
+│   ├── AUTH_CHANGES_LOG.md
+│   ├── AUTHENTICATION_FRONTEND.md
+│   ├── USER_DATA_FLOW.md
+│   ├── BOOK_PAGE_DATA_FLOW.md
+│   ├── BOOK_PAGE_DESIGN_DATA_FLOW.md
+│   ├── COMPONENTS.md
 │   ├── Concept.md
 │   └── STRUCTURE.md
 ├── App.tsx
@@ -123,23 +145,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 
 **Поточна реалізація (з роутером):**
 ```tsx
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Base } from "./app/Base";
-import HomePage from "./main/HomePage";
-import Profile from "./users/Profile";
-
-export default function App() {
-  return (
-    <BrowserRouter>
-      <Base>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/profile" element={<Profile />} />
-        </Routes>
-      </Base>
-    </BrowserRouter>
-  );
-}
+// Bootstrap auth перед показом Routes; QueryClientProvider, NotificationProvider
+// Маршрути: / (HomePage), /profile (Profile), /books/:slug (BookDetailRouter)
+// Suspense + lazy для Profile та BookDetailRouter
 ```
 
 ---
@@ -228,6 +236,26 @@ export function Base({ children }: Props) {
 
 ---
 
+## `api/` — запити до сервера
+
+**Що це:** axios-клієнт, ендпоінти, інтерцептори (401 → refresh, retry).
+
+**Файли:**
+- `http.ts` — axios з Authorization, 401-interceptor (refreshSessionForce → retry → doLogout)
+- `httpRaw.ts` — axios без інтерцепторів для refresh/logout (withCredentials)
+- `endpoints.ts` — URL API (login, register, auth-status, profile, add-balance тощо)
+- `catalogApi.ts` — API для каталогу книг
+
+---
+
+## `auth/` — авторизація
+
+**Що це:** JWT access (в памʼяті), refresh (HttpOnly cookie), CSRF, store, bootstrap, LoginForm, RegisterForm.
+
+**Ключові файли:** `store.ts`, `service.ts`, `useAuth.ts`, `bootstrap.ts`, `token.ts`, `refreshCore.ts`, `refreshMutex.ts`. Детально — `docs/AUTHENTICATION_FRONTEND.md`, `docs/USER_DATA_FLOW.md`.
+
+---
+
 ## `routes/` — визначення маршрутів (поки що порожня)
 
 **Що це:** папка для конфігурацій маршрутів, шляхів і (пізніше) лінивої загрузки.
@@ -235,7 +263,7 @@ export function Base({ children }: Props) {
 **Навіщо існує:** коли сторінок стане багато, зберігати маршрути в `App.tsx` стане незручно.
 Логіку маршрутизації можна винести в `routes/`.
 
-**Поточний стан:** папка існує, але поки що порожня. Маршрути визначені безпосередньо в `App.tsx`.
+**Поточний стан:** папка не створена. Маршрути визначені безпосередньо в `App.tsx` (/, /profile, /books/:slug).
 
 **Майбутній приклад:** `routes/AppRoutes.tsx`
 ```tsx
@@ -262,22 +290,6 @@ export function AppRoutes() {
   );
 }
 ```
-
----
-
-## `api/` — запити до сервера (поки що не існує)
-
-**Що це:** майбутнє місце для:
-- інстансу axios,
-- базової URL-конфігурації,
-- інтерцепторів,
-- типізованих API-функцій.
-
-**Навіщо існує:** щоб API-код не був розкиданий по сторінках і компонентах.
-
-**Поточний стан:** папка поки що не створена. Коли з'явиться потреба в API-запитах, створіть `api/` і винесіть туди всю логіку роботи з бекендом.
-
-
 
 ---
 
@@ -330,6 +342,15 @@ export function AppRoutes() {
 - Керується через CSS-змінні
 - Автоматично ховається, якщо контент не потребує скроллу
 - Підтримка `prefers-reduced-motion`
+
+### `shared/Modal/`, `shared/NotificationModal/`, `shared/NotificationProvider.tsx`
+**Що це:** модальні вікна та провайдер сповіщень для глобального тусту (toast).
+
+### `shared/ActionButton/`
+**Що це:** стилізована кнопка для дій.
+
+### `shared/utils/errorUtils.ts`
+**Що це:** утиліти для обробки помилок.
 
 ### `shared/hooks/`
 **useMedia.ts** — хук для відстеження медіа-запитів (наприклад, для визначення mobile/desktop).
@@ -387,6 +408,20 @@ export function AppRoutes() {
 
 ---
 
+## `catalog/` — фіча Каталог (сторінка книги)
+
+**Що це:** сторінка книги `/books/:slug` — BookDetailRouter, BookDetailLayout, BookDetailOwner, BookDetailReader, секції (BookHero, BookDescription, BookChapters тощо).
+
+**Маршрут:** `/books/:slug` (визначений в `App.tsx`).
+
+---
+
+## `website_advertising/` — реклама книг
+
+**Що це:** AdvertisingBooks, BookAdCard — блоки реклами.
+
+---
+
 ## `main/` — фіча Home (сторінка + локальні стилі)
 
 ### `main/HomePage.tsx`
@@ -420,9 +455,15 @@ export function HomePage() {
 ## `users/` — фіча Profile (сторінка користувача)
 
 ### `users/Profile.tsx`
-**Що це:** сторінка профілю користувача.
+**Що це:** сторінка профілю користувача (аватар, баланс, deposit/withdraw, translate/author, налаштування).
 
 **Маршрут:** `/profile` (визначений в `App.tsx`).
+
+### `users/profileService.ts`
+**Що це:** API-функції профілю (getMyProfile, uploadProfileImage, depositBalance, withdrawBalance тощо).
+
+### `users/types.ts`
+**Що це:** типи UserProfile, BalanceHistoryItem, NotificationSettingsPatch.
 
 ### `users/Profile.module.css`
 Стилі лише для сторінки профілю.
@@ -501,8 +542,7 @@ export function HeaderLogo() {
 - Коли сторінок стане багато — винести в `routes/AppRoutes.tsx`.
 
 8) **API**
-- Поки що папка `api/` не існує.
-- Коли з'явиться потреба — створити `api/` для axios instance та API-функцій.
+- `api/` — http.ts, httpRaw.ts, endpoints.ts, catalogApi.ts.
 
 ---
 
@@ -515,7 +555,7 @@ export function HeaderLogo() {
 - «Це глобальна іконка/лого/фон/шрифт?» → `assets/`
 - «Це дані меню/конфігурація?» → `shared/menu/` або `shared/`
 - «Це маршрути?» → поки що `App.tsx`, пізніше `routes/`
-- «Це API-запити?» → поки що немає, пізніше `api/`
+- «Це API-запити?» → `api/`
 
 ---
 

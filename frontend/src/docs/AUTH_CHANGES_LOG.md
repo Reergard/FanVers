@@ -1,90 +1,65 @@
 # Журнал изменений авторизации и профиля
 
-Документ описывает **что именно** изменили/добавили/убрали относительно состояния, описанного в `AUTHENTICATION_FRONTEND.md` и `USER_DATA_FLOW.md`.
+Документ описывает **что именно** изменили/добавили/убрали в auth-модуле. Актуальное состояние — в `AUTHENTICATION_FRONTEND.md` и `USER_DATA_FLOW.md`.
 
 ---
 
 ## 1. `auth/useAuth.ts`
 
-### getSnapshot — новый объект вместо ссылки
+### getSnapshot — кеширование снапшота (фикс чёрного экрана)
 
-**Было:** `return authStore` — одна и та же ссылка. `useSyncExternalStore` сравнивает по `Object.is`, React мог не перерендерить Header при мутации store.
+**Было:** `return { ...authStore, user: { ...authStore.user } }` — каждый раз новый объект. `useSyncExternalStore` вызывает getSnapshot при каждом рендере. React сравнивает по `Object.is` — новый объект = изменение → бесконечный цикл ре-рендеров, чёрный экран.
 
-**Стало:** `return { csrfToken, bootstrapped, status, user: { ...authStore.user } }` — каждый раз новый объект. React фиксирует изменение и перерендеривает.
+**Стало:** Кеширование снапшота по `storeVersion`. В `store.ts` при каждом `emit()` инкрементируется `storeVersion`. `getSnapshot()` возвращает новый объект только когда `getStoreVersion()` изменился; иначе — тот же `cachedSnapshot`.
 
 ### `authReady`
 
-**Было (по AUTHENTICATION_FRONTEND.md):**
-```ts
-authReady = (status !== "unknown")
-```
-
-**Стало:**
 ```ts
 authReady = s.bootstrapped && s.status !== "unknown"
 ```
 
-**Смысл:** UI не зависает на "Завантаження…", если bootstrap уже завершился. Раньше при `status === "unknown"` даже после `markBootstrapped()` показывался загрузчик. Теперь `authReady` учитывает оба условия: bootstrap завершён и статус определён.
+**Смысл:** UI не зависает на "Завантаження…", если bootstrap уже завершился. Учитываются оба условия: bootstrap завершён и статус определён.
 
 ---
 
-## 2. `auth/service.ts`
+## 2. `auth/store.ts`
 
-### 2.1. `refreshSessionSilent` — параметр `fromBootstrap`
+### storeVersion и getStoreVersion
 
-**Было:**
-```ts
-export function refreshSessionSilent(): Promise<string | null>
-```
+**Добавлено:** При каждом вызове `emit()` инкрементируется `storeVersion`. Экспортируется `getStoreVersion()` для `useAuth.getSnapshot()` — чтобы создавать новый снапшот только при реальном изменении store.
 
-**Стало:**
+---
+
+## 3. `auth/service.ts`
+
+### 3.1. `refreshSessionSilent` — параметр `fromBootstrap`
+
 ```ts
 export function refreshSessionSilent(opts?: { fromBootstrap?: boolean }): Promise<string | null>
 ```
 
-### 2.2. Early return для гостей (focus/visibility)
+### 3.2. Early return для гостей (focus/visibility)
 
-**Добавлено** в начале `refreshSessionSilent`:
+В начале `refreshSessionSilent`:
 ```ts
 if (!opts?.fromBootstrap && !getAccess()) return Promise.resolve(null);
 ```
 
 **Смысл:**
 - **Bootstrap** вызывает `refreshSessionSilent({ fromBootstrap: true })` — пробует refresh даже без access (F5 после логина).
-- **Focus/visibility** вызывают `refreshSessionSilent()` без параметров — если `access` нет (гость), сразу возвращают `null`, не вызывая `/refresh/`. Раньше для гостей при каждом focus/visibility уходил лишний запрос на `/refresh/`.
+- **Focus/visibility** вызывают `refreshSessionSilent({ fromBootstrap: getAccess() == null })` — при отсутствии access пробуют refresh (фикс «утром разлогинен»).
 
-### 2.3. Валидация access перед setAccess
-
-**Добавлено в loginSession и registerSession:**
-```ts
-const access = typeof data?.access === "string" ? data.access : null;
-setAccess(access);
-
-if (!access) {
-  throw new Error("Login succeeded but access token missing in response");
-}
-```
-(В registerSession — `if (access)` вместо throw, т.к. регистрация может не возвращать access.)
-
-Проверка `typeof` предотвращает запись `undefined`/числа/объекта — иначе `getAccess() !== null` может вести себя некорректно.
-
-### 2.4. Оптимистичный логин/регистрация (фикс рассинхрона Header)
+### 3.3. Оптимистичный логин/регистрация (фикс рассинхрона Header)
 
 **Было:** После `setAccess()` пробовался `authStatus()`. При падении `authStatus()` вызывался `setAuthAnonymous()` → access оставался в памяти, но UI показывал «гостя» (Header: «Войти»). Только после F5 (bootstrap) UI обновлялся.
 
 **Стало:** Сразу после `setAccess()` вызывается `setAuthAuthenticated({ username: payload.username, userId: null, balance: null })` — Header переключается в authenticated без ожидания `authStatus()`. Затем `authStatus()` дозагружает точные данные. При падении `authStatus()` — **не** вызываем `setAuthAnonymous()`, оставляем `authenticated`. Если токен невалидный — 401-interceptor сделает logout при следующем запросе.
 
-### 2.5. refreshSessionSilent: синхронизация store после refresh
+### 3.4. refreshSessionSilent: синхронизация store после refresh
 
-**Добавлено:** после успешного `doRefresh()` если получен token — вызов `refreshAuthStatus()`. Иначе Header остаётся «гостем» после восстановления сессии (focus/visibility после сна).
+После успешного `doRefresh()` если получен token — вызов `refreshAuthStatus()`. Иначе Header остаётся «гостем» после восстановления сессии (focus/visibility после сна).
 
-### 2.6. attachAuthAutoRefresh: refresh при отсутствии access
-
-**Было:** `refreshSessionSilent()` без параметров → ранний return при `!getAccess()` → refresh не вызывался.
-
-**Стало:** `refreshSessionSilent({ fromBootstrap: getAccess() == null })` — при отсутствии access (после сна/выгрузки) пробуем refresh. Фикс «утром разлогинен», когда refresh-cookie ещё валидна.
-
-### 2.7. Функция `refreshAuthStatus`
+### 3.5. Функция `refreshAuthStatus`
 
 **Добавлена** новая функция:
 ```ts
@@ -108,7 +83,7 @@ export async function refreshAuthStatus(): Promise<void> {
 
 ---
 
-## 3. `auth/bootstrap.ts`
+## 4. `auth/bootstrap.ts`
 
 ### Вызов `refreshSessionSilent`
 
@@ -139,14 +114,13 @@ if (!getAccess()) {
 
 ---
 
-## 4. `auth/attachAuthAutoRefresh` (в `bootstrap.ts`)
+## 5. `auth/attachAuthAutoRefresh` (в `bootstrap.ts`)
 
-Вызов `refreshSessionSilent()` без параметров — без изменений.  
-Для focus/visibility `opts?.fromBootstrap` будет `undefined`, поэтому для гостей (нет access) ранний return сработает и запрос на `/refresh/` не выполнится.
+Вызов `refreshSessionSilent({ fromBootstrap: getAccess() == null })` — при отсутствии access пробует refresh (как при bootstrap).
 
 ---
 
-## 5. `users/service.ts` → `users/profileService.ts`
+## 6. `users/service.ts` → `users/profileService.ts`
 
 ### Переименование файла
 
@@ -161,16 +135,16 @@ if (!getAccess()) {
 
 ---
 
-## 6. `users/Profile.tsx`
+## 7. `users/Profile.tsx`
 
-### 6.1. Импорт `refreshAuthStatus`
+### 7.1. Импорт `refreshAuthStatus`
 
 **Добавлено:**
 ```ts
 import { refreshAuthStatus } from "../auth/service";
 ```
 
-### 6.2. Импорт профильных функций
+### 7.2. Импорт профильных функций
 
 **Было:**
 ```ts
@@ -182,7 +156,7 @@ import { refreshAuthStatus } from "../auth/service";
 } from "./profileService";
 ```
 
-### 6.3. `validateAvatarMagicBytes`
+### 7.3. `validateAvatarMagicBytes`
 
 **Добавлена** функция проверки сигнатуры файла (magic bytes):
 ```ts
@@ -205,7 +179,7 @@ async function validateAvatarMagicBytes(file: File): Promise<boolean> {
 
 **Использование:** В `handleAvatarChange` после `validateAvatarFile` вызывается `validateAvatarMagicBytes`; при `false` — ошибка "Невірний формат файлу або файл пошкоджений".
 
-### 6.4. `parseBalance`
+### 7.4. `parseBalance`
 
 **Добавлена** функция:
 ```ts
@@ -220,20 +194,20 @@ function parseBalance(value: string | number | undefined): number {
 
 **Использование:** Парсинг `profile.balance` (учёт пробелов и запятой) при проверке суммы при выводе и отображении баланса.
 
-### 6.5. `depositMutation` / `withdrawMutation`
+### 7.5. `depositMutation` / `withdrawMutation`
 
 **Добавлено** в `onSuccess`:
 - `await refreshAuthStatus();` — обновление auth store (balance в хедере)
 - `setBalanceHistory(data?.balance_history ?? []);` — сохранение истории транзакций из ответа
 
-### 6.6. `useState` для `balanceHistory`
+### 7.6. `useState` для `balanceHistory`
 
 **Добавлено:**
 ```ts
 const [balanceHistory, setBalanceHistory] = useState<BalanceHistoryItem[]>([]);
 ```
 
-### 6.7. Проверка `authReady`
+### 7.7. Проверка `authReady`
 
 **Есть** блок:
 ```ts
@@ -264,7 +238,7 @@ export type BalanceHistoryItem = {
 
 ---
 
-## 8. `users/profileService.ts`
+## 9. `users/profileService.ts`
 
 ### Типизация `depositBalance` / `withdrawBalance`
 
@@ -277,12 +251,11 @@ balance_history?: BalanceHistoryItem[];
 
 ---
 
-## 9. Файлы без изменений
+## 10. Файлы без изменений
 
 Следующие файлы **не менялись** в рамках этих правок:
 
-- `auth/token.ts` — access в памяти, `getJwtExpMs`
-- `auth/store.ts` — status, user, bootstrapped, subscribeAuth
+- `auth/token.ts` — access в памяти, `getJwtExpMs`, `subscribeAccessToken` (useAuth не использует — подписывается на store)
 - `auth/refreshCore.ts` — doRefresh, refreshSessionForce, doLogout
 - `auth/refreshMutex.ts` — cooldown 20s, force для 401
 - `auth/authLogger.ts`, `auth/authSelfTest.ts`
@@ -292,7 +265,7 @@ balance_history?: BalanceHistoryItem[];
 
 ---
 
-## 10. Проверка `clearAuth` (auth/store.ts)
+## 11. Проверка `clearAuth` (auth/store.ts)
 
 При падении `authStatus()` в bootstrap вызывается `clearAuth()`. Важно, чтобы `status` не оставался `"unknown"`, иначе `authReady` застрянет в `false` и UI покажет вечную «Завантаження…».
 
@@ -300,12 +273,12 @@ balance_history?: BalanceHistoryItem[];
 
 ---
 
-## 11. Сводка по документации
+## 12. Сводка по документации
 
 | Документ | Актуальность |
 |----------|--------------|
-| `AUTHENTICATION_FRONTEND.md` | Частично устарел: `authReady` теперь `bootstrapped && status !== "unknown"`; `refreshSessionSilent` принимает `opts.fromBootstrap`; не упомянута `refreshAuthStatus`. |
-| `USER_DATA_FLOW.md` | Описывает старую схему, где `useAuth` подписывался на `subscribeAccessToken` и вызывал `authStatus()`. Сейчас используется `subscribeAuth` на store, `authStatus` вызывают bootstrap, login, register и `refreshAuthStatus`. |
+| `AUTHENTICATION_FRONTEND.md` | Описывает текущую архитектуру. |
+| `USER_DATA_FLOW.md` | Описывает текущий поток данных (store, subscribeAuth, bootstrap). |
 
 ---
 

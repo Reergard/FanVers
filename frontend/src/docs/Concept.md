@@ -10,16 +10,21 @@ Vite + React + TypeScript
 
 2) Структура проекта и ответственность папок
 src/
+  api/            # axios (http.ts, httpRaw.ts), endpoints, catalogApi
   app/            # общий layout приложения: Base.tsx + Base.module.css
-  routes/         # маршрутизация (React Router): список роутов/конфиг/обёртки (пока пустая)
+  auth/           # авторизация: store, service, useAuth, bootstrap, token, refresh
+  catalog/        # страница книги: BookDetailRouter, BookDetailLayout, sections
   main/           # страницы/фичи главной (HomePage.tsx + стили + локальные картинки)
-  users/          # страницы/фичи пользователей (Profile.tsx + стили)
-  shared/         # переиспользуемые "примитивы": Container, Icon, hooks, utils, types
+  users/          # страницы/фичи пользователей (Profile.tsx, profileService, types)
+  website_advertising/  # реклама книг (AdvertisingBooks, BookAdCard)
+  shared/         # переиспользуемые "примитивы": Container, Icon, Modal, hooks, utils
   widgets/        # крупные блоки: header, footer (и дальше: sidebar, drawer и т.д.)
   assets/         # глобальные ассеты: icons, logos, backgrounds, fonts
-  docs/           # документация проекта (Concept.md, STRUCTURE.md)
+  docs/           # документация (Concept.md, STRUCTURE.md, AUTHENTICATION_FRONTEND.md и др.)
 
-Правило: всё "глобальное" → assets/, всё "только для страницы" → feature/images/.
+Правило: всё "глобальное" → assets/, всё "только для страницы" → feature/assets/.
+
+Авторизация: auth/store (status, user), auth/useAuth (subscribeAuth), bootstrap → refresh → authStatus. Детали: docs/AUTHENTICATION_FRONTEND.md, docs/USER_DATA_FLOW.md.
 
 3) Base layout (обёртка приложения)
 
@@ -214,19 +219,19 @@ react-router-dom (BrowserRouter, Routes, Route)
 
 Base оборачивает Routes, Routes содержит Route для каждой страницы
 
-Текущие маршруты: "/" (HomePage), "/profile" (Profile)
+Текущие маршруты: "/" (HomePage), "/profile" (Profile), "/books/:slug" (BookDetailRouter)
+
+Перед роутером — bootstrap auth (bootstrapAuth), затем QueryClientProvider, NotificationProvider
 
 Важно: Base оборачивает одну страницу за раз, роутер выбирает какую.
 
 15) Производительность: code-splitting
 
-План (пока не реализовано):
+Реализовано для Profile и BookDetailRouter:
 
-"тяжёлые" страницы (каталог/кабинет/читалка) грузить лениво:
+React.lazy + Suspense — уменьшает стартовый бандл
 
-React.lazy + Suspense
-
-Это уменьшает стартовый бандл и ускоряет первую загрузку.
+HomePage загружается сразу, Profile и BookDetailRouter — лениво
 
 16) Shared компоненты и утилиты
 
@@ -236,6 +241,11 @@ shared/MenuPanel.tsx — панель меню с аватаром и списк
 shared/MenuList.tsx — список пунктов меню
 shared/AvatarOrbit.tsx — аватар с орбитой (декор)
 shared/ScrollIndicator/ — кастомный индикатор прокрутки (overlay)
+shared/Modal/ — модальное окно
+shared/NotificationModal/ — уведомления (toast)
+shared/NotificationProvider.tsx — провайдер контекста уведомлений
+shared/ActionButton/ — стилизованная кнопка
+shared/utils/errorUtils.ts — утилиты для ошибок
 shared/hooks/useMedia.ts — хук для медиа-запросов
 shared/hooks/useScrollLock.ts — хук для блокировки скролла (iOS-safe)
 shared/menu/menuData.ts — единый источник данных для меню (USER_MENU, NAV_MENU)
