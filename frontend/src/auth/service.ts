@@ -3,7 +3,7 @@ import { API } from "../api/endpoints";
 import { setAccess, getAccess, getJwtExpMs } from "./token";
 import { runSingleFlight } from "./refreshMutex";
 import { doRefresh, doLogout, refreshSessionForce } from "./refreshCore";
-import { setAuthAnonymous, setAuthAuthenticated } from "./store";
+import { setAuthAuthenticated } from "./store";
 import { authLog } from "./authLogger";
 
 // ВАЖНО: login/register — csrf_exempt, но refresh/logout — требуют CSRF
@@ -34,15 +34,19 @@ export async function loginSession(payload: { username: string; password: string
     const { data } = await http.post(API.login, payload, { withCredentials: true });
     setAccess(data.access);
     authLog("LOGIN_OK", { hasAccess: !!data?.access });
+
+    // Сразу переключаем Header (оптимистично)
+    setAuthAuthenticated({ username: payload.username, userId: null, balance: null });
+
     try {
       const userData = await authStatus();
       setAuthAuthenticated({
         userId: userData?.userId ?? null,
-        username: userData?.username ?? null,
+        username: userData?.username ?? payload.username ?? null,
         balance: userData?.balance ?? null,
       });
     } catch {
-      setAuthAnonymous();
+      // Не setAuthAnonymous — access есть
     }
     return data;
   } catch (error: any) {
@@ -62,15 +66,16 @@ export async function registerSession(payload: {
     if (data?.access) {
       setAccess(data.access);
       authLog("LOGIN_OK", { source: "register", hasAccess: true });
+      setAuthAuthenticated({ username: payload.username, userId: null, balance: null });
       try {
         const userData = await authStatus();
         setAuthAuthenticated({
           userId: userData?.userId ?? null,
-          username: userData?.username ?? null,
+          username: userData?.username ?? payload.username ?? null,
           balance: userData?.balance ?? null,
         });
       } catch {
-        setAuthAnonymous();
+        // Не setAuthAnonymous
       }
     }
     return data;
@@ -92,7 +97,8 @@ export function refreshSessionSilent(opts?: { fromBootstrap?: boolean }): Promis
 
   return runSingleFlight(async () => {
     const token = await doRefresh();
-    lastProactiveRefreshAt = Date.now(); // только при успехе — при сбое не штрафуем cooldown'ом
+    lastProactiveRefreshAt = Date.now();
+    if (token) await refreshAuthStatus();
     return token;
   });
 }

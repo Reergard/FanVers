@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { authStore, subscribeAuth } from "./store";
+import { authStore, subscribeAuth, getStoreVersion } from "./store";
 
 export type AuthState = {
   isAuthenticated: boolean;
@@ -9,8 +9,18 @@ export type AuthState = {
   authReady: boolean;
 };
 
+let cachedSnapshot: { csrfToken: string | null; bootstrapped: boolean; status: string; user: { userId: number | null; username: string | null; balance: string | null } } | null = null;
+let cachedVersion = -1;
+
 function getSnapshot() {
-  return authStore;
+  const v = getStoreVersion();
+  if (cachedSnapshot && cachedVersion === v) return cachedSnapshot;
+  cachedVersion = v;
+  cachedSnapshot = {
+    ...authStore,
+    user: { ...authStore.user },
+  };
+  return cachedSnapshot;
 }
 
 /**

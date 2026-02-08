@@ -55,7 +55,9 @@ export async function bootstrapAuth() {
 }
 
 export function attachAuthAutoRefresh() {
-  const safeRefresh = () => refreshSessionSilent().catch(() => {});
+  // Если access нет (после сна/выгрузки) — пробуем refresh, как при bootstrap
+  const safeRefresh = () =>
+    refreshSessionSilent({ fromBootstrap: getAccess() == null }).catch(() => {});
 
   const onFocus = () => safeRefresh();
   const onVisibility = () => {

@@ -22,9 +22,15 @@ export const authStore: AuthStore = {
   user: { userId: null, username: null, balance: null },
 };
 
+let storeVersion = 0;
+export function getStoreVersion() {
+  return storeVersion;
+}
+
 const listeners = new Set<() => void>();
 
 function emit() {
+  storeVersion++;
   for (const cb of listeners) cb();
 }
 
