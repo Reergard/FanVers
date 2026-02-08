@@ -10,6 +10,7 @@ import BookDetailSkeleton from "./catalog/BookDetailSkeleton";
 
 const BookDetailRouter = lazy(() => import("./catalog/BookDetailRouter"));
 const BookmarksPage = lazy(() => import("./bookmarks/BookmarksPage"));
+const UserTranslations = lazy(() => import("./users/UserTranslations"));
 const LoginPage = lazy(() => import("./auth/LoginPage"));
 
 const queryClient = new QueryClient();
@@ -53,6 +54,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <BookmarksPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/my-translations"
+                element={
+                  <Suspense fallback={<div />}>
+                    <UserTranslations />
                   </Suspense>
                 }
               />

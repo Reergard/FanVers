@@ -57,6 +57,15 @@ export interface Book {
   thankAuthorCoins?: number | null;
 }
 
+/** Книга з user-translations API (з додатковою статистикою) */
+export interface UserTranslationBook extends Book {
+  created_at?: string | null;
+  last_updated?: string | null;
+  daily_income?: number;
+  monthly_income?: number;
+  daily_views?: number;
+}
+
 export interface Chapter {
   id: number;
   title: string;
@@ -140,6 +149,18 @@ function normalizeBook(raw: Record<string, unknown>): Book {
   };
 }
 
+function normalizeUserTranslation(raw: Record<string, unknown>): UserTranslationBook {
+  const book = normalizeBook(raw);
+  return {
+    ...book,
+    created_at: raw.created_at != null ? String(raw.created_at) : null,
+    last_updated: raw.last_updated != null ? String(raw.last_updated) : null,
+    daily_income: raw.daily_income != null ? Number(raw.daily_income) : 0,
+    monthly_income: raw.monthly_income != null ? Number(raw.monthly_income) : 0,
+    daily_views: raw.daily_views != null ? Number(raw.daily_views) : 0,
+  };
+}
+
 function normalizeChapter(raw: Record<string, unknown>): Chapter {
   const pos = raw.position ?? raw._position;
   return {
@@ -168,6 +189,7 @@ export const catalogKeys = {
   chapters: (slug: string) => ["book-chapters", slug] as const,
   chaptersPage: (bookId: number, rangeStart: number) =>
     ["book-chapters-page", bookId, rangeStart] as const,
+  userTranslations: (userId: number) => ["user-translations", userId] as const,
 };
 
 // --- API методы ---
@@ -220,6 +242,14 @@ export async function updateChapterOrderNoVolume(
   });
 }
 
+/** Книги користувача (власні переклади та авторські твори) */
+export async function getUserTranslations(): Promise<UserTranslationBook[]> {
+  const { data } = await http.get<Record<string, unknown>[]>(
+    `${CATALOG}/user-translations/`
+  );
+  return Array.isArray(data) ? data.map(normalizeUserTranslation) : [];
+}
+
 export const catalogApi = {
   getBook,
   getChapters,
@@ -227,4 +257,5 @@ export const catalogApi = {
   createVolume,
   updateChapterOrder,
   updateChapterOrderNoVolume,
+  getUserTranslations,
 };

@@ -525,11 +525,14 @@ def user_translations(request):
             # Реальные просмотры за день
             daily_views = BookView.get_daily_views(book, today)
             
-            # Добавляем статистику к данным книги
+            # Добавляем статистику та дату створення до даних книги
+            from django.utils.dateformat import format
             book_data.update({
                 'daily_income': float(daily_income),
                 'monthly_income': float(monthly_income),
-                'daily_views': daily_views
+                'daily_views': daily_views,
+                'created_at': format(book.created_at, 'd.m.Y') if book.created_at else None,
+                'last_updated': format(book.last_updated, 'd.m.Y') if book.last_updated else None,
             })
             
             books_with_stats.append(book_data)

@@ -1,0 +1,145 @@
+/* Картка перекладу — форма як у рекламної картки, без рамки */
+.card {
+  --cover-w: clamp(140px, 14vw, 180px);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  border: none;
+  overflow: visible;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* Форма обкладинки як у BookAdCard (ad) — вертикальна смужка зліва, заокруглення справа, більший розмір */
+.coverWrap {
+  position: relative;
+  width: var(--cover-w);
+  margin: 0 auto;
+
+  border-radius:
+    0
+    clamp(16px, calc(1.8 * var(--vwu)), 22px)
+    clamp(16px, calc(1.8 * var(--vwu)), 22px)
+    0;
+
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Вертикальна полоска зліва — як у рекламній картці */
+.coverWrap::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: clamp(10px, calc(1.2 * var(--vwu)), 14px);
+  height: 100%;
+  background: url("../../assets/backgrounds/line__smoll_book.svg") left top / 100% 100% no-repeat;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.cover {
+  width: 100%;
+  height: auto;
+  display: block;
+  position: relative;
+  z-index: 1;
+  aspect-ratio: 152 / 224;
+  object-fit: cover;
+  transform: translateZ(0);
+  filter: contrast(1.05) saturate(1.05);
+}
+
+.badge18 {
+  position: absolute;
+  top: clamp(8px, calc(0.9 * var(--vwu)), 12px);
+  right: clamp(8px, calc(0.9 * var(--vwu)), 12px);
+  width: clamp(22px, calc(2.4 * var(--vwu)), 28px);
+  height: auto;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Буква A — як у рекламній картці */
+.cornerA {
+  position: absolute;
+  right: clamp(8px, calc(0.9 * var(--vwu)), 12px);
+  bottom: clamp(8px, calc(0.9 * var(--vwu)), 12px);
+  width: clamp(40px, calc(4.0 * var(--vwu)), 52px);
+  height: clamp(30px, calc(3.0 * var(--vwu)), 40px);
+  display: grid;
+  place-items: center;
+  font-family: "WindSong", cursive;
+  font-size: 35px;
+  line-height: 1;
+  color: rgba(0, 210, 255, 0.95);
+  text-shadow:
+    0 0 14px rgba(0, 210, 255, 0.35),
+    0 0 2px rgba(0, 210, 255, 0.45);
+  transform: rotate(-6deg);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Назва книги під картинкою */
+.title {
+  font-family: "Seminaria", serif;
+  font-size: clamp(14px, calc(1.35 * var(--vwu)), 18px);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: #F58807;
+  margin: 0 0 clamp(8px, 1vw, 12px);
+  padding: 0 clamp(4px, 0.5vw, 8px);
+  text-align: center;
+  width: var(--cover-w);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Блок метаданих під обкладинкою */
+.metaBlock {
+  width: var(--cover-w);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 0.8vw, 10px);
+  padding: clamp(12px, 1.5vw, 16px) 0;
+}
+
+.metaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: clamp(8px, 1vw, 12px);
+}
+
+.metaLabel {
+  font-family: "BadScript", cursive;
+  font-size: clamp(12px, 1.1vw, 14px);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.metaValue {
+  font-family: "BadScript", cursive;
+  font-size: clamp(12px, 1.1vw, 14px);
+  color: rgba(255, 255, 255, 0.85);
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.cardLink:hover {
+  opacity: 0.95;
+}
+
+.cardNoLink {
+  opacity: 0.85;
+}
