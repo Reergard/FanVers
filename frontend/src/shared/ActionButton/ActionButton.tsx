@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "./ActionButton.module.css";
 
-export type ActionButtonVariant = "default" | "primary" | "outline" | "ghost" | "danger";
+export type ActionButtonVariant = "default" | "primary" | "outline" | "ghost" | "danger" | "bookFrame";
 export type ActionButtonSize = "sm" | "md" | "lg";
 
 type Props = {
@@ -64,15 +64,11 @@ export function ActionButton({
     </>
   );
 
-  if (as === "a") {
-    return (
-      <a className={cls} href={href} aria-label={ariaLabel} aria-busy={loading}>
-        {content}
-      </a>
-    );
-  }
-
-  return (
+  const inner = as === "a" ? (
+    <a className={cls} href={href} aria-label={ariaLabel} aria-busy={loading}>
+      {content}
+    </a>
+  ) : (
     <button
       type={type}
       className={cls}
@@ -84,4 +80,14 @@ export function ActionButton({
       {content}
     </button>
   );
+
+  if (variant === "bookFrame") {
+    return (
+      <span className={styles.bookFrameWrap}>
+        {inner}
+      </span>
+    );
+  }
+
+  return inner;
 }

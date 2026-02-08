@@ -85,6 +85,7 @@ export default function BookDetailReader({
           ratingValue={book.ratingValue ?? null}
           ratingCount={book.ratingCount ?? null}
           thankAuthorCoins={book.thankAuthorCoins ?? 10}
+          bookId={book.id}
           onBecomeTranslator={isAuthenticated ? () => {} : undefined}
         />
       }

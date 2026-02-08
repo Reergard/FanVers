@@ -92,6 +92,37 @@
   border-color: #f58807;
 }
 
+/* ===== Variant: bookFrame (ліше рамка SVG + текст) ===== */
+.bookFrameWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(10px, 1.2vw, 14px) clamp(14px, 1.8vw, 22px);
+  background-image: url("../../assets/icons/book_frame.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+}
+
+.variant_bookFrame {
+  padding: clamp(8px, 1vw, 12px) clamp(20px, 2.2vw, 32px);
+  font-size: clamp(12px, calc(1.2 * var(--vwu)), 14px);
+  font-family: "Seminaria", serif;
+
+  background: none;
+  border: none;
+  color: #f58807;
+}
+
+.variant_bookFrame:hover:not(:disabled):not(.loading) {
+  background: none;
+}
+
+.variant_bookFrame:disabled:hover,
+.variant_bookFrame.loading:hover {
+  background: none;
+}
+
 /* ===== Variant: ghost ===== */
 .variant_ghost {
   padding: clamp(8px, calc(0.9 * var(--vwu)), 10px) clamp(16px, calc(1.6 * var(--vwu)), 22px);

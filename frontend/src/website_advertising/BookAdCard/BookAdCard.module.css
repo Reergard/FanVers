@@ -18,8 +18,45 @@
   overflow: visible;
 }
 
+/* === Variant: bookmark (Закладки) — без еліпса, glow border, іконка закладки === */
+.card.variantBookmark {
+  min-height: auto;
+  border: 1px solid #f58807;
+  box-shadow: 0 0 12px rgba(245, 136, 7, 0.2);
+  border-radius: clamp(8px, calc(1.0 * var(--vwu)), 12px);
+  background: rgba(12, 20, 26, 0.4);
+}
+
+.card.variantBookmark::before {
+  display: none;
+}
+
+.card.variantBookmark .title {
+  color: #f58807;
+}
+
+.card.variantBookmark .title::after {
+  background: rgba(5, 180, 199, 0.33);
+}
+
+/* Іконка закладки на обкладинці (справа знизу) */
+.bookmarkIcon {
+  position: absolute;
+  right: clamp(8px, calc(0.9 * var(--vwu)), 12px);
+  bottom: clamp(8px, calc(0.9 * var(--vwu)), 12px);
+  width: clamp(24px, calc(2.5 * var(--vwu)), 32px);
+  height: clamp(24px, calc(2.5 * var(--vwu)), 32px);
+  color: rgba(0, 210, 255, 0.95);
+  z-index: 3;
+}
+
+.bookmarkIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
 /* Эллипс ПОД картинкой/текстом/кнопкой */
-.card::before{
+.card:not(.variantBookmark)::before{
   content: "";
   position: absolute;
   left: 50%;
@@ -66,8 +103,8 @@
 }
 
 
-/* вертикальная полоска слева поверх картинки */
-.coverWrap::after{
+/* вертикальная полоска слева — тільки для ad */
+.coverWrap:not(.variantBookmarkCover)::after{
   content: "";
   position: absolute;
   left: 0;

@@ -19,6 +19,13 @@
 
 **Місця використання:**
 - `website_advertising/BookAdCard/BookAdCard.tsx` — кнопка "Читати" на картці книги
+- `catalog/sections/BookChapters.tsx` — кнопки "Додати розділ", "Створити том", "Змінити порядок розділів"
+- `catalog/sections/BookHero.tsx` — кнопка «Стати новим перекладачем»
+- `catalog/sections/BookActions.tsx` — кнопки "В закладки", налаштування
+- `auth/LoginForm.tsx` — кнопка входу
+- `auth/RegisterForm.tsx` — кнопка реєстрації
+- `shared/NotificationModal/NotificationModal.tsx` — кнопка "Зрозуміло" для закриття уведомлення
+- `widgets/header/UserMenuOverlay/UserMenuOverlay.tsx` — кнопки "Вхід" і "Реєстрація" в меню неавторизованого користувача
 
 **Приклад використання:**
 ```tsx
@@ -96,6 +103,7 @@
 
 **Місця використання:**
 - `widgets/header/Header.tsx` — іконки пошуку, бургер-меню, шеврон тощо
+- `widgets/footer/Footer.tsx` — іконки соцмереж (Facebook, Instagram, YouTube)
 - `shared/MenuPanel/MenuPanel.tsx` — іконка рамки для CTA-кнопки
 - `shared/MenuList/MenuList.tsx` — іконки пунктів меню користувача
 
@@ -111,16 +119,18 @@
 
 ### `BookAdCard`
 
-**Призначення:** Картка реклами книги з обкладинкою, заголовком, описом та кнопкою "Читати".
+**Призначення:** Картка реклами книги з обкладинкою, заголовком, описом та кнопкою "Читати". Підтримує варіант `bookmark` для сторінки закладок.
 
 **Особливості:**
 - Адаптивна ширина (`width: 100%` від обгортки каруселі)
 - Підтримка вікового рейтингу (18+ badge)
-- Декоративний еліпс на фоні через CSS-змінну
+- Декоративний еліпс на фоні через CSS-змінну (тільки для `variant="ad"`)
 - Використовує `ActionButton` для кнопки дії
+- `variant="bookmark"` — компактний дизайн: без еліпса, з іконкою закладки на обкладинці, outline-кнопка
 
 **Місця використання:**
 - `website_advertising/AdvertisingBooks.tsx` — картки книг у каруселі реклами
+- `bookmarks/BookmarksPage.tsx` — картки закладок (`variant="bookmark"`)
 
 **Приклад використання:**
 ```tsx
@@ -131,6 +141,15 @@
   isAdult={true}
   adultBadgeSrc={badge18}
   onRead={() => console.log("READ")}
+/>
+
+<BookAdCard
+  variant="bookmark"
+  coverSrc={coverUrl}
+  title="Назва книги"
+  isAdult={false}
+  adultBadgeSrc={badge18}
+  onRead={() => navigate(`/books/${slug}`)}
 />
 ```
 
@@ -171,6 +190,96 @@
 
 ---
 
+### `Modal`
+
+**Призначення:** Переиспользуемый компонент модального окна — оверлей + вікно з центруванням, доступністю, закриттям по Esc і overlay.
+
+**Файли:**
+- `shared/Modal/Modal.tsx` — основний компонент
+- `shared/Modal/Modal.module.css` — стилі оверлею, вікна, заголовка, контенту
+
+**Props:**
+| Prop | Тип | Обов'язковий | Опис |
+|------|-----|--------------|------|
+| `open` | `boolean` | так | Чи відкрито модалку |
+| `onClose` | `() => void` | так | Колбек закриття (викликається при Esc, клік по overlay) |
+| `title` | `string` | ні | Заголовок (рендериться як `<h2 id="modal-title">`) |
+| `children` | `React.ReactNode` | так | Вміст модалки (обгортається в `div` з класом `.content`) |
+| `className` | `string` | ні | Додаткові CSS-класи для модального вікна (додаються до `.modal`) |
+
+**Залежності:**
+- `shared/hooks/useScrollLock.ts` — Modal викликає `useScrollLock(open)` для блокування скролу body при відкритті (iOS-safe)
+
+**Поведінка:**
+- Якщо `open === false` — повертає `null` (нічого не рендериться)
+- Закриття: клік по overlay (`onMouseDown={onClose}`), клавіша Escape
+- Фокус: при відкритті фокус йде на перший focusable елемент у модалці; при закритті — повертається на попередній
+- Доступність: `role="dialog"`, `aria-modal="true"`, `aria-labelledby` при наявності title
+- Анімації: `fadeIn` для overlay, `slideIn` для вікна; для `prefers-reduced-motion` — вимкнено
+
+**Стилі (Modal.module.css):**
+- `.overlay` — fixed, inset:0, напівпрозорий фон (rgba(0,0,0,0.7)), z-index: 2000
+- `.modal` — fixed, центрування, max-width: min(90vw, 500px), max-height: 90vh, рамка cyan, box-shadow, scrollbar
+- `.title` — заголовок (BadScript, clamp 20–28px)
+- `.content` — flex column, gap для контенту
+
+---
+
+**Тип 1: Пряме використання `Modal`**
+
+Місця і деталі:
+
+1. **`users/Profile.tsx`** — 3 модалки:
+   - **Поповнити баланс** (`depositModalOpen`): відкривається кнопкою «Поповнити баланс» (рядок ~494), закривається `onClose` і при успішному `depositMutation.onSuccess`. Вміст: форма з полем «Сума» і кнопкою «Поповнити», стилі з `Profile.module.css` (`.modalForm`, `.field`, `.input`, `.btnGreen`).
+   - **Вивести кошти** (`withdrawModalOpen`): відкривається кнопкою «Вивести кошти» (рядок ~502), закривається `onClose` і при успішному `withdrawMutation.onSuccess`. Вміст: підказка «Доступно: {balance}», форма з полем «Сума» і кнопкою «Вивести», стилі `.modalForm`, `.modalHint`, `.btnRed`.
+   - **Історія транзакцій** (`transactionModalOpen`): відкривається кнопкою «Історія транзакцій» (рядок ~471, `handleTransactionHistory`), закривається `onClose`. Вміст: список `balanceHistory` (`.transactionHistory`, `ul`/`li`).
+
+   У всіх трьох: `className` не передається, використовуються тільки стандартні стилі Modal + локальні стилі сторінки.
+
+2. **`widgets/header/UserMenuOverlay/UserMenuOverlay.tsx`** — 2 модалки:
+   - **Вхід** (`loginModalOpen`): відкривається кнопкою «Вхід» (рядок ~188) — при кліку спочатку `setLoginModalOpen(true)`, потім `onClose()` закриває overlay меню. Закривається `onClose` і через `handleLoginSuccess` (після успішного логіну). Вміст: `<LoginForm onSuccess={handleLoginSuccess} />`.
+   - **Реєстрація** (`registerModalOpen`): відкривається кнопкою «Реєстрація» (рядок ~197) — при кліку спочатку `setRegisterModalOpen(true)`, потім `onClose()` закриває overlay меню. Закривається `onClose` і через `handleRegisterSuccess`. Вміст: `<RegisterForm onSuccess={handleRegisterSuccess} />`.
+
+   У обох: `className` не передається, title — «Вхід» і «Реєстрація».
+
+---
+
+**Тип 2: Використання через `NotificationModal` (обгортка над `Modal`)**
+
+- **Файл:** `shared/NotificationModal/NotificationModal.tsx`
+- **Призначення:** Модалка для уведомлень (error/success/info/warning) з фіксованим layout: заголовок за типом, текст повідомлення, кнопка «Зрозуміло».
+
+**Props:**
+- `open`, `onClose`, `message`, `type?: "error" | "success" | "info" | "warning"`
+
+**Реалізація:** Викликає `<Modal open={open} onClose={onClose} title={getTitle()}>` з контентом: div з класами `.content` і `.[type]` (для кольорової смуги зліва), `<p>` з текстом, `<ActionButton>` «Зрозуміло» для закриття.
+
+**Deployment:**
+- `NotificationProvider` (`shared/NotificationModal/NotificationProvider.tsx`) рендерить `<NotificationModal>` усередині провайдера (рядки 46–51).
+- `NotificationProvider` обгортає весь додаток у `App.tsx` (рядки 36–59).
+- Уведомлення викликаються через `useNotification()`: `showError`, `showSuccess`, `showInfo`, `showWarning`.
+
+**Місця використання `useNotification`:**
+- `users/Profile.tsx` — `showSuccess`, `showError` (результати мутацій)
+- `auth/LoginForm.tsx` — показ помилок логіну
+- `auth/RegisterForm.tsx` — показ помилок реєстрації
+
+Тобто `NotificationModal` показується глобально, коли будь-який компонент викликає `showError`/`showSuccess`/тощо.
+
+**Стилі:** `NotificationModal.module.css` — `.content`, `.message`, `.actions`, `.error` / `.success` / `.info` / `.warning` (border-left для кольорового акценту).
+
+---
+
+**Підсумок:**
+- Один базовий компонент: `Modal` (shared/Modal)
+- Два способи використання: напряму (Profile, UserMenuOverlay) і через `NotificationModal` (глобальні уведомлення)
+- `className` для Modal у проекті не використовується — всі варіанти використовують стандартний вигляд
+- Окремих «типів» Modal немає — є один тип з різним контентом (children)
+
+**Майбутнє використання:** Для будь-якої нової модалки імпортувати `Modal` з `shared/Modal/Modal`, передати `open`, `onClose`, опційно `title` і `className`, і передати вміст як `children`.
+
+---
+
 ## `widgets/` — Великі переиспользуемые секції
 
 ### `Header`
@@ -194,6 +303,7 @@
 
 **Використовує компоненти:**
 - `Container` — для обгортки контенту
+- `Icon` — для іконок соцмереж (Facebook, Instagram, YouTube)
 
 **Місця використання:**
 - `app/Base.tsx` — рендериться на всіх сторінках через макет
@@ -224,4 +334,4 @@
 
 ---
 
-**Останнє оновлення:** 2026-01-25
+**Останнє оновлення:** 2026-02-08

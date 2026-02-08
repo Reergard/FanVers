@@ -1,16 +1,23 @@
 import { ActionButton } from "../../shared/ActionButton/ActionButton";
+import { BookmarkButton } from "../../bookmarks/BookmarkButton";
 import styles from "../styles/BookDetail.module.css";
 import settingsIcon from "../assets/backgrounds/settings.svg";
 
 type BookActionsProps = {
-  onBookmark?: () => void;
+  bookId?: number;
   onTranslationSettings?: () => void;
 };
 
-export function BookActions({ onBookmark, onTranslationSettings }: BookActionsProps) {
+export function BookActions({ bookId, onTranslationSettings }: BookActionsProps) {
   return (
     <div className={styles.coverActions}>
-      <ActionButton variant="primary" onClick={onBookmark}>В закладки</ActionButton>
+      {bookId != null ? (
+        <BookmarkButton bookId={bookId} />
+      ) : (
+        <ActionButton variant="primary" disabled>
+          В закладки
+        </ActionButton>
+      )}
       <ActionButton
         variant="outline"
         onClick={onTranslationSettings}

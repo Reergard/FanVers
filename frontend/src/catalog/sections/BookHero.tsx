@@ -26,7 +26,7 @@ export type BookHeroProps = {
   thankAuthorLabel?: string;
   thankAuthorCoins?: string | number;
 
-  onBookmark?: () => void;
+  bookId?: number;
   onTranslationSettings?: () => void;
   onBecomeTranslator?: () => void;
 };
@@ -42,7 +42,7 @@ export function BookHero({
   ratingValue,
   ratingCount,
   thankAuthorLabel = "подякувати автору",
-  onBookmark,
+  bookId,
   onTranslationSettings,
   onBecomeTranslator,
 }: BookHeroProps) {
@@ -94,7 +94,7 @@ export function BookHero({
               )}
             </div>
 
-            <BookActions onBookmark={onBookmark} onTranslationSettings={onTranslationSettings} />
+            <BookActions bookId={bookId} onTranslationSettings={onTranslationSettings} />
           </div>
 
           {/* MIDDLE: meta + кнопка після опису жанрів/тегів */}

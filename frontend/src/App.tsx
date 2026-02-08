@@ -9,6 +9,8 @@ import { NotificationProvider } from "./shared/NotificationModal/NotificationPro
 import BookDetailSkeleton from "./catalog/BookDetailSkeleton";
 
 const BookDetailRouter = lazy(() => import("./catalog/BookDetailRouter"));
+const BookmarksPage = lazy(() => import("./bookmarks/BookmarksPage"));
+const LoginPage = lazy(() => import("./auth/LoginPage"));
 
 const queryClient = new QueryClient();
 
@@ -43,6 +45,22 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <Profile />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/bookmarks"
+                element={
+                  <Suspense fallback={<div />}>
+                    <BookmarksPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/login"
+                element={
+                  <Suspense fallback={<div />}>
+                    <LoginPage />
                   </Suspense>
                 }
               />

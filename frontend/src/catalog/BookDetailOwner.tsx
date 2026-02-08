@@ -130,7 +130,7 @@ export default function BookDetailOwner({
           ratingValue={book.ratingValue ?? null}
           ratingCount={book.ratingCount ?? null}
           thankAuthorCoins={book.thankAuthorCoins ?? 10}
-          onBookmark={() => {}}
+          bookId={book.id}
           onTranslationSettings={() => {}}
           onBecomeTranslator={() => {}}
         />
