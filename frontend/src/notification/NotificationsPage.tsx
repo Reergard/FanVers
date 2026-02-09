@@ -1,58 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import styles from "./NotificationsPage.module.css";
 import { Container } from "../shared/Container";
 import { SaveButton } from "../shared/SaveButton/SaveButton";
 import { FilterCheckbox } from "../shared/FilterCheckbox/FilterCheckbox";
+import { ActionButton } from "../shared/ActionButton/ActionButton";
+import { useAuth } from "../auth/useAuth";
+import { useNotification } from "../shared/NotificationModal/NotificationProvider";
+import { useNotifications } from "./useNotifications";
+import { getMyProfile, updateNotificationSettings } from "../users/profileService";
+import type { AppNotification } from "./types";
+import type { NotificationSettingsPatch } from "../users/types";
 
-type MessageItem = {
-  id: string;
-  title: string;
-  text: string;
-  isRead: boolean;
-};
-
-const MOCK_MESSAGES: MessageItem[] = [
-  {
-    id: "1",
-    title: "Повідомлення 1",
-    text:
-      "Вітання. Добро пожалувати в систему перекладів «UA Translate». Цей сайт призначений для професійних мов любительських перекладів будь-яких новелів, фанфіків, ранобе з різних мов.",
-    isRead: false,
-  },
-  {
-    id: "2",
-    title: "Повідомлення 2",
-    text:
-      "Вітання. Добро пожалувати в систему перекладів «UA Translate». Цей сайт призначений для професійних мов любительських перекладів будь-яких новелів, фанфіків, ранобе з різних мов.",
-    isRead: false,
-  },
-  {
-    id: "3",
-    title: "Повідомлення 3",
-    text:
-      "Вітання. Добро пожалувати в систему перекладів «UA Translate». Цей сайт призначений для професійних мов любительських перекладів будь-яких новелів, фанфіків, ранобе з різних мов.",
-    isRead: true,
-  },
-  {
-    id: "4",
-    title: "Повідомлення 4",
-    text:
-      "Вітання. Добро пожалувати в систему перекладів «UA Translate». Цей сайт призначений для професійних мов любительських перекладів будь-яких новелів, фанфіків, ранобе з різних мов.",
-    isRead: true,
-  },
-];
-
-const FILTERS = [
-  "Помилка у тексті",
-  "Передача перекладу іншому",
-  "Отримання перекладу від іншого",
-  "Зміна статусу замовлення реклами у соцмережах",
-  "Вихід нових розділів",
-  "Новий розділ у перекладі",
-  "Зміна статусу перекладу",
-  "Зняття розділу з передплати",
-  "Коментар до глави",
-  "Коментар до книги",
+const NOTIFICATION_FILTERS: { key: keyof NotificationSettingsPatch; label: string }[] = [
+  { key: "comment_notifications", label: "Коментарі у ваших постах та відповіді на ваші коментарі" },
+  { key: "translation_status_notifications", label: "Зміна статусу перекладу" },
+  { key: "chapter_subscription_notifications", label: "Зняття розділу з передплати" },
+  { key: "chapter_comment_notifications", label: "Коментарі до розділу" },
 ];
 
 function pluralize(count: number): string {
@@ -63,23 +28,111 @@ function pluralize(count: number): string {
   return "повідомлень";
 }
 
+function formatDate(createdAt: string): string {
+  try {
+    return new Date(createdAt).toLocaleString("uk-UA");
+  } catch {
+    return createdAt;
+  }
+}
+
 export function NotificationsPage() {
-  const total = MOCK_MESSAGES.length;
-  const [filters, setFilters] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    FILTERS.forEach((label) => {
-      initial[label] = label === "Отримання перекладу від іншого";
-    });
-    return initial;
+  const { isAuthenticated, authReady } = useAuth();
+  const { showSuccess, showError } = useNotification();
+  const queryClient = useQueryClient();
+  const { query, markRead, remove } = useNotifications(isAuthenticated);
+
+  const [filters, setFilters] = useState<Partial<Record<keyof NotificationSettingsPatch, boolean>>>({});
+
+  const profileQuery = useQuery({
+    queryKey: ["profile"],
+    queryFn: getMyProfile,
+    enabled: isAuthenticated,
   });
 
-  const handleFilterChange = (label: string, checked: boolean) => {
-    setFilters((prev) => ({ ...prev, [label]: checked }));
+  const profile = profileQuery.data;
+
+  useEffect(() => {
+    if (profile) {
+      const next: Partial<Record<keyof NotificationSettingsPatch, boolean>> = {};
+      NOTIFICATION_FILTERS.forEach(({ key }) => {
+        const val = profile[key as keyof typeof profile];
+        next[key] = typeof val === "boolean" ? val : true;
+      });
+      setFilters(next);
+    }
+  }, [profile]);
+
+  const saveFiltersMutation = useMutation({
+    mutationFn: (patch: NotificationSettingsPatch) => updateNotificationSettings(patch),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      showSuccess("Налаштування збережено");
+    },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      showError(msg ?? "Помилка при збереженні");
+    },
+  });
+
+  const notifications = query.data?.notifications ?? [];
+  const isLoading = query.isLoading;
+  const isError = query.isError;
+  const refetch = query.refetch;
+
+  const handleFilterChange = (key: keyof NotificationSettingsPatch, checked: boolean) => {
+    setFilters((prev) => ({ ...prev, [key]: checked }));
   };
 
   const handleSaveFilters = () => {
-    // TODO: API call
+    const patch: NotificationSettingsPatch = {};
+    NOTIFICATION_FILTERS.forEach(({ key }) => {
+      if (key in filters && typeof filters[key] === "boolean") {
+        patch[key] = filters[key]!;
+      }
+    });
+    saveFiltersMutation.mutate(patch);
   };
+
+  const profileLoaded = !profileQuery.isLoading && !!profile;
+  const canSaveFilters = profileLoaded && Object.keys(filters).length > 0;
+
+  const handleMarkAsRead = (id: number | string) => {
+    markRead.mutate(id);
+  };
+
+  const handleDelete = (id: number | string) => {
+    remove.mutate(id, {
+      onSuccess: () => showSuccess("Повідомлення видалено"),
+      onError: () => showError("Помилка при видаленні повідомлення"),
+    });
+  };
+
+  if (!authReady) {
+    return (
+      <section className={styles.page}>
+        <Container>
+          <div className={styles.loading}>Завантаження…</div>
+        </Container>
+      </section>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <section className={styles.page}>
+        <Container>
+          <div className={styles.authRequired}>
+            <h2>Для перегляду повідомлень необхідно увійти в систему</h2>
+            <p>Увійдіть або зареєструйтесь, щоб мати доступ до ваших повідомлень</p>
+            <Link to="/login">
+              <ActionButton variant="primary">Увійти</ActionButton>
+            </Link>
+          </div>
+        </Container>
+      </section>
+    );
+  }
 
   return (
     <section className={styles.page}>
@@ -89,7 +142,7 @@ export function NotificationsPage() {
 
           <div className={styles.headerMid}>
             <span className={styles.count}>
-              Показано {total} {pluralize(total)}
+              Показано {notifications.length} {pluralize(notifications.length)}
             </span>
             <span className={styles.topLine} aria-hidden="true" />
           </div>
@@ -103,15 +156,15 @@ export function NotificationsPage() {
               <h2 className={styles.sidebarTitle}>ПОВІДОМЛЕННЯ</h2>
 
               <form className={styles.filters} onSubmit={(e) => e.preventDefault()}>
-                {FILTERS.map((label, idx) => {
+                {NOTIFICATION_FILTERS.map(({ key, label }, idx) => {
                   const id = `msg-filter-${idx}`;
                   return (
                     <FilterCheckbox
                       key={id}
                       id={id}
                       label={label}
-                      checked={filters[label] ?? false}
-                      onChange={(checked) => handleFilterChange(label, checked)}
+                      checked={filters[key] ?? true}
+                      onChange={(checked) => handleFilterChange(key as keyof NotificationSettingsPatch, checked)}
                     />
                   );
                 })}
@@ -121,6 +174,8 @@ export function NotificationsPage() {
                     type="button"
                     onClick={handleSaveFilters}
                     variant="default"
+                    disabled={!canSaveFilters || saveFiltersMutation.isPending}
+                    loading={saveFiltersMutation.isPending}
                   />
                 </div>
               </form>
@@ -131,34 +186,73 @@ export function NotificationsPage() {
           <main className={styles.content} aria-label="Список повідомлень">
             <div className={styles.contentHeader}>
               <span className={styles.contentCount}>
-                Показано {total} {pluralize(total)}
+                Показано {notifications.length} {pluralize(notifications.length)}
               </span>
               <span className={styles.contentLine} aria-hidden="true" />
             </div>
 
-            <ul className={styles.list}>
-              {MOCK_MESSAGES.map((m) => (
-                <li key={m.id} className={styles.itemWrap}>
-                  <article className={styles.item}>
-                    <div className={styles.itemTitlePill}>{m.title}</div>
+            {isError ? (
+              <div className={styles.error}>
+                <p>Помилка завантаження повідомлень</p>
+                <ActionButton
+                  variant="outline"
+                  onClick={() => refetch()}
+                  disabled={isLoading}
+                >
+                  Спробувати ще раз
+                </ActionButton>
+              </div>
+            ) : isLoading ? (
+              <div className={styles.loading}>Завантаження повідомлень…</div>
+            ) : notifications.length === 0 ? (
+              <div className={styles.empty}>
+                <div className={styles.itemTitlePill}>Немає повідомлень</div>
+                <p className={styles.itemText}>У вас поки немає повідомлень</p>
+              </div>
+            ) : (
+              <ul className={styles.list}>
+                {notifications.map((m: AppNotification, idx: number) => (
+                  <li key={m.id} className={styles.itemWrap}>
+                    <article className={styles.item}>
+                      <div className={styles.itemTitlePill}>
+                        Повідомлення {idx + 1}
+                        {!m.is_read && <span className={styles.unreadDot} />}
+                      </div>
 
-                    <p className={styles.itemText}>{m.text}</p>
+                      <p className={styles.itemText}>
+                        {m.message || "Немає тексту повідомлення"}
+                      </p>
+                      {m.created_at && (
+                        <small className={styles.itemDate}>{formatDate(m.created_at)}</small>
+                      )}
 
-                    <div className={styles.itemFooter}>
-                      <button type="button" className={styles.markReadBtn}>
-                        Позначити як прочитане
-                      </button>
+                      <div className={styles.itemFooter}>
+                        {!m.is_read && (
+                          <button
+                            type="button"
+                            className={styles.markReadBtn}
+                            onClick={() => handleMarkAsRead(m.id)}
+                            disabled={markRead.isPending}
+                          >
+                            Позначити як прочитане
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className={styles.deleteBtn}
+                          onClick={() => handleDelete(m.id)}
+                          disabled={remove.isPending}
+                        >
+                          Видалити
+                        </button>
+                      </div>
+                    </article>
 
-                      <button type="button" className={styles.deleteBtn}>
-                        Видалити
-                      </button>
-                    </div>
-                  </article>
-
-                  <div className={styles.separator} aria-hidden="true" />
-                </li>
-              ))}
-            </ul>
+                    <div className={styles.separator} aria-hidden="true" />
+                  </li>
+                ))}
+              </ul>
+            )}
           </main>
         </div>
       </Container>

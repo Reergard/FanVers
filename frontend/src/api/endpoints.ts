@@ -24,4 +24,10 @@ export const API = {
   bookmarkStatus: (bookId: number) => `/api/navigation/bookmarks/status/${bookId}/`,
   bookmarks: "/api/navigation/bookmarks/",
   bookmarkById: (id: number) => `/api/navigation/bookmarks/${id}/`,
+
+  // Notifications
+  notifications: "/api/notification/notifications/",
+  notificationById: (id: number | string) => `/api/notification/notifications/${id}/`,
+  notificationMarkAsRead: (id: number | string) =>
+    `/api/notification/notifications/${id}/mark_as_read/`,
 } as const;
