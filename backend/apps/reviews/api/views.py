@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from apps.catalog.models import Book, Chapter
 from apps.reviews.models import BookComment, ChapterComment
@@ -21,7 +22,9 @@ class BookCommentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         book_slug = self.kwargs.get('slug')
         book = get_object_or_404(Book, slug=book_slug)
-        return BookComment.objects.filter(book=book, parent=None)  # Отримуємо тільки кореневі коментарі
+        if self.action == 'list':
+            return BookComment.objects.filter(book=book, parent=None)  # Кореневі коментарі для списку
+        return BookComment.objects.filter(book=book)  # Всі коментарі для retrieve/update/destroy
 
     def create(self, request, *args, **kwargs):
         logger.info(f"Received data: {request.data}")
@@ -88,6 +91,11 @@ class BookCommentViewSet(viewsets.ModelViewSet):
         except (TypeError, KeyError):
             return {}
 
+    def perform_destroy(self, instance):
+        if self.request.user != instance.user:
+            raise PermissionDenied("Можна видаляти лише свої коментарі.")
+        instance.delete()
+
 
 class ChapterCommentViewSet(viewsets.ModelViewSet):
     serializer_class = ChapterCommentSerializer
@@ -96,7 +104,9 @@ class ChapterCommentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         chapter_slug = self.kwargs.get('slug')
         chapter = get_object_or_404(Chapter, slug=chapter_slug)
-        return ChapterComment.objects.filter(chapter=chapter, parent=None)  # Отримуємо тільки кореневі коментарі
+        if self.action == 'list':
+            return ChapterComment.objects.filter(chapter=chapter, parent=None)  # Кореневі для списку
+        return ChapterComment.objects.filter(chapter=chapter)  # Всі для retrieve/update/destroy
 
     def create(self, request, *args, **kwargs):
         logger.info(f"Received data: {request.data}")
@@ -163,6 +173,11 @@ class ChapterCommentViewSet(viewsets.ModelViewSet):
             return {'Location': str(data['url'])}
         except (TypeError, KeyError):
             return {}
+
+    def perform_destroy(self, instance):
+        if self.request.user != instance.user:
+            raise PermissionDenied("Можна видаляти лише свої коментарі.")
+        instance.delete()
 
     @action(detail=True, methods=['post'])
     def reply(self, request, pk=None, slug=None):

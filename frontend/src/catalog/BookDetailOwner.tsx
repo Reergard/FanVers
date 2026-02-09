@@ -6,7 +6,7 @@ import { BookHero } from "./sections/BookHero";
 import { BookDescription } from "./sections/BookDescription";
 import { AuthorWorks } from "./sections/AuthorWorks";
 import { BookChapters } from "./sections/BookChapters";
-import { BookComments, MOCK_COMMENTS } from "./sections/BookComments";
+import { BookCommentsContainer } from "./sections/BookCommentsContainer";
 
 interface BookDetailOwnerProps {
   book: Book;
@@ -166,7 +166,7 @@ export default function BookDetailOwner({
           )}
         </>
       }
-      comments={<BookComments comments={MOCK_COMMENTS} />}
+      comments={<BookCommentsContainer type="book" slug={book.slug} isOwner />}
     />
   );
 }

@@ -1,8 +1,11 @@
 import axios, { AxiosError } from "axios";
 import { getAccess } from "../auth/token";
+import { authStore } from "../auth/store";
 import { API } from "./endpoints";
 import { refreshSessionForce, doLogout } from "../auth/refreshCore";
 import { authLog } from "../auth/authLogger";
+
+const UNSAFE_METHODS = ["post", "put", "patch", "delete"];
 
 // 401 → всегда реальный refresh через refreshSessionForce (force: true, без cooldown).
 // Logout — через refreshCore (httpRaw, без интерцепторов).
@@ -19,12 +22,16 @@ export const http = axios.create({
   withCredentials: true,
 });
 
-// 1) Подставляем access в Authorization
+// 1) Подставляем access в Authorization и CSRF для POST/PUT/PATCH/DELETE
 http.interceptors.request.use((config) => {
+  config.headers = config.headers ?? {};
   const token = getAccess();
   if (token) {
-    config.headers = config.headers ?? {};
     (config.headers as any).Authorization = `Bearer ${token}`;
+  }
+  const method = (config.method ?? "get").toLowerCase();
+  if (UNSAFE_METHODS.includes(method) && authStore.csrfToken) {
+    (config.headers as any)["X-CSRFToken"] = authStore.csrfToken;
   }
   return config;
 });

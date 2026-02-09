@@ -1029,6 +1029,11 @@
   text-decoration: underline;
 }
 
+.commentDeleteBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .commentDeleteIcon {
   width: 18px;
   height: 18px;
@@ -1057,6 +1062,88 @@
 
 .commentReplies .commentItem + .commentItem {
   border-top: 1px solid var(--comment-accent);
+}
+
+/* Реакції: кнопки для лайк/дизлайк */
+.commentReactionBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.commentLikeMuted {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.commentDislikeMuted {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* Лайк автора */
+.ownerLikeDisplay {
+  color: #28a745;
+  font-weight: 600;
+  font-size: clamp(12px, 1.1vw, 14px);
+  margin-right: 8px;
+}
+
+.commentOwnerLikeBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--comment-accent);
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.commentOwnerLikeBtn:hover {
+  text-decoration: underline;
+}
+
+/* Форма відповіді під коментарем */
+.replyForm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-left: clamp(54px, 5.5vw, 90px);
+}
+
+.replyForm .commentInput {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--comment-accent);
+  border-radius: 9999px;
+}
+
+/* Підказки форми */
+.commentValidationError {
+  color: #ef1b1b;
+  font-size: 12px;
+  margin: 6px 0 0 0;
+}
+
+.commentBlockedHint {
+  color: #f58807;
+  font-size: 12px;
+  margin: 6px 0 0 0;
+}
+
+.commentLoginHint {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  margin: 0 0 16px 0;
+}
+
+.commentEmpty {
+  list-style: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  padding: 16px 0;
 }
 
 /* ===== АДАПТИВ ===== */

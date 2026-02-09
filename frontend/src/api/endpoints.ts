@@ -30,4 +30,16 @@ export const API = {
   notificationById: (id: number | string) => `/api/notification/notifications/${id}/`,
   notificationMarkAsRead: (id: number | string) =>
     `/api/notification/notifications/${id}/mark_as_read/`,
+
+  // Reviews (comments)
+  bookComments: (bookSlug: string) => `/api/reviews/book/${bookSlug}/comments/`,
+  chapterComments: (chapterSlug: string) => `/api/reviews/chapter/${chapterSlug}/comments/`,
+  commentReaction: (type: "book" | "chapter", commentId: number) =>
+    `/api/reviews/${type}-comment/${commentId}/update_reaction/`,
+  commentOwnerLike: (type: "book" | "chapter", commentId: number) =>
+    `/api/reviews/${type}-comment/${commentId}/owner_like/`,
+  bookCommentDetail: (bookSlug: string, commentId: number) =>
+    `/api/reviews/book/${bookSlug}/comments/${commentId}/`,
+  chapterCommentDetail: (chapterSlug: string, commentId: number) =>
+    `/api/reviews/chapter/${chapterSlug}/comments/${commentId}/`,
 } as const;
