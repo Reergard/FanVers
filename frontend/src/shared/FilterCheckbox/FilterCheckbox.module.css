@@ -1,0 +1,56 @@
+.row {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: 10px;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.box {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  flex-shrink: 0;
+
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.15) inset,
+    0 0 0 1px rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.12);
+
+  position: relative;
+}
+
+.row:has(.input:checked) .box {
+  background: rgba(0, 234, 253, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(0, 234, 253, 0.7) inset,
+    0 0 14px rgba(0, 234, 253, 0.25);
+}
+
+.row:has(.input:checked) .box::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 8px;
+  height: 4px;
+  border-left: 2px solid rgba(255, 255, 255, 0.92);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.92);
+  transform: rotate(-45deg) translateY(-1px);
+}
+
+.label {
+  font-size: clamp(12px, 1.15vw, 13px);
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.row:has(.input:checked) .label {
+  color: #00EAFD;
+}

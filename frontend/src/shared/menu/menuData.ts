@@ -6,7 +6,7 @@ export type MenuItem = {
 };
 
 export const USER_MENU: MenuItem[] = [
-  { to: "/notifications", label: "Сповіщення", iconName: "bell" },
+  { to: "/messages", label: "Повідомлення", iconName: "bell" },
   { to: "/chat", label: "ChatVerse", iconName: "mail" },
   { to: "/bookmarks", label: "Закладки", iconName: "zakladki" },
   { to: "/my-translations", label: "Власні переклади", iconName: "my_books" },

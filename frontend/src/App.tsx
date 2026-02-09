@@ -12,6 +12,9 @@ const BookDetailRouter = lazy(() => import("./catalog/BookDetailRouter"));
 const BookmarksPage = lazy(() => import("./bookmarks/BookmarksPage"));
 const UserTranslations = lazy(() => import("./users/UserTranslations"));
 const LoginPage = lazy(() => import("./auth/LoginPage"));
+const NotificationsPage = lazy(() =>
+  import("./notification/NotificationsPage").then((m) => ({ default: m.NotificationsPage }))
+);
 
 const queryClient = new QueryClient();
 
@@ -70,6 +73,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <LoginPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/messages"
+                element={
+                  <Suspense fallback={<div />}>
+                    <NotificationsPage />
                   </Suspense>
                 }
               />

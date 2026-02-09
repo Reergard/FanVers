@@ -1,0 +1,55 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(8px, 1vw, 10px);
+
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(255, 255, 255, 0.84);
+
+  padding: clamp(7px, 1vw, 10px) clamp(12px, 1.4vw, 18px);
+  border-radius: 7px;
+
+  font-size: clamp(12px, 1.05vw, 14px);
+  font-family: inherit;
+  cursor: pointer;
+
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+/* Messages page: slightly different border */
+.variant_default {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.variant_default:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.variant_green {
+  border: 1px solid rgba(12, 178, 8, 0.75);
+  background: rgba(0, 0, 0, 0.16);
+  color: #0cb208;
+}
+
+.variant_green:hover:not(:disabled) {
+  border-color: #0cb208;
+}

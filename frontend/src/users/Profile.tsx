@@ -5,7 +5,7 @@ import styles from "./Profile.module.css";
 import crownSvg from "./assets/icons/crown.svg";
 import turnedOffView from "./assets/icons/turned_off_view.svg";
 import includedView from "./assets/icons/included_view.svg";
-import saveSvg from "./assets/icons/Save.svg";
+import { SaveButton } from "../shared/SaveButton/SaveButton";
 import crystalProfile from "./assets/icons/crysral_profile.svg";
 import { useAuth } from "../auth/useAuth";
 import { refreshAuthStatus } from "../auth/service";
@@ -527,15 +527,13 @@ export default function Profile() {
                   />
                 </span>
               </label>
-              <button
+              <SaveButton
                 type="button"
-                className={styles.btnSave}
                 onClick={handleEmailSubmit}
                 disabled={updateEmailMutation.isPending || !newEmail.trim()}
-              >
-                <img src={saveSvg} alt="" className={styles.btnSaveIcon} aria-hidden="true" />
-                {updateEmailMutation.isPending ? "Збереження..." : "Зберегти"}
-              </button>
+                loading={updateEmailMutation.isPending}
+                variant="default"
+              />
             </div>
 
             <div className={styles.formBlock}>
@@ -603,9 +601,8 @@ export default function Profile() {
                   </button>
                 </span>
               </label>
-              <button
+              <SaveButton
                 type="button"
-                className={styles.btnGreenOutline}
                 onClick={handlePasswordSubmit}
                 disabled={
                   changePasswordMutation.isPending ||
@@ -613,10 +610,9 @@ export default function Profile() {
                   !passwords.new ||
                   !passwords.confirm
                 }
-              >
-                <img src={saveSvg} alt="" className={styles.btnSaveIcon} aria-hidden="true" />
-                {changePasswordMutation.isPending ? "Збереження..." : "Зберегти"}
-              </button>
+                loading={changePasswordMutation.isPending}
+                variant="green"
+              />
             </div>
           </section>
 
