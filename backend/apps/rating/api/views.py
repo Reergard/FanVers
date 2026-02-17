@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Avg
+from django.http import Http404
 from ..models import BookRating
 from .serializers import BookRatingSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -51,9 +52,11 @@ class BookRatingViewSet(viewsets.ModelViewSet):
                 )
             self.perform_create(serializer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Http404:
+            raise
         except Exception as e:
             return Response(
-                {'error': str(e)}, 
+                {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -97,17 +100,19 @@ class BookRatingViewSet(viewsets.ModelViewSet):
 
             return Response({
                 'book_rating': {
-                    'average': book_rating_stats['avg_rating'] or 0,
+                    'average': book_rating_stats['avg_rating'] if book_rating_stats['avg_rating'] is not None else 0,
                     'total_votes': book_rating_stats['total_votes']
                 },
                 'translation_rating': {
-                    'average': translation_rating_stats['avg_rating'] or 0,
+                    'average': translation_rating_stats['avg_rating'] if translation_rating_stats['avg_rating'] is not None else 0,
                     'total_votes': translation_rating_stats['total_votes']
                 },
                 'user_ratings': list(user_ratings) if user_ratings else None
             })
+        except Http404:
+            raise
         except Exception as e:
             return Response(
-                {'error': str(e)}, 
+                {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )

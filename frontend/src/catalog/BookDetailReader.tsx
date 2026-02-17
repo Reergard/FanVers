@@ -82,6 +82,7 @@ export default function BookDetailReader({
           showAgeBadge={book.adult_content === true}
           authorMarkText={authorMarkText ?? undefined}
           metaRows={metaRows}
+          bookSlug={book.slug}
           ratingValue={book.ratingValue ?? null}
           ratingCount={book.ratingCount ?? null}
           thankAuthorCoins={book.thankAuthorCoins ?? 10}
