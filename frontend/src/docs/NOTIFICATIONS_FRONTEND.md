@@ -52,7 +52,8 @@ frontend/src/
 | **notification/NotificationsPage.tsx** | UI-компонент: гейти по auth, рендер списку, обробники кліків, фільтри з профілю, збереження налаштувань. |
 | **users/profileService.ts** | `updateNotificationSettings(patch)` — PUT на `/api/users/profile/notification-settings/`. Використовується для збереження чекбоксів фільтрів. |
 | **users/types.ts** | `NotificationSettingsPatch` — частковий тип з полями `comment_notifications`, `translation_status_notifications` тощо. |
-| **shared/NotificationModal/NotificationProvider.tsx** | Глобальний контекст для toast: `showSuccess`, `showError`, `showInfo`, `showWarning`. Використовується для зворотного зв’язку після збереження/видалення. |
+| **shared/NotificationModal/NotificationProvider.tsx** | Глобальний контекст для toast: `showSuccess`, `showError`, `showInfo`, `showWarning`, **`showSuccessAutoClose(message)`** (модалка без кнопок, авто-закриття через 3 с). Рендерить NotificationModal або AutoCloseNotificationModal залежно від variant. Використовується для зворотного зв’язку після збереження/видалення та після створення глави. |
+| **shared/NotificationModal/AutoCloseNotificationModal.tsx** | Модалка успіху без кнопок: тільки заголовок «Успіх» і текст; закривається по таймеру (prop `autoCloseMs`). Використовується для повідомлення після створення глави. |
 
 ---
 
@@ -256,6 +257,19 @@ frontend/src/
 - **Уведомлення в системі** — список повідомлень із бекенду (коментарі, передплати тощо).
 - Це різні сутності; вони спільні тільки в назві.
 
+**Коментарі (catalog):** секція коментарів використовує тільки **showError** з `useNotification()` — для помилок завантаження списку, помилок 403 при відправці/видаленні та загальних помилок API. Success-повідомлення після відправки коментаря, відповіді або видалення не показуються.
+
+**Рейтинги (catalog):** компонент `BookRatingStars` використовує `useNotification()`: **showWarning** — коли неавторизований користувач клікає по зірці («Для голосування необхідно увійти в систему»); **showError** — при помилці відправки оцінки (в т.ч. 429, або текст з `data.error` / `data.detail` з відповіді сервера). Детально: RATINGS_FRONTEND.md.
+
+### 10.5. Глобальні toast (NotificationProvider) — два варіанти
+
+**Файли:** `shared/NotificationModal/NotificationProvider.tsx`, `NotificationModal.tsx`, `AutoCloseNotificationModal.tsx`, `Modal/Modal.tsx`.
+
+- Провайдер зберігає state: `open`, `message`, `type`, **variant** (`"default"` | `"autoClose"`).
+- **variant "default"**: рендериться `NotificationModal` — заголовок за типом, текст, кнопка «Зрозуміло», у Modal показується кнопка ×. Закриття: клік по overlay, ×, «Зрозуміло», Escape.
+- **variant "autoClose"**: рендериться `AutoCloseNotificationModal` — заголовок «Успіх», тільки текст повідомлення, **без кнопок** (Modal з `showCloseButton={false}`). Закриття **автоматично** через `AUTO_CLOSE_MS` (3000 мс) по таймеру в useEffect; overlay-клік і Escape також викликають `onClose`.
+- Метод **showSuccessAutoClose(message)** встановлює variant `"autoClose"` і відкриває модалку. Використовується в `catalog/BookDetailRouter.tsx`: після редиректу з сторінки додавання глави перевіряється `location.state?.chapterCreated`; якщо true — викликається `showSuccessAutoClose("Глава успішно завантажена")`, потім state очищається (navigate replace), щоб при оновленні сторінки модалка не показувалась знову.
+
 ### 10.5. Дедуплікація
 
 - У `notificationsService` застосовується `Map` по `id`, щоб уникнути дублікатів у списку.
@@ -306,4 +320,4 @@ frontend/src/
 
 ---
 
-**Останнє оновлення:** 2026-02-09
+**Останнє оновлення:** з урахуванням showSuccessAutoClose та AutoCloseNotificationModal (створення глави).

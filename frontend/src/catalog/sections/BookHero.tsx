@@ -33,7 +33,6 @@ export type BookHeroProps = {
   thankAuthorCoins?: string | number;
 
   bookId?: number;
-  onTranslationSettings?: () => void;
   onBecomeTranslator?: () => void;
 };
 
@@ -52,7 +51,6 @@ export function BookHero({
   ratingCount,
   thankAuthorLabel = "подякувати автору",
   bookId,
-  onTranslationSettings,
   onBecomeTranslator,
 }: BookHeroProps) {
   const queryClient = useQueryClient();
@@ -128,7 +126,7 @@ export function BookHero({
               )}
             </div>
 
-            <BookActions bookId={bookId} onTranslationSettings={onTranslationSettings} />
+            <BookActions bookId={bookId} />
           </div>
 
           {/* MIDDLE: meta + кнопка після опису жанрів/тегів */}

@@ -132,7 +132,6 @@ export default function BookDetailOwner({
           ratingCount={book.ratingCount ?? null}
           thankAuthorCoins={book.thankAuthorCoins ?? 10}
           bookId={book.id}
-          onTranslationSettings={() => {}}
           onBecomeTranslator={() => {}}
         />
       }
@@ -146,14 +145,26 @@ export default function BookDetailOwner({
               chapters={chapters}
               isOwner
               loading={chaptersLoading}
-              onAddChapter={() => {}}
+              addChapterTo={`/books/${book.slug}/add-chapter`}
               onCreateVolume={() => handleCreateVolume("Новий том")}
               onChangeOrder={enterReorderMode}
               onRead={(ch) => {}}
               onEdit={(ch) => {}}
               onDelete={(ch) => {}}
-              getChapterPrice={() => "10 ₴"}
-              getChapterDate={() => "13.02.2023"}
+              getChapterPrice={(ch) =>
+                ch.is_paid && ch.price != null && ch.price > 0
+                  ? `${Number(ch.price).toFixed(2)} ₴`
+                  : "Безкоштовно"
+              }
+              getChapterDate={(ch) =>
+                ch.created_at
+                  ? new Date(ch.created_at).toLocaleDateString("uk-UA", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })
+                  : "—"
+              }
             />
           ) : (
             <div>

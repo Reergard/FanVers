@@ -20,7 +20,9 @@ frontend/src/
 │   ├── catalogApi.ts
 │   ├── endpoints.ts
 │   ├── http.ts
-│   └── httpRaw.ts
+│   ├── httpRaw.ts
+│   ├── ratingApi.ts
+│   └── reviewsApi.ts
 ├── app/
 │   ├── Base.tsx
 │   └── Base.module.css
@@ -39,6 +41,7 @@ frontend/src/
 │   ├── authLogger.ts
 │   └── authSelfTest.ts
 ├── catalog/
+│   ├── AddChapter.tsx
 │   ├── BookDetailLayout.tsx
 │   ├── BookDetailOwner.tsx
 │   ├── BookDetailReader.tsx
@@ -46,7 +49,9 @@ frontend/src/
 │   ├── BookDetailSkeleton.tsx
 │   ├── sections/
 │   ├── assets/
-│   └── styles/
+│   ├── styles/
+│   │   └── AddChapter.module.css
+│   └── ...
 ├── main/
 │   ├── HomePage.tsx
 │   ├── HomePage.module.css
@@ -75,7 +80,10 @@ frontend/src/
 │   ├── ActionButton/
 │   ├── Modal/
 │   ├── NotificationModal/
-│   ├── NotificationProvider.tsx
+│   │   ├── NotificationModal.tsx
+│   │   ├── NotificationModal.module.css
+│   │   ├── NotificationProvider.tsx
+│   │   └── AutoCloseNotificationModal.tsx
 │   ├── hooks/
 │   ├── menu/
 │   └── utils/
@@ -93,13 +101,17 @@ frontend/src/
 │   ├── fonts/
 │   └── ...
 ├── docs/
+│   ├── ADD_CHAPTER_FLOW.md
 │   ├── AUTH_CHANGES_LOG.md
 │   ├── AUTHENTICATION_FRONTEND.md
 │   ├── USER_DATA_FLOW.md
 │   ├── BOOK_PAGE_DATA_FLOW.md
 │   ├── BOOK_PAGE_DESIGN_DATA_FLOW.md
+│   ├── COMMENTS_FRONTEND.md
 │   ├── COMPONENTS.md
 │   ├── Concept.md
+│   ├── NOTIFICATIONS_FRONTEND.md
+│   ├── RATINGS_FRONTEND.md
 │   └── STRUCTURE.md
 ├── App.tsx
 ├── main.tsx
@@ -243,8 +255,10 @@ export function Base({ children }: Props) {
 **Файли:**
 - `http.ts` — axios з Authorization, 401-interceptor (refreshSessionForce → retry → doLogout)
 - `httpRaw.ts` — axios без інтерцепторів для refresh/logout (withCredentials)
-- `endpoints.ts` — URL API (login, register, auth-status, profile, add-balance тощо)
-- `catalogApi.ts` — API для каталогу книг
+- `endpoints.ts` — URL API (login, register, auth-status, profile, add-balance, коментарі, рейтинги тощо)
+- `catalogApi.ts` — API для каталогу книг (book, volumes, chapters)
+- `ratingApi.ts` — API рейтингів книги: fetchBookRatings(slug), submitRating(slug, type, value); нормалізація відповіді. Див. docs/RATINGS_FRONTEND.md.
+- `reviewsApi.ts` — API коментарів (книга/глава): fetch, post, delete, reaction, owner_like. Див. docs/COMMENTS_FRONTEND.md.
 
 ---
 
@@ -343,11 +357,14 @@ export function AppRoutes() {
 - Автоматично ховається, якщо контент не потребує скроллу
 - Підтримка `prefers-reduced-motion`
 
-### `shared/Modal/`, `shared/NotificationModal/`, `shared/NotificationProvider.tsx`
-**Що це:** модальні вікна та провайдер сповіщень для глобального тусту (toast).
+### `shared/Modal/`, `shared/NotificationModal/`
+**Що це:** модальні вікна (`Modal`) та глобальні toast через `NotificationModal` і `AutoCloseNotificationModal`. Провайдер `NotificationModal/NotificationProvider.tsx` дає `useNotification()`: `showSuccess`, `showError`, `showInfo`, `showWarning`, **`showSuccessAutoClose(message)`** — успіх без кнопок, авто-закриття через 3 с (використовується після створення глави).
 
 ### `shared/ActionButton/`
 **Що це:** стилізована кнопка для дій.
+
+### `shared/utils/requestThrottle.ts`
+**Що це:** обмеження частоти запитів (throttling) для рейтингів: мінімальний інтервал 100 ms, до 30 запитів/хв по ключу, single-flight (один активний запит на ключ). Використовується в `BookRatingStars` при відправці оцінки. Експорт: `requestThrottle`, `createRequestKey(bookSlug, ratingType, action)`.
 
 ### `shared/utils/errorUtils.ts`
 **Що це:** утиліти для обробки помилок.
@@ -410,9 +427,9 @@ export function AppRoutes() {
 
 ## `catalog/` — фіча Каталог (сторінка книги)
 
-**Що це:** сторінка книги `/books/:slug` — BookDetailRouter, BookDetailLayout, BookDetailOwner, BookDetailReader, секції (BookHero, BookDescription, BookChapters тощо).
+**Що це:** сторінка книги `/books/:slug` — BookDetailRouter, BookDetailLayout, BookDetailOwner, BookDetailReader, секції (BookHero, BookDescription, BookChapters, **BookCommentsContainer**, **BookRatingStars** тощо). **Рейтинги (РЕЙТИНГ ТВОРУ, ЯКІСТЬ ПЕРЕКЛАДУ):** BookHero отримує `bookSlug` від Owner/Reader, робить useQuery за ключем `["book-ratings", slug]`, викликає `ratingApi.fetchBookRatings(slug)`; рендерить два блоки `BookRatingStars` (BOOK, TRANSLATION). Відправка оцінки — через `ratingApi.submitRating` і `requestThrottle`. Див. docs/RATINGS_FRONTEND.md. Секція коментарів: `BookCommentsContainer` робить useQuery за ключем `["book-comments", slug]` / `["chapter-comments", slug]`, викликає `reviewsApi`. Окрема сторінка **додавання глави**: `AddChapter.tsx`. Стилі сторінки книги — `styles/BookDetail.module.css`.
 
-**Маршрут:** `/books/:slug` (визначений в `App.tsx`).
+**Маршрути (App.tsx):** `/books/:slug/add-chapter` → AddChapter (оголошується **перед** `/books/:slug`), `/books/:slug` → BookDetailRouter.
 
 ---
 
@@ -542,7 +559,7 @@ export function HeaderLogo() {
 - Коли сторінок стане багато — винести в `routes/AppRoutes.tsx`.
 
 8) **API**
-- `api/` — http.ts, httpRaw.ts, endpoints.ts, catalogApi.ts.
+- `api/` — http.ts, httpRaw.ts, endpoints.ts, catalogApi.ts, ratingApi.ts, reviewsApi.ts.
 
 ---
 

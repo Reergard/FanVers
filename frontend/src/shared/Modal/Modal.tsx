@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useScrollLock } from "../hooks/useScrollLock";
 import styles from "./Modal.module.css";
 
@@ -8,9 +9,11 @@ type Props = {
   title?: string;
   children: React.ReactNode;
   className?: string;
+  /** Показувати кнопку закриття (×). За замовчуванням true */
+  showCloseButton?: boolean;
 };
 
-export function Modal({ open, onClose, title, children, className }: Props) {
+export function Modal({ open, onClose, title, children, className, showCloseButton = true }: Props) {
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
@@ -66,11 +69,11 @@ export function Modal({ open, onClose, title, children, className }: Props) {
 
   const modalClassName = [styles.modal, className].filter(Boolean).join(" ");
 
-  return (
+  const modalContent = (
     <>
       <div
         className={styles.overlay}
-        onMouseDown={onClose}
+        onClick={onClose}
         aria-hidden="true"
       />
       <div
@@ -80,15 +83,30 @@ export function Modal({ open, onClose, title, children, className }: Props) {
         aria-modal="true"
         aria-labelledby={title ? "modal-title" : undefined}
         tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
       >
         {title && (
-          <h2 id="modal-title" className={styles.title}>
-            {title}
-          </h2>
+          <div className={styles.titleRow}>
+            <h2 id="modal-title" className={styles.title}>
+              {title}
+            </h2>
+            {showCloseButton && (
+              <button
+                type="button"
+                className={styles.closeBtn}
+                onClick={onClose}
+                aria-label="Закрити"
+              >
+                ×
+              </button>
+            )}
+          </div>
         )}
         <div className={styles.content}>{children}</div>
       </div>
     </>
   );
+
+  return createPortal(modalContent, document.body);
 }

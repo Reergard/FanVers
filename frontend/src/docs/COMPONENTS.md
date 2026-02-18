@@ -13,13 +13,15 @@
 **Призначення:** Універсальна кнопка дії, яка може працювати як `<button>` або `<a>` посилання.
 
 **Особливості:**
-- Підтримка prop `as` для вибору типу елемента (`button` або `a`)
-- Автоматична підтримка `aria-label` для доступності
-- Єдині стилі для всіх кнопок дій у проекті
+- Підтримка prop `as` для вибору типу елемента (`button` або `a`); опційний prop **`to`** — при передачі рендериться `<Link to={to}>` (React Router) замість button.
+- Підтримка **`loading`** (показ спінера та disabled під час відправки).
+- Автоматична підтримка `aria-label` для доступності.
+- Єдині стилі для всіх кнопок дій у проекті.
 
 **Місця використання:**
 - `website_advertising/BookAdCard/BookAdCard.tsx` — кнопка "Читати" на картці книги
-- `catalog/sections/BookChapters.tsx` — кнопки "Додати розділ", "Створити том", "Змінити порядок розділів"
+- `catalog/sections/BookChapters.tsx` — кнопка "Додати розділ" як `<ActionButton to={addChapterTo}>` (Link на `/books/:slug/add-chapter`), кнопки "Створити том", "Змінити порядок розділів"
+- `catalog/AddChapter.tsx` — кнопка сабміту форми «Додати розділ» (type="submit", loading={isSubmitting})
 - `catalog/sections/BookHero.tsx` — кнопка «Стати новим перекладачем»
 - `catalog/sections/BookActions.tsx` — кнопки "В закладки", налаштування
 - `auth/LoginForm.tsx` — кнопка входу
@@ -190,29 +192,62 @@
 
 ---
 
+### `BookCommentsContainer`, `BookComments` (catalog/sections/)
+
+**Призначення:** Секція коментарів на сторінці книги (або глави): завантаження списку, додавання коментаря/відповіді, лайк/дизлайк, лайк автора, видалення.
+
+**Особливості:**
+- **BookCommentsContainer** — контейнер з логікою: `useQuery` (fetchBookComments/fetchChapterComments за slug), `useMutation` (reaction, ownerLike, delete), валідація тексту (3–1000 символів), спам-захист (5 с), маппінг API → CommentItem; показ помилок через `useNotification().showError`; не показує success-тостів.
+- **BookComments** — чистий UI: форма коментаря (controlled через props або внутрішній state), список CommentCard з відповідями, кнопками реакцій, лайком автора, кнопкою видалення (з станом «Видалення…» через `isDeletingId`).
+
+**Місця використання:**
+- `catalog/BookDetailOwner.tsx` — `<BookCommentsContainer type="book" slug={book.slug} isOwner />`
+- `catalog/BookDetailReader.tsx` — `<BookCommentsContainer type="book" slug={book.slug} isOwner={false} />`
+
+**Дані:** API через `api/reviewsApi.ts` (GET/POST/DELETE `/api/reviews/book|chapter/<slug>/comments/`, reaction, owner_like). Детально: docs/COMMENTS_FRONTEND.md.
+
+---
+
+### `BookRatingStars` (catalog/sections/)
+
+**Призначення:** Блок зіркового рейтингу (5 зірок) для книги: відображення середнього та кількості голосів, оцінка користувача; клік по зірці відправляє оцінку на бекенд.
+
+**Особливості:**
+- Використовується в `BookHero` двічі: РЕЙТИНГ ТВОРУ (BOOK) та ЯКІСТЬ ПЕРЕКЛАДУ (TRANSLATION). Дані (average, totalVotes, userRating) приходять з useQuery у BookHero (`ratingApi.fetchBookRatings(slug)`), не з полів book.
+- Props: `bookSlug`, `ratingType` (BOOK | TRANSLATION), `title`, `average`, `totalVotes`, `userRating`, `isLoading`, `onRatingSuccess`.
+- Три стани зірки: порожня (0), середня (0.5), заповнена (1); hover показує попередній вибір до кліку.
+- Відправка оцінки: через `ratingApi.submitRating` з троттлінгом (`requestThrottle`); після успіху викликається `onRatingSuccess` (invalidate query у BookHero).
+- Сповіщення: `useNotification()` — `showWarning` коли гость клікає зірку («Для голосування необхідно увійти в систему»); `showError` при помилці відправки (в т.ч. 429, повідомлення з `data.error` / `data.detail`). Див. NOTIFICATIONS_FRONTEND.md, RATINGS_FRONTEND.md.
+
+**Місця використання:**
+- `catalog/sections/BookHero.tsx` — два екземпляри з різними `ratingType` і даними з useQuery book-ratings.
+
+---
+
 ### `Modal`
 
-**Призначення:** Переиспользуемый компонент модального окна — оверлей + вікно з центруванням, доступністю, закриттям по Esc і overlay.
+**Призначення:** Переиспользуемый компонент модального окна — оверлей + вікно з центруванням, доступністю, закриттям по Esc і overlay. Рендериться в **document.body** через `createPortal` (щоб бути поверх всього контенту).
 
 **Файли:**
 - `shared/Modal/Modal.tsx` — основний компонент
-- `shared/Modal/Modal.module.css` — стилі оверлею, вікна, заголовка, контенту
+- `shared/Modal/Modal.module.css` — стилі оверлею, вікна, заголовка, контенту, кнопки закриття (×)
 
 **Props:**
 | Prop | Тип | Обов'язковий | Опис |
 |------|-----|--------------|------|
 | `open` | `boolean` | так | Чи відкрито модалку |
-| `onClose` | `() => void` | так | Колбек закриття (викликається при Esc, клік по overlay) |
+| `onClose` | `() => void` | так | Колбек закриття (викликається при Esc, клік по overlay, клік по ×) |
 | `title` | `string` | ні | Заголовок (рендериться як `<h2 id="modal-title">`) |
 | `children` | `React.ReactNode` | так | Вміст модалки (обгортається в `div` з класом `.content`) |
 | `className` | `string` | ні | Додаткові CSS-класи для модального вікна (додаються до `.modal`) |
+| `showCloseButton` | `boolean` | ні | Чи показувати кнопку закриття (×). За замовчуванням `true`. При `false` (наприклад у AutoCloseNotificationModal) крестик не рендериться. |
 
 **Залежності:**
 - `shared/hooks/useScrollLock.ts` — Modal викликає `useScrollLock(open)` для блокування скролу body при відкритті (iOS-safe)
 
 **Поведінка:**
 - Якщо `open === false` — повертає `null` (нічого не рендериться)
-- Закриття: клік по overlay (`onMouseDown={onClose}`), клавіша Escape
+- Закриття: клік по overlay (`onClick={onClose}`), кнопка × (якщо `showCloseButton`), клавіша Escape
 - Фокус: при відкритті фокус йде на перший focusable елемент у модалці; при закритті — повертається на попередній
 - Доступність: `role="dialog"`, `aria-modal="true"`, `aria-labelledby` при наявності title
 - Анімації: `fadeIn` для overlay, `slideIn` для вікна; для `prefers-reduced-motion` — вимкнено
@@ -255,26 +290,25 @@
 **Реалізація:** Викликає `<Modal open={open} onClose={onClose} title={getTitle()}>` з контентом: div з класами `.content` і `.[type]` (для кольорової смуги зліва), `<p>` з текстом, `<ActionButton>` «Зрозуміло» для закриття.
 
 **Deployment:**
-- `NotificationProvider` (`shared/NotificationModal/NotificationProvider.tsx`) рендерить `<NotificationModal>` усередині провайдера (рядки 46–51).
-- `NotificationProvider` обгортає весь додаток у `App.tsx` (рядки 36–59).
-- Уведомлення викликаються через `useNotification()`: `showError`, `showSuccess`, `showInfo`, `showWarning`.
+- `NotificationProvider` (`shared/NotificationModal/NotificationProvider.tsx`) зберігає state уведомлення (`open`, `message`, `type`, **`variant`**: `"default"` | `"autoClose"`). Залежно від variant рендерить або **NotificationModal**, або **AutoCloseNotificationModal**.
+- Провайдер обгортає весь додаток у `App.tsx`.
+- Уведомлення викликаються через `useNotification()`: `showError`, `showSuccess`, `showInfo`, `showWarning`, **`showSuccessAutoClose(message)`** — успіх без кнопок, модалка сама зникає через 3 с (константа `AUTO_CLOSE_MS` у провайдері).
+
+**AutoCloseNotificationModal** (`shared/NotificationModal/AutoCloseNotificationModal.tsx`): використовує `Modal` з `showCloseButton={false}`; тільки заголовок «Успіх» і текст повідомлення; у `useEffect` таймер на `autoCloseMs` мс викликає `onClose()`. Використовується після успішного створення глави (редирект на сторінку книги → BookDetailRouter викликає `showSuccessAutoClose`).
 
 **Місця використання `useNotification`:**
 - `users/Profile.tsx` — `showSuccess`, `showError` (результати мутацій)
-- `auth/LoginForm.tsx` — показ помилок логіну
-- `auth/RegisterForm.tsx` — показ помилок реєстрації
+- `auth/LoginForm.tsx`, `auth/RegisterForm.tsx` — показ помилок
+- `catalog/BookDetailRouter.tsx` — `showSuccessAutoClose("Глава успішно завантажена")` при `location.state?.chapterCreated`
+- `catalog/AddChapter.tsx` — `showError` (помилки доступу та валідації)
 
-Тобто `NotificationModal` показується глобально, коли будь-який компонент викликає `showError`/`showSuccess`/тощо.
-
-**Стилі:** `NotificationModal.module.css` — `.content`, `.message`, `.actions`, `.error` / `.success` / `.info` / `.warning` (border-left для кольорового акценту).
+**Стилі:** `NotificationModal.module.css` — `.content`, `.message`, `.actions`, `.error` / `.success` / `.info` / `.warning` (border-left для кольорового акценту). AutoCloseNotificationModal використовує ті самі класи для контенту.
 
 ---
 
 **Підсумок:**
-- Один базовий компонент: `Modal` (shared/Modal)
-- Два способи використання: напряму (Profile, UserMenuOverlay) і через `NotificationModal` (глобальні уведомлення)
-- `className` для Modal у проекті не використовується — всі варіанти використовують стандартний вигляд
-- Окремих «типів» Modal немає — є один тип з різним контентом (children)
+- Один базовий компонент: `Modal` (shared/Modal), опційно `showCloseButton`.
+- Використання: напряму (Profile, UserMenuOverlay); через `NotificationModal` (глобальні уведомлення з кнопкою «Зрозуміло» та ×); через `AutoCloseNotificationModal` (успіх після створення глави — без кнопок, авто-закриття через 3 с).
 
 **Майбутнє використання:** Для будь-якої нової модалки імпортувати `Modal` з `shared/Modal/Modal`, передати `open`, `onClose`, опційно `title` і `className`, і передати вміст як `children`.
 

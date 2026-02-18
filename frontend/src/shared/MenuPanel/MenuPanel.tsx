@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import styles from "./MenuPanel.module.css";
 import { AvatarOrbit } from "../AvatarOrbit/AvatarOrbit";
 import { MenuList } from "../MenuList/MenuList";
@@ -24,9 +25,9 @@ export function MenuPanel({ name, avatarUrl, items, onSelect }: Props) {
         <h2 className={styles.userName}>{name}</h2>
       </div>
 
-      {/* CTA кнопка с рамкой */}
+      {/* CTA кнопка с рамкой — переход на сторінку створення книги */}
       <div className={styles.ctaSection}>
-        <button className={styles.ctaButton} type="button">
+        <Link to="/create-book" className={styles.ctaButton} onClick={onSelect}>
           {/* рамка */}
           <Icon name="menu_frame" className={styles.ctaFrame} aria-hidden="true" />
 
@@ -37,7 +38,7 @@ export function MenuPanel({ name, avatarUrl, items, onSelect }: Props) {
             </svg>
             <span className={styles.ctaText}>Створити книгу</span>
           </span>
-        </button>
+        </Link>
       </div>
 
       {/* Список меню */}

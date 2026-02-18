@@ -11,6 +11,11 @@ export interface BookMetaItem {
   name: string;
 }
 
+/** Тег з групою (API tags повертає group при depth=1) */
+export interface TagWithGroup extends BookMetaItem {
+  group?: { id: number; name: string } | null;
+}
+
 /** Країна з API */
 export interface BookCountry {
   id: number;
@@ -72,6 +77,12 @@ export interface Chapter {
   position: number;
   volume?: number | null;
   volumeId?: number | null;
+  /** Платний розділ (з API) */
+  is_paid?: boolean;
+  /** Ціна (з API), для безкоштовних — 0 */
+  price?: number;
+  /** ISO дата створення з API */
+  created_at?: string | null;
 }
 
 export interface Volume {
@@ -90,6 +101,20 @@ function normalizeMetaItem(item: unknown): BookMetaItem | null {
   const name = typeof o.name === "string" ? o.name : "";
   if (Number.isNaN(id) || !name) return null;
   return { id, name };
+}
+
+function normalizeTagWithGroup(item: unknown): TagWithGroup | null {
+  const base = normalizeMetaItem(item);
+  if (!base) return null;
+  const o = item as Record<string, unknown>;
+  const g = o.group;
+  let group: { id: number; name: string } | undefined;
+  if (g != null && typeof g === "object" && "id" in g && "name" in g) {
+    const gid = Number((g as Record<string, unknown>).id);
+    const gname = String((g as Record<string, unknown>).name ?? "");
+    if (!Number.isNaN(gid) && gname) group = { id: gid, name: gname };
+  }
+  return { ...base, group: group ?? null };
 }
 
 function normalizeCountry(raw: unknown): BookCountry | null {
@@ -163,12 +188,16 @@ function normalizeUserTranslation(raw: Record<string, unknown>): UserTranslation
 
 function normalizeChapter(raw: Record<string, unknown>): Chapter {
   const pos = raw.position ?? raw._position;
+  const priceVal = raw.price;
   return {
     id: Number(raw.id),
     title: String(raw.title ?? ""),
     position: typeof pos === "number" ? pos : Number(pos ?? 0),
     volumeId: raw.volume != null ? Number(raw.volume) : null,
     volume: raw.volume != null ? Number(raw.volume) : null,
+    is_paid: raw.is_paid === true,
+    price: priceVal != null ? Number(priceVal) : undefined,
+    created_at: raw.created_at != null && raw.created_at !== "" ? String(raw.created_at) : null,
   };
 }
 
@@ -242,12 +271,121 @@ export async function updateChapterOrderNoVolume(
   });
 }
 
+/**
+ * Завантаження розділу (глави): multipart/form-data.
+ * @param volumeId — id тому або null (не прив’язувати до тому)
+ * @param price — число (для платних глав; для безкоштовних бекенд ставить 0)
+ */
+export async function uploadChapter(
+  slug: string,
+  title: string,
+  file: File,
+  isPaid: boolean,
+  volumeId: number | null,
+  price: number
+): Promise<Chapter> {
+  const form = new FormData();
+  form.append("title", title.trim());
+  form.append("file", file);
+  form.append("is_paid", isPaid ? "true" : "false");
+  if (volumeId != null) {
+    form.append("volume", String(volumeId));
+  }
+  form.append("price", String(price));
+
+  const { data } = await http.post<Record<string, unknown>>(
+    `${CATALOG}/books/${encodeURIComponent(slug)}/add_chapter/`,
+    form,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+  return normalizeChapter(data);
+}
+
 /** Книги користувача (власні переклади та авторські твори) */
 export async function getUserTranslations(): Promise<UserTranslationBook[]> {
   const { data } = await http.get<Record<string, unknown>[]>(
     `${CATALOG}/user-translations/`
   );
   return Array.isArray(data) ? data.map(normalizeUserTranslation) : [];
+}
+
+// --- Справочники для сторінки створення книги ---
+
+const STALE_REF = 10 * 60 * 1000; // 10 хв
+
+export async function getGenres(): Promise<BookMetaItem[]> {
+  const { data } = await http.get<Record<string, unknown>[]>(`${CATALOG}/genres/`);
+  return Array.isArray(data) ? data.map(normalizeMetaItem).filter((g): g is BookMetaItem => g != null) : [];
+}
+
+export async function getTags(): Promise<TagWithGroup[]> {
+  const { data } = await http.get<Record<string, unknown>[]>(`${CATALOG}/tags/`);
+  return Array.isArray(data) ? data.map(normalizeTagWithGroup).filter((t): t is TagWithGroup => t != null) : [];
+}
+
+export async function getCountries(): Promise<BookCountry[]> {
+  const { data } = await http.get<Record<string, unknown>[]>(`${CATALOG}/countries/`);
+  return Array.isArray(data) ? data.map(normalizeCountry).filter((c): c is BookCountry => c != null) : [];
+}
+
+export async function getFandoms(): Promise<BookMetaItem[]> {
+  const { data } = await http.get<Record<string, unknown>[]>(`${CATALOG}/fandoms/`);
+  return Array.isArray(data) ? data.map(normalizeMetaItem).filter((f): f is BookMetaItem => f != null) : [];
+}
+
+/** Payload для створення книги. image — File або null. */
+export interface CreateBookPayload {
+  title: string;
+  title_en?: string;
+  author: string;
+  description?: string;
+  book_type: "AUTHOR" | "TRANSLATION";
+  translation_status?: string | null;
+  original_status: string;
+  country: number;
+  genres: number[];
+  tags: number[];
+  fandoms: number[];
+  adult_content: boolean;
+  image?: File | null;
+}
+
+/** Відповідь створення книги (повна книга з бекенду). */
+export interface CreateBookResponse {
+  id: number;
+  slug: string;
+  title: string;
+  [key: string]: unknown;
+}
+
+/** Створення книги: multipart/form-data (backend очікує getlist для genres/tags/fandoms). */
+export async function createBook(payload: CreateBookPayload): Promise<CreateBookResponse> {
+  const form = new FormData();
+  form.append("title", payload.title.trim());
+  if (payload.title_en != null && payload.title_en.trim() !== "") {
+    form.append("title_en", payload.title_en.trim());
+  }
+  form.append("author", payload.author.trim());
+  if (payload.description != null && payload.description.trim() !== "") {
+    form.append("description", payload.description.trim());
+  }
+  form.append("book_type", payload.book_type);
+  form.append("original_status", payload.original_status);
+  form.append("country", String(payload.country));
+  payload.genres.forEach((id) => form.append("genres", String(id)));
+  payload.tags.forEach((id) => form.append("tags", String(id)));
+  payload.fandoms.forEach((id) => form.append("fandoms", String(id)));
+  form.append("adult_content", payload.adult_content ? "true" : "false");
+  if (payload.book_type === "TRANSLATION" && payload.translation_status != null) {
+    form.append("translation_status", payload.translation_status);
+  }
+  if (payload.image) {
+    form.append("image", payload.image);
+  }
+  const { data } = await http.post<CreateBookResponse>(`${CATALOG}/books/create/`, form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
 }
 
 export const catalogApi = {
@@ -257,5 +395,13 @@ export const catalogApi = {
   createVolume,
   updateChapterOrder,
   updateChapterOrderNoVolume,
+  uploadChapter,
   getUserTranslations,
+  getGenres,
+  getTags,
+  getCountries,
+  getFandoms,
+  createBook,
 };
+
+export { STALE_REF };

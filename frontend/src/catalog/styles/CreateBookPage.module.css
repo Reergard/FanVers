@@ -1,0 +1,556 @@
+.page {
+  --gold: #F58807;
+  --goldSoft: rgba(245, 136, 7, 0.35);
+  --panelBg: rgba(6, 15, 18, 0.55);
+  --panelBg2: rgba(6, 15, 18, 0.35);
+  --line: rgba(245, 136, 7, 0.55);
+
+  display: grid;
+  gap: clamp(18px, calc(2.2 * var(--vwu)), 34px);
+  padding-bottom: clamp(28px, calc(3.5 * var(--vwu)), 64px);
+}
+
+/* ===== TOP ===== */
+.top {
+  display: grid;
+  gap: 10px;
+}
+.breadcrumbs {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.85;
+  font-size: 14px;
+}
+.crumb {
+  text-decoration: none;
+  color: #F58807;
+}
+.crumbSep {
+  opacity: 0.6;
+  color: #F58807;
+}
+
+.h1 {
+  margin: 0;
+  font-family: var(--font-decor);
+  font-weight: 400;
+  font-size: clamp(22px, calc(2.6 * var(--vwu)), 34px);
+  color: var(--gold);
+}
+
+/* ===== FIELDS ===== */
+.gridTwo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(16px, calc(2.2 * var(--vwu)), 28px);
+}
+
+.field {
+  position: relative;
+  display: block;
+}
+
+.fieldPill {
+  position: absolute;
+  top: -12px;
+  left: 16px;
+  z-index: 2;
+
+  display: inline-flex;
+  gap: 8px;
+  align-items: baseline;
+
+  padding: 6px 12px;
+  border-radius: 999px;
+
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--goldSoft);
+  color: var(--gold);
+  font-size: 13px;
+  line-height: 1.1;
+}
+.hint {
+  color: rgba(245, 136, 7, 0.7);
+  font-size: 12px;
+}
+
+.fieldBody {
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--panelBg), var(--panelBg2));
+  padding: 18px 16px 14px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15) inset;
+}
+
+.input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: #F58807;
+  font-size: 16px;
+  padding: 6px 2px 4px;
+}
+.textarea {
+  width: 100%;
+  min-height: clamp(150px, calc(18 * var(--vwu)), 240px);
+  resize: vertical;
+
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: #F58807;
+  font-size: 14px;
+  line-height: 1.55;
+  padding: 6px 2px 4px;
+}
+
+/* focus-within */
+.field:focus-within .fieldBody {
+  border-color: rgba(5, 180, 199, 0.75);
+  box-shadow: 0 0 18px rgba(5, 180, 199, 0.15);
+}
+.field:focus-within .fieldPill {
+  border-color: rgba(5, 180, 199, 0.55);
+}
+
+/* ===== SELECT ROW (5 pills) ===== */
+.selectRow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(12px, calc(1.6 * var(--vwu)), 22px);
+}
+
+.pillSelect {
+  position: relative;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--panelBg), var(--panelBg2));
+  padding: 18px 14px 14px;
+}
+
+.pillLabel {
+  position: absolute;
+  top: -12px;
+  left: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--goldSoft);
+  color: var(--gold);
+  font-size: 13px;
+}
+
+.pillBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 4px;
+
+  background: transparent;
+  border: 0;
+  color: #F58807;
+  cursor: pointer;
+}
+.pillArrow {
+  color: var(--gold);
+  opacity: 0.95;
+}
+
+.pillSelectNative {
+  width: 100%;
+  padding: 8px 4px;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: #F58807;
+  font-size: 14px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23F58807' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  padding-right: 20px;
+}
+
+.pillSelectNative option {
+  background: rgba(10, 18, 20, 0.98);
+  color: #F58807;
+}
+
+.hiddenInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.previewImg {
+  display: block;
+}
+
+/* ===== DESCRIPTION + CONTENT CARD ===== */
+.descGrid {
+  display: grid;
+  grid-template-columns: 1.75fr 0.55fr;
+  gap: clamp(14px, calc(2 * var(--vwu)), 26px);
+  align-items: start;
+}
+
+.contentCard {
+  width: clamp(140px, calc(176 * 100vw / 1366), 176px);
+  height: clamp(150px, calc(191 * 100vw / 1366), 191px);
+  border-radius: 18px;
+  border-top-right-radius: 15px;
+  border-bottom-left-radius: 15px;
+  border: 1px solid var(--line);
+  background: rgba(159, 1, 1, 0.15);
+  padding: 14px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  box-sizing: border-box;
+}
+
+.contentTop {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  color: var(--gold);
+  font-size: 13px;
+}
+.checkboxBtn {
+  width: 18px;
+  height: 19px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #F58807;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.checkboxBtn svg {
+  width: 18px;
+  height: 19px;
+}
+
+.contentBadge {
+  display: grid;
+  place-items: center;
+}
+.badge18Img {
+  width: clamp(90px, calc(116 * 100vw / 1366), 116px);
+  height: clamp(90px, calc(115 * 100vw / 1366), 115px);
+  object-fit: contain;
+}
+
+/* ===== PANELS (Жанр/Теги/Фендом) ===== */
+.panel {
+  position: relative;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(4, 12, 14, 0.55), rgba(4, 12, 14, 0.25));
+  padding: 18px 16px 16px;
+}
+
+.panelTitle {
+  position: absolute;
+  top: -12px;
+  left: 16px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--goldSoft);
+  color: var(--gold);
+  font-size: 13px;
+}
+.panelBody {
+  padding-top: 10px;
+}
+
+/* chips inside — адаптивная ширина по содержимому, общие отступы */
+.chipsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+.chip {
+  min-height: 28px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(10, 18, 20, 0.35);
+  border: 1px solid rgba(245, 136, 7, 0.5);
+  color: rgba(245, 136, 7, 0.5);
+  font-size: 13px;
+  line-height: 1.25;
+  cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+.chipBlue {
+  border-color: rgba(5, 180, 199, 0.55);
+  background: #05B4C7;
+  color: #fff;
+}
+
+/* ===== TAGS ===== */
+.tagsWrap {
+  display: grid;
+  gap: 18px;
+  padding-top: 8px;
+}
+.tagGroup {
+  display: grid;
+  gap: 14px;
+}
+.tagGroupHead {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 14px;
+}
+.tagGroupTitle {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  opacity: 0.95;
+}
+.tagGroupLine {
+  height: 2px;
+  min-width: 40px;
+  flex: 1;
+  display: block;
+}
+.tagGroupLine svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  vertical-align: top;
+}
+
+.tagRows {
+  display: grid;
+  gap: 12px;
+}
+.tagRow {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  align-items: start;
+  gap: 14px;
+}
+.hashChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid rgba(245, 136, 7, 0.25);
+  background: rgba(10, 18, 20, 0.25);
+  white-space: nowrap;
+}
+.hashBlue {
+  border-color: rgba(5, 180, 199, 0.35);
+  color: rgba(5, 180, 199, 0.95);
+}
+.hashGold {
+  border-color: rgba(245, 136, 7, 0.35);
+  color: rgba(245, 136, 7, 0.95);
+}
+
+.tagRowChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+.centerRow {
+  display: grid;
+  place-items: center;
+  padding-top: 24px;
+}
+.showAllBtn {
+  min-height: 28px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 136, 7, 0.55);
+  background: transparent;
+  color: #F58807;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.chev {
+  opacity: 0.95;
+}
+
+/* ===== FANDOM ===== */
+.fandomGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding-top: 8px;
+}
+.fandomChipsWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+/* ===== IMAGES ===== */
+.imagesGrid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: clamp(14px, calc(2.2 * var(--vwu)), 26px);
+  align-items: start;
+}
+
+.imagePanel {
+  position: relative;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(4, 12, 14, 0.55), rgba(4, 12, 14, 0.25));
+  padding: 18px 16px 16px;
+  min-height: 240px;
+}
+
+.panelTitlePill {
+  position: absolute;
+  top: -12px;
+  left: 16px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--goldSoft);
+  color: var(--gold);
+  font-size: 13px;
+}
+
+.mainImageDrop {
+  width: clamp(160px, calc(220 * 100vw / 1366), 220px);
+  height: clamp(240px, calc(340 * 100vw / 1366), 340px);
+  border-radius: 0 18px 18px 0;
+  border: 1px dashed rgba(245, 136, 7, 0.45);
+  border-left: none;
+  background: rgba(5, 180, 199, 0.15);
+  cursor: pointer;
+  box-sizing: border-box;
+
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  padding: 16px;
+  color: #F58807;
+  position: relative;
+}
+.uploadCircle {
+  width: clamp(70px, calc(101 * 100vw / 1366), 101px);
+  height: clamp(70px, calc(101 * 100vw / 1366), 101px);
+  border-radius: 50%;
+  border: 1px solid rgba(245, 136, 7, 0.55);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.uploadIconMain {
+  width: clamp(26px, calc(51 * 100vw / 1366), 51px);
+  height: clamp(22px, calc(43 * 100vw / 1366), 43px);
+  color: #F58807;
+}
+.uploadText {
+  font-size: 12px;
+  color: #F58807;
+}
+
+.extraImagesRow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  padding-top: 10px;
+}
+.extraSlot {
+  width: clamp(120px, calc(163 * 100vw / 1366), 163px);
+  height: clamp(180px, calc(241 * 100vw / 1366), 241px);
+  border-radius: 0 16px 16px 0;
+  border: 1px dashed rgba(245, 136, 7, 0.45);
+  border-left: none;
+  background: rgba(5, 180, 199, 0.15);
+  cursor: pointer;
+  box-sizing: border-box;
+
+  display: grid;
+  place-items: center;
+}
+.uploadIconSmall {
+  width: clamp(24px, calc(51 * 100vw / 1366), 51px);
+  height: clamp(20px, calc(43 * 100vw / 1366), 43px);
+  color: #F58807;
+}
+
+/* ===== SUBMIT ===== */
+.submitRow {
+  display: grid;
+  place-items: center;
+  padding-top: 8px;
+}
+.submitBtn {
+  height: 34px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 136, 7, 0.55);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--gold);
+  cursor: pointer;
+}
+
+/* ===== RESPONSIVE ===== */
+
+/* <= 1024: ломаем 5 селектов на 2 строки, описание в колонку, картинки в колонку */
+@media (max-width: 1024px) {
+  .gridTwo {
+    grid-template-columns: 1fr;
+  }
+  .selectRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .descGrid {
+    grid-template-columns: 1fr;
+  }
+  .contentCard {
+    min-height: 180px;
+  }
+
+  .fandomGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .imagesGrid {
+    grid-template-columns: 1fr;
+  }
+  .extraImagesRow {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* <= 768 */
+@media (max-width: 768px) {
+  .selectRow {
+    grid-template-columns: 1fr;
+  }
+  .tagRow {
+    grid-template-columns: 1fr;
+  }
+  .extraImagesRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

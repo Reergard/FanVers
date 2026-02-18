@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import styles from "./ActionButton.module.css";
 
 export type ActionButtonVariant = "default" | "primary" | "outline" | "ghost" | "danger" | "bookFrame";
@@ -7,6 +8,8 @@ export type ActionButtonSize = "sm" | "md" | "lg";
 type Props = {
   as?: "button" | "a";
   href?: string;
+  /** React Router path — рендерить Link замість button (кліентська навігація) */
+  to?: string;
   onClick?: () => void;
   children: React.ReactNode;
   className?: string;
@@ -30,6 +33,7 @@ type Props = {
 export function ActionButton({
   as = "button",
   href,
+  to,
   onClick,
   children,
   className,
@@ -64,7 +68,11 @@ export function ActionButton({
     </>
   );
 
-  const inner = as === "a" ? (
+  const inner = to != null ? (
+    <Link to={to} className={cls} aria-label={ariaLabel} aria-busy={loading}>
+      {content}
+    </Link>
+  ) : as === "a" ? (
     <a className={cls} href={href} aria-label={ariaLabel} aria-busy={loading}>
       {content}
     </a>

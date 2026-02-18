@@ -15,6 +15,12 @@ const LoginPage = lazy(() => import("./auth/LoginPage"));
 const NotificationsPage = lazy(() =>
   import("./notification/NotificationsPage").then((m) => ({ default: m.NotificationsPage }))
 );
+const CreateBookPage = lazy(() =>
+  import("./catalog/CreateBookPage").then((m) => ({ default: m.CreateBookPage }))
+);
+const AddChapter = lazy(() =>
+  import("./catalog/AddChapter").then((m) => ({ default: m.default }))
+);
 
 const queryClient = new QueryClient();
 
@@ -44,6 +50,14 @@ export default function App() {
           <Base>
             <Routes>
               <Route path="/" element={<HomePage />} />
+              <Route
+                path="/create-book"
+                element={
+                  <Suspense fallback={<div />}>
+                    <CreateBookPage />
+                  </Suspense>
+                }
+              />
               <Route
                 path="/profile"
                 element={
@@ -81,6 +95,22 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <NotificationsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/books/:slug/settings"
+                element={
+                  <Suspense fallback={<div />}>
+                    <CreateBookPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/books/:slug/add-chapter"
+                element={
+                  <Suspense fallback={<div />}>
+                    <AddChapter />
                   </Suspense>
                 }
               />

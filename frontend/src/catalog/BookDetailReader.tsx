@@ -100,8 +100,20 @@ export default function BookDetailReader({
           onRead={(ch) => {
             /* TODO: navigate to chapter */
           }}
-          getChapterPrice={() => "10 ₴"}
-          getChapterDate={() => "13.02.2023"}
+          getChapterPrice={(ch) =>
+            ch.is_paid && ch.price != null && ch.price > 0
+              ? `${Number(ch.price).toFixed(2)} ₴`
+              : "Безкоштовно"
+          }
+          getChapterDate={(ch) =>
+            ch.created_at
+              ? new Date(ch.created_at).toLocaleDateString("uk-UA", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })
+              : "—"
+          }
         />
       }
       comments={<BookCommentsContainer type="book" slug={book.slug} isOwner={false} />}

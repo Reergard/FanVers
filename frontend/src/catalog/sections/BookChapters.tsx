@@ -13,6 +13,8 @@ export type BookChaptersProps = {
   chapters: Chapter[];
   isOwner?: boolean;
   loading?: boolean;
+  /** Якщо задано — кнопка «Додати розділ» рендериться як Link на цей шлях */
+  addChapterTo?: string;
   onAddChapter?: () => void;
   onCreateVolume?: () => void;
   onChangeOrder?: () => void;
@@ -29,6 +31,7 @@ export function BookChapters({
   chapters,
   isOwner = false,
   loading = false,
+  addChapterTo,
   onAddChapter,
   onCreateVolume,
   onChangeOrder,
@@ -58,7 +61,11 @@ export function BookChapters({
         {isOwner && (
           <>
             <div className={styles.chapterActions}>
-              <ActionButton variant="primary" onClick={onAddChapter}>Додати розділ</ActionButton>
+              {addChapterTo ? (
+                <ActionButton variant="primary" to={addChapterTo}>Додати розділ</ActionButton>
+              ) : (
+                <ActionButton variant="primary" onClick={onAddChapter}>Додати розділ</ActionButton>
+              )}
               <ActionButton variant="primary" onClick={onCreateVolume}>Створити том</ActionButton>
             </div>
             <div className={styles.chapterActionsRight}>
@@ -79,7 +86,9 @@ export function BookChapters({
             <div key={i} className={styles.skeletonChapterRow} role="row" aria-hidden="true" />
           ))
         ) : (
-        sorted.map((chapter) => (
+        sorted.map((chapter, index) => {
+          const displayPosition = chapter.position > 0 ? chapter.position : index + 1;
+          return (
           <div key={chapter.id} className={styles.chapterRow} role="row">
             <div className={styles.chapterRowName} role="cell">
               <label className={styles.chapterCheckboxWrap}>
@@ -88,7 +97,7 @@ export function BookChapters({
                   className={styles.chapterCheckboxInput}
                   checked={selectedIds.has(chapter.id)}
                   onChange={() => toggleSelected(chapter.id)}
-                  aria-label={`Обрати розділ ${chapter.position ?? chapter.id}`}
+                  aria-label={`Обрати розділ ${displayPosition}`}
                 />
                 <span className={styles.chapterCheckboxBox}>
                   {selectedIds.has(chapter.id) && <img src={checkIcon} alt="" className={styles.chapterCheckIcon} aria-hidden />}
@@ -98,8 +107,8 @@ export function BookChapters({
                 <input
                   type="text"
                   className={styles.chapterPositionInput}
-                  data-digits={Math.min(4, String(chapter.position ?? chapter.id).length) || 1}
-                  value={chapter.position ?? chapter.id}
+                  data-digits={Math.min(4, String(displayPosition).length) || 1}
+                  value={displayPosition}
                   readOnly
                   aria-label="Позиція"
                 />
@@ -125,7 +134,7 @@ export function BookChapters({
                 </div>
               </div>
               <span className={styles.chapterTitleText}>
-                Розділ {chapter.position ?? chapter.id}: {chapter.title}
+                {chapter.title}
               </span>
               {isOwner && onEdit && (
                 <button
@@ -163,7 +172,8 @@ export function BookChapters({
               )}
             </div>
           </div>
-        ))
+          );
+        })
         )}
       </div>
     </section>
