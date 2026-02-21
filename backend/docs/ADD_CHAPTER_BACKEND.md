@@ -84,5 +84,6 @@
 ## 6. Пов’язана документація
 
 - Frontend-потік: `frontend/src/docs/ADD_CHAPTER_FLOW.md`.
+- Доступ до читання глав та навігація: `backend/docs/CHAPTER_ACCESS_BACKEND.md`.
 
 **Останнє оновлення:** за поточним коду в проєкті.

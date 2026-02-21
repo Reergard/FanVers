@@ -13,7 +13,7 @@ src/
   api/            # axios (http.ts, httpRaw.ts), endpoints, catalogApi, ratingApi (рейтинги), reviewsApi (коментарі)
   app/            # общий layout приложения: Base.tsx + Base.module.css
   auth/           # авторизация: store, service, useAuth, bootstrap, token, refresh
-  catalog/        # страница книги: BookDetailRouter, BookDetailLayout, sections (BookHero, BookChapters, BookCommentsContainer, BookRatingStars тощо); AddChapter — страница добавления главы (/books/:slug/add-chapter)
+  catalog/        # страница книги (/books/:slug), страница добавления главы (/books/:slug/add-chapter), страница главы (/books/:bookSlug/chapters/:chapterSlug)
   main/           # страницы/фичи главной (HomePage.tsx + стили + локальные картинки)
   users/          # страницы/фичи пользователей (Profile.tsx, profileService, types)
   website_advertising/  # реклама книг (AdvertisingBooks, BookAdCard)
@@ -219,7 +219,13 @@ react-router-dom (BrowserRouter, Routes, Route)
 
 Base оборачивает Routes, Routes содержит Route для каждой страницы
 
-Текущие маршруты: "/" (HomePage), "/profile" (Profile), "/books/:slug" (BookDetailRouter)
+Текущие маршруты включают:
+
+- "/" (HomePage)
+- "/profile" (Profile)
+- "/books/:slug/add-chapter" (AddChapter)
+- "/books/:bookSlug/chapters/:chapterSlug" (ChapterDetailRouter)
+- "/books/:slug" (BookDetailRouter)
 
 Перед роутером — bootstrap auth (bootstrapAuth), затем QueryClientProvider, NotificationProvider
 

@@ -208,6 +208,26 @@
 
 ---
 
+### `ChapterDetailRouter`, `ChapterDetail` (catalog/)
+
+**Призначення:** сторінка читання конкретної глави (`/books/:bookSlug/chapters/:chapterSlug`) з верхньою/нижньою навігацією, текстом глави та коментарями.
+
+**Особливості:**
+- `ChapterDetailRouter` завантажує:
+  - chapter detail (`catalogApi.getChapterDetail`)
+  - chapter navigation (`catalogApi.getChapterNavigation`)
+- У переходах Prev/Next router спочатку prefetch-ить target chapter detail; при `403` відкриває локальну `Modal` з текстом backend.
+- `isOwner` для сторінки глави визначається через `chapter.book_owner_id === userId` і передається в `BookCommentsContainer type="chapter"`.
+- `ChapterDetail` — presentation-компонент: рендер Link-кнопок навігації, контенту (`dangerouslySetInnerHTML`) і секції коментарів.
+
+**Місця використання:**
+- `App.tsx` — маршрут `/books/:bookSlug/chapters/:chapterSlug` -> `ChapterDetailRouter`.
+- `BookChapters.tsx` -> `onRead` веде на цей маршрут.
+
+**Пов'язана документація:** `docs/CHAPTER_PAGE_DATA_FLOW.md`.
+
+---
+
 ### `BookRatingStars` (catalog/sections/)
 
 **Призначення:** Блок зіркового рейтингу (5 зірок) для книги: відображення середнього та кількості голосів, оцінка користувача; клік по зірці відправляє оцінку на бекенд.
@@ -368,4 +388,4 @@
 
 ---
 
-**Останнє оновлення:** 2026-02-08
+**Останнє оновлення:** 2026-02-21

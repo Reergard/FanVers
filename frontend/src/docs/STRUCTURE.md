@@ -107,6 +107,7 @@ frontend/src/
 │   ├── USER_DATA_FLOW.md
 │   ├── BOOK_PAGE_DATA_FLOW.md
 │   ├── BOOK_PAGE_DESIGN_DATA_FLOW.md
+│   ├── CHAPTER_PAGE_DATA_FLOW.md
 │   ├── COMMENTS_FRONTEND.md
 │   ├── COMPONENTS.md
 │   ├── Concept.md
@@ -158,8 +159,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 **Поточна реалізація (з роутером):**
 ```tsx
 // Bootstrap auth перед показом Routes; QueryClientProvider, NotificationProvider
-// Маршрути: / (HomePage), /profile (Profile), /books/:slug (BookDetailRouter)
-// Suspense + lazy для Profile та BookDetailRouter
+// Маршрути: /, /profile, /books/:slug, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug
+// Suspense + lazy для кількох сторінок (зокрема Profile, BookDetailRouter, AddChapter, ChapterDetailRouter)
 ```
 
 ---
@@ -277,7 +278,7 @@ export function Base({ children }: Props) {
 **Навіщо існує:** коли сторінок стане багато, зберігати маршрути в `App.tsx` стане незручно.
 Логіку маршрутизації можна винести в `routes/`.
 
-**Поточний стан:** папка не створена. Маршрути визначені безпосередньо в `App.tsx` (/, /profile, /books/:slug).
+**Поточний стан:** папка не створена. Маршрути визначені безпосередньо в `App.tsx` (/, /profile, /books/:slug, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug).
 
 **Майбутній приклад:** `routes/AppRoutes.tsx`
 ```tsx
@@ -327,6 +328,8 @@ export function AppRoutes() {
 **Що це:** компонент, який завантажує глобальний SVG-спрайт (`public/sprite.svg`) один раз.
 
 **Навіщо існує:** спрайт має бути в DOM, щоб працювали `<use href="#icon-name" />`. Рендериться в `Base.tsx`.
+
+**Нюанс:** для сторінки глави використовується окремий спрайт `public/sprite-book.svg` через `shared/SvgSpriteBook.tsx`.
 
 ### `shared/FrameLink.tsx`
 **Що це:** стилізована навігаційна посилання з рамкою (використовується в Header NAV).
@@ -427,9 +430,9 @@ export function AppRoutes() {
 
 ## `catalog/` — фіча Каталог (сторінка книги)
 
-**Що це:** сторінка книги `/books/:slug` — BookDetailRouter, BookDetailLayout, BookDetailOwner, BookDetailReader, секції (BookHero, BookDescription, BookChapters, **BookCommentsContainer**, **BookRatingStars** тощо). **Рейтинги (РЕЙТИНГ ТВОРУ, ЯКІСТЬ ПЕРЕКЛАДУ):** BookHero отримує `bookSlug` від Owner/Reader, робить useQuery за ключем `["book-ratings", slug]`, викликає `ratingApi.fetchBookRatings(slug)`; рендерить два блоки `BookRatingStars` (BOOK, TRANSLATION). Відправка оцінки — через `ratingApi.submitRating` і `requestThrottle`. Див. docs/RATINGS_FRONTEND.md. Секція коментарів: `BookCommentsContainer` робить useQuery за ключем `["book-comments", slug]` / `["chapter-comments", slug]`, викликає `reviewsApi`. Окрема сторінка **додавання глави**: `AddChapter.tsx`. Стилі сторінки книги — `styles/BookDetail.module.css`.
+**Що це:** сторінка книги `/books/:slug` — BookDetailRouter, BookDetailLayout, BookDetailOwner, BookDetailReader, секції (BookHero, BookDescription, BookChapters, **BookCommentsContainer**, **BookRatingStars** тощо). Також у фічі `catalog/` знаходиться сторінка глави: `ChapterDetailRouter` + `ChapterDetail` для маршруту `/books/:bookSlug/chapters/:chapterSlug`, і сторінка додавання глави `AddChapter.tsx` для `/books/:slug/add-chapter`.
 
-**Маршрути (App.tsx):** `/books/:slug/add-chapter` → AddChapter (оголошується **перед** `/books/:slug`), `/books/:slug` → BookDetailRouter.
+**Маршрути (App.tsx):** `/books/:slug/add-chapter` → AddChapter (оголошується **перед** `/books/:slug`), `/books/:bookSlug/chapters/:chapterSlug` → ChapterDetailRouter, `/books/:slug` → BookDetailRouter.
 
 ---
 

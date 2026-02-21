@@ -261,6 +261,8 @@ frontend/src/
 
 **Рейтинги (catalog):** компонент `BookRatingStars` використовує `useNotification()`: **showWarning** — коли неавторизований користувач клікає по зірці («Для голосування необхідно увійти в систему»); **showError** — при помилці відправки оцінки (в т.ч. 429, або текст з `data.error` / `data.detail` з відповіді сервера). Детально: RATINGS_FRONTEND.md.
 
+**Сторінка глави (catalog):** `ChapterDetailRouter` при `403` під час переходів Prev/Next показує **локальну `Modal`** (`shared/Modal/Modal`), а не `useNotification()`. Тобто повідомлення про недоступну платну главу на цій сторінці йдуть окремим UI-механізмом.
+
 ### 10.5. Глобальні toast (NotificationProvider) — два варіанти
 
 **Файли:** `shared/NotificationModal/NotificationProvider.tsx`, `NotificationModal.tsx`, `AutoCloseNotificationModal.tsx`, `Modal/Modal.tsx`.
