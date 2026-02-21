@@ -1,0 +1,473 @@
+.abandoned-page {
+  width: 100%;
+  min-height: 60vh;
+  padding-block: clamp(24px, 3vw, 48px);
+}
+
+/* ---------- Layout ---------- */
+
+.abandoned-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 330px);
+  gap: clamp(24px, 3vw, 44px);
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .abandoned-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.abandoned-main-col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.6vw, 18px);
+  min-width: 0;
+}
+
+/* ---------- Top area ---------- */
+
+.abandoned-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "BadScript", cursive;
+  font-size: clamp(12px, 1.1vw, 14px);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.abandoned-breadcrumb-sep {
+  opacity: 0.7;
+}
+
+.abandoned-breadcrumb-item--active {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.abandoned-breadcrumb-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.abandoned-breadcrumb-link:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.abandoned-title {
+  font-family: "Seminaria", serif;
+  font-size: clamp(28px, 3.6vw, 44px);
+  color: #f58807;
+  margin: 0;
+  letter-spacing: 0.06em;
+}
+
+.abandoned-note {
+  margin: 0;
+  font-family: "BadScript", cursive;
+  font-size: clamp(12px, 1.1vw, 14px);
+  color: rgba(245, 136, 7, 0.5);
+}
+
+.abandoned-search-row {
+  margin-top: clamp(2px, 0.4vw, 6px);
+}
+
+.abandoned-search {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.abandoned-search-input {
+  width: 100%;
+  height: clamp(44px, 4.2vw, 54px);
+  padding: 0 clamp(50px, 5vw, 60px) 0 clamp(18px, 2vw, 26px);
+  border-radius: 999px;
+  border: 1px solid rgba(0, 210, 255, 0.55);
+  background: rgba(0, 0, 0, 0.18);
+  box-shadow: 0 0 0 1px rgba(0, 210, 255, 0.14), 0 0 24px rgba(0, 210, 255, 0.12);
+  color: rgba(5, 180, 199, 0.5);
+  font-family: "BadScript", cursive;
+  font-size: clamp(14px, 1.2vw, 16px);
+  outline: none;
+}
+
+.abandoned-search-input::placeholder {
+  color: rgba(5, 180, 199, 0.5);
+}
+
+.abandoned-search-input:focus {
+  box-shadow: 0 0 0 1px rgba(0, 210, 255, 0.28), 0 0 34px rgba(0, 210, 255, 0.18);
+}
+
+.abandoned-search-btn {
+  position: absolute;
+  right: clamp(10px, 1vw, 14px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: auto;
+  height: auto;
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: rgba(0, 210, 255, 0.9);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.abandoned-search-btn:hover {
+  filter: brightness(1.08);
+}
+
+.abandoned-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(12px, 2vw, 18px);
+  padding-top: clamp(6px, 0.8vw, 10px);
+}
+
+@media (max-width: 640px) {
+  .abandoned-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.abandoned-shown {
+  font-family: "BadScript", cursive;
+  font-size: clamp(14px, 1.2vw, 16px);
+  color: rgba(0, 210, 255, 0.9);
+}
+
+.abandoned-sort {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.2vw, 14px);
+}
+
+@media (max-width: 640px) {
+  .abandoned-sort {
+    justify-content: space-between;
+  }
+}
+
+.abandoned-sort-label {
+  font-family: "BadScript", cursive;
+  font-size: clamp(14px, 1.2vw, 16px);
+  color: rgba(0, 210, 255, 0.9);
+}
+
+.abandoned-sort-select-wrap {
+  position: relative;
+  width: min(420px, 46vw);
+}
+
+@media (max-width: 640px) {
+  .abandoned-sort-select-wrap {
+    width: 100%;
+  }
+}
+
+.abandoned-sort-select {
+  width: 100%;
+  height: clamp(40px, 3.8vw, 48px);
+  padding: 0 clamp(38px, 3.6vw, 46px) 0 clamp(16px, 1.8vw, 22px);
+  border-radius: 999px;
+  border: 1px solid rgba(0, 210, 255, 0.55);
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+  font-family: "BadScript", cursive;
+  font-size: clamp(14px, 1.2vw, 16px);
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.abandoned-sort-select-wrap::after {
+  content: "";
+  position: absolute;
+  right: clamp(14px, 1.5vw, 18px);
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid rgba(0, 210, 255, 0.85);
+  border-bottom: 2px solid rgba(0, 210, 255, 0.85);
+  transform: translateY(-65%) rotate(45deg);
+  pointer-events: none;
+}
+
+/* ---------- Grid + card surface ---------- */
+
+.abandoned-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(18px, 2vw, 26px);
+  padding-top: clamp(6px, 0.9vw, 12px);
+}
+
+@media (max-width: 1100px) {
+  .abandoned-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .abandoned-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.abandoned-state {
+  margin-top: clamp(12px, 1.5vw, 20px);
+  border: 1px solid rgba(0, 210, 255, 0.28);
+  border-radius: 16px;
+  padding: clamp(18px, 2vw, 26px);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: "BadScript", cursive;
+  font-size: clamp(16px, 1.3vw, 18px);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.abandoned-state-error {
+  border-color: rgba(220, 27, 27, 0.5);
+  color: rgba(255, 190, 190, 0.95);
+}
+
+.abandoned-card-cell {
+  width: 100%;
+}
+
+.abandoned-card-surface {
+  border-radius: clamp(18px, 2vw, 26px);
+  padding: clamp(18px, 2vw, 24px);
+  background:
+    radial-gradient(120% 80% at 50% 18%, rgba(0, 210, 255, 0.12) 0%, rgba(0, 0, 0, 0.22) 62%, rgba(0, 0, 0, 0.32) 100%),
+    rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(0, 210, 255, 0.14),
+    0 16px 44px rgba(0, 0, 0, 0.55),
+    0 0 46px rgba(0, 210, 255, 0.12);
+}
+
+.abandoned-card-surface .book-card-meta-block {
+  display: none;
+}
+
+.abandoned-book-extra {
+  width: var(--cover-w, clamp(140px, 14vw, 180px));
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.abandoned-book-status {
+  font-family: "Seminaria", serif;
+  font-size: clamp(14px, 1.35vw, 18px);
+  color: #dc1b1b;
+  text-align: center;
+  margin-top: -4px;
+}
+
+.abandoned-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.abandoned-meta-label {
+  min-width: 52px;
+  font-family: "BadScript", cursive;
+  font-size: clamp(14px, 1.2vw, 16px);
+  color: #05b4c7;
+}
+
+.abandoned-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.abandoned-tag {
+  border: 1px solid #05b4c7;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-family: "SofiaSansSemiCondensed", system-ui, sans-serif;
+  font-size: clamp(11px, 1vw, 13px);
+  color: #05b4c7;
+  line-height: 1.2;
+}
+
+.abandoned-tag-empty {
+  opacity: 0.7;
+}
+
+.abandoned-tags-more {
+  color: #05b4c7;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.abandoned-read-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.abandoned-read-btn {
+  min-width: 88px;
+  height: 30px;
+  border-color: rgba(255, 255, 255, 0.92) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-family: "Seminaria", serif !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase;
+  background: transparent !important;
+}
+
+.abandoned-read-btn:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.abandoned-show-more {
+  margin: clamp(10px, 1.4vw, 16px) auto 0;
+  width: min(240px, 100%);
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 136, 7, 0.8);
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(245, 136, 7, 0.95);
+  font-family: "Seminaria", serif;
+  font-size: clamp(14px, 1.2vw, 16px);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.abandoned-show-more:hover {
+  filter: brightness(1.08);
+}
+
+/* ---------- Sidebar ---------- */
+
+.abandoned-sidebar {
+  position: sticky;
+  top: clamp(20px, 2vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 2vw, 26px);
+}
+
+@media (max-width: 1024px) {
+  .abandoned-sidebar {
+    position: static;
+  }
+}
+
+.filters-panel {
+  border: 1px solid rgba(245, 136, 7, 0.8);
+  border-radius: clamp(18px, 2vw, 26px);
+  padding: clamp(18px, 2vw, 22px);
+  position: relative;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.filters-title {
+  margin: 0;
+  text-align: center;
+  font-family: "Seminaria", serif;
+  font-size: clamp(18px, 1.8vw, 22px);
+  letter-spacing: 0.06em;
+  color: rgba(245, 136, 7, 0.95);
+  padding-bottom: clamp(12px, 1.4vw, 16px);
+  border-bottom: 1px solid rgba(245, 136, 7, 0.75);
+}
+
+.filters-list {
+  padding-top: clamp(12px, 1.4vw, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.filters-item {
+  appearance: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: clamp(10px, 1.1vw, 12px) 0;
+  color: rgba(245, 136, 7, 0.92);
+  font-family: "Seminaria", serif;
+  font-size: clamp(14px, 1.3vw, 16px);
+  letter-spacing: 0.04em;
+}
+
+.filters-item:hover {
+  filter: brightness(1.08);
+}
+
+.filters-chevron {
+  color: rgba(245, 136, 7, 0.95);
+  font-size: 18px;
+}
+
+.filters-checks {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.2vw, 14px);
+  padding-left: 4px;
+}
+
+.filters-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "BadScript", cursive;
+  font-size: clamp(14px, 1.2vw, 16px);
+  color: #f58807;
+}
+
+.filters-checkbox-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  color: #f58807;
+  flex-shrink: 0;
+}
+
+.filters-checkbox-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.filters-submit {
+  margin-top: clamp(8px, 1vw, 12px);
+  align-self: center;
+  width: min(230px, 100%);
+  height: clamp(38px, 3.6vw, 44px);
+  border-radius: 999px;
+  border: 1px solid rgba(245, 136, 7, 0.8);
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(245, 136, 7, 0.95);
+  font-family: "Seminaria", serif;
+  font-size: clamp(14px, 1.3vw, 16px);
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.filters-submit:hover {
+  filter: brightness(1.08);
+}

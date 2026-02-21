@@ -13,7 +13,7 @@ src/
   api/            # axios (http.ts, httpRaw.ts), endpoints, catalogApi, ratingApi (рейтинги), reviewsApi (коментарі)
   app/            # общий layout приложения: Base.tsx + Base.module.css
   auth/           # авторизация: store, service, useAuth, bootstrap, token, refresh
-  catalog/        # страница книги (/books/:slug), страница добавления главы (/books/:slug/add-chapter), страница главы (/books/:bookSlug/chapters/:chapterSlug)
+  catalog/        # страница книги (/books/:slug), добавление главы (/books/:slug/add-chapter), страница главы (/books/:bookSlug/chapters/:chapterSlug), покинуті переклади (/abandoned)
   main/           # страницы/фичи главной (HomePage.tsx + стили + локальные картинки)
   users/          # страницы/фичи пользователей (Profile.tsx, profileService, types)
   website_advertising/  # реклама книг (AdvertisingBooks, BookAdCard)
@@ -223,6 +223,7 @@ Base оборачивает Routes, Routes содержит Route для каж�
 
 - "/" (HomePage)
 - "/profile" (Profile)
+- "/abandoned" (AbandonedTranslations)
 - "/books/:slug/add-chapter" (AddChapter)
 - "/books/:bookSlug/chapters/:chapterSlug" (ChapterDetailRouter)
 - "/books/:slug" (BookDetailRouter)

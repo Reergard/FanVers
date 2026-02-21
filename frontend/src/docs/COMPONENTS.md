@@ -24,6 +24,7 @@
 - `catalog/AddChapter.tsx` — кнопка сабміту форми «Додати розділ» (type="submit", loading={isSubmitting})
 - `catalog/sections/BookHero.tsx` — кнопка «Стати новим перекладачем»
 - `catalog/sections/BookActions.tsx` — кнопки "В закладки", налаштування
+- `catalog/AbandonedTranslations.tsx` — кнопка "Читати" під карткою покинутого перекладу
 - `auth/LoginForm.tsx` — кнопка входу
 - `auth/RegisterForm.tsx` — кнопка реєстрації
 - `shared/NotificationModal/NotificationModal.tsx` — кнопка "Зрозуміло" для закриття уведомлення
@@ -108,6 +109,8 @@
 - `widgets/footer/Footer.tsx` — іконки соцмереж (Facebook, Instagram, YouTube)
 - `shared/MenuPanel/MenuPanel.tsx` — іконка рамки для CTA-кнопки
 - `shared/MenuList/MenuList.tsx` — іконки пунктів меню користувача
+- `catalog/CreateBookPage.tsx` — іконка чекбокса "Контент 18+"
+- `catalog/AbandonedTranslations.tsx` — іконки чекбоксів у фільтрах
 
 **Приклад використання:**
 ```tsx
@@ -156,6 +159,26 @@
 ```
 
 **Майбутнє використання:** Може використовуватися в каталозі книг, на сторінках авторів, в рекомендаціях тощо.
+
+---
+
+### `BookCard`
+
+**Призначення:** Переиспользовувана картка книги/перекладу з обкладинкою, назвою, 18+ бейджем, декоративною літерою та базовим блоком метаданих.
+
+**Файли:**
+- `BookCard/BookCard.tsx`
+- `BookCard/BookCard.css`
+
+**Особливості:**
+- Працює з типом книги із `api/catalogApi.ts` (slug, title, image, adult_content, created_at, last_updated, daily views/income).
+- Якщо є `slug` — картка клікабельна (`Link` на `/books/:slug`), інакше рендериться неклікабельний варіант.
+- Зображення обкладинки бере з `book.image`; якщо порожнє — використовує локальний placeholder.
+- На сторінці покинутих перекладів базовий блок метаданих цієї картки приховується локальними стилями сторінки, а поверх додається власний блок статусу/тегів.
+
+**Місця використання:**
+- `users/UserTranslations.tsx`
+- `catalog/AbandonedTranslations.tsx`
 
 ---
 
@@ -370,7 +393,7 @@
 
 2. **Оновлюйте документацію:** При додаванні нового місця використання компонента оновіть цей файл.
 
-3. **CSS Modules:** Всі компоненти використовують CSS Modules для ізоляції стилів.
+3. **Стилі:** Більшість компонентів використовують CSS Modules для ізоляції стилів, але в проєкті є й звичайні `.css` (наприклад, `BookCard/BookCard.css`, `catalog/AbandonedTranslations.css`).
 
 4. **TypeScript:** Всі компоненти типізовані через TypeScript для безпеки типів.
 

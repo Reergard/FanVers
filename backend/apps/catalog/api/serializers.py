@@ -193,6 +193,7 @@ class BookReaderSerializer(serializers.ModelSerializer):
     translation_status = serializers.CharField(read_only=True)
     original_status = serializers.CharField(read_only=True)
     chapters_count = serializers.SerializerMethodField()
+    created_at = serializers.DateTimeField(read_only=True)
     genres = GenresSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     fandoms = FandomSerializer(many=True, read_only=True)
@@ -207,7 +208,7 @@ class BookReaderSerializer(serializers.ModelSerializer):
             'country', 'slug', 'last_updated', 'owner_username', 
             'creator_username', 'bookmark_status', 'bookmark_id', 
             'adult_content', 'book_type', 'chapters_count',
-            'genres', 'tags', 'fandoms'
+            'genres', 'tags', 'fandoms', 'created_at'
         ]
         read_only_fields = fields
 

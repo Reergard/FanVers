@@ -62,3 +62,14 @@ const { isAuthenticated, userId, username, balance, authReady } = useAuth();
 ## Альтернативный источник: профиль
 
 Полный профиль (баланс, аватар, about и т.д.) — через `GET /api/users/profile/` (UserProfileView). Для хедера достаточно `auth-status`. После deposit/withdraw на странице Profile вызывается `refreshAuthStatus()` для обновления баланса в store и Header.
+
+## Страница "Покинуті переклади" и auth
+
+- Страница: `catalog/AbandonedTranslations.tsx`
+- API: `GET /api/catalog/abandoned-translations/` через `api/catalogApi.ts`
+
+Важно:
+
+- Эта страница **не зависит от `useAuth()`** для загрузки списка книг.
+- Запрос идет через `http.ts`, поэтому если access-токен в памяти есть — он автоматически добавится в Bearer.
+- Если access нет, страница все равно может работать (endpoint на backend сейчас публичный по default permission `AllowAny`).

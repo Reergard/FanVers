@@ -71,6 +71,12 @@ export interface UserTranslationBook extends Book {
   daily_views?: number;
 }
 
+/** Книга зі списку покинутих перекладів */
+export interface AbandonedTranslationBook extends Book {
+  created_at?: string | null;
+  last_updated?: string | null;
+}
+
 export interface Chapter {
   id: number;
   slug?: string;
@@ -218,6 +224,15 @@ function normalizeUserTranslation(raw: Record<string, unknown>): UserTranslation
   };
 }
 
+function normalizeAbandonedTranslation(raw: Record<string, unknown>): AbandonedTranslationBook {
+  const book = normalizeBook(raw);
+  return {
+    ...book,
+    created_at: raw.created_at != null && raw.created_at !== "" ? String(raw.created_at) : null,
+    last_updated: raw.last_updated != null && raw.last_updated !== "" ? String(raw.last_updated) : null,
+  };
+}
+
 function normalizeChapter(raw: Record<string, unknown>): Chapter {
   const pos = raw.position ?? raw._position;
   const priceVal = raw.price;
@@ -304,6 +319,7 @@ export const catalogKeys = {
   chaptersPage: (bookId: number, rangeStart: number) =>
     ["book-chapters-page", bookId, rangeStart] as const,
   userTranslations: (userId: number) => ["user-translations", userId] as const,
+  abandonedTranslations: () => ["abandoned-translations"] as const,
 };
 
 // --- API методы ---
@@ -421,6 +437,14 @@ export async function getUserTranslations(): Promise<UserTranslationBook[]> {
   return Array.isArray(data) ? data.map(normalizeUserTranslation) : [];
 }
 
+/** Список покинутих перекладів */
+export async function getAbandonedTranslations(): Promise<AbandonedTranslationBook[]> {
+  const { data } = await http.get<Record<string, unknown>[]>(
+    `${CATALOG}/abandoned-translations/`
+  );
+  return Array.isArray(data) ? data.map(normalizeAbandonedTranslation) : [];
+}
+
 // --- Справочники для сторінки створення книги ---
 
 const STALE_REF = 10 * 60 * 1000; // 10 хв
@@ -511,6 +535,7 @@ export const catalogApi = {
   updateChapterOrderNoVolume,
   uploadChapter,
   getUserTranslations,
+  getAbandonedTranslations,
   getGenres,
   getTags,
   getCountries,

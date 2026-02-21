@@ -41,6 +41,8 @@ frontend/src/
 │   ├── authLogger.ts
 │   └── authSelfTest.ts
 ├── catalog/
+│   ├── AbandonedTranslations.tsx
+│   ├── AbandonedTranslations.css
 │   ├── AddChapter.tsx
 │   ├── BookDetailLayout.tsx
 │   ├── BookDetailOwner.tsx
@@ -52,6 +54,9 @@ frontend/src/
 │   ├── styles/
 │   │   └── AddChapter.module.css
 │   └── ...
+├── BookCard/
+│   ├── BookCard.tsx
+│   └── BookCard.css
 ├── main/
 │   ├── HomePage.tsx
 │   ├── HomePage.module.css
@@ -101,6 +106,7 @@ frontend/src/
 │   ├── fonts/
 │   └── ...
 ├── docs/
+│   ├── ABANDONED_TRANSLATIONS_FRONTEND.md
 │   ├── ADD_CHAPTER_FLOW.md
 │   ├── AUTH_CHANGES_LOG.md
 │   ├── AUTHENTICATION_FRONTEND.md
@@ -159,7 +165,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 **Поточна реалізація (з роутером):**
 ```tsx
 // Bootstrap auth перед показом Routes; QueryClientProvider, NotificationProvider
-// Маршрути: /, /profile, /books/:slug, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug
+// Маршрути: /, /profile, /abandoned, /books/:slug, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug
 // Suspense + lazy для кількох сторінок (зокрема Profile, BookDetailRouter, AddChapter, ChapterDetailRouter)
 ```
 
@@ -278,7 +284,7 @@ export function Base({ children }: Props) {
 **Навіщо існує:** коли сторінок стане багато, зберігати маршрути в `App.tsx` стане незручно.
 Логіку маршрутизації можна винести в `routes/`.
 
-**Поточний стан:** папка не створена. Маршрути визначені безпосередньо в `App.tsx` (/, /profile, /books/:slug, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug).
+**Поточний стан:** папка не створена. Маршрути визначені безпосередньо в `App.tsx` (/, /profile, /abandoned, /books/:slug, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug).
 
 **Майбутній приклад:** `routes/AppRoutes.tsx`
 ```tsx
@@ -430,9 +436,9 @@ export function AppRoutes() {
 
 ## `catalog/` — фіча Каталог (сторінка книги)
 
-**Що це:** сторінка книги `/books/:slug` — BookDetailRouter, BookDetailLayout, BookDetailOwner, BookDetailReader, секції (BookHero, BookDescription, BookChapters, **BookCommentsContainer**, **BookRatingStars** тощо). Також у фічі `catalog/` знаходиться сторінка глави: `ChapterDetailRouter` + `ChapterDetail` для маршруту `/books/:bookSlug/chapters/:chapterSlug`, і сторінка додавання глави `AddChapter.tsx` для `/books/:slug/add-chapter`.
+**Що це:** сторінка книги `/books/:slug` — BookDetailRouter, BookDetailLayout, BookDetailOwner, BookDetailReader, секції (BookHero, BookDescription, BookChapters, **BookCommentsContainer**, **BookRatingStars** тощо). Також у фічі `catalog/` знаходяться: сторінка глави `ChapterDetailRouter` + `ChapterDetail` для маршруту `/books/:bookSlug/chapters/:chapterSlug`, сторінка додавання глави `AddChapter.tsx` для `/books/:slug/add-chapter`, і сторінка покинутих перекладів `AbandonedTranslations.tsx` для `/abandoned`.
 
-**Маршрути (App.tsx):** `/books/:slug/add-chapter` → AddChapter (оголошується **перед** `/books/:slug`), `/books/:bookSlug/chapters/:chapterSlug` → ChapterDetailRouter, `/books/:slug` → BookDetailRouter.
+**Маршрути (App.tsx):** `/abandoned` → AbandonedTranslations, `/books/:slug/add-chapter` → AddChapter (оголошується **перед** `/books/:slug`), `/books/:bookSlug/chapters/:chapterSlug` → ChapterDetailRouter, `/books/:slug` → BookDetailRouter.
 
 ---
 
@@ -541,7 +547,7 @@ export function HeaderLogo() {
 
 3) **Сторінки**
 - Сторінки — у своїх фіча-папках (`main/`, `users/`, `catalog/` тощо).
-- Стилі сторінки — поруч із нею (`*.module.css`).
+- Стилі сторінки — поруч із нею (переважно `*.module.css`, але в проєкті також є звичайні `.css` для окремих сторінок, напр. `catalog/AbandonedTranslations.css`).
 - Кожна фіча може мати підкомпоненти (наприклад, `HomePage1.tsx`).
 
 4) **Shared**

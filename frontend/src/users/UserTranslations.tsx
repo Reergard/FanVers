@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/useAuth";
 import { Container } from "../shared/Container";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
-import { UserTranslationCard } from "./UserTranslationCard/UserTranslationCard";
+import { BookCard } from "../BookCard/BookCard";
 import { getUserTranslations, catalogKeys, type UserTranslationBook } from "../api/catalogApi";
 import { getMyProfile } from "./profileService";
 import styles from "./UserTranslations.module.css";
@@ -83,7 +83,7 @@ export default function UserTranslations() {
               <div className={styles.grid}>
                 {books.map((book: UserTranslationBook) => (
                   <div key={book.id} className={styles.cardCell}>
-                    <UserTranslationCard book={book} />
+                    <BookCard book={book} />
                   </div>
                 ))}
               </div>

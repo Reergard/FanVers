@@ -24,6 +24,9 @@ const AddChapter = lazy(() =>
 const ChapterDetailRouter = lazy(() =>
   import("./catalog/ChapterDetailRouter").then((m) => ({ default: m.default }))
 );
+const AbandonedTranslations = lazy(() =>
+  import("./catalog/AbandonedTranslations").then((m) => ({ default: m.default }))
+);
 
 const queryClient = new QueryClient();
 
@@ -98,6 +101,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <NotificationsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/abandoned"
+                element={
+                  <Suspense fallback={<div />}>
+                    <AbandonedTranslations />
                   </Suspense>
                 }
               />
