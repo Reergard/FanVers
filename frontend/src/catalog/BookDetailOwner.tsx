@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { catalogApi, type Book, type Chapter, type Volume } from "../api/catalogApi";
 import { BookDetailLayout } from "./BookDetailLayout";
@@ -24,6 +25,7 @@ export default function BookDetailOwner({
   volumesLoading: _volumesLoading,
 }: BookDetailOwnerProps) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   const [reorderMode, setReorderMode] = useState(false);
   const [chapterPositions, setChapterPositions] = useState<Record<number, number>>({});
@@ -148,9 +150,9 @@ export default function BookDetailOwner({
               addChapterTo={`/books/${book.slug}/add-chapter`}
               onCreateVolume={() => handleCreateVolume("Новий том")}
               onChangeOrder={enterReorderMode}
-              onRead={(ch) => {}}
-              onEdit={(ch) => {}}
-              onDelete={(ch) => {}}
+              onRead={(ch) => navigate(`/books/${book.slug}/chapters/${ch.slug ?? ch.id}`)}
+              onEdit={(_chapter) => {}}
+              onDelete={(_chapter) => {}}
               getChapterPrice={(ch) =>
                 ch.is_paid && ch.price != null && ch.price > 0
                   ? `${Number(ch.price).toFixed(2)} ₴`

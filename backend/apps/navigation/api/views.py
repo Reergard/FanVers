@@ -11,6 +11,7 @@ from .serializers import BookmarkSerializer
 from ..models import Bookmark, ChapterPagination
 import logging
 from rest_framework.permissions import IsAuthenticated
+from apps.catalog.api.permissions import is_book_owner_or_creator
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ class ChapterNavigationView(APIView):
             # Визначаємо попередній та наступний розділ
             prev_chapter = all_chapters[current_index - 1] if current_index > 0 else None
             next_chapter = all_chapters[current_index + 1] if current_index < len(all_chapters) - 1 else None
+            is_owner_or_creator = is_book_owner_or_creator(request.user, book)
 
             def get_chapter_data(chapter):
                 if not chapter:
@@ -52,7 +54,13 @@ class ChapterNavigationView(APIView):
                     
                 is_purchased = False
                 if request.user.is_authenticated:
-                    is_purchased = request.user.profile.purchased_chapters.filter(id=chapter.id).exists()
+                    if is_owner_or_creator:
+                        is_purchased = True
+                    else:
+                        try:
+                            is_purchased = request.user.profile.purchased_chapters.filter(id=chapter.id).exists()
+                        except ObjectDoesNotExist:
+                            is_purchased = False
                 
                 return {
                     'title': chapter.title,

@@ -24,7 +24,12 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from apps.catalog.utils.errorUtils import get_error_codes
-from apps.catalog.api.permissions import IsBookOwner, IsNotBookOwner, check_book_access_permission
+from apps.catalog.api.permissions import (
+    IsBookOwner,
+    IsNotBookOwner,
+    check_book_access_permission,
+    is_book_owner_or_creator,
+)
 from rest_framework import generics
 from rest_framework import serializers
 from django.utils.text import slugify
@@ -118,25 +123,48 @@ def chapter_detail(request, book_slug, chapter_slug):
             book__slug=book_slug, 
             slug=chapter_slug
         )
-        
-        # Перевіряємо права доступу до завантаження розділу
-        is_allowed, error_message = check_book_access_permission(
-            request.user, chapter.book, 'download'
+
+        # Власник/творець книги завжди має доступ до будь-якої глави, включно з платною.
+        is_owner_or_creator = is_book_owner_or_creator(request.user, chapter.book)
+        logger.warning(
+            "CHAPTER_DETAIL_ACCESS user_id=%s owner_id=%s creator_id=%s book_slug=%s chapter_slug=%s is_owner_or_creator=%s is_paid=%s",
+            request.user.id if request.user.is_authenticated else None,
+            chapter.book.owner_id,
+            chapter.book.creator_id,
+            book_slug,
+            chapter_slug,
+            is_owner_or_creator,
+            chapter.is_paid,
         )
-        
-        if not is_allowed:
-            return Response(
-                {"error": error_message}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        if chapter.is_paid and request.user.is_authenticated:
-            is_purchased = request.user.profile.purchased_chapters.filter(id=chapter.id).exists()
-            if not is_purchased:
+        if not is_owner_or_creator:
+            # Для платної глави неавторизований користувач має отримати 401.
+            if chapter.is_paid and not request.user.is_authenticated:
                 return Response(
-                    {"error": "Необхідно придбати главу для перегляду"}, 
+                    {"error": "Необхідна авторизація для перегляду платної глави"},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+            # Загальні правила доступу до книги для інших користувачів.
+            is_allowed, error_message = check_book_access_permission(
+                request.user, chapter.book, 'download'
+            )
+            if not is_allowed:
+                return Response(
+                    {"error": error_message}, 
                     status=status.HTTP_403_FORBIDDEN
                 )
+
+            # Платну главу може читати тільки той, хто купив.
+            if chapter.is_paid:
+                try:
+                    is_purchased = request.user.profile.purchased_chapters.filter(id=chapter.id).exists()
+                except ObjectDoesNotExist:
+                    is_purchased = False
+                if not is_purchased:
+                    return Response(
+                        {"error": "Необхідно придбати главу для перегляду"}, 
+                        status=status.HTTP_403_FORBIDDEN
+                    )
         
         html_content = chapter.get_html_content()
         

@@ -23,6 +23,7 @@ export type BookChaptersProps = {
   onRead?: (chapter: Chapter) => void;
   onEdit?: (chapter: Chapter) => void;
   onDelete?: (chapter: Chapter) => void;
+  getReadLabel?: (chapter: Chapter) => string;
   getChapterPrice?: (chapter: Chapter) => string;
   getChapterDate?: (chapter: Chapter) => string;
 };
@@ -40,6 +41,7 @@ export function BookChapters({
   onRead,
   onEdit,
   onDelete,
+  getReadLabel = () => "Читати",
   getChapterPrice = () => "—",
   getChapterDate = () => "—",
 }: BookChaptersProps) {
@@ -133,9 +135,18 @@ export function BookChapters({
                   </button>
                 </div>
               </div>
-              <span className={styles.chapterTitleText}>
-                {chapter.title}
-              </span>
+              {onRead ? (
+                <button
+                  type="button"
+                  className={styles.chapterTitleBtn}
+                  onClick={() => onRead(chapter)}
+                  aria-label={`${getReadLabel(chapter)}: ${chapter.title}`}
+                >
+                  <span className={styles.chapterTitleText}>{chapter.title}</span>
+                </button>
+              ) : (
+                <span className={styles.chapterTitleText}>{chapter.title}</span>
+              )}
               {isOwner && onEdit && (
                 <button
                   type="button"
@@ -157,7 +168,7 @@ export function BookChapters({
               {onRead && (
                 <button type="button" className={styles.chapterReadBtn} onClick={() => onRead(chapter)}>
                   <img src={readIcon} alt="" className={styles.chapterActionIcon} aria-hidden />
-                  Читати
+                  {getReadLabel(chapter)}
                 </button>
               )}
               {isOwner && onDelete && (

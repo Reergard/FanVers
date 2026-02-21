@@ -4,6 +4,12 @@ from apps.users.models import User
 from apps.navigation.models import Bookmark
 from django.shortcuts import get_object_or_404
 
+
+def is_book_owner_or_creator(user, book):
+    if not user or not getattr(user, "is_authenticated", False) or not book:
+        return False
+    return book.owner_id == user.id or book.creator_id == user.id
+
 class IsBookOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.owner == request.user
@@ -28,8 +34,8 @@ def check_book_access_permission(user, book, permission_type):
     if not user or not user.is_authenticated:
         return False, "Необхідна авторизація"
     
-    # Власник завжди має доступ
-    if book.owner == user:
+    # Власник/творець завжди має доступ
+    if is_book_owner_or_creator(user, book):
         return True, None
     
     # Отримуємо налаштування доступу

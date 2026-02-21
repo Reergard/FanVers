@@ -21,6 +21,9 @@ const CreateBookPage = lazy(() =>
 const AddChapter = lazy(() =>
   import("./catalog/AddChapter").then((m) => ({ default: m.default }))
 );
+const ChapterDetailRouter = lazy(() =>
+  import("./catalog/ChapterDetailRouter").then((m) => ({ default: m.default }))
+);
 
 const queryClient = new QueryClient();
 
@@ -111,6 +114,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <AddChapter />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/books/:bookSlug/chapters/:chapterSlug"
+                element={
+                  <Suspense fallback={<div />}>
+                    <ChapterDetailRouter />
                   </Suspense>
                 }
               />

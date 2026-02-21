@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import type { Book, Chapter, Volume } from "../api/catalogApi";
 import { BookDetailLayout } from "./BookDetailLayout";
@@ -24,6 +25,7 @@ export default function BookDetailReader({
   volumesLoading: _volumesLoading,
 }: BookDetailReaderProps) {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const metaRows = useMemo(
     () => [
@@ -97,9 +99,8 @@ export default function BookDetailReader({
           chapters={chapters}
           isOwner={false}
           loading={chaptersLoading}
-          onRead={(ch) => {
-            /* TODO: navigate to chapter */
-          }}
+          onRead={(ch) => navigate(`/books/${book.slug}/chapters/${ch.slug ?? ch.id}`)}
+          getReadLabel={(ch) => (ch.is_paid && !ch.is_purchased ? "Купити" : "Читати")}
           getChapterPrice={(ch) =>
             ch.is_paid && ch.price != null && ch.price > 0
               ? `${Number(ch.price).toFixed(2)} ₴`

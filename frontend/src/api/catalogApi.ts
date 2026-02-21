@@ -73,12 +73,15 @@ export interface UserTranslationBook extends Book {
 
 export interface Chapter {
   id: number;
+  slug?: string;
   title: string;
   position: number;
   volume?: number | null;
   volumeId?: number | null;
   /** Платний розділ (з API) */
   is_paid?: boolean;
+  /** Чи купив поточний користувач цей розділ */
+  is_purchased?: boolean;
   /** Ціна (з API), для безкоштовних — 0 */
   price?: number;
   /** ISO дата створення з API */
@@ -90,6 +93,35 @@ export interface Volume {
   title: string;
   book?: number;
   position?: number;
+}
+
+export interface ChapterDetail {
+  id: number;
+  slug: string;
+  title: string;
+  content: string;
+  book_id: number;
+  book_slug: string;
+  book_title: string;
+  book_owner_id: number | null;
+  is_paid: boolean;
+  price: number | null;
+}
+
+export interface ChapterNavigationItem {
+  id: number;
+  slug: string;
+  title: string;
+  is_paid: boolean;
+  is_purchased: boolean;
+  volume: number | null;
+}
+
+export interface ChapterNavigation {
+  current_chapter: ChapterNavigationItem | null;
+  prev_chapter: ChapterNavigationItem | null;
+  next_chapter: ChapterNavigationItem | null;
+  all_chapters: ChapterNavigationItem[];
 }
 
 // --- Нормализация ответов API (бэкенд может отдавать owner, фронт использует ownerId) ---
@@ -191,13 +223,62 @@ function normalizeChapter(raw: Record<string, unknown>): Chapter {
   const priceVal = raw.price;
   return {
     id: Number(raw.id),
+    slug: raw.slug != null ? String(raw.slug) : undefined,
     title: String(raw.title ?? ""),
     position: typeof pos === "number" ? pos : Number(pos ?? 0),
     volumeId: raw.volume != null ? Number(raw.volume) : null,
     volume: raw.volume != null ? Number(raw.volume) : null,
     is_paid: raw.is_paid === true,
+    is_purchased: raw.is_purchased === true,
     price: priceVal != null ? Number(priceVal) : undefined,
     created_at: raw.created_at != null && raw.created_at !== "" ? String(raw.created_at) : null,
+  };
+}
+
+function normalizeChapterDetail(raw: Record<string, unknown>): ChapterDetail {
+  return {
+    id: Number(raw.id),
+    slug: String(raw.slug ?? ""),
+    title: String(raw.title ?? ""),
+    content: String(raw.content ?? ""),
+    book_id: Number(raw.book_id ?? raw.book ?? 0),
+    book_slug: String(raw.book_slug ?? ""),
+    book_title: String(raw.book_title ?? ""),
+    book_owner_id: raw.book_owner_id != null ? Number(raw.book_owner_id) : null,
+    is_paid: raw.is_paid === true,
+    price: raw.price != null ? Number(raw.price) : null,
+  };
+}
+
+function normalizeChapterNavigationItem(raw: unknown): ChapterNavigationItem | null {
+  if (raw == null || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  const id = Number(o.id);
+  const slug = String(o.slug ?? "");
+  const title = String(o.title ?? "");
+  if (Number.isNaN(id) || !slug || !title) return null;
+  return {
+    id,
+    slug,
+    title,
+    is_paid: o.is_paid === true,
+    is_purchased: o.is_purchased === true,
+    volume: o.volume != null ? Number(o.volume) : null,
+  };
+}
+
+function normalizeChapterNavigation(raw: Record<string, unknown>): ChapterNavigation {
+  const current = normalizeChapterNavigationItem(raw.current_chapter);
+  const prev = normalizeChapterNavigationItem(raw.prev_chapter);
+  const next = normalizeChapterNavigationItem(raw.next_chapter);
+  const allRaw = Array.isArray(raw.all_chapters) ? raw.all_chapters : [];
+  return {
+    current_chapter: current,
+    prev_chapter: prev,
+    next_chapter: next,
+    all_chapters: allRaw
+      .map(normalizeChapterNavigationItem)
+      .filter((item): item is ChapterNavigationItem => item != null),
   };
 }
 
@@ -216,6 +297,10 @@ export const catalogKeys = {
   book: (slug: string) => ["book", slug] as const,
   volumes: (slug: string) => ["book-volumes", slug] as const,
   chapters: (slug: string) => ["book-chapters", slug] as const,
+  chapterDetail: (bookSlug: string, chapterSlug: string) =>
+    ["chapter-detail", bookSlug, chapterSlug] as const,
+  chapterNavigation: (bookSlug: string, chapterSlug: string) =>
+    ["chapter-navigation", bookSlug, chapterSlug] as const,
   chaptersPage: (bookId: number, rangeStart: number) =>
     ["book-chapters-page", bookId, rangeStart] as const,
   userTranslations: (userId: number) => ["user-translations", userId] as const,
@@ -242,6 +327,33 @@ export async function getVolumes(slug: string): Promise<Volume[]> {
     `${CATALOG}/books/${encodeURIComponent(slug)}/volumes/`
   );
   return Array.isArray(data) ? data.map(normalizeVolume) : [];
+}
+
+export async function getChapterDetail(
+  bookSlug: string,
+  chapterSlug: string
+): Promise<ChapterDetail> {
+  const { data } = await http.get<Record<string, unknown>>(
+    `${CATALOG}/books/${encodeURIComponent(bookSlug)}/chapters/${encodeURIComponent(chapterSlug)}/`
+  );
+  const normalized = normalizeChapterDetail(data);
+  if (!normalized.book_slug) {
+    normalized.book_slug = bookSlug;
+  }
+  if (!normalized.slug) {
+    normalized.slug = chapterSlug;
+  }
+  return normalized;
+}
+
+export async function getChapterNavigation(
+  bookSlug: string,
+  chapterSlug: string
+): Promise<ChapterNavigation> {
+  const { data } = await http.get<Record<string, unknown>>(
+    `/api/navigation/books/${encodeURIComponent(bookSlug)}/chapters/${encodeURIComponent(chapterSlug)}/navigation/`
+  );
+  return normalizeChapterNavigation(data);
 }
 
 export async function createVolume(slug: string, title: string): Promise<Volume> {
@@ -392,6 +504,8 @@ export const catalogApi = {
   getBook,
   getChapters,
   getVolumes,
+  getChapterDetail,
+  getChapterNavigation,
   createVolume,
   updateChapterOrder,
   updateChapterOrderNoVolume,

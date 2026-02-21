@@ -1,0 +1,235 @@
+/* ===== PAGE ===== */
+.page {
+  width: 100%;
+}
+
+/* ===== NAV (top / bottom) ===== */
+.chapterNav {
+  padding-top: clamp(10px, calc(2.2 * var(--vwu)), 18px);
+  padding-bottom: clamp(8px, calc(1.6 * var(--vwu)), 14px);
+}
+
+.chapterNav__inner {
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 760px) 1fr;
+  align-items: start;
+  column-gap: clamp(10px, calc(2.2 * var(--vwu)), 24px);
+}
+
+.navBtn {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, calc(1.2 * var(--vwu)), 10px);
+  padding: clamp(7px, calc(1.2 * var(--vwu)), 10px) clamp(10px, calc(2 * var(--vwu)), 16px);
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+  text-decoration: none;
+  font-size: clamp(12px, calc(1.2 * var(--vwu)), 14px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  border-radius: 0;
+  min-height: 34px;
+  transition: color 160ms ease, opacity 160ms ease;
+}
+
+.navBtn:hover {
+  color: rgba(255, 255, 255, 0.95);
+  opacity: 0.92;
+}
+
+.navBtnRight {
+  justify-self: end;
+  flex-direction: row-reverse;
+}
+
+.navBtn__text {
+  white-space: nowrap;
+}
+
+.navBtnIcon {
+  flex-shrink: 0;
+  width: clamp(80px, calc(10 * var(--vwu)), 120px);
+  height: 34px;
+  color: rgba(245, 136, 7, 0.5);
+}
+
+.navTitle {
+  justify-self: center;
+  width: min(100%, clamp(320px, calc(54 * var(--vwu)), 760px));
+  text-align: center;
+  position: relative;
+}
+
+.navTitle__text {
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -52%);
+  width: calc(100% - clamp(42px, calc(6 * var(--vwu)), 88px));
+  font-family: var(--font-decor);
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: clamp(15px, calc(1.75 * var(--vwu)), 22px);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.15;
+}
+
+.navTitleFrame {
+  display: block;
+  width: 100%;
+  height: clamp(58px, calc(8.4 * var(--vwu)), 104px);
+  opacity: 0.92;
+  object-fit: cover;
+}
+
+/* Точкова лінія перед/після тексту — з спрайта chapter-dots */
+.dottedDivider {
+  display: block;
+  width: 100%;
+  height: 2px;
+  margin-top: clamp(8px, calc(1.8 * var(--vwu)), 14px);
+  margin-bottom: clamp(14px, calc(2.6 * var(--vwu)), 22px);
+  opacity: 0.85;
+}
+
+/* ===== READER ===== */
+.reader {
+  padding-bottom: clamp(18px, calc(3 * var(--vwu)), 30px);
+}
+
+.reader__inner {
+  max-width: 980px;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.reader__inner p,
+.p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: clamp(14px, calc(1.4 * var(--vwu)), 16px);
+  line-height: 1.72;
+  font-family: "Inter", sans-serif;
+}
+
+.reader__inner p + p,
+.p + .p {
+  margin-top: clamp(10px, calc(1.9 * var(--vwu)), 16px);
+}
+
+/* ===== FOOTER NAV ===== */
+.chapterFooter {
+  padding-top: clamp(6px, calc(1.2 * var(--vwu)), 12px);
+  padding-bottom: clamp(18px, calc(3.4 * var(--vwu)), 30px);
+}
+
+.chapterFooter__inner {
+  display: grid;
+  gap: clamp(10px, calc(2 * var(--vwu)), 16px);
+}
+
+.chapterFooter__row {
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 760px) 1fr;
+  align-items: start;
+  column-gap: clamp(10px, calc(2.2 * var(--vwu)), 24px);
+}
+
+.reportRow {
+  display: flex;
+  justify-content: flex-start;
+  position: relative;
+}
+
+.reportBtnWrap {
+  position: relative;
+  display: inline-block;
+}
+
+.reportBtnFrame {
+  position: absolute;
+  inset: -6px -10px -6px -10px;
+  pointer-events: none;
+  color: rgba(245, 136, 7, 0.5);
+}
+
+.reportBtnFrame svg {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+
+.reportBtn {
+  position: relative;
+  width: clamp(180px, calc(22 * var(--vwu)), 214px);
+  padding: clamp(7px, calc(1.2 * var(--vwu)), 10px) clamp(10px, calc(2 * var(--vwu)), 16px);
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+  font-size: clamp(12px, calc(1.2 * var(--vwu)), 14px);
+  letter-spacing: 0.02em;
+  min-height: 34px;
+  font-family: inherit;
+  transition: color 160ms ease, opacity 160ms ease;
+}
+
+.reportBtn:hover {
+  color: rgba(255, 255, 255, 0.95);
+  opacity: 0.92;
+}
+
+/* ===== COMMENTS WRAP (дизайн 1:1 з BookComments — використовуємо той самий компонент і стилі з BookDetail) ===== */
+.commentsWrap {
+  max-width: var(--container-max, 1280px);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  padding-bottom: clamp(22px, calc(4 * var(--vwu)), 44px);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .chapterNav__inner,
+  .chapterFooter__row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .navBtn,
+  .navBtnRight {
+    justify-self: stretch;
+  }
+
+  .navBtnRight {
+    flex-direction: row-reverse;
+  }
+
+  .navTitle {
+    order: -1;
+  }
+
+  .reader__inner {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .navBtnIcon {
+    width: clamp(60px, 12vw, 90px);
+  }
+}
+
+@media (max-width: 480px) {
+  .navBtn {
+    padding: clamp(6px, 1.2vw, 10px) clamp(8px, 2vw, 14px);
+  }
+
+  .reportBtn {
+    padding: clamp(6px, 1.2vw, 10px) clamp(8px, 2vw, 14px);
+  }
+}
