@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Container } from "../shared/Container";
 import { ShowMoreButton } from "../shared/ActionButton/ActionButton";
 import styles from "./Authors.module.css";
-import rowHoverFrameSvg from "../assets/backgrounds/Рамка Авторов.svg";
 import { getAuthorsList } from "./profileService";
 
 type SortKey = "books" | "comments" | "lastVisit";
@@ -133,13 +132,14 @@ export default function Authors() {
               ) : sortedRows.map((row) => (
                 <div key={`${row.nickname}-${row.rank}`} className={styles.row} role="row" tabIndex={0}>
                   <span className={styles.rowHoverFrame} aria-hidden="true">
-                    <img
+                    <svg
                       className={styles.rowHoverSvg}
-                      src={rowHoverFrameSvg}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                    />
+                      viewBox="0 0 1399 67"
+                      preserveAspectRatio="none"
+                      aria-hidden="true"
+                    >
+                      <use href="/sprite-book.svg#authors-row-hover-frame" />
+                    </svg>
                   </span>
 
                   <div className={`${styles.cell} ${styles.cellItalic}`} role="cell">

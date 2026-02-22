@@ -29,6 +29,9 @@ const ChapterDetailRouter = lazy(() =>
 const AbandonedTranslations = lazy(() =>
   import("./catalog/AbandonedTranslations").then((m) => ({ default: m.default }))
 );
+const Catalog = lazy(() =>
+  import("./catalog/Catalog").then((m) => ({ default: m.default }))
+);
 
 const queryClient = new QueryClient();
 
@@ -119,6 +122,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <NotificationsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/catalog"
+                element={
+                  <Suspense fallback={<div />}>
+                    <Catalog />
                   </Suspense>
                 }
               />

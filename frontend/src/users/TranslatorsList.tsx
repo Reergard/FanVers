@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Container } from "../shared/Container";
 import { ShowMoreButton } from "../shared/ActionButton/ActionButton";
-import rowHoverFrameSvg from "../assets/backgrounds/Рамка Авторов.svg";
 import { getTranslatorsList } from "./profileService";
 import "./TranslatorsList.css";
 
@@ -133,13 +132,14 @@ export default function TranslatorsList() {
               ) : sortedRows.map((row) => (
                 <div key={`${row.nickname}-${row.rank}`} className="translators-list-row" role="row" tabIndex={0}>
                   <span className="translators-list-row-hover-frame" aria-hidden="true">
-                    <img
+                    <svg
                       className="translators-list-row-hover-svg"
-                      src={rowHoverFrameSvg}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                    />
+                      viewBox="0 0 1399 67"
+                      preserveAspectRatio="none"
+                      aria-hidden="true"
+                    >
+                      <use href="/sprite-book.svg#authors-row-hover-frame" />
+                    </svg>
                   </span>
 
                   <div className="translators-list-cell translators-list-cell-number" role="cell">

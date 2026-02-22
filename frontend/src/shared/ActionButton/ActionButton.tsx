@@ -1,7 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import styles from "./ActionButton.module.css";
-import showMoreArrowSvg from "../../assets/backgrounds/Стрелоска Авторов.svg";
 
 export type ActionButtonVariant =
   | "default"
@@ -116,7 +115,11 @@ export function ShowMoreButton({ children = "Показати ще", ariaLabel, 
       {...rest}
       variant="showMore"
       ariaLabel={ariaLabel ?? "Показати ще"}
-      leftIcon={<img src={showMoreArrowSvg} className={styles.showMoreIcon} alt="" aria-hidden="true" />}
+      leftIcon={
+        <svg className={styles.showMoreIcon} viewBox="0 0 17 19" aria-hidden="true" focusable="false">
+          <use href="/sprite-book.svg#show-more-arrow" />
+        </svg>
+      }
     >
       {children}
     </ActionButton>
