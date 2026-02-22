@@ -409,37 +409,39 @@ class TranslatorListSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'nickname', 'role', 'image', 'books_count', 'comments_count', 'last_visit']
 
     def get_books_count(self, obj):
-        """Кількість книг перекладів користувача (тільки TRANSLATION)"""
-        return obj.user.owned_books.filter(book_type='TRANSLATION').count()
+        """
+        Кількість книг користувача, де він creator або owner,
+        а тип книги AUTHOR або TRANSLATION.
+        """
+        from django.db.models import Q
+
+        return Book.objects.filter(
+            Q(creator=obj.user) | Q(owner=obj.user),
+            book_type__in=['AUTHOR', 'TRANSLATION']
+        ).distinct().count()
 
     def get_comments_count(self, obj):
-        """Кількість коментарів в книгах користувача"""
-        from apps.analytics_books.models import BookAnalytics
+        """
+        Сумарна кількість коментарів у книгах і главах книг користувача,
+        де він creator або owner, а тип книги AUTHOR або TRANSLATION.
+        """
+        from apps.reviews.models import BookComment, ChapterComment
         from django.db.models import Q
-        
-        # Отримуємо всі книги користувача (як автор або власник)
+
         user_books = Book.objects.filter(
-            Q(creator=obj.user) | Q(owner=obj.user)
-        )
-        
-        # Підраховуємо загальну кількість коментарів через аналітику
-        total_comments = 0
-        for book in user_books:
-            try:
-                analytics = book.analytics
-                if analytics:
-                    total_comments += analytics.comments_count
-            except BookAnalytics.DoesNotExist:
-                # Якщо аналітика не існує, пропускаємо
-                continue
-        
-        return total_comments
+            Q(creator=obj.user) | Q(owner=obj.user),
+            book_type__in=['AUTHOR', 'TRANSLATION']
+        ).distinct()
+
+        book_comments_count = BookComment.objects.filter(book__in=user_books).count()
+        chapter_comments_count = ChapterComment.objects.filter(chapter__book__in=user_books).count()
+        return book_comments_count + chapter_comments_count
 
     def get_last_visit(self, obj):
-        """Дата останнього відвідування"""
-        # Використовуємо дату створення профілю як приблизну дату останнього відвідування
-        # В майбутньому можна додати поле last_login або last_activity
-        if obj.user.is_active:
+        """Дата останнього відвідування (last_login, fallback: дата створення профілю)."""
+        if obj.user.last_login:
+            return obj.user.last_login.strftime('%d.%m.%Y')
+        if obj.created:
             return obj.created.strftime('%d.%m.%Y')
         return 'Н/Д'
 
@@ -462,37 +464,30 @@ class AuthorListSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'nickname', 'books_count', 'comments_count', 'last_visit']
 
     def get_books_count(self, obj):
-        """Кількість авторських книг користувача"""
+        """Кількість авторських книг, де користувач є creator."""
         return obj.user.created_books.filter(book_type='AUTHOR').count()
 
     def get_comments_count(self, obj):
-        """Кількість коментарів в книгах користувача"""
-        from apps.analytics_books.models import BookAnalytics
-        from django.db.models import Q
-        
-        # Отримуємо всі книги користувача (як автор або власник)
+        """
+        Сумарна кількість коментарів у книгах і главах авторських книг,
+        де користувач є creator.
+        """
+        from apps.reviews.models import BookComment, ChapterComment
+
         user_books = Book.objects.filter(
-            Q(creator=obj.user) | Q(owner=obj.user)
+            creator=obj.user,
+            book_type='AUTHOR'
         )
-        
-        # Підраховуємо загальну кількість коментарів через аналітику
-        total_comments = 0
-        for book in user_books:
-            try:
-                analytics = book.analytics
-                if analytics:
-                    total_comments += analytics.comments_count
-            except BookAnalytics.DoesNotExist:
-                # Якщо аналітика не існує, пропускаємо
-                continue
-        
-        return total_comments
+
+        book_comments_count = BookComment.objects.filter(book__in=user_books).count()
+        chapter_comments_count = ChapterComment.objects.filter(chapter__book__in=user_books).count()
+        return book_comments_count + chapter_comments_count
 
     def get_last_visit(self, obj):
-        """Дата останнього відвідування"""
-        # Використовуємо дату створення профілю як приблизну дату останнього відвідування
-        # В майбутньому можна додати поле last_login або last_activity
-        if obj.user.is_active:
+        """Дата останнього відвідування (last_login, fallback: дата створення профілю)."""
+        if obj.user.last_login:
+            return obj.user.last_login.strftime('%d.%m.%Y')
+        if obj.created:
             return obj.created.strftime('%d.%m.%Y')
         return 'Н/Д'
 

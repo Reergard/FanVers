@@ -13,6 +13,8 @@ export const API = {
   profileUpdateEmail: "/api/users/profile/update-email/",
   profileChangePassword: "/api/users/profile/change-password/",
   profileNotificationSettings: "/api/users/profile/notification-settings/",
+  usersAuthorsList: "/api/users/authors/",
+  usersTranslatorsList: "/api/users/translators/",
 
   // Balance & roles
   becomeTranslator: "/api/users/become-translator/",

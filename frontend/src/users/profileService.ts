@@ -4,6 +4,7 @@ import type {
   UserProfile,
   NotificationSettingsPatch,
   BalanceHistoryItem,
+  PublicUserListItem,
 } from "./types";
 
 /** Отримати повний профіль поточного користувача */
@@ -88,5 +89,17 @@ export async function withdrawBalance(amount: number): Promise<{
   balance_history?: BalanceHistoryItem[];
 }> {
   const { data } = await http.post(API.withdrawBalance, { amount });
+  return data;
+}
+
+/** Публічний рейтинг авторів */
+export async function getAuthorsList(): Promise<PublicUserListItem[]> {
+  const { data } = await http.get<PublicUserListItem[]>(API.usersAuthorsList);
+  return data;
+}
+
+/** Публічний рейтинг перекладачів */
+export async function getTranslatorsList(): Promise<PublicUserListItem[]> {
+  const { data } = await http.get<PublicUserListItem[]>(API.usersTranslatorsList);
   return data;
 }

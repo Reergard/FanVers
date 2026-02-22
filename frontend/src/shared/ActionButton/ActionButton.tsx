@@ -1,8 +1,16 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import styles from "./ActionButton.module.css";
+import showMoreArrowSvg from "../../assets/backgrounds/Стрелоска Авторов.svg";
 
-export type ActionButtonVariant = "default" | "primary" | "outline" | "ghost" | "danger" | "bookFrame";
+export type ActionButtonVariant =
+  | "default"
+  | "primary"
+  | "outline"
+  | "ghost"
+  | "danger"
+  | "bookFrame"
+  | "showMore";
 export type ActionButtonSize = "sm" | "md" | "lg";
 
 type Props = {
@@ -98,4 +106,19 @@ export function ActionButton({
   }
 
   return inner;
+}
+
+type ShowMoreButtonProps = Omit<Props, "variant" | "leftIcon">;
+
+export function ShowMoreButton({ children = "Показати ще", ariaLabel, ...rest }: ShowMoreButtonProps) {
+  return (
+    <ActionButton
+      {...rest}
+      variant="showMore"
+      ariaLabel={ariaLabel ?? "Показати ще"}
+      leftIcon={<img src={showMoreArrowSvg} className={styles.showMoreIcon} alt="" aria-hidden="true" />}
+    >
+      {children}
+    </ActionButton>
+  );
 }

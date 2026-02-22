@@ -11,6 +11,8 @@ import BookDetailSkeleton from "./catalog/BookDetailSkeleton";
 const BookDetailRouter = lazy(() => import("./catalog/BookDetailRouter"));
 const BookmarksPage = lazy(() => import("./bookmarks/BookmarksPage"));
 const UserTranslations = lazy(() => import("./users/UserTranslations"));
+const Authors = lazy(() => import("./users/Authors"));
+const TranslatorsList = lazy(() => import("./users/TranslatorsList"));
 const LoginPage = lazy(() => import("./auth/LoginPage"));
 const NotificationsPage = lazy(() =>
   import("./notification/NotificationsPage").then((m) => ({ default: m.NotificationsPage }))
@@ -85,6 +87,22 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <UserTranslations />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/authors"
+                element={
+                  <Suspense fallback={<div />}>
+                    <Authors />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/translators"
+                element={
+                  <Suspense fallback={<div />}>
+                    <TranslatorsList />
                   </Suspense>
                 }
               />

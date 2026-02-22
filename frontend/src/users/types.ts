@@ -54,3 +54,14 @@ export type NotificationSettingsPatch = Partial<{
   chapter_subscription_notifications: boolean;
   chapter_comment_notifications: boolean;
 }>;
+
+export type PublicUserListItem = {
+  id: number;
+  username: string;
+  nickname: string;
+  role?: string;
+  image?: string | null;
+  books_count: number;
+  comments_count: number;
+  last_visit: string;
+};

@@ -1,0 +1,256 @@
+.page {
+  --accent: #f58807;
+  --line: rgba(245, 136, 7, 0.38);
+  --line-strong: rgba(245, 136, 7, 0.55);
+  --glass: rgba(0, 0, 0, 0.22);
+  --header-text: rgba(255, 255, 255, 0.7);
+
+  --c1: 18%;
+  --c2: 30%;
+  --c3: 12%;
+  --c4: 15%;
+  --c5: 25%;
+
+  padding-block: clamp(16px, 2.2vw, 28px) clamp(24px, 3vw, 40px);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: clamp(16px, 2vw, 28px);
+  margin-bottom: clamp(14px, 2vw, 22px);
+}
+
+.headerLeft {
+  display: grid;
+  gap: 6px;
+}
+
+.title {
+  margin: 0;
+  color: var(--accent);
+  font-size: clamp(24px, 2.2vw, 32px);
+  font-weight: 500;
+  line-height: 1.1;
+  font-family: var(--font-decor);
+}
+
+.sub {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: clamp(12px, 1.1vw, 13px);
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.2vw, 16px);
+  padding-top: 4px;
+}
+
+.sortLabel {
+  color: var(--header-text);
+  font-size: clamp(12px, 1.1vw, 13px);
+  white-space: nowrap;
+}
+
+.sortPill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 8px 34px 8px 14px;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+.sortPillText {
+  color: var(--accent);
+  font-size: clamp(12px, 1.1vw, 13px);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.sortSelect {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.sortCaret {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  transform: translateY(-50%);
+}
+
+.sortCaret::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-right: 1.5px solid var(--accent);
+  border-bottom: 1.5px solid var(--accent);
+  transform: rotate(45deg);
+  transform-origin: center;
+}
+
+.tableScroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.tableFrame {
+  min-width: 820px;
+  border: 1px solid var(--line-strong);
+  background: var(--glass);
+  position: relative;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.32) inset;
+  background-image:
+    linear-gradient(var(--line), var(--line)),
+    linear-gradient(var(--line), var(--line)),
+    linear-gradient(var(--line), var(--line)),
+    linear-gradient(var(--line), var(--line));
+  background-repeat: no-repeat;
+  background-size:
+    1px 100%,
+    1px 100%,
+    1px 100%,
+    1px 100%;
+  background-position:
+    var(--c1) 0,
+    calc(var(--c1) + var(--c2)) 0,
+    calc(var(--c1) + var(--c2) + var(--c3)) 0,
+    calc(var(--c1) + var(--c2) + var(--c3) + var(--c4)) 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: var(--c1) var(--c2) var(--c3) var(--c4) var(--c5);
+  align-items: center;
+  min-height: 64px;
+  position: relative;
+  isolation: isolate;
+}
+
+.rowHead {
+  min-height: 58px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.cell {
+  padding: 14px 18px;
+  color: rgba(255, 255, 255, 0.82);
+  font-family: "BadScript", cursive;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.rowHead .cell {
+  color: var(--header-text);
+  font-family: "BadScript", cursive;
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 400;
+}
+
+.cellCenter {
+  text-align: center;
+}
+
+.cellNick {
+  padding-left: 22px;
+}
+
+.cellItalic {
+  font-style: normal;
+  font-family: "Arizonia", cursive;
+  font-size: 32px;
+  line-height: 0.96;
+}
+
+.headOrnament {
+  position: absolute;
+  top: -8px;
+  left: calc(var(--c1) + var(--c2) + (var(--c3) / 2));
+  transform: translateX(-50%);
+  width: 94px;
+  height: 16px;
+  pointer-events: none;
+  opacity: 0.85;
+  background: radial-gradient(circle, rgba(245, 136, 7, 0.95), rgba(245, 136, 7, 0) 62%);
+}
+
+.rowHoverFrame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.rowHoverSvg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.row:hover .rowHoverFrame,
+.row:focus-visible .rowHoverFrame {
+  opacity: 1;
+}
+
+.row:hover .cell,
+.row:focus-visible .cell {
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.row:focus-visible {
+  outline: none;
+}
+
+.row > .cell {
+  position: relative;
+  z-index: 1;
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(14px, 1.8vw, 18px);
+}
+
+@media (max-width: 1024px) {
+  .page {
+    --c1: 20%;
+    --c2: 28%;
+    --c3: 14%;
+    --c4: 16%;
+    --c5: 22%;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-wrap: wrap;
+  }
+
+  .headerRight {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 24px;
+  }
+}

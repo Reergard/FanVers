@@ -653,32 +653,25 @@ def update_notification_settings(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_translators_list(request):
     try:
-        # Отримуємо ВСІХ перекладачів за роллю (навіть без книг)
-        translators_by_role = Profile.objects.filter(
-            role='Перекладач'
-        ).select_related('user')
-
-        # Отримуємо ТІЛЬКИ літераторів, які мають книги з типом TRANSLATION
-        literators_with_translations = Profile.objects.filter(
-            role='Літератор',
-            user__owned_books__book_type='TRANSLATION'
+        translators = Profile.objects.filter(
+            role__in=['Перекладач', 'Літератор']
         ).select_related('user').distinct()
 
-        # Об'єднуємо результати
-        all_translators = list(translators_by_role) + list(literators_with_translations)
-        
-        # Видаляємо дублікати та сортуємо за кількістю книг
-        unique_translators = list({translator.id: translator for translator in all_translators}.values())
-        
-        # Сортуємо за кількістю книг перекладів (спочатку ті, у кого більше книг)
-        unique_translators.sort(
-            key=lambda x: x.user.owned_books.filter(book_type='TRANSLATION').count(),
+        translators_list = list(translators)
+        translators_list.sort(
+            key=lambda x: (
+                x.user.owned_books.filter(book_type__in=['AUTHOR', 'TRANSLATION']).count()
+                + x.user.created_books.filter(book_type__in=['AUTHOR', 'TRANSLATION']).exclude(
+                    id__in=x.user.owned_books.values_list('id', flat=True)
+                ).count()
+            ),
             reverse=True
         )
-        
-        serializer = TranslatorListSerializer(unique_translators, many=True)
+
+        serializer = TranslatorListSerializer(translators_list, many=True)
         return Response(serializer.data)
         
     except Exception as e:
@@ -690,38 +683,24 @@ def get_translators_list(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_authors_list(request):
     try:
-        # Додаємо діагностичне логування
-        total_profiles = Profile.objects.count()
-        total_literators = Profile.objects.filter(role='Літератор').count()
-        total_translators = Profile.objects.filter(role='Перекладач').count()
-        total_readers = Profile.objects.filter(role='Читач').count()
-        
-        logger.info(f"Діагностика ролей: Всього профілів: {total_profiles}, "
-                   f"Літераторів: {total_literators}, "
-                   f"Перекладачів: {total_translators}, "
-                   f"Читачів: {total_readers}")
-        
-        # Отримуємо тільки літераторів (перевіряємо обидва варіанти)
+        # Отримуємо тільки профілі з роллю "Літератор"
         authors = Profile.objects.filter(
-            role__in=['Літератор', 'Литератор', 'Author']
+            role='Літератор'
         ).select_related('user').prefetch_related(
             'user__created_books',
             'user__owned_books'
         )
-        
-        logger.info(f"Знайдено літераторів: {authors.count()}")
-        
-        # Сортуємо за кількістю авторських книг (спочатку ті, у кого більше книг)
+
         authors_list = list(authors)
         authors_list.sort(
             key=lambda x: x.user.created_books.filter(book_type='AUTHOR').count(),
             reverse=True
         )
-        
+
         serializer = AuthorListSerializer(authors_list, many=True)
-        logger.info(f"Успішно серіалізовано {len(serializer.data)} авторів")
         return Response(serializer.data)
         
     except Exception as e:
