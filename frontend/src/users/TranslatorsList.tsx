@@ -1,11 +1,18 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Container } from "../shared/Container";
-import { ShowMoreButton } from "../shared/ActionButton/ActionButton";
+import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
+import { SortByNavigation } from "../navigation/SortByNavigation.tsx";
 import { getTranslatorsList } from "./profileService";
 import "./TranslatorsList.css";
 
 type SortKey = "books" | "comments" | "lastVisit";
+const PAGE_SIZE = 1;
+const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
+  { value: "books", label: "Кількість книг" },
+  { value: "comments", label: "К-сть коментарів" },
+  { value: "lastVisit", label: "Останнє відвідування" },
+];
 
 type TranslatorRow = {
   rank: number;
@@ -28,6 +35,7 @@ function parseUkDate(value: string): number {
 
 export default function TranslatorsList() {
   const [sort, setSort] = useState<SortKey>("books");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const {
     data: apiRows = [],
     isLoading,
@@ -59,6 +67,16 @@ export default function TranslatorsList() {
     return copy.map((row, index) => ({ ...row, rank: index + 1 }));
   }, [apiRows, sort]);
 
+  const visibleRows = useMemo(
+    () => sortedRows.slice(0, visibleCount),
+    [sortedRows, visibleCount]
+  );
+  const showMore = () => setVisibleCount((prev) => prev + PAGE_SIZE);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [sort, apiRows.length]);
+
   return (
     <section className="translators-list-page">
       <Container>
@@ -69,25 +87,13 @@ export default function TranslatorsList() {
           </div>
 
           <div className="translators-list-header-right">
-            <span className="translators-list-sort-label">Сортувати</span>
-            <label className="translators-list-sort-pill">
-              <span className="translators-list-sort-pill-text">
-                {sort === "books" && "Кількість книг"}
-                {sort === "comments" && "К-сть коментарів"}
-                {sort === "lastVisit" && "Останнє відвідування"}
-              </span>
-              <select
-                className="translators-list-sort-select"
-                value={sort}
-                onChange={(event) => setSort(event.target.value as SortKey)}
-                aria-label="Сортувати перекладачів"
-              >
-                <option value="books">Кількість книг</option>
-                <option value="comments">К-сть коментарів</option>
-                <option value="lastVisit">Останнє відвідування</option>
-              </select>
-              <span className="translators-list-sort-caret" aria-hidden="true" />
-            </label>
+            <SortByNavigation
+              value={sort}
+              options={SORT_OPTIONS}
+              onChange={(nextValue) => setSort(nextValue as SortKey)}
+              ariaLabel="Сортувати перекладачів"
+              labelText="Сортувати за"
+            />
           </div>
         </div>
 
@@ -129,7 +135,7 @@ export default function TranslatorsList() {
                   <div className="translators-list-cell" role="cell" />
                   <div className="translators-list-cell" role="cell" />
                 </div>
-              ) : sortedRows.map((row) => (
+              ) : visibleRows.map((row) => (
                 <div key={`${row.nickname}-${row.rank}`} className="translators-list-row" role="row" tabIndex={0}>
                   <span className="translators-list-row-hover-frame" aria-hidden="true">
                     <svg
@@ -164,7 +170,12 @@ export default function TranslatorsList() {
         </div>
 
         <div className="translators-list-footer">
-          <ShowMoreButton ariaLabel="Показати ще перекладачів">Показати ще</ShowMoreButton>
+          <ShowMoreNavigation
+            visibleCount={visibleCount}
+            totalCount={sortedRows.length}
+            onShowMore={showMore}
+            ariaLabel="Показати ще перекладачів"
+          />
         </div>
       </Container>
     </section>

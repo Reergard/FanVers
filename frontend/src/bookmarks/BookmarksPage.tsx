@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/useAuth";
+import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
+import { SortByNavigation } from "../navigation/SortByNavigation.tsx";
 import { Container } from "../shared/Container";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { BookAdCard } from "../website_advertising/BookAdCard/BookAdCard";
@@ -20,6 +22,19 @@ const FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "dropped", label: "Покинуті" },
   { value: "completed", label: "Прочитані" },
 ];
+const PAGE_SIZE = 1;
+type SortKey = "updated" | "created" | "title";
+const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
+  { value: "updated", label: "Останньою активністю" },
+  { value: "created", label: "Датою створення" },
+  { value: "title", label: "Назвою" },
+];
+
+function toTimestamp(value: string | null | undefined): number {
+  if (!value) return 0;
+  const ts = new Date(value).getTime();
+  return Number.isNaN(ts) ? 0 : ts;
+}
 
 function getImageUrl(book: BookmarkBook): string {
   const img = book.image;
@@ -67,6 +82,8 @@ function BookmarkCard({ bookmark }: { bookmark: BookmarkType }) {
 
 export default function BookmarksPage() {
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [sortBy, setSortBy] = useState<SortKey>("updated");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const { isAuthenticated, userId, authReady } = useAuth();
 
   const {
@@ -82,6 +99,28 @@ export default function BookmarksPage() {
     refetchOnWindowFocus: false,
     staleTime: 2 * 60 * 1000,
   });
+
+  const sortedBookmarks = useMemo(() => {
+    const copy = [...bookmarks];
+    if (sortBy === "updated") {
+      copy.sort((a, b) => toTimestamp(b.updated_at) - toTimestamp(a.updated_at));
+    } else if (sortBy === "created") {
+      copy.sort((a, b) => toTimestamp(b.created_at) - toTimestamp(a.created_at));
+    } else {
+      copy.sort((a, b) => a.book.title.localeCompare(b.book.title, "uk-UA"));
+    }
+    return copy;
+  }, [bookmarks, sortBy]);
+
+  const visibleBookmarks = useMemo(
+    () => sortedBookmarks.slice(0, visibleCount),
+    [sortedBookmarks, visibleCount]
+  );
+  const showMore = () => setVisibleCount((prev) => prev + PAGE_SIZE);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [selectedStatus, sortBy, bookmarks.length]);
 
   if (!authReady) {
     return (
@@ -122,22 +161,16 @@ export default function BookmarksPage() {
 
             <div className={styles.topBar}>
               <span className={styles.shownCount}>
-                Показано {bookmarks.length} робіт
+                Показано {sortedBookmarks.length} робіт
               </span>
               <div className={styles.sortWrap}>
-                <label htmlFor="sort-select" className={styles.sortLabel}>
-                  Сортувати за
-                </label>
-                <select
-                  id="sort-select"
-                  className={styles.sortSelect}
-                  defaultValue=""
-                  aria-label="Сортувати за"
-                >
-                  <option value="" disabled>
-                    Вибрати
-                  </option>
-                </select>
+                <SortByNavigation
+                  value={sortBy}
+                  options={SORT_OPTIONS}
+                  onChange={(nextValue) => setSortBy(nextValue as SortKey)}
+                  ariaLabel="Сортувати закладки"
+                  labelText="Сортувати за"
+                />
               </div>
             </div>
 
@@ -155,21 +188,30 @@ export default function BookmarksPage() {
             ) : isLoading ? (
               <div className={styles.loading}>Завантаження закладок…</div>
             ) : bookmarks.length > 0 ? (
-              <div className={styles.grid}>
-                {bookmarks.map((bookmark, index) => {
-                  const col = index % 3;
-                  const row = Math.floor(index / 3);
-                  const hasGradient = (row + col) % 2 === 1;
-                  return (
-                    <div
-                      key={bookmark.id}
-                      className={hasGradient ? styles.cardWithGradient : ""}
-                    >
-                      <BookmarkCard bookmark={bookmark} />
-                    </div>
-                  );
-                })}
-              </div>
+              <>
+                <div className={styles.grid}>
+                  {visibleBookmarks.map((bookmark, index) => {
+                    const col = index % 3;
+                    const row = Math.floor(index / 3);
+                    const hasGradient = (row + col) % 2 === 1;
+                    return (
+                      <div
+                        key={bookmark.id}
+                        className={hasGradient ? styles.cardWithGradient : ""}
+                      >
+                        <BookmarkCard bookmark={bookmark} />
+                      </div>
+                    );
+                  })}
+                </div>
+                <ShowMoreNavigation
+                  className={styles.showMore}
+                  visibleCount={visibleCount}
+                  totalCount={sortedBookmarks.length}
+                  onShowMore={showMore}
+                  ariaLabel="Показати ще закладки"
+                />
+              </>
             ) : (
               <div className={styles.empty}>
                 <h3 className={styles.emptyTitle}>

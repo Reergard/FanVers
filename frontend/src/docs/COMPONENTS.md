@@ -29,6 +29,7 @@
 - `auth/RegisterForm.tsx` — кнопка реєстрації
 - `shared/NotificationModal/NotificationModal.tsx` — кнопка "Зрозуміло" для закриття уведомлення
 - `widgets/header/UserMenuOverlay/UserMenuOverlay.tsx` — кнопки "Вхід" і "Реєстрація" в меню неавторизованого користувача
+- `navigation/ShowMoreNavigation.tsx` — через `ShowMoreButton` для кнопки "Показати ще" (єдина обгортка пагінації списків)
 
 **Приклад використання:**
 ```tsx
@@ -38,6 +39,58 @@
 ```
 
 **Майбутнє використання:** Може використовуватися в будь-якому місці, де потрібна стандартизована кнопка дії (форми, модальні вікна, картки тощо).
+
+---
+
+### `ShowMoreNavigation`
+
+**Призначення:** Єдина обгортка для кнопки `Показати ще` і логіки її видимості.
+
+**Файли:**
+- `navigation/ShowMoreNavigation.tsx`
+- `navigation/ShowMoreNavigation.module.css`
+
+**Як працює:**
+- Приймає `visibleCount`, `totalCount`, `onShowMore`.
+- Якщо `visibleCount >= totalCount`, повертає `null` (кнопка не рендериться).
+- Якщо елементи ще є, рендерить `ShowMoreButton` і передає `onClick={onShowMore}`.
+
+**Місця використання:**
+- `catalog/Catalog.tsx`
+- `catalog/AbandonedTranslations.tsx`
+- `bookmarks/BookmarksPage.tsx`
+- `users/UserTranslations.tsx`
+- `users/Authors.tsx`
+- `users/TranslatorsList.tsx`
+- `notification/NotificationsPage.tsx`
+- `catalog/CreateBookPage.tsx` (для груп тегів)
+
+**Деталі:** `docs/PAGINATION_SHOW_MORE_FRONTEND.md`.
+
+---
+
+### `SortByNavigation`
+
+**Призначення:** Єдина обгортка для UI-контролу `Сортувати` / `Сортувати за`.
+
+**Файли:**
+- `navigation/SortByNavigation.tsx`
+- `navigation/SortByNavigation.module.css`
+
+**Як працює:**
+- Приймає `value`, `options`, `onChange`, `ariaLabel`.
+- Показує текст поточної опції (`currentLabel`) на pill.
+- Рендерить нативний `select` (прозорий поверх pill) і викликає `onChange(nextValue)` при виборі.
+- Не містить власної бізнес-логіки сортування, тільки UI-вибір.
+
+**Місця використання:**
+- `users/Authors.tsx`
+- `users/TranslatorsList.tsx`
+- `catalog/Catalog.tsx`
+- `catalog/AbandonedTranslations.tsx`
+- `bookmarks/BookmarksPage.tsx`
+
+**Деталі:** `docs/SORT_BY_NAVIGATION_FRONTEND.md`.
 
 ---
 
@@ -411,4 +464,4 @@
 
 ---
 
-**Останнє оновлення:** 2026-02-21
+**Останнє оновлення:** 2026-02-22

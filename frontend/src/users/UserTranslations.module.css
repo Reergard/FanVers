@@ -40,6 +40,10 @@
   gap: clamp(16px, 2vw, 24px);
 }
 
+.showMore {
+  margin-top: clamp(14px, 2vw, 20px);
+}
+
 @media (max-width: 1024px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);

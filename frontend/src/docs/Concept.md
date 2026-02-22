@@ -250,7 +250,7 @@ shared/AvatarOrbit.tsx — аватар с орбитой (декор)
 shared/ScrollIndicator/ — кастомный индикатор прокрутки (overlay)
 shared/Modal/ — модальное окно
 shared/NotificationModal/ — уведомления (toast)
-shared/NotificationProvider.tsx — провайдер контекста уведомлений
+shared/NotificationModal/NotificationProvider.tsx — провайдер контекста уведомлений
 shared/ActionButton/ — стилизованная кнопка
 shared/utils/errorUtils.ts — утилиты для ошибок
 shared/hooks/useMedia.ts — хук для медиа-запросов
@@ -290,3 +290,39 @@ Container увеличивает max-width до 1680px
 Активное состояние при скролле (is-scrolling класс на html)
 
 Поддержка prefers-reduced-motion
+
+20) Пагінація через "Показати ще"
+
+Поточний підхід у проєкті:
+
+- для сторінок списків використовується клієнтська пагінація;
+- бекенд повертає повний масив;
+- на фронтенді рендериться `items.slice(0, visibleCount)`;
+- кнопка показується тільки якщо `visibleCount < totalCount`.
+
+Базовий компонент:
+
+- `src/navigation/ShowMoreNavigation.tsx` (використовує `ShowMoreButton` з `shared/ActionButton/ActionButton.tsx`)
+
+Детальна технічна документація:
+
+- `src/docs/PAGINATION_SHOW_MORE_FRONTEND.md`
+- `backend/docs/PAGINATION_SHOW_MORE_BACKEND.md`
+
+21) Сортування через "Сортувати за"
+
+Поточний підхід у проєкті:
+
+- для сторінок списків використовується єдиний UI-контрол `SortByNavigation`;
+- сам компонент відповідає тільки за інтерфейс вибору (label + pill + native select);
+- конкретні правила сортування (які поля і в який бік) задаються на рівні сторінки;
+- після зміни сорту сторінки зі `ShowMoreNavigation` скидають `visibleCount` до стартового кроку.
+
+Базовий компонент:
+
+- `src/navigation/SortByNavigation.tsx`
+
+Детальна технічна документація:
+
+- `src/docs/SORT_BY_NAVIGATION_FRONTEND.md`
+- `backend/docs/SORT_BY_NAVIGATION_BACKEND.md`

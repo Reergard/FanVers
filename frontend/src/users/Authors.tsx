@@ -1,11 +1,18 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { SortByNavigation } from "../navigation/SortByNavigation.tsx";
 import { Container } from "../shared/Container";
-import { ShowMoreButton } from "../shared/ActionButton/ActionButton";
+import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
 import styles from "./Authors.module.css";
 import { getAuthorsList } from "./profileService";
 
 type SortKey = "books" | "comments" | "lastVisit";
+const PAGE_SIZE = 1;
+const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
+  { value: "books", label: "Кількість книг" },
+  { value: "comments", label: "К-сть коментарів" },
+  { value: "lastVisit", label: "Останнє відвідування" },
+];
 
 type AuthorRow = {
   rank: number;
@@ -28,6 +35,7 @@ function parseUkDate(value: string): number {
 
 export default function Authors() {
   const [sort, setSort] = useState<SortKey>("books");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const {
     data: apiRows = [],
     isLoading,
@@ -59,6 +67,16 @@ export default function Authors() {
     return copy.map((row, index) => ({ ...row, rank: index + 1 }));
   }, [apiRows, sort]);
 
+  const visibleRows = useMemo(
+    () => sortedRows.slice(0, visibleCount),
+    [sortedRows, visibleCount]
+  );
+  const showMore = () => setVisibleCount((prev) => prev + PAGE_SIZE);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [sort, apiRows.length]);
+
   return (
     <section className={styles.page}>
       <Container>
@@ -69,25 +87,12 @@ export default function Authors() {
           </div>
 
           <div className={styles.headerRight}>
-            <span className={styles.sortLabel}>Сортувати</span>
-            <label className={styles.sortPill}>
-              <span className={styles.sortPillText}>
-                {sort === "books" && "Кількість книг"}
-                {sort === "comments" && "К-сть коментарів"}
-                {sort === "lastVisit" && "Останнє відвідування"}
-              </span>
-              <select
-                className={styles.sortSelect}
-                value={sort}
-                onChange={(event) => setSort(event.target.value as SortKey)}
-                aria-label="Сортувати авторів"
-              >
-                <option value="books">Кількість книг</option>
-                <option value="comments">К-сть коментарів</option>
-                <option value="lastVisit">Останнє відвідування</option>
-              </select>
-              <span className={styles.sortCaret} aria-hidden="true" />
-            </label>
+            <SortByNavigation
+              value={sort}
+              options={SORT_OPTIONS}
+              onChange={(nextValue) => setSort(nextValue as SortKey)}
+              ariaLabel="Сортувати авторів"
+            />
           </div>
         </div>
 
@@ -129,7 +134,7 @@ export default function Authors() {
                   <div className={styles.cell} role="cell" />
                   <div className={styles.cell} role="cell" />
                 </div>
-              ) : sortedRows.map((row) => (
+              ) : visibleRows.map((row) => (
                 <div key={`${row.nickname}-${row.rank}`} className={styles.row} role="row" tabIndex={0}>
                   <span className={styles.rowHoverFrame} aria-hidden="true">
                     <svg
@@ -164,9 +169,12 @@ export default function Authors() {
         </div>
 
         <div className={styles.footer}>
-          <ShowMoreButton ariaLabel="Показати ще авторів">
-            Показати ще
-          </ShowMoreButton>
+          <ShowMoreNavigation
+            visibleCount={visibleCount}
+            totalCount={sortedRows.length}
+            onShowMore={showMore}
+            ariaLabel="Показати ще авторів"
+          />
         </div>
       </Container>
     </section>

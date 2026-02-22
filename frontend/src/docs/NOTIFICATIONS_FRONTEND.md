@@ -149,6 +149,17 @@ frontend/src/
   - «Позначити як прочитане» — тільки для непрочитаних, при `markRead.isPending` кнопка disabled.
   - «Видалити» — при `remove.isPending` disabled.
 
+### 6.3. Пагінація списку на сторінці
+
+На сторінці використовується локальна пагінація через кнопку `Показати ще`:
+
+- `visibleCount` зберігається у state (`PAGE_SIZE = 1` у поточному тестовому режимі).
+- Для рендеру береться `visibleNotifications = notifications.slice(0, visibleCount)`.
+- Кнопка рендериться через `ShowMoreNavigation` (`frontend/src/navigation/ShowMoreNavigation.tsx`).
+- По кліку: `setVisibleCount(prev => prev + PAGE_SIZE)`.
+- Коли `visibleCount >= notifications.length`, `ShowMoreNavigation` повертає `null`, і кнопка зникає.
+- При зміні `notifications.length` виконується reset: `setVisibleCount(PAGE_SIZE)`.
+
 ---
 
 ## 7. Дії з уведомленнями

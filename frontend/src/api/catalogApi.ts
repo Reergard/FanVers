@@ -309,6 +309,7 @@ function normalizeVolume(raw: Record<string, unknown>): Volume {
 // --- Query keys (единая кэш-логика) ---
 
 export const catalogKeys = {
+  allBooks: () => ["catalog-all-books"] as const,
   book: (slug: string) => ["book", slug] as const,
   volumes: (slug: string) => ["book-volumes", slug] as const,
   chapters: (slug: string) => ["book-chapters", slug] as const,
@@ -437,6 +438,14 @@ export async function getUserTranslations(): Promise<UserTranslationBook[]> {
   return Array.isArray(data) ? data.map(normalizeUserTranslation) : [];
 }
 
+/** Усі книги каталогу (без фільтрації по користувачу/типу) */
+export async function getAllCatalogBooks(): Promise<UserTranslationBook[]> {
+  const { data } = await http.get<Record<string, unknown>[]>(
+    `${CATALOG}/books/reader/`
+  );
+  return Array.isArray(data) ? data.map(normalizeUserTranslation) : [];
+}
+
 /** Список покинутих перекладів */
 export async function getAbandonedTranslations(): Promise<AbandonedTranslationBook[]> {
   const { data } = await http.get<Record<string, unknown>[]>(
@@ -534,6 +543,7 @@ export const catalogApi = {
   updateChapterOrder,
   updateChapterOrderNoVolume,
   uploadChapter,
+  getAllCatalogBooks,
   getUserTranslations,
   getAbandonedTranslations,
   getGenres,

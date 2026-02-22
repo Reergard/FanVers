@@ -3,35 +3,23 @@ import { useQuery } from "@tanstack/react-query";
 import { BookCard } from "../BookCard/BookCard";
 import {
   catalogKeys,
-  getUserTranslations,
+  getAllCatalogBooks,
   type UserTranslationBook,
 } from "../api/catalogApi";
 import { Container } from "../shared/Container";
-import { ShowMoreButton } from "../shared/ActionButton/ActionButton";
+import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
+import { SortByNavigation } from "../navigation/SortByNavigation.tsx";
 import "./Catalog.css";
 
 type SortKey = "created" | "views" | "incomeDay" | "incomeMonth";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 1;
 const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: "created", label: "Дата створення" },
   { value: "views", label: "Перегляди за день" },
   { value: "incomeDay", label: "Дохід за день" },
   { value: "incomeMonth", label: "Дохід за місяць" },
 ];
-
-const MOCK_BOOKS: UserTranslationBook[] = Array.from({ length: 12 }, (_, index) => ({
-  id: index + 1,
-  owner: 0,
-  slug: `catalog-mock-${index + 1}`,
-  title: "",
-  adult_content: true,
-  created_at: "14.02.2023",
-  last_updated: "14.02.2023",
-  daily_views: 457 + (index % 4) * 32,
-  daily_income: 457 + (index % 3) * 18,
-  monthly_income: 457 + (index % 5) * 14,
-}));
 
 function toTimestamp(value: string | null | undefined): number {
   if (!value) return 0;
@@ -48,13 +36,13 @@ export default function Catalog() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const catalogQuery = useQuery({
-    queryKey: catalogKeys.userTranslations(0),
-    queryFn: getUserTranslations,
+    queryKey: catalogKeys.allBooks(),
+    queryFn: getAllCatalogBooks,
     refetchOnWindowFocus: false,
     staleTime: 2 * 60 * 1000,
   });
 
-  const sourceBooks = catalogQuery.data?.length ? catalogQuery.data : MOCK_BOOKS;
+  const sourceBooks = catalogQuery.data ?? [];
 
   const comparators = useMemo(
     () => ({
@@ -78,7 +66,6 @@ export default function Catalog() {
   }, [sourceBooks, sortBy, comparators]);
 
   const visibleBooks = sortedBooks.slice(0, visibleCount);
-  const hasMore = visibleCount < sortedBooks.length;
   const showMore = () => setVisibleCount((prev) => prev + PAGE_SIZE);
 
   useEffect(() => {
@@ -89,20 +76,13 @@ export default function Catalog() {
     <section className="catalog-page">
       <Container>
         <div className="catalog-page__topbar">
-          <label className="catalog-page__sort">
-            <span>Сортувати</span>
-            <select
-              value={sortBy}
-              onChange={(event) => setSortBy(event.target.value as SortKey)}
-              aria-label="Сортування каталогу"
-            >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SortByNavigation
+            value={sortBy}
+            options={SORT_OPTIONS}
+            onChange={(nextValue) => setSortBy(nextValue as SortKey)}
+            ariaLabel="Сортування каталогу"
+            labelText="Сортувати за"
+          />
         </div>
 
         <div className="catalog-page__grid">
@@ -113,13 +93,14 @@ export default function Catalog() {
           ))}
         </div>
 
-        {hasMore && (
-          <div className="catalog-page__footer">
-            <ShowMoreButton onClick={showMore} ariaLabel="Показати ще книги каталогу">
-              Показати ще
-            </ShowMoreButton>
-          </div>
-        )}
+        <div className="catalog-page__footer">
+          <ShowMoreNavigation
+            visibleCount={visibleCount}
+            totalCount={sortedBooks.length}
+            onShowMore={showMore}
+            ariaLabel="Показати ще книги каталогу"
+          />
+        </div>
       </Container>
     </section>
   );

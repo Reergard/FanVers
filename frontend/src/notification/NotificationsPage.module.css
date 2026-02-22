@@ -129,6 +129,10 @@
   padding: 0;
 }
 
+.showMore {
+  margin-top: clamp(14px, 1.8vw, 20px);
+}
+
 .itemWrap {
   position: relative;
   padding-top: 6px;

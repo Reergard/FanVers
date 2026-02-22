@@ -9,11 +9,21 @@ import {
   type BookMetaItem,
 } from "../api/catalogApi";
 import { BookCard } from "../BookCard/BookCard";
+import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
+import { SortByNavigation } from "../navigation/SortByNavigation.tsx";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { Icon } from "../shared/Icon";
 import "./AbandonedTranslations.css";
 
-const PAGE_SIZE = 4;
+const PAGE_SIZE = 1;
+type SortKey = "choose" | "created" | "updated" | "views" | "income";
+const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
+  { value: "choose", label: "Вибрати" },
+  { value: "created", label: "Датою створення" },
+  { value: "updated", label: "Останньою активністю" },
+  { value: "views", label: "Переглядами за день" },
+  { value: "income", label: "Доходом за місяць" },
+];
 
 function toTimestamp(value: string | null | undefined): number {
   if (!value) return 0;
@@ -28,7 +38,7 @@ function getTagNames(items: BookMetaItem[] | undefined): string[] {
 
 export default function AbandonedTranslations() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("choose");
+  const [sortBy, setSortBy] = useState<SortKey>("choose");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [checkValues, setCheckValues] = useState<Record<string, boolean>>({
     age18: false,
@@ -135,21 +145,13 @@ export default function AbandonedTranslations() {
               <div className="abandoned-shown">Показано {shownCount} робіт</div>
 
               <div className="abandoned-sort">
-                <span className="abandoned-sort-label">Сортувати за</span>
-                <div className="abandoned-sort-select-wrap">
-                  <select
-                    className="abandoned-sort-select"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    aria-label="Сортування"
-                  >
-                    <option value="choose">Вибрати</option>
-                    <option value="created">Датою створення</option>
-                    <option value="updated">Останньою активністю</option>
-                    <option value="views">Переглядами за день</option>
-                    <option value="income">Доходом за місяць</option>
-                  </select>
-                </div>
+                <SortByNavigation
+                  value={sortBy}
+                  options={SORT_OPTIONS}
+                  onChange={(nextValue) => setSortBy(nextValue as SortKey)}
+                  ariaLabel="Сортування покинутих перекладів"
+                  labelText="Сортувати за"
+                />
               </div>
             </div>
 
@@ -245,15 +247,12 @@ export default function AbandonedTranslations() {
                   })}
                 </div>
 
-                {visibleCount < filteredBooks.length && (
-                  <button
-                    className="abandoned-show-more"
-                    type="button"
-                    onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
-                  >
-                    Показати ще
-                  </button>
-                )}
+                <ShowMoreNavigation
+                  visibleCount={visibleCount}
+                  totalCount={filteredBooks.length}
+                  onShowMore={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+                  ariaLabel="Показати ще покинуті переклади"
+                />
               </>
             )}
           </div>

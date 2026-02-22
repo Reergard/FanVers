@@ -18,6 +18,20 @@ function formatStat(value: number | string | undefined): string {
   return String(value);
 }
 
+function formatDateOnly(value: string | null | undefined): string {
+  if (!value) return "—";
+  if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
+    return value.slice(0, 10);
+  }
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(value)) {
+    const [day, month, year] = value.split(".");
+    return `${year}-${month}-${day}`;
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toISOString().slice(0, 10);
+}
+
 type Props = {
   book: UserTranslationBook;
 };
@@ -53,11 +67,11 @@ export function BookCard({ book }: Props) {
       <div className="book-card-meta-block">
         <div className="book-card-meta-row">
           <span className="book-card-meta-label">Дата створення</span>
-          <span className="book-card-meta-value">{book.created_at ?? "—"}</span>
+          <span className="book-card-meta-value">{formatDateOnly(book.created_at)}</span>
         </div>
         <div className="book-card-meta-row">
           <span className="book-card-meta-label">Дата останньої активності</span>
-          <span className="book-card-meta-value">{book.last_updated ?? "—"}</span>
+          <span className="book-card-meta-value">{formatDateOnly(book.last_updated)}</span>
         </div>
         <div className="book-card-meta-row">
           <span className="book-card-meta-label">Переглядів за день</span>

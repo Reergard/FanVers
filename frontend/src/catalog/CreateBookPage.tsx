@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import styles from "./styles/CreateBookPage.module.css";
 import { Container } from "../shared/Container";
+import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { Icon } from "../shared/Icon";
 import icon18CreateBook from "../assets/backgrounds/18+CreateBook.svg";
@@ -72,6 +73,7 @@ const INVALID_NEW_BOOK_TRANSLATION_STATUSES = [
 
 const DESCRIPTION_MAX_WORDS = 250;
 const IMAGE_MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const TAG_GROUPS_PAGE_SIZE = 1;
 
 type FormData = {
   title: string;
@@ -113,7 +115,7 @@ function CreateBookPageInner() {
 
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [tagsShowAll, setTagsShowAll] = useState(false);
+  const [tagGroupsVisibleCount, setTagGroupsVisibleCount] = useState(TAG_GROUPS_PAGE_SIZE);
 
   const { data: genres = [], isLoading: genresLoading } = useQuery({
     queryKey: ["genres"],
@@ -157,7 +159,10 @@ function CreateBookPageInner() {
       .map(([name, tagList]) => ({ name, tags: tagList }));
   }, [tags]);
 
-  const tagGroupsToShow = tagsShowAll ? tagGroups : tagGroups.slice(0, 2);
+  const tagGroupsToShow = tagGroups.slice(0, tagGroupsVisibleCount);
+  const showMoreTagGroups = () => {
+    setTagGroupsVisibleCount((prev) => prev + TAG_GROUPS_PAGE_SIZE);
+  };
 
   const createBookMutation = useMutation({
     mutationFn: (payload: CreateBookPayload) => createBook(payload),
@@ -253,6 +258,10 @@ function CreateBookPageInner() {
       if (imagePreview) URL.revokeObjectURL(imagePreview);
     };
   }, [imagePreview]);
+
+  useEffect(() => {
+    setTagGroupsVisibleCount(TAG_GROUPS_PAGE_SIZE);
+  }, [tagGroups.length]);
 
   const validateForm = useCallback((): boolean => {
     const err: string[] = [];
@@ -487,17 +496,13 @@ function CreateBookPageInner() {
                 </div>
               </div>
             ))}
-            {tagGroups.length > 2 && !tagsShowAll && (
-              <div className={styles.centerRow}>
-                <button
-                  type="button"
-                  className={styles.showAllBtn}
-                  onClick={() => setTagsShowAll(true)}
-                >
-                  Показати всі <span className={styles.chev}>▾</span>
-                </button>
-              </div>
-            )}
+            <ShowMoreNavigation
+              className={styles.centerRow}
+              visibleCount={tagGroupsVisibleCount}
+              totalCount={tagGroups.length}
+              onShowMore={showMoreTagGroups}
+              ariaLabel="Показати ще теги"
+            />
           </div>
         </Panel>
 

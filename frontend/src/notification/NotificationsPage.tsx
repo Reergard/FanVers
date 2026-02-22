@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import styles from "./NotificationsPage.module.css";
 import { Container } from "../shared/Container";
+import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
 import { SaveButton } from "../shared/SaveButton/SaveButton";
 import { FilterCheckbox } from "../shared/FilterCheckbox/FilterCheckbox";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
@@ -19,6 +20,7 @@ const NOTIFICATION_FILTERS: { key: keyof NotificationSettingsPatch; label: strin
   { key: "chapter_subscription_notifications", label: "Зняття розділу з передплати" },
   { key: "chapter_comment_notifications", label: "Коментарі до розділу" },
 ];
+const PAGE_SIZE = 1;
 
 function pluralize(count: number): string {
   const mod10 = count % 10;
@@ -43,6 +45,7 @@ export function NotificationsPage() {
   const { query, markRead, remove } = useNotifications(isAuthenticated);
 
   const [filters, setFilters] = useState<Partial<Record<keyof NotificationSettingsPatch, boolean>>>({});
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const profileQuery = useQuery({
     queryKey: ["profile"],
@@ -76,9 +79,18 @@ export function NotificationsPage() {
   });
 
   const notifications = query.data?.notifications ?? [];
+  const visibleNotifications = useMemo(
+    () => notifications.slice(0, visibleCount),
+    [notifications, visibleCount]
+  );
+  const showMore = () => setVisibleCount((prev) => prev + PAGE_SIZE);
   const isLoading = query.isLoading;
   const isError = query.isError;
   const refetch = query.refetch;
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [notifications.length]);
 
   const handleFilterChange = (key: keyof NotificationSettingsPatch, checked: boolean) => {
     setFilters((prev) => ({ ...prev, [key]: checked }));
@@ -210,48 +222,57 @@ export function NotificationsPage() {
                 <p className={styles.itemText}>У вас поки немає повідомлень</p>
               </div>
             ) : (
-              <ul className={styles.list}>
-                {notifications.map((m: AppNotification, idx: number) => (
-                  <li key={m.id} className={styles.itemWrap}>
-                    <article className={styles.item}>
-                      <div className={styles.itemTitlePill}>
-                        Повідомлення {idx + 1}
-                        {!m.is_read && <span className={styles.unreadDot} />}
-                      </div>
+              <>
+                <ul className={styles.list}>
+                  {visibleNotifications.map((m: AppNotification, idx: number) => (
+                    <li key={m.id} className={styles.itemWrap}>
+                      <article className={styles.item}>
+                        <div className={styles.itemTitlePill}>
+                          Повідомлення {idx + 1}
+                          {!m.is_read && <span className={styles.unreadDot} />}
+                        </div>
 
-                      <p className={styles.itemText}>
-                        {m.message || "Немає тексту повідомлення"}
-                      </p>
-                      {m.created_at && (
-                        <small className={styles.itemDate}>{formatDate(m.created_at)}</small>
-                      )}
+                        <p className={styles.itemText}>
+                          {m.message || "Немає тексту повідомлення"}
+                        </p>
+                        {m.created_at && (
+                          <small className={styles.itemDate}>{formatDate(m.created_at)}</small>
+                        )}
 
-                      <div className={styles.itemFooter}>
-                        {!m.is_read && (
+                        <div className={styles.itemFooter}>
+                          {!m.is_read && (
+                            <button
+                              type="button"
+                              className={styles.markReadBtn}
+                              onClick={() => handleMarkAsRead(m.id)}
+                              disabled={markRead.isPending}
+                            >
+                              Позначити як прочитане
+                            </button>
+                          )}
                           <button
                             type="button"
-                            className={styles.markReadBtn}
-                            onClick={() => handleMarkAsRead(m.id)}
-                            disabled={markRead.isPending}
+                            className={styles.deleteBtn}
+                            onClick={() => handleDelete(m.id)}
+                            disabled={remove.isPending}
                           >
-                            Позначити як прочитане
+                            Видалити
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          className={styles.deleteBtn}
-                          onClick={() => handleDelete(m.id)}
-                          disabled={remove.isPending}
-                        >
-                          Видалити
-                        </button>
-                      </div>
-                    </article>
+                        </div>
+                      </article>
 
-                    <div className={styles.separator} aria-hidden="true" />
-                  </li>
-                ))}
-              </ul>
+                      <div className={styles.separator} aria-hidden="true" />
+                    </li>
+                  ))}
+                </ul>
+                <ShowMoreNavigation
+                  className={styles.showMore}
+                  visibleCount={visibleCount}
+                  totalCount={notifications.length}
+                  onShowMore={showMore}
+                  ariaLabel="Показати ще повідомлення"
+                />
+              </>
             )}
           </main>
         </div>

@@ -63,6 +63,11 @@ frontend/src/
 │   ├── HomePage1.tsx
 │   ├── HomePage2.tsx
 │   └── HomePage3.tsx
+├── navigation/
+│   ├── ShowMoreNavigation.tsx
+│   ├── ShowMoreNavigation.module.css
+│   ├── SortByNavigation.tsx
+│   └── SortByNavigation.module.css
 ├── users/
 │   ├── Profile.tsx
 │   ├── Profile.module.css
@@ -108,7 +113,6 @@ frontend/src/
 ├── docs/
 │   ├── ABANDONED_TRANSLATIONS_FRONTEND.md
 │   ├── ADD_CHAPTER_FLOW.md
-│   ├── AUTH_CHANGES_LOG.md
 │   ├── AUTHENTICATION_FRONTEND.md
 │   ├── USER_DATA_FLOW.md
 │   ├── BOOK_PAGE_DATA_FLOW.md
@@ -118,6 +122,8 @@ frontend/src/
 │   ├── COMPONENTS.md
 │   ├── Concept.md
 │   ├── NOTIFICATIONS_FRONTEND.md
+│   ├── PAGINATION_SHOW_MORE_FRONTEND.md
+│   ├── SORT_BY_NAVIGATION_FRONTEND.md
 │   ├── RATINGS_FRONTEND.md
 │   └── STRUCTURE.md
 ├── App.tsx
@@ -165,8 +171,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 **Поточна реалізація (з роутером):**
 ```tsx
 // Bootstrap auth перед показом Routes; QueryClientProvider, NotificationProvider
-// Маршрути: /, /profile, /abandoned, /books/:slug, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug
-// Suspense + lazy для кількох сторінок (зокрема Profile, BookDetailRouter, AddChapter, ChapterDetailRouter)
+// Маршрути: /, /profile, /bookmarks, /my-translations, /authors, /translators, /login, /messages, /catalog, /abandoned, /create-book, /books/:slug/settings, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug, /books/:slug
+// Suspense + lazy для сторінок (Profile, BookmarksPage, UserTranslations, Authors, TranslatorsList, LoginPage, NotificationsPage, Catalog, AbandonedTranslations, CreateBookPage, AddChapter, ChapterDetailRouter, BookDetailRouter)
 ```
 
 ---
@@ -284,7 +290,7 @@ export function Base({ children }: Props) {
 **Навіщо існує:** коли сторінок стане багато, зберігати маршрути в `App.tsx` стане незручно.
 Логіку маршрутизації можна винести в `routes/`.
 
-**Поточний стан:** папка не створена. Маршрути визначені безпосередньо в `App.tsx` (/, /profile, /abandoned, /books/:slug, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug).
+**Поточний стан:** папка не створена. Маршрути визначені безпосередньо в `App.tsx` (/, /profile, /bookmarks, /my-translations, /authors, /translators, /login, /messages, /catalog, /abandoned, /create-book, /books/:slug/settings, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug, /books/:slug).
 
 **Майбутній приклад:** `routes/AppRoutes.tsx`
 ```tsx
@@ -311,6 +317,29 @@ export function AppRoutes() {
   );
 }
 ```
+
+---
+
+## `navigation/` — компоненти навігації списків
+
+### `navigation/ShowMoreNavigation.tsx`
+**Що це:** єдина обгортка кнопки `Показати ще` для локальної пагінації списків.
+
+**Навіщо існує:** щоб не дублювати однакову перевірку `visibleCount < totalCount` і рендер `ShowMoreButton` у кожній сторінці.
+
+**Пов’язані файли:**
+- `navigation/ShowMoreNavigation.module.css`
+- `shared/ActionButton/ActionButton.tsx` (`ShowMoreButton`)
+- `docs/PAGINATION_SHOW_MORE_FRONTEND.md`
+
+### `navigation/SortByNavigation.tsx`
+**Що це:** єдина обгортка для контролу `Сортувати за` (label + pill + native select).
+
+**Навіщо існує:** щоб не дублювати однакову розмітку і стилі сортування на різних сторінках.
+
+**Пов’язані файли:**
+- `navigation/SortByNavigation.module.css`
+- `docs/SORT_BY_NAVIGATION_FRONTEND.md`
 
 ---
 

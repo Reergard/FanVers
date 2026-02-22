@@ -1,6 +1,8 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/useAuth";
+import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
 import { Container } from "../shared/Container";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { BookCard } from "../BookCard/BookCard";
@@ -8,8 +10,11 @@ import { getUserTranslations, catalogKeys, type UserTranslationBook } from "../a
 import { getMyProfile } from "./profileService";
 import styles from "./UserTranslations.module.css";
 
+const PAGE_SIZE = 1;
+
 export default function UserTranslations() {
   const { isAuthenticated, userId, authReady } = useAuth();
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const {
     data: books = [],
@@ -29,6 +34,16 @@ export default function UserTranslations() {
     queryFn: getMyProfile,
     enabled: isAuthenticated && !!userId && authReady,
   });
+
+  const visibleBooks = useMemo(
+    () => books.slice(0, visibleCount),
+    [books, visibleCount]
+  );
+  const showMore = () => setVisibleCount((prev) => prev + PAGE_SIZE);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [books.length]);
 
   if (!authReady) {
     return (
@@ -80,13 +95,22 @@ export default function UserTranslations() {
             ) : isLoading ? (
               <div className={styles.loading}>Завантаження перекладів…</div>
             ) : books.length > 0 ? (
-              <div className={styles.grid}>
-                {books.map((book: UserTranslationBook) => (
-                  <div key={book.id} className={styles.cardCell}>
-                    <BookCard book={book} />
-                  </div>
-                ))}
-              </div>
+              <>
+                <div className={styles.grid}>
+                  {visibleBooks.map((book: UserTranslationBook) => (
+                    <div key={book.id} className={styles.cardCell}>
+                      <BookCard book={book} />
+                    </div>
+                  ))}
+                </div>
+                <ShowMoreNavigation
+                  className={styles.showMore}
+                  visibleCount={visibleCount}
+                  totalCount={books.length}
+                  onShowMore={showMore}
+                  ariaLabel="Показати ще власні переклади"
+                />
+              </>
             ) : (
               <div className={styles.empty}>
                 <h3 className={styles.emptyTitle}>
