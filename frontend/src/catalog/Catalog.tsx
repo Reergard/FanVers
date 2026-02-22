@@ -12,8 +12,8 @@ import { SortByNavigation } from "../navigation/SortByNavigation.tsx";
 import "./Catalog.css";
 
 type SortKey = "created" | "views" | "incomeDay" | "incomeMonth";
+const PAGE_SIZE = 8;
 
-const PAGE_SIZE = 1;
 const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: "created", label: "Дата створення" },
   { value: "views", label: "Перегляди за день" },
@@ -66,7 +66,8 @@ export default function Catalog() {
   }, [sourceBooks, sortBy, comparators]);
 
   const visibleBooks = sortedBooks.slice(0, visibleCount);
-  const showMore = () => setVisibleCount((prev) => prev + PAGE_SIZE);
+  const showMore = () =>
+    setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, sortedBooks.length));
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
