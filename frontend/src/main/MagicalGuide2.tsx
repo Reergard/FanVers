@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { BookCard } from "../BookCard/BookCard";
+import { SectionLineTitle } from "../navigation/SectionLineTitle";
 import type { UserTranslationBook } from "../api/catalogApi";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { useMedia } from "../shared/hooks/useMedia";
@@ -148,6 +149,8 @@ export function MagicalGuide2() {
 
   return (
     <section className="mg2-section" aria-label="Магічний гід">
+      <SectionLineTitle text="Рекомендації" className="mg2-sectionLineTitle" />
+
       <div className="mg2-filters" role="tablist" aria-label="Фільтри рейтингу">
         {FILTER_LABELS.map((label) => (
           <button key={label} className="mg2-filterBtn" type="button" role="tab" aria-selected="false">

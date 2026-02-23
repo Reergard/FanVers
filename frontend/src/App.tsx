@@ -35,6 +35,9 @@ const Catalog = lazy(() =>
 const MagicalGuide = lazy(() =>
   import("./main/MagicalGuide").then((m) => ({ default: m.default }))
 );
+const SearchPage = lazy(() =>
+  import("./search/search").then((m) => ({ default: m.default }))
+);
 
 const queryClient = new QueryClient();
 
@@ -149,6 +152,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <AbandonedTranslations />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/search"
+                element={
+                  <Suspense fallback={<div />}>
+                    <SearchPage />
                   </Suspense>
                 }
               />
