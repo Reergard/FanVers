@@ -73,3 +73,53 @@ const { isAuthenticated, userId, username, balance, authReady } = useAuth();
 - Эта страница **не зависит от `useAuth()`** для загрузки списка книг.
 - Запрос идет через `http.ts`, поэтому если access-токен в памяти есть — он автоматически добавится в Bearer.
 - Если access нет, страница все равно может работать (endpoint на backend сейчас публичный по default permission `AllowAny`).
+
+## Глобальная настройка 18+ (hideAdultContent)
+
+Добавлен отдельный фронтенд-store для настройки 18+:
+
+- `settings/adultContentStore.ts`
+- `settings/useAdultContent.ts`
+
+Как работает:
+
+1. Источник истины — `localStorage` ключ `hideAdultContent`.
+2. Подписка на изменения — `useSyncExternalStore`.
+3. Межвкладочная синхронизация — через событие `storage` (`window.addEventListener("storage", ...)`).
+
+Где используется:
+
+- `search/search.tsx`: в запрос поиска уходит `adult_content = !hideAdultContent`.
+- `users/Profile.tsx`: чекбокс "Прибрати 18+" работает через этот store; при включении показывается modal подтверждения.
+
+Важно:
+
+- Настройка `hideAdultContent` теперь реактивная и общая для страниц, но это отдельный frontend-store (не auth-store).
+
+## Пошук і закладки (користувач-залежні дані)
+
+На сторінці `search/search.tsx` використовуються user-залежні поля з результату пошуку:
+
+- `bookmark_status`
+- `bookmark_id`
+
+Як це працює:
+
+1. Пошук викликає `GET /api/search/book-search/`.
+2. Backend віддає `bookmark_status/bookmark_id` через `BookReaderSerializer` для авторизованого користувача.
+3. На фронті `searchApi.ts` нормалізує ці поля.
+4. Чекбокс `Не показувати закладки` (`hideBookmarks`) фільтрує книги клієнтськи: ховає книги, де `bookmark_status !== null`.
+
+Нюанс:
+
+- для гостя перемикання `hideBookmarks` не застосовується (показується warning «Увійдіть, щоб приховати закладки»).
+
+## UI-стан фільтрів пошуку (Dropdown)
+
+На `search/search.tsx` фільтри (`genres/tags/fandoms/...` та `min/max chapters`) відкриваються через `navigation/FilterDropdown.tsx`.
+
+Що важливо для поведінки:
+
+- dropdown прив’язується до натиснутого фільтра (`anchorEl`);
+- під час відкриття блокується скрол сторінки через `useScrollLock`;
+- сам вибір у dropdown (multi-select) змінює локальний `filters` state, який далі йде в `searchBooks` (через debounced `effectiveFilters`).

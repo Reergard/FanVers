@@ -22,6 +22,7 @@ frontend/src/
 │   ├── http.ts
 │   ├── httpRaw.ts
 │   ├── ratingApi.ts
+│   ├── searchApi.ts
 │   └── reviewsApi.ts
 ├── app/
 │   ├── Base.tsx
@@ -64,10 +65,18 @@ frontend/src/
 │   ├── HomePage2.tsx
 │   └── HomePage3.tsx
 ├── navigation/
+│   ├── FilterDropdown.tsx
+│   ├── FilterDropdown.module.css
 │   ├── ShowMoreNavigation.tsx
 │   ├── ShowMoreNavigation.module.css
 │   ├── SortByNavigation.tsx
 │   └── SortByNavigation.module.css
+├── search/
+│   ├── search.tsx
+│   └── search.css
+├── settings/
+│   ├── adultContentStore.ts
+│   └── useAdultContent.ts
 ├── users/
 │   ├── Profile.tsx
 │   ├── Profile.module.css
@@ -95,6 +104,7 @@ frontend/src/
 │   │   ├── NotificationProvider.tsx
 │   │   └── AutoCloseNotificationModal.tsx
 │   ├── hooks/
+│   │   └── useDebouncedValue.ts
 │   ├── menu/
 │   └── utils/
 ├── widgets/
@@ -125,6 +135,7 @@ frontend/src/
 │   ├── PAGINATION_SHOW_MORE_FRONTEND.md
 │   ├── SORT_BY_NAVIGATION_FRONTEND.md
 │   ├── RATINGS_FRONTEND.md
+│   ├── SEARCH_FRONTEND.md
 │   └── STRUCTURE.md
 ├── App.tsx
 ├── main.tsx
@@ -270,6 +281,7 @@ export function Base({ children }: Props) {
 - `httpRaw.ts` — axios без інтерцепторів для refresh/logout (withCredentials)
 - `endpoints.ts` — URL API (login, register, auth-status, profile, add-balance, коментарі, рейтинги тощо)
 - `catalogApi.ts` — API для каталогу книг (book, volumes, chapters)
+- `searchApi.ts` — API пошуку книг (`searchBooks`) для сторінки `/search`
 - `ratingApi.ts` — API рейтингів книги: fetchBookRatings(slug), submitRating(slug, type, value); нормалізація відповіді. Див. docs/RATINGS_FRONTEND.md.
 - `reviewsApi.ts` — API коментарів (книга/глава): fetch, post, delete, reaction, owner_like. Див. docs/COMMENTS_FRONTEND.md.
 
@@ -341,6 +353,34 @@ export function AppRoutes() {
 - `navigation/SortByNavigation.module.css`
 - `docs/SORT_BY_NAVIGATION_FRONTEND.md`
 
+### `navigation/FilterDropdown.tsx`
+**Що це:** переиспользуемий dropdown для фільтрів (позиціонування відносно кнопки, рендер через portal).
+
+**Навіщо існує:** щоб не дублювати логіку випадаючих фільтрів, блокування скролу сторінки і базову поведінку закриття (outside click, Escape).
+
+**Пов’язані файли:**
+- `navigation/FilterDropdown.module.css`
+- `shared/hooks/useScrollLock.ts`
+
+---
+
+## `search/` — фіча пошуку книг
+
+**Що це:** сторінка `/search` з автопошуком, фільтрами, сортуванням і клієнтською пагінацією.
+
+- `search/search.tsx` — логіка і розмітка сторінки
+- `search/search.css` — стилі (через `@import` використовує стилі `AbandonedTranslations.css`)
+
+Пов’язано з:
+
+- `api/searchApi.ts`
+- `auth/useAuth.ts`
+- `navigation/FilterDropdown.tsx`
+- `settings/useAdultContent.ts`
+- `shared/hooks/useDebouncedValue.ts`
+- `shared/NotificationModal/NotificationProvider.tsx`
+- `docs/SEARCH_FRONTEND.md`
+
 ---
 
 ## `shared/` — дрібні повторно використовувані блоки
@@ -411,6 +451,20 @@ export function AppRoutes() {
 **useMedia.ts** — хук для відстеження медіа-запитів (наприклад, для визначення mobile/desktop).
 
 **useScrollLock.ts** — хук для блокування скроллу body (iOS-safe, зберігає позицію).
+
+**useDebouncedValue.ts** — універсальний debounce-хук (використовується на сторінці пошуку `/search` для автопошуку з затримкою).
+
+---
+
+## `settings/` — локальні глобальні настройки фронтенду
+
+- `settings/adultContentStore.ts` — глобальний store `hideAdultContent` на `localStorage` + `storage` event + підписки.
+- `settings/useAdultContent.ts` — React-хук на базі `useSyncExternalStore`.
+
+Використання:
+
+- `search/search.tsx` (передача `adult_content` у пошук як `!hideAdultContent`);
+- `users/Profile.tsx` (чекбокс "Прибрати 18+").
 
 ### `shared/menu/menuData.ts`
 **Що це:** єдине джерело даних для меню (USER_MENU, NAV_MENU).
@@ -597,7 +651,7 @@ export function HeaderLogo() {
 - Коли сторінок стане багато — винести в `routes/AppRoutes.tsx`.
 
 8) **API**
-- `api/` — http.ts, httpRaw.ts, endpoints.ts, catalogApi.ts, ratingApi.ts, reviewsApi.ts.
+- `api/` — http.ts, httpRaw.ts, endpoints.ts, catalogApi.ts, searchApi.ts, ratingApi.ts, reviewsApi.ts.
 
 ---
 

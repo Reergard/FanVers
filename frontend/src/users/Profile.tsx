@@ -22,7 +22,8 @@ import {
 } from "./profileService";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { Modal } from "../shared/Modal/Modal";
-import type { UserProfile, NotificationSettingsPatch } from "./types";
+import { useAdultContent } from "../settings/useAdultContent";
+import type { UserProfile, NotificationSettingsPatch, BalanceHistoryItem } from "./types";
 
 const AVATAR_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -122,8 +123,10 @@ export default function Profile() {
   const [depositModalOpen, setDepositModalOpen] = useState(false);
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+  const [adultConfirmModalOpen, setAdultConfirmModalOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [balanceHistory, setBalanceHistory] = useState<BalanceHistoryItem[]>([]);
+  const { hideAdultContent, setHideAdultContent } = useAdultContent();
 
   const profileQuery = useQuery({
     queryKey: ["profile"],
@@ -137,6 +140,11 @@ export default function Profile() {
   useEffect(() => {
     if (profile?.email) setNewEmail(profile.email);
   }, [profile?.email]);
+
+  useEffect(() => {
+    if (profile?.hide_adult_content == null) return;
+    setHideAdultContent(Boolean(profile.hide_adult_content));
+  }, [profile?.hide_adult_content, setHideAdultContent]);
 
   const uploadAvatarMutation = useMutation({
     mutationFn: uploadProfileImage,
@@ -304,6 +312,26 @@ export default function Profile() {
 
   const handleTransactionHistory = () => {
     setTransactionModalOpen(true);
+  };
+
+  const handleAdultContentToggle = (nextValue: boolean) => {
+    if (nextValue) {
+      setAdultConfirmModalOpen(true);
+      return;
+    }
+    setHideAdultContent(false);
+    void handleNotificationChange("hide_adult_content", false);
+  };
+
+  const confirmHideAdultContent = () => {
+    setHideAdultContent(true);
+    setAdultConfirmModalOpen(false);
+    void handleNotificationChange("hide_adult_content", true);
+  };
+
+  const cancelHideAdultContent = () => {
+    setHideAdultContent(false);
+    setAdultConfirmModalOpen(false);
   };
 
   if (!authReady) {
@@ -630,8 +658,8 @@ export default function Profile() {
               <label className={styles.check}>
                 <input
                   type="checkbox"
-                  checked={profile.hide_adult_content ?? false}
-                  onChange={(e) => handleNotificationChange("hide_adult_content", e.target.checked)}
+                  checked={hideAdultContent}
+                  onChange={(e) => handleAdultContentToggle(e.target.checked)}
                 />
                 <span>Прибрати 18+</span>
               </label>
@@ -778,6 +806,26 @@ export default function Profile() {
               ))}
             </ul>
           )}
+        </div>
+      </Modal>
+
+      <Modal
+        open={adultConfirmModalOpen}
+        onClose={cancelHideAdultContent}
+        title="Підтвердження 18+"
+      >
+        <div className={styles.modalForm}>
+          <p className={styles.modalHint}>
+            Ви впевнені, що хочете прибрати контент 18+ з усіх сторінок?
+          </p>
+          <div className={styles.balanceActions}>
+            <button type="button" className={styles.btnRed} onClick={cancelHideAdultContent}>
+              Скасувати
+            </button>
+            <button type="button" className={styles.btnGreen} onClick={confirmHideAdultContent}>
+              Підтвердити
+            </button>
+          </div>
         </div>
       </Modal>
     </section>

@@ -56,6 +56,10 @@ export interface Book {
   owner_username?: string | null;
   /** Ім'я творця/перекладача (API: creator_username) */
   creator_username?: string | null;
+  /** Статус закладки поточного користувача (API: bookmark_status) */
+  bookmark_status?: "reading" | "dropped" | "planned" | "completed" | null;
+  /** ID закладки поточного користувача (API: bookmark_id) */
+  bookmark_id?: number | null;
   /** Рейтинг твору (майбутнє API) */
   ratingValue?: number | null;
   ratingCount?: number | null;
@@ -129,6 +133,11 @@ export interface ChapterNavigation {
   next_chapter: ChapterNavigationItem | null;
   all_chapters: ChapterNavigationItem[];
 }
+
+type PaginatedResponse<T> = {
+  results?: T[];
+  next?: string | null;
+};
 
 // --- Нормализация ответов API (бэкенд может отдавать owner, фронт использует ownerId) ---
 
@@ -208,6 +217,17 @@ function normalizeBook(raw: Record<string, unknown>): Book {
     creator_username:
       raw.creator_username != null && raw.creator_username !== ""
         ? String(raw.creator_username)
+        : null,
+    bookmark_status:
+      raw.bookmark_status === "reading" ||
+      raw.bookmark_status === "dropped" ||
+      raw.bookmark_status === "planned" ||
+      raw.bookmark_status === "completed"
+        ? raw.bookmark_status
+        : null,
+    bookmark_id:
+      raw.bookmark_id != null && Number.isFinite(Number(raw.bookmark_id))
+        ? Number(raw.bookmark_id)
         : null,
   };
 }
@@ -304,6 +324,39 @@ function normalizeVolume(raw: Record<string, unknown>): Volume {
     book: raw.book != null ? Number(raw.book) : undefined,
     position: raw.position != null ? Number(raw.position) : undefined,
   };
+}
+
+async function fetchAllMetaPages<T>(
+  firstUrl: string,
+  normalize: (item: unknown) => T | null
+): Promise<T[]> {
+  const out: T[] = [];
+  const seenUrls = new Set<string>();
+  let nextUrl: string | null = firstUrl;
+
+  while (nextUrl) {
+    if (seenUrls.has(nextUrl)) break;
+    seenUrls.add(nextUrl);
+
+    const { data } = await http.get<unknown>(nextUrl);
+
+    if (Array.isArray(data)) {
+      out.push(...data.map(normalize).filter((item): item is T => item != null));
+      break;
+    }
+
+    if (data != null && typeof data === "object") {
+      const page = data as PaginatedResponse<unknown>;
+      const results = Array.isArray(page.results) ? page.results : [];
+      out.push(...results.map(normalize).filter((item): item is T => item != null));
+      nextUrl = typeof page.next === "string" && page.next !== "" ? page.next : null;
+      continue;
+    }
+
+    break;
+  }
+
+  return out;
 }
 
 // --- Query keys (единая кэш-логика) ---
@@ -459,23 +512,19 @@ export async function getAbandonedTranslations(): Promise<AbandonedTranslationBo
 const STALE_REF = 10 * 60 * 1000; // 10 хв
 
 export async function getGenres(): Promise<BookMetaItem[]> {
-  const { data } = await http.get<Record<string, unknown>[]>(`${CATALOG}/genres/`);
-  return Array.isArray(data) ? data.map(normalizeMetaItem).filter((g): g is BookMetaItem => g != null) : [];
+  return fetchAllMetaPages(`${CATALOG}/genres/`, normalizeMetaItem);
 }
 
 export async function getTags(): Promise<TagWithGroup[]> {
-  const { data } = await http.get<Record<string, unknown>[]>(`${CATALOG}/tags/`);
-  return Array.isArray(data) ? data.map(normalizeTagWithGroup).filter((t): t is TagWithGroup => t != null) : [];
+  return fetchAllMetaPages(`${CATALOG}/tags/`, normalizeTagWithGroup);
 }
 
 export async function getCountries(): Promise<BookCountry[]> {
-  const { data } = await http.get<Record<string, unknown>[]>(`${CATALOG}/countries/`);
-  return Array.isArray(data) ? data.map(normalizeCountry).filter((c): c is BookCountry => c != null) : [];
+  return fetchAllMetaPages(`${CATALOG}/countries/`, normalizeCountry);
 }
 
 export async function getFandoms(): Promise<BookMetaItem[]> {
-  const { data } = await http.get<Record<string, unknown>[]>(`${CATALOG}/fandoms/`);
-  return Array.isArray(data) ? data.map(normalizeMetaItem).filter((f): f is BookMetaItem => f != null) : [];
+  return fetchAllMetaPages(`${CATALOG}/fandoms/`, normalizeMetaItem);
 }
 
 /** Payload для створення книги. image — File або null. */

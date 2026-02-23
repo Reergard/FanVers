@@ -48,4 +48,7 @@ export const API = {
   // Rating (book + translation quality)
   ratingBookRatings: (bookSlug: string) => `/api/rating/${encodeURIComponent(bookSlug)}/book-ratings/`,
   ratingSubmit: "/api/rating/",
+
+  // Search
+  bookSearch: "/search/book-search/",
 } as const;

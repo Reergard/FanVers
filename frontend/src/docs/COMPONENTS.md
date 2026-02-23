@@ -64,6 +64,7 @@
 - `users/TranslatorsList.tsx`
 - `notification/NotificationsPage.tsx`
 - `catalog/CreateBookPage.tsx` (для груп тегів)
+- `search/search.tsx`
 
 **Деталі:** `docs/PAGINATION_SHOW_MORE_FRONTEND.md`.
 
@@ -89,8 +90,29 @@
 - `catalog/Catalog.tsx`
 - `catalog/AbandonedTranslations.tsx`
 - `bookmarks/BookmarksPage.tsx`
+- `search/search.tsx`
 
 **Деталі:** `docs/SORT_BY_NAVIGATION_FRONTEND.md`.
+
+---
+
+### `FilterDropdown`
+
+**Призначення:** Переиспользуемий dropdown для фільтрів, прив’язаний до натиснутого елемента.
+
+**Файли:**
+- `navigation/FilterDropdown.tsx`
+- `navigation/FilterDropdown.module.css`
+
+**Як працює:**
+- Рендериться через `createPortal` в `document.body`.
+- Позиціонується відносно `anchorEl` (кнопки, яку натиснули).
+- Підтримує адаптивну ширину: мінімум по ширині тригера, далі по вмісту з обмеженням viewport.
+- Блокує скрол сторінки під час відкриття через `useScrollLock(open)`.
+- Закривається по кліку поза панеллю і по `Escape`.
+
+**Місця використання:**
+- `search/search.tsx`
 
 ---
 
@@ -373,6 +395,8 @@
 
    У обох: `className` не передається, title — «Вхід» і «Реєстрація».
 
+3. **`search/search.tsx`** — модалка більше не використовується для фільтрів (заміна на `navigation/FilterDropdown.tsx`).
+
 ---
 
 **Тип 2: Використання через `NotificationModal` (обгортка над `Modal`)**
@@ -407,6 +431,25 @@
 - Використання: напряму (Profile, UserMenuOverlay); через `NotificationModal` (глобальні уведомлення з кнопкою «Зрозуміло» та ×); через `AutoCloseNotificationModal` (успіх після створення глави — без кнопок, авто-закриття через 3 с).
 
 **Майбутнє використання:** Для будь-якої нової модалки імпортувати `Modal` з `shared/Modal/Modal`, передати `open`, `onClose`, опційно `title` і `className`, і передати вміст як `children`.
+
+---
+
+### `SearchPage` (`search/search.tsx`)
+
+**Призначення:** сторінка пошуку книг `/search` з автопошуком, примусовим пошуком по Enter/кнопці, фільтрами і сортуванням.
+
+**Особливості:**
+- Автопошук через debounce 500ms (`shared/hooks/useDebouncedValue.ts`).
+- Примусовий пошук через `queryClient.fetchQuery(...)` без очікування debounce.
+- Підтягування довідників фільтрів через `catalogApi.getGenres/getTags/getCountries/getFandoms`.
+- Передача 18+ у запит: `adult_content = !hideAdultContent` з `settings/useAdultContent.ts`.
+
+**Відомі обмеження поточної реалізації:**
+- `viewedOnly` змінює state, але не впливає на результат.
+- `hideBookmarks` працює тільки для авторизованого користувача (фільтрація через `bookmark_status` у результатах пошуку); для гостя перемикання блокується з warning.
+- UI-фільтри реалізовані через `FilterDropdown` (прив’язка до кнопки фільтра, multi-select, блокування скролу сторінки під час відкриття).
+
+**Деталі:** `docs/SEARCH_FRONTEND.md`.
 
 ---
 
@@ -464,4 +507,4 @@
 
 ---
 
-**Останнє оновлення:** 2026-02-22
+**Останнє оновлення:** 2026-02-23

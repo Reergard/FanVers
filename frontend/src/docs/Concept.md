@@ -326,3 +326,25 @@ Container увеличивает max-width до 1680px
 
 - `src/docs/SORT_BY_NAVIGATION_FRONTEND.md`
 - `backend/docs/SORT_BY_NAVIGATION_BACKEND.md`
+
+22) Пошук (сторінка `/search`)
+
+Поточний підхід:
+
+- сторінка: `src/search/search.tsx`;
+- API: `src/api/searchApi.ts` -> `GET /api/search/book-search/`;
+- автопошук через debounce `500ms` (`src/shared/hooks/useDebouncedValue.ts`);
+- примусовий пошук (Enter/кнопка) через `queryClient.fetchQuery(...)`;
+- довідники фільтрів (`genres/tags/countries/fandoms`) завантажуються через `catalogApi.get*` + TanStack Query;
+- глобальна 18+ настройка береться з `src/settings/useAdultContent.ts` (`adult_content = !hideAdultContent`).
+
+Важливо:
+
+- `viewedOnly` у поточній реалізації сторінки змінює тільки локальний state і не впливає на результат;
+- `hideBookmarks` працює для авторизованого користувача через `book.bookmark_status !== null`; для гостя перемикання блокується з warning;
+- у фільтрах сторінки пошуку використовується `navigation/FilterDropdown.tsx` (прив’язка до натиснутого фільтра, multi-select, блокування скролу сторінки під час відкриття).
+
+Детально:
+
+- `src/docs/SEARCH_FRONTEND.md`
+- `backend/docs/SEARCH_BACKEND.md`
