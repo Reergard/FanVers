@@ -42,7 +42,7 @@ class BookFilter(django_filters.FilterSet):
     order = django_filters.OrderingFilter(
         fields=(
             ('title', 'title'),
-            ('-last_updated', 'last_updated'),
+            ('last_updated', 'last_updated'),
             ('chapter_count', 'chapter_count'),
         )
     )

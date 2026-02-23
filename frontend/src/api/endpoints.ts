@@ -50,5 +50,5 @@ export const API = {
   ratingSubmit: "/api/rating/",
 
   // Search
-  bookSearch: "/search/book-search/",
+  bookSearch: "/api/search/book-search/",
 } as const;

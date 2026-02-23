@@ -137,9 +137,20 @@ export async function searchBooks(filters: SearchFilters): Promise<UserTranslati
 
   const { data } = await http.get<Paginated<unknown> | unknown[]>(url);
 
-  const list = Array.isArray(data)
-    ? data
-    : (Array.isArray((data as Paginated<unknown>).results) ? (data as Paginated<unknown>).results : []);
+  let list: unknown[] | null = null;
+  if (Array.isArray(data)) {
+    list = data;
+  } else if (
+    data != null &&
+    typeof data === "object" &&
+    Array.isArray((data as Paginated<unknown>).results)
+  ) {
+    list = (data as Paginated<unknown>).results;
+  }
+
+  if (list == null) {
+    throw new Error("Search API returned unexpected response format.");
+  }
 
   return list.map(normalizeBook).filter((book): book is UserTranslationBook => book != null);
 }
