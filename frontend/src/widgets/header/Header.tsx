@@ -14,7 +14,7 @@ import { useAuth } from "../../auth/useAuth";
 // Single source of truth (Desktop)
 const NAV_MENU_OLD = [
   { to: "/catalog", label: "Каталог" },
-  { to: "/gd", label: "Чарівний Гід" },
+  { to: "/MagicalGuide", label: "Чарівний Гід" },
   { to: "/authors", label: "Автори" },
   { to: "/translators", label: "Перекладачі" },
   { to: "/abandoned", label: "Покинуті переклади" },
@@ -25,7 +25,7 @@ const NAV_MENU_OLD = [
 // Tablet/Mobile: навигация в 2 строки
 const NAV_ROW_1 = [
   { to: "/catalog", label: "Каталог" },
-  { to: "/gd", label: "Чарівний Гід" },
+  { to: "/MagicalGuide", label: "Чарівний Гід" },
   { to: "/abandoned", label: "Покинуті переклади" },
 ];
 

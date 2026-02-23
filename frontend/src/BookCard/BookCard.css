@@ -16,7 +16,7 @@
   margin: 0 auto;
   border-radius: 0 clamp(16px, calc(1.8 * var(--vwu)), 22px)
     clamp(16px, calc(1.8 * var(--vwu)), 22px) 0;
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
 }
 
@@ -40,6 +40,7 @@
   z-index: 1;
   aspect-ratio: 152 / 224;
   object-fit: cover;
+  border-radius: inherit;
   transform: translateZ(0);
   filter: contrast(1.05) saturate(1.05);
 }
@@ -52,6 +53,16 @@
   height: auto;
   pointer-events: none;
   z-index: 3;
+}
+
+.book-card-badge-new {
+  position: absolute;
+  top: clamp(-9px, calc(-0.9 * var(--vwu)), -5px);
+  left: clamp(-16px, calc(-1.7 * var(--vwu)), -10px);
+  width: clamp(58px, calc(6.2 * var(--vwu)), 76px);
+  height: auto;
+  pointer-events: none;
+  z-index: 4;
 }
 
 .book-card-corner-a {

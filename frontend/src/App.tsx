@@ -32,6 +32,9 @@ const AbandonedTranslations = lazy(() =>
 const Catalog = lazy(() =>
   import("./catalog/Catalog").then((m) => ({ default: m.default }))
 );
+const MagicalGuide = lazy(() =>
+  import("./main/MagicalGuide").then((m) => ({ default: m.default }))
+);
 
 const queryClient = new QueryClient();
 
@@ -130,6 +133,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <Catalog />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/MagicalGuide"
+                element={
+                  <Suspense fallback={<div />}>
+                    <MagicalGuide />
                   </Suspense>
                 }
               />

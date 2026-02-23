@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { UserTranslationBook } from "../api/catalogApi";
 import badge18 from "../assets/backgrounds/18+.svg";
+import newBadge from "../assets/icons/NEW.svg";
 import coverPlaceholder from "../assets/1SR-gLCHT4s.jpg";
 import "./BookCard.css";
 
@@ -43,6 +44,14 @@ export function BookCard({ book }: Props) {
   const cardContent = (
     <article className="book-card">
       <div className="book-card-cover-wrap">
+        <img
+          className="book-card-badge-new"
+          src={newBadge}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+        />
         <img
           className="book-card-cover"
           src={imageUrl}
