@@ -483,6 +483,43 @@
 
 ---
 
+### `ChatPage`, `ChatList`, `ChatWindow`, `CreateChatModal` (`chat/`)
+
+**Призначення:** фіча особистих чатів на маршруті `/chat`.
+
+**Файли:**
+- `chat/ChatPage.tsx`
+- `chat/components/ChatList.tsx`
+- `chat/components/ChatWindow.tsx`
+- `chat/components/CreateChatModal.tsx`
+- `chat/store/chatStore.ts`, `chat/store/useChat.ts`
+- `chat/api/chatApi.ts`, `chat/ws/chatWs.ts`, `chat/ws/counterWs.ts`
+
+**Як розподілена відповідальність:**
+
+- **ChatPage** — auth-гейт (`useAuth`), ініціалізація списку чатів, підключення ws конкретного чату, проброс actions/стану в дочірні компоненти.
+- **ChatList** — лівий список діалогів, вибір чату, кнопка відкриття модалки створення.
+- **ChatWindow** — рендер повідомлень, відправка (ws -> fallback HTTP), mark-as-read при відкритті чату, confirm-видалення.
+- **CreateChatModal** — форма створення чату (`username` + optional перше повідомлення) через спільний `Modal`.
+
+**Особливості:**
+
+- `chatStore` працює як external store (подібно до auth/adultContent підходу): `subscribe`, `getSnapshot`, `storeVersion`.
+- `counterWs` підключається в `widgets/header/Header.tsx` для глобального оновлення `unreadTotal`.
+- повідомлення "чат уже існує" показується через `useNotification().showWarning(...)`.
+- "Видалити чат" має confirm-модалку з кнопками `Так/Ні`.
+
+**Місця використання:**
+
+- `App.tsx` — маршрут `/chat`.
+- `widgets/header/Header.tsx` — unread бейдж повідомлень із `useChat().state.unreadTotal`.
+
+**Детальна документація:**
+
+- `docs/CHAT_FRONTEND.md`
+
+---
+
 ## Правила використання
 
 1. **Не дублюйте код:** Якщо компонент вже існує в `shared/` або `widgets/`, використовуйте його замість створення нового.
@@ -507,4 +544,4 @@
 
 ---
 
-**Останнє оновлення:** 2026-02-23
+**Останнє оновлення:** 2026-02-25

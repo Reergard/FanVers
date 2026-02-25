@@ -74,6 +74,14 @@ frontend/src/
 ├── search/
 │   ├── search.tsx
 │   └── search.css
+├── chat/
+│   ├── Chat.tsx
+│   ├── ChatPage.tsx
+│   ├── Chat.module.css
+│   ├── components/
+│   ├── api/
+│   ├── store/
+│   └── ws/
 ├── settings/
 │   ├── adultContentStore.ts
 │   └── useAdultContent.ts
@@ -129,6 +137,7 @@ frontend/src/
 │   ├── BOOK_PAGE_DESIGN_DATA_FLOW.md
 │   ├── CHAPTER_PAGE_DATA_FLOW.md
 │   ├── COMMENTS_FRONTEND.md
+│   ├── CHAT_FRONTEND.md
 │   ├── COMPONENTS.md
 │   ├── Concept.md
 │   ├── NOTIFICATIONS_FRONTEND.md
@@ -182,8 +191,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 **Поточна реалізація (з роутером):**
 ```tsx
 // Bootstrap auth перед показом Routes; QueryClientProvider, NotificationProvider
-// Маршрути: /, /profile, /bookmarks, /my-translations, /authors, /translators, /login, /messages, /catalog, /abandoned, /create-book, /books/:slug/settings, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug, /books/:slug
-// Suspense + lazy для сторінок (Profile, BookmarksPage, UserTranslations, Authors, TranslatorsList, LoginPage, NotificationsPage, Catalog, AbandonedTranslations, CreateBookPage, AddChapter, ChapterDetailRouter, BookDetailRouter)
+// Маршрути: /, /profile, /bookmarks, /my-translations, /authors, /translators, /login, /messages, /chat, /catalog, /abandoned, /create-book, /books/:slug/settings, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug, /books/:slug
+// Suspense + lazy для сторінок (Profile, BookmarksPage, UserTranslations, Authors, TranslatorsList, LoginPage, NotificationsPage, Catalog, MagicalGuide, AbandonedTranslations, SearchPage, ChatPage, CreateBookPage, AddChapter, ChapterDetailRouter, BookDetailRouter)
 ```
 
 ---
@@ -302,7 +311,7 @@ export function Base({ children }: Props) {
 **Навіщо існує:** коли сторінок стане багато, зберігати маршрути в `App.tsx` стане незручно.
 Логіку маршрутизації можна винести в `routes/`.
 
-**Поточний стан:** папка не створена. Маршрути визначені безпосередньо в `App.tsx` (/, /profile, /bookmarks, /my-translations, /authors, /translators, /login, /messages, /catalog, /abandoned, /create-book, /books/:slug/settings, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug, /books/:slug).
+**Поточний стан:** папка не створена. Маршрути визначені безпосередньо в `App.tsx` (/, /profile, /bookmarks, /my-translations, /authors, /translators, /login, /messages, /chat, /catalog, /abandoned, /create-book, /books/:slug/settings, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug, /books/:slug).
 
 **Майбутній приклад:** `routes/AppRoutes.tsx`
 ```tsx
@@ -380,6 +389,29 @@ export function AppRoutes() {
 - `shared/hooks/useDebouncedValue.ts`
 - `shared/NotificationModal/NotificationProvider.tsx`
 - `docs/SEARCH_FRONTEND.md`
+
+---
+
+## `chat/` — фіча ChatVerse (особисті повідомлення)
+
+**Що це:** сторінка `/chat` зі списком діалогів, вікном вибраного чату, створенням/видаленням чату, realtime-повідомленнями.
+
+Склад:
+
+- `Chat.tsx` — thin re-export на `ChatPage`.
+- `ChatPage.tsx` — page orchestration: auth-gate, завантаження чатів, підключення ws конкретного чату.
+- `components/ChatList.tsx` — лівий список чатів + кнопка створення.
+- `components/ChatWindow.tsx` — повідомлення, відправка, confirm delete.
+- `components/CreateChatModal.tsx` — модалка створення через `shared/Modal/Modal`.
+- `api/chatApi.ts`, `api/types.ts` — HTTP-контракти.
+- `store/chatStore.ts`, `store/useChat.ts` — external store (`useSyncExternalStore`).
+- `ws/chatWs.ts`, `ws/counterWs.ts` — realtime-шар.
+
+Пов’язано з:
+
+- `api/endpoints.ts` (`API.chat`)
+- `widgets/header/Header.tsx` (глобальний unread через `useChat`)
+- `docs/CHAT_FRONTEND.md`
 
 ---
 

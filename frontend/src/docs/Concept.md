@@ -14,13 +14,14 @@ src/
   app/            # общий layout приложения: Base.tsx + Base.module.css
   auth/           # авторизация: store, service, useAuth, bootstrap, token, refresh
   catalog/        # страница книги (/books/:slug), добавление главы (/books/:slug/add-chapter), страница главы (/books/:bookSlug/chapters/:chapterSlug), покинуті переклади (/abandoned)
+  chat/           # страница чата (/chat): список диалогов, окно сообщений, ws realtime
   main/           # страницы/фичи главной (HomePage.tsx + стили + локальные картинки)
   users/          # страницы/фичи пользователей (Profile.tsx, profileService, types)
   website_advertising/  # реклама книг (AdvertisingBooks, BookAdCard)
   shared/         # переиспользуемые "примитивы": Container, Icon, Modal, hooks, utils
   widgets/        # крупные блоки: header, footer (и дальше: sidebar, drawer и т.д.)
   assets/         # глобальные ассеты: icons, logos, backgrounds, fonts
-  docs/           # документация (Concept.md, STRUCTURE.md, AUTHENTICATION_FRONTEND.md и др.)
+  docs/           # документация (Concept.md, STRUCTURE.md, AUTHENTICATION_FRONTEND.md, CHAT_FRONTEND.md и др.)
 
 Правило: всё "глобальное" → assets/, всё "только для страницы" → feature/assets/.
 
@@ -213,7 +214,7 @@ font-display: swap включен
 
 14) Routing (как страницы реально переключаются)
 
-Реализовано в App.tsx:
+Реализовано в `App.tsx`:
 
 react-router-dom (BrowserRouter, Routes, Route)
 
@@ -222,8 +223,20 @@ Base оборачивает Routes, Routes содержит Route для каж�
 Текущие маршруты включают:
 
 - "/" (HomePage)
+- "/create-book" (CreateBookPage)
 - "/profile" (Profile)
+- "/bookmarks" (BookmarksPage)
+- "/my-translations" (UserTranslations)
+- "/authors" (Authors)
+- "/translators" (TranslatorsList)
+- "/login" (LoginPage)
+- "/messages" (NotificationsPage)
+- "/catalog" (Catalog)
+- "/MagicalGuide" (MagicalGuide)
 - "/abandoned" (AbandonedTranslations)
+- "/search" (SearchPage)
+- "/chat" (ChatPage)
+- "/books/:slug/settings" (CreateBookPage)
 - "/books/:slug/add-chapter" (AddChapter)
 - "/books/:bookSlug/chapters/:chapterSlug" (ChapterDetailRouter)
 - "/books/:slug" (BookDetailRouter)
@@ -348,3 +361,34 @@ Container увеличивает max-width до 1680px
 
 - `src/docs/SEARCH_FRONTEND.md`
 - `backend/docs/SEARCH_BACKEND.md`
+
+23) Чат (сторінка `/chat`)
+
+Поточний підхід:
+
+- сторінка: `src/chat/ChatPage.tsx` (lazy route в `App.tsx`);
+- UI-частини: `src/chat/components/ChatList.tsx`, `ChatWindow.tsx`, `CreateChatModal.tsx`;
+- store: `src/chat/store/chatStore.ts` + `useChat.ts` (`useSyncExternalStore`);
+- API: `src/chat/api/chatApi.ts` через `api/http.ts` і `API.chat` у `api/endpoints.ts`;
+- realtime:
+  - `src/chat/ws/chatWs.ts` -> `ws/chat/{chatId}/`,
+  - `src/chat/ws/counterWs.ts` -> `ws/counter/`.
+
+Як працює:
+
+- `ChatPage` перевіряє `useAuth()` (`authReady`, `isAuthenticated`): для гостя редірект на `/login`.
+- Після авторизації викликається `fetchChats()`.
+- При виборі чату `ChatWindow` завантажує повідомлення і викликає `mark_as_read`.
+- Відправка повідомлення:
+  - пріоритетно через `chatWs.sendMessage(...)`,
+  - fallback через HTTP `sendMessage`.
+- Видалення чату — через confirm modal (Так/Ні) і `DELETE /api/chat/{id}/`.
+
+Нюанс:
+
+- глобальний counter WebSocket підключається в `widgets/header/Header.tsx`; `unreadTotal` береться із chat-store і використовується для бейджа повідомлень у хедері.
+
+Деталі:
+
+- `src/docs/CHAT_FRONTEND.md`
+- `backend/docs/CHAT_BACKEND.md`

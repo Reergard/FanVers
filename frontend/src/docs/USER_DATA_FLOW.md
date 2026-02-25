@@ -123,3 +123,44 @@ const { isAuthenticated, userId, username, balance, authReady } = useAuth();
 - dropdown прив’язується до натиснутого фільтра (`anchorEl`);
 - під час відкриття блокується скрол сторінки через `useScrollLock`;
 - сам вибір у dropdown (multi-select) змінює локальний `filters` state, який далі йде в `searchBooks` (через debounced `effectiveFilters`).
+
+## Чат (користувач-залежні дані + realtime)
+
+Файли:
+
+- `chat/ChatPage.tsx`
+- `chat/store/chatStore.ts`, `chat/store/useChat.ts`
+- `chat/api/chatApi.ts`
+- `chat/ws/chatWs.ts`, `chat/ws/counterWs.ts`
+- `widgets/header/Header.tsx`
+
+Що важливо для auth у чаті:
+
+- сторінка `/chat` бере `authReady`, `isAuthenticated`, `username`, `userId` із `useAuth()`;
+- при `!isAuthenticated` робить редірект на `/login`;
+- для HTTP-запитів чату використовується `http.ts` (Bearer + refresh/retry);
+- для ws токен береться з `auth/token.ts` (`getAccess()`).
+
+Потік даних:
+
+1. Після авторизації `ChatPage` викликає `chatStore.fetchChats()`.
+2. Вибраний чат (`selectedChatId`) синхронізується через external store.
+3. При відкритті чату:
+   - `fetchMessages(chatId)`,
+   - `markReadLocal(chatId)` + `markChatAsRead(chatId)`.
+4. Надсилання повідомлення:
+   - спочатку через `chatWs.sendMessage`,
+   - якщо ws не відкритий — fallback `chatApi.sendMessage`.
+5. Вхідні ws події оновлюють:
+   - `messagesByChatId`,
+   - `last_message` у списку чатів,
+   - `unreadTotal` (через store recalculation).
+
+Header і unread:
+
+- у `widgets/header/Header.tsx` підключений `counterWs`;
+- бейдж повідомлень у хедері бере значення з `useChat().state.unreadTotal`.
+
+Нюанс:
+
+- у лівому списку чатів окремий бейдж unread не рендериться, але `unreadTotal` зберігається в store і використовується в Header.
