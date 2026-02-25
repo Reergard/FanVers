@@ -121,5 +121,7 @@
     <rect x="0.5" y="2.5" width="16" height="16" rx="3.5" stroke="currentColor" fill="none"/>
     <path d="M5 7.69162C5 7.69162 7.7106 12.7415 9 15C10.0499 16.839 9.60239 16.5393 10.5 12.5C12.5 3.5 16.5 1 16.5 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
   </symbol>
+
+  
   
 </svg>

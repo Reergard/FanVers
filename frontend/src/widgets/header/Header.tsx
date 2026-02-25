@@ -5,11 +5,13 @@ import { Link } from "react-router-dom";
 import { FrameLink } from "../../shared/FrameLink/FrameLink";
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import logo from "../../assets/logos/logo.png";
-import backBalance from "../../assets/backgrounds/back_balance.svg";
 import { UserMenuOverlay } from "./UserMenuOverlay/UserMenuOverlay";
 import { USER_MENU } from "../../shared/menu/menuData";
 import { useMedia } from "../../shared/hooks/useMedia";
 import { useAuth } from "../../auth/useAuth";
+import { useChat } from "../../chat/store/useChat";
+import { counterWs } from "../../chat/ws/counterWs";
+import type { ChatMessage } from "../../chat/api/types";
 
 // Single source of truth (Desktop)
 const NAV_MENU_OLD = [
@@ -38,12 +40,13 @@ const NAV_ROW_2 = [
 
 export function Header() {
   const { isAuthenticated, username, balance } = useAuth();
+  const { state: chatState, actions: chatActions } = useChat();
 
   const user = {
     name: isAuthenticated ? (username ?? "Користувач") : "Гість",
     coins: isAuthenticated ? (balance ?? "0") : "0",
     notifications: 4,
-    messages: 14,
+    messages: chatState.unreadTotal,
     avatarUrl: "",
   };
 
@@ -59,6 +62,24 @@ export function Header() {
   const isMobile = useMedia("(max-width: 1024px)");
   // Определяем tablet/mobile для навигации в 2 строки
   const isTablet = useMedia("(max-width: 1024px)");
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      counterWs.disconnect();
+      return;
+    }
+
+    chatActions.fetchChats();
+    counterWs.connect();
+    const handleCounter = ({ chatId, message }: { chatId: number; message: ChatMessage }) => {
+      chatActions.applyCounterEvent(chatId, message, username);
+    };
+    counterWs.onMessage(handleCounter);
+    return () => {
+      counterWs.offMessage(handleCounter);
+      counterWs.disconnect();
+    };
+  }, [chatActions, isAuthenticated, username]);
 
   // Определяем контент меню
   const menuItems = USER_MENU;

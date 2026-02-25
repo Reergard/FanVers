@@ -38,6 +38,9 @@ const MagicalGuide = lazy(() =>
 const SearchPage = lazy(() =>
   import("./search/search").then((m) => ({ default: m.default }))
 );
+const ChatPage = lazy(() =>
+  import("./chat/Chat").then((m) => ({ default: m.default }))
+);
 
 const queryClient = new QueryClient();
 
@@ -160,6 +163,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <SearchPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/chat"
+                element={
+                  <Suspense fallback={<div />}>
+                    <ChatPage />
                   </Suspense>
                 }
               />

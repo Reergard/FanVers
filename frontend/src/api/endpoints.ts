@@ -51,4 +51,14 @@ export const API = {
 
   // Search
   bookSearch: "/api/search/book-search/",
+
+  // Chat
+  chat: {
+    list: "/api/chat/",
+    create: "/api/chat/create/",
+    byId: (chatId: number | string) => `/api/chat/${chatId}/`,
+    messages: (chatId: number | string) => `/api/chat/${chatId}/messages/`,
+    sendMessage: (chatId: number | string) => `/api/chat/${chatId}/send_message/`,
+    markAsRead: (chatId: number | string) => `/api/chat/${chatId}/mark_as_read/`,
+  },
 } as const;
