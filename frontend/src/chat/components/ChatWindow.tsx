@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import ghostBlueIcon from "../../assets/icons/Ghost.svg";
-import ghostOrangeIcon from "../../assets/icons/Ghost_orange.svg";
 import sendIcon from "../../catalog/assets/icons/send.svg";
 import { Modal } from "../../shared/Modal/Modal";
 import { chatWs } from "../ws/chatWs";
 import styles from "../Chat.module.css";
 import type { ChatListItem, ChatMessage } from "../api/types";
+import { resolveAvatarUrl } from "../../shared/avatar/resolveAvatarUrl";
 
 type Props = {
   selectedChat: ChatListItem | null;
   currentUsername: string | null;
   currentUserId: number | null;
+  currentUserAvatarUrl?: string | null;
   messages: ChatMessage[];
   loadingMessages: boolean;
   onLoadMessages: (chatId: number) => Promise<void> | void;
@@ -34,10 +35,23 @@ function getOtherParticipantName(chat: ChatListItem, currentUsername: string | n
   return other?.username || "Невідомий користувач";
 }
 
+function getParticipantAvatar(
+  chat: ChatListItem | null,
+  username: string | null
+): string {
+  if (!chat || !username) return resolveAvatarUrl(null);
+  const normalizedUsername = normalizeUsername(username);
+  const participant = chat.participants.find(
+    (item) => normalizeUsername(item.username) === normalizedUsername
+  );
+  return resolveAvatarUrl(participant?.profile_image ?? null);
+}
+
 export function ChatWindow({
   selectedChat,
   currentUsername,
   currentUserId,
+  currentUserAvatarUrl,
   messages,
   loadingMessages,
   onLoadMessages,
@@ -55,6 +69,17 @@ export function ChatWindow({
   const otherUsername = useMemo(
     () => (selectedChat ? getOtherParticipantName(selectedChat, currentUsername) : null),
     [selectedChat, currentUsername]
+  );
+  const currentAvatar = useMemo(
+    () =>
+      currentUserAvatarUrl
+        ? resolveAvatarUrl(currentUserAvatarUrl)
+        : getParticipantAvatar(selectedChat, currentUsername),
+    [currentUserAvatarUrl, selectedChat, currentUsername]
+  );
+  const otherAvatar = useMemo(
+    () => getParticipantAvatar(selectedChat, otherUsername),
+    [selectedChat, otherUsername]
   );
 
   useEffect(() => {
@@ -118,7 +143,7 @@ export function ChatWindow({
       <header className={styles.chatHeader}>
         <div className={styles.chatHeaderLeft}>
           <span className={styles.headerAvatarOrange}>
-            <img className={styles.ghostOrange} src={ghostOrangeIcon} alt="" aria-hidden="true" />
+            <img className={styles.ghostOrange} src={otherAvatar} alt="" aria-hidden="true" />
           </span>
 
           <div className={styles.headerTitleRow}>
@@ -152,7 +177,7 @@ export function ChatWindow({
             >
               {!isOwn ? (
                 <span className={styles.msgAvatarLeft} aria-hidden="true">
-                  <img className={styles.ghostOrange} src={ghostOrangeIcon} alt="" />
+                  <img className={styles.ghostOrange} src={otherAvatar} alt="" />
                 </span>
               ) : null}
 
@@ -162,7 +187,7 @@ export function ChatWindow({
 
               {isOwn ? (
                 <span className={styles.msgAvatar} aria-hidden="true">
-                  <img className={styles.ghost} src={ghostBlueIcon} alt="" />
+                  <img className={styles.ghost} src={currentAvatar || ghostBlueIcon} alt="" />
                 </span>
               ) : null}
             </li>

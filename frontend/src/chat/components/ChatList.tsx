@@ -2,6 +2,7 @@ import ghostIcon from "../../assets/icons/Ghost.svg";
 import chatFrameIcon from "../../assets/icons/рамкаsvg.svg";
 import styles from "../Chat.module.css";
 import type { ChatListItem } from "../api/types";
+import { resolveAvatarUrl } from "../../shared/avatar/resolveAvatarUrl";
 
 type Props = {
   chats: ChatListItem[];
@@ -21,6 +22,12 @@ function getOtherParticipantName(chat: ChatListItem, currentUsername: string | n
   return other?.username || "Невідомий користувач";
 }
 
+function getOtherParticipantAvatar(chat: ChatListItem, currentUsername: string | null): string {
+  const other =
+    chat.participants.find((participant) => participant.username !== currentUsername) ?? chat.participants[0];
+  return resolveAvatarUrl(other?.profile_image ?? null);
+}
+
 export function ChatList({ chats, selectedChatId, currentUsername, onSelect, onCreate }: Props) {
   return (
     <aside className={styles.sidebar} aria-label="Список чатів">
@@ -35,6 +42,7 @@ export function ChatList({ chats, selectedChatId, currentUsername, onSelect, onC
         <ul className={styles.chatListInner}>
           {chats.map((chat) => {
             const otherUsername = getOtherParticipantName(chat, currentUsername);
+            const otherAvatar = getOtherParticipantAvatar(chat, currentUsername);
             return (
               <li key={chat.id}>
                 <button
@@ -43,7 +51,7 @@ export function ChatList({ chats, selectedChatId, currentUsername, onSelect, onC
                   className={clsx(styles.chatItem, chat.id === selectedChatId && styles.chatItemActive)}
                 >
                   <span className={styles.chatAvatar}>
-                    <img className={styles.ghost} src={ghostIcon} alt="" aria-hidden="true" />
+                    <img className={styles.ghost} src={otherAvatar || ghostIcon} alt="" aria-hidden="true" />
                   </span>
 
                   <span className={styles.chatMeta}>

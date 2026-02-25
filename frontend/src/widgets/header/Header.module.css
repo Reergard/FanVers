@@ -111,35 +111,70 @@
 
 /* ===== SEARCH (desktop) ===== */
 .search {
-  display: flex;
-  align-items: flex-end;
+  position: relative;
+  display: block;
+  width: min(100%, 320px);
 }
 
 .searchField {
-  display: flex;
-  flex-direction: column;
-  border-bottom: 1px solid #05b4c7;
+  position: relative;
+  display: block;
+  width: 100%;
+  border-bottom: 1px solid rgba(5, 180, 199, 0.9);
 }
 
 .searchField:focus-within {
-  border-bottom-color: rgba(5, 180, 199, 1);
+  border-bottom-color: rgba(0, 210, 255, 0.95);
 }
 
 .searchLabel {
-  font-family: "Seminaria", sans-serif;
-  font-size: 21px;
-  color: rgba(5, 180, 199, 1);
-  left: 20px;
-  padding-left: 20px;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .searchInput {
-  width: 260px;
-  background: transparent;
+  width: 100%;
+  height: clamp(30px, 2.6vw, 36px);
+  padding: 0 34px 0 0;
+  border-radius: 0;
   border: 0;
+  background: transparent;
+  color: rgba(5, 180, 199, 0.5);
+  font-family: "BadScript", cursive;
+  font-size: clamp(14px, 1.2vw, 16px);
   outline: none;
-  color: inherit;
+  box-sizing: border-box;
+}
+
+.searchInput::placeholder {
+  color: rgba(5, 180, 199, 0.5);
+}
+
+.searchInput:focus {
+  box-shadow: none;
+}
+
+.search .iconBtn[type="submit"] {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: auto;
+  height: auto;
+  border: none;
+  background: transparent;
   padding: 0;
+  color: rgba(0, 210, 255, 0.9);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
 }
 
 /* ===== USER (desktop) ===== */
@@ -161,9 +196,14 @@
 
   /* картинка */
   background-color: rgba(255, 255, 255, 0.10);
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: inherit;
 }
 
 /* Мягкий наружный ореол (градиент от кольца наружу) */

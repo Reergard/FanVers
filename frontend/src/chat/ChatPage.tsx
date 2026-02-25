@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/useAuth";
 import styles from "./Chat.module.css";
 import { ChatList } from "./components/ChatList";
@@ -10,12 +11,19 @@ import { getChatStoreSnapshot } from "./store/chatStore";
 import { chatWs } from "./ws/chatWs";
 import type { ChatMessage } from "./api/types";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
+import { getMyProfile } from "../users/profileService";
 
 export default function ChatPage() {
   const { isAuthenticated, authReady, username, userId } = useAuth();
   const { state, actions } = useChat();
   const { showWarning, showError } = useNotification();
   const [createOpen, setCreateOpen] = useState(false);
+  const profileQuery = useQuery({
+    queryKey: ["profile"],
+    queryFn: getMyProfile,
+    enabled: authReady && isAuthenticated,
+    staleTime: 60_000,
+  });
 
   useEffect(() => {
     if (!authReady || !isAuthenticated) return;
@@ -130,6 +138,14 @@ export default function ChatPage() {
           selectedChat={selectedChat}
           currentUsername={username}
           currentUserId={userId}
+          currentUserAvatarUrl={
+            profileQuery.data?.has_custom_image === false
+              ? null
+              : (profileQuery.data?.profile_image_small ??
+                profileQuery.data?.profile_image_large ??
+                profileQuery.data?.image ??
+                null)
+          }
           messages={state.selectedMessages}
           loadingMessages={state.isLoadingSelectedMessages}
           onLoadMessages={onLoadMessages}

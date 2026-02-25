@@ -111,7 +111,7 @@ class Profile(models.Model):
         verbose_name='Приватні повідомлення'
     )
     age_confirmed = models.BooleanField(
-        default=False,
+        default=True,
         verbose_name='Підтверджено вік 18+'
     )
     

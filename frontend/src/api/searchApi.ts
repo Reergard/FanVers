@@ -98,7 +98,12 @@ function buildParams(filters: SearchFilters): URLSearchParams {
   const p = new URLSearchParams();
 
   const title = filters.title?.trim();
-  if (title) p.append("title", title);
+  if (title) {
+    p.append("title", title);
+    // Compatibility keys for backend variants where query may be read as q/search.
+    p.append("q", title);
+    p.append("search", title);
+  }
 
   const appendMany = (key: string, arr?: number[]) => {
     if (!arr || arr.length === 0) return;

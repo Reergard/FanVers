@@ -4,6 +4,7 @@ import sendIcon from "../assets/icons/send.svg";
 import deleteIcon from "../assets/icons/Delete.svg";
 import leftCrystalIcon from "../assets/backgrounds/left_crystal.svg";
 import rightCrystalIcon from "../assets/backgrounds/right_crystal.svg";
+import { resolveAvatarUrl } from "../../shared/avatar/resolveAvatarUrl";
 
 export type CommentItem = {
   id: string | number;
@@ -84,11 +85,7 @@ function CommentCard({
     <li className={styles.commentItem} data-depth={depth}>
       <header>
         <div className={styles.commentAvatar}>
-          {comment.authorAvatarUrl ? (
-            <img src={comment.authorAvatarUrl} alt="" />
-          ) : (
-            <span className={styles.commentAvatarPlaceholder} aria-hidden="true" />
-          )}
+          <img src={resolveAvatarUrl(comment.authorAvatarUrl)} alt="" />
         </div>
         <span className={styles.commentAuthor}>{comment.authorName}</span>
         <span className={styles.commentTime}>{comment.timeAgo}</span>

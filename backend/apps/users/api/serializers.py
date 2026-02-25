@@ -255,6 +255,32 @@ class NotificationSettingsSerializer(serializers.ModelSerializer):
             'chapter_comment_notifications'
         ]
 
+    def validate(self, attrs):
+        # Synchronize 18+ preferences:
+        # - hide_adult_content=True  -> age_confirmed=False
+        # - age_confirmed=True       -> hide_adult_content=False
+        # - age_confirmed=False      -> hide_adult_content=True
+        # - hide_adult_content=False (without explicit age flag) -> age_confirmed=True
+        hide = attrs.get('hide_adult_content')
+        age = attrs.get('age_confirmed')
+
+        if hide is True:
+            attrs['age_confirmed'] = False
+            return attrs
+
+        if age is True:
+            attrs['hide_adult_content'] = False
+            return attrs
+
+        if age is False:
+            attrs['hide_adult_content'] = True
+            return attrs
+
+        if hide is False and 'age_confirmed' not in attrs:
+            attrs['age_confirmed'] = True
+
+        return attrs
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()

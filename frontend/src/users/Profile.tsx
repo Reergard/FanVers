@@ -23,6 +23,7 @@ import {
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { Modal } from "../shared/Modal/Modal";
 import { useAdultContent } from "../settings/useAdultContent";
+import { resolveAvatarUrl } from "../shared/avatar/resolveAvatarUrl";
 import type { UserProfile, NotificationSettingsPatch, BalanceHistoryItem } from "./types";
 
 const AVATAR_MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -94,13 +95,6 @@ function validatePasswords(
   if (newP.length < 8) return "Новий пароль повинен містити мінімум 8 символів";
   if (newP !== confirmP) return "Новий пароль та підтвердження не співпадають";
   return null;
-}
-
-function getAvatarUrl(profile: UserProfile | null): string | null {
-  if (!profile) return null;
-  const url =
-    profile.profile_image_large ?? profile.image ?? profile.profile_image_small;
-  return url ?? null;
 }
 
 export default function Profile() {
@@ -287,6 +281,22 @@ export default function Profile() {
     }
   };
 
+  const handleAdultPreferencesUpdate = async (
+    patch: NotificationSettingsPatch,
+    localHideAdultContent?: boolean
+  ) => {
+    try {
+      await updateNotificationSettings(patch);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      if (typeof localHideAdultContent === "boolean") {
+        setHideAdultContent(localHideAdultContent);
+      }
+      showSuccess("Налаштування оновлено");
+    } catch (err: any) {
+      showError(err?.response?.data?.error ?? "Помилка при оновленні");
+    }
+  };
+
   const handleDeposit = () => {
     const num = Number(amount);
     if (!Number.isFinite(num) || num <= 0) {
@@ -319,14 +329,24 @@ export default function Profile() {
       setAdultConfirmModalOpen(true);
       return;
     }
-    setHideAdultContent(false);
-    void handleNotificationChange("hide_adult_content", false);
+    void handleAdultPreferencesUpdate(
+      {
+        hide_adult_content: false,
+        age_confirmed: true,
+      },
+      false
+    );
   };
 
   const confirmHideAdultContent = () => {
-    setHideAdultContent(true);
     setAdultConfirmModalOpen(false);
-    void handleNotificationChange("hide_adult_content", true);
+    void handleAdultPreferencesUpdate(
+      {
+        hide_adult_content: true,
+        age_confirmed: false,
+      },
+      true
+    );
   };
 
   const cancelHideAdultContent = () => {
@@ -369,7 +389,11 @@ export default function Profile() {
     );
   }
 
-  const avatarUrl = getAvatarUrl(profile);
+  const avatarUrl = resolveAvatarUrl(
+    profile.has_custom_image === false
+      ? null
+      : (profile.profile_image_large ?? profile.image ?? profile.profile_image_small)
+  );
   const balanceNum = parseBalance(profile.balance);
 
   return (
@@ -394,7 +418,7 @@ export default function Profile() {
               <div className={styles.avatarFrame}>
                 <img
                   className={styles.avatarImg}
-                  src={avatarUrl ?? "https://via.placeholder.com/320x420.png?text=Avatar"}
+                  src={avatarUrl}
                   alt="Фото профілю"
                   loading="lazy"
                   decoding="async"
@@ -675,7 +699,26 @@ export default function Profile() {
                 <input
                   type="checkbox"
                   checked={profile.age_confirmed ?? false}
-                  onChange={(e) => handleNotificationChange("age_confirmed", e.target.checked)}
+                  onChange={(e) => {
+                    const nextAgeConfirmed = e.target.checked;
+                    if (nextAgeConfirmed) {
+                      void handleAdultPreferencesUpdate(
+                        {
+                          age_confirmed: true,
+                          hide_adult_content: false,
+                        },
+                        false
+                      );
+                      return;
+                    }
+                    void handleAdultPreferencesUpdate(
+                      {
+                        age_confirmed: false,
+                        hide_adult_content: true,
+                      },
+                      true
+                    );
+                  }}
                 />
                 <span>
                   Я підтверджую, що мені виповнилося 18 років, і я можу переглядати

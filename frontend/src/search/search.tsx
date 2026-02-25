@@ -8,6 +8,7 @@ import { SortByNavigation } from "../navigation/SortByNavigation";
 import { FilterDropdown } from "../navigation/FilterDropdown";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { Icon } from "../shared/Icon";
+import { Modal } from "../shared/Modal/Modal";
 import {
   catalogApi,
   type BookMetaItem,
@@ -20,6 +21,7 @@ import { useDebouncedValue } from "../shared/hooks/useDebouncedValue";
 import { useAdultContent } from "../settings/useAdultContent";
 import { useAuth } from "../auth/useAuth";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
+import { getMyProfile, updateNotificationSettings } from "../users/profileService";
 import "./search.css";
 
 const SORT_OPTIONS = [
@@ -78,6 +80,7 @@ export default function SearchPage() {
   const [forcedError, setForcedError] = useState<string | null>(null);
   const [forcedData, setForcedData] = useState<UserTranslationBook[] | null>(null);
   const [forcedUpdatedAt, setForcedUpdatedAt] = useState(0);
+  const [adultRestrictionConfirmOpen, setAdultRestrictionConfirmOpen] = useState(false);
   const [checkValues, setCheckValues] = useState({
     noFandoms: false,
     ready100: false,
@@ -87,7 +90,13 @@ export default function SearchPage() {
   });
   const { hideAdultContent, setHideAdultContent } = useAdultContent();
   const { isAuthenticated, userId, authReady } = useAuth();
-  const { showWarning } = useNotification();
+  const { showWarning, showError } = useNotification();
+  const profileQuery = useQuery({
+    queryKey: ["profile"],
+    queryFn: getMyProfile,
+    enabled: authReady && isAuthenticated,
+    staleTime: 60_000,
+  });
 
   const [filters, setFilters] = useState<SearchFilters>({
     genres: [],
@@ -105,6 +114,12 @@ export default function SearchPage() {
   useEffect(() => {
     setSearchQuery(queryFromUrl);
   }, [queryFromUrl]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (profileQuery.data?.hide_adult_content == null) return;
+    setHideAdultContent(Boolean(profileQuery.data.hide_adult_content));
+  }, [isAuthenticated, profileQuery.data?.hide_adult_content, setHideAdultContent]);
 
   const debouncedQ = useDebouncedValue(searchQuery, 500);
   const debouncedFilters = useDebouncedValue(filters, 500);
@@ -267,6 +282,40 @@ export default function SearchPage() {
 
   const toggleExtraCheck = (key: keyof typeof checkValues) => {
     setCheckValues((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleAdultSearchToggle = async (nextHideAdultContent: boolean) => {
+    setHideAdultContent(nextHideAdultContent);
+
+    if (!isAuthenticated) return;
+
+    try {
+      if (!nextHideAdultContent) {
+        await updateNotificationSettings({
+          hide_adult_content: false,
+          age_confirmed: true,
+        });
+        showWarning("Увага! Налаштування Профілю, стосовно контенту 18+, було змінено!");
+      } else {
+        await updateNotificationSettings({
+          hide_adult_content: true,
+          age_confirmed: false,
+        });
+      }
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+    } catch {
+      showError("Не вдалося оновити налаштування 18+.");
+      setHideAdultContent(!nextHideAdultContent);
+    }
+  };
+
+  const confirmEnableAdultRestriction = () => {
+    setAdultRestrictionConfirmOpen(false);
+    void handleAdultSearchToggle(true);
+  };
+
+  const cancelEnableAdultRestriction = () => {
+    setAdultRestrictionConfirmOpen(false);
   };
 
   return (
@@ -543,7 +592,14 @@ export default function SearchPage() {
                   type="button"
                   aria-label="Обмеження за віком 18+"
                   aria-pressed={hideAdultContent}
-                  onClick={() => setHideAdultContent(!hideAdultContent)}
+                  onClick={() => {
+                    const nextHideAdultContent = !hideAdultContent;
+                    if (nextHideAdultContent) {
+                      setAdultRestrictionConfirmOpen(true);
+                      return;
+                    }
+                    void handleAdultSearchToggle(false);
+                  }}
                 >
                   <Icon
                     name={hideAdultContent ? "content_checkbox_checked" : "content_checkbox"}
@@ -769,6 +825,26 @@ export default function SearchPage() {
           )}
         </div>
       </FilterDropdown>
+
+      <Modal
+        open={adultRestrictionConfirmOpen}
+        onClose={cancelEnableAdultRestriction}
+        title="Підтвердження 18+"
+      >
+        <div className="search-modal-content">
+          <p className="search-modal-hint">
+            Ви впевнені, що хочете прибрати контент 18+ з усіх сторінок?
+          </p>
+          <div className="search-modal-actions">
+            <button type="button" className="filters-submit" onClick={cancelEnableAdultRestriction}>
+              Скасувати
+            </button>
+            <button type="button" className="filters-submit" onClick={confirmEnableAdultRestriction}>
+              Підтвердити
+            </button>
+          </div>
+        </div>
+      </Modal>
     </section>
   );
 }

@@ -41,6 +41,9 @@ const SearchPage = lazy(() =>
 const ChatPage = lazy(() =>
   import("./chat/Chat").then((m) => ({ default: m.default }))
 );
+const SettingsBook = lazy(() =>
+  import("./catalog/settings/SettingsBook").then((m) => ({ default: m.default }))
+);
 
 const queryClient = new QueryClient();
 
@@ -178,7 +181,7 @@ export default function App() {
                 path="/books/:slug/settings"
                 element={
                   <Suspense fallback={<div />}>
-                    <CreateBookPage />
+                    <SettingsBook />
                   </Suspense>
                 }
               />

@@ -1,5 +1,5 @@
 const KEY = "hideAdultContent";
-const DEFAULT_HIDE = true;
+const DEFAULT_HIDE = false;
 
 type Listener = () => void;
 const listeners = new Set<Listener>();

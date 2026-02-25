@@ -126,7 +126,7 @@ export function BookHero({
               )}
             </div>
 
-            <BookActions bookId={bookId} />
+            <BookActions bookId={bookId} bookSlug={bookSlug} />
           </div>
 
           {/* MIDDLE: meta + кнопка після опису жанрів/тегів */}

@@ -1,9 +1,10 @@
 import styles from "./Header.module.css";
 import { Container } from "../../shared/Container";
 import { Icon } from "../../shared/Icon";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FrameLink } from "../../shared/FrameLink/FrameLink";
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import logo from "../../assets/logos/logo.png";
 import { UserMenuOverlay } from "./UserMenuOverlay/UserMenuOverlay";
 import { USER_MENU } from "../../shared/menu/menuData";
@@ -12,6 +13,8 @@ import { useAuth } from "../../auth/useAuth";
 import { useChat } from "../../chat/store/useChat";
 import { counterWs } from "../../chat/ws/counterWs";
 import type { ChatMessage } from "../../chat/api/types";
+import { getMyProfile } from "../../users/profileService";
+import { resolveAvatarUrl } from "../../shared/avatar/resolveAvatarUrl";
 
 // Single source of truth (Desktop)
 const NAV_MENU_OLD = [
@@ -41,13 +44,37 @@ const NAV_ROW_2 = [
 export function Header() {
   const { isAuthenticated, username, balance } = useAuth();
   const { state: chatState, actions: chatActions } = useChat();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const queryFromUrl = searchParams.get("q") ?? "";
+  const [headerSearchValue, setHeaderSearchValue] = useState(queryFromUrl);
+
+  useEffect(() => {
+    setHeaderSearchValue(queryFromUrl);
+  }, [queryFromUrl]);
+
+  const profileQuery = useQuery({
+    queryKey: ["profile"],
+    queryFn: getMyProfile,
+    enabled: isAuthenticated,
+    staleTime: 60_000,
+  });
+
+  const avatarUrl = resolveAvatarUrl(
+    profileQuery.data?.has_custom_image === false
+      ? null
+      : (profileQuery.data?.profile_image_small ??
+        profileQuery.data?.profile_image_large ??
+        profileQuery.data?.image ??
+        null)
+  );
 
   const user = {
     name: isAuthenticated ? (username ?? "Користувач") : "Гість",
     coins: isAuthenticated ? (balance ?? "0") : "0",
     notifications: 4,
     messages: chatState.unreadTotal,
-    avatarUrl: "",
+    avatarUrl,
   };
 
   // Состояние меню
@@ -127,7 +154,17 @@ export function Header() {
         <Container className={styles.topInner}>
           {/* ===== Desktop LEFT: Search ===== */}
           <div className={[styles.left, styles.leftDesktop].filter(Boolean).join(" ")}>
-            <form className={styles.search} role="search" aria-label="Пошук по сайту">
+            <form
+              className={styles.search}
+              role="search"
+              aria-label="Пошук по сайту"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const formData = new FormData(event.currentTarget);
+                const q = String(formData.get("q") ?? "").trim();
+                navigate(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
+              }}
+            >
               <label className={styles.searchField}>
                 <span className={styles.searchLabel}>Пошук по сайту</span>
                 <input
@@ -135,7 +172,9 @@ export function Header() {
                   type="search"
                   name="q"
                   autoComplete="off"
-                  placeholder=""
+                  placeholder="Пошук по сайту"
+                  value={headerSearchValue}
+                  onChange={(event) => setHeaderSearchValue(event.target.value)}
                 />
               </label>
 
@@ -152,12 +191,11 @@ export function Header() {
               {/* Всегда рендерим структуру, но скрываем если не авторизован */}
               <div
                 className={styles.avatar}
-                style={{
-                  ...(user.avatarUrl ? { backgroundImage: `url(${user.avatarUrl})` } : {}),
-                  visibility: isAuthenticated ? "visible" : "hidden",
-                }}
+                style={{ visibility: isAuthenticated ? "visible" : "hidden" }}
                 aria-hidden="true"
-              />
+              >
+                <img className={styles.avatarImage} src={user.avatarUrl} alt="" />
+              </div>
 
               <div className={styles.compactMeta} style={{ visibility: isAuthenticated ? "visible" : "hidden" }}>
                 <div className={styles.compactActions} aria-label="Сповіщення та повідомлення">
@@ -229,9 +267,10 @@ export function Header() {
             <div className={styles.user}>
               <div
                 className={styles.avatar}
-                style={user.avatarUrl ? { backgroundImage: `url(${user.avatarUrl})` } : undefined}
                 aria-hidden="true"
-              />
+              >
+                <img className={styles.avatarImage} src={user.avatarUrl} alt="" />
+              </div>
               <div className={styles.userText}>
                 <div className={styles.userName}>{user.name}</div>
                 <div className={styles.userCoins}>
@@ -256,7 +295,12 @@ export function Header() {
 
           {/* ===== Compact RIGHT: search + burger (pill) ===== */}
           <div className={[styles.right, styles.rightCompact].filter(Boolean).join(" ")}>
-            <button className={`${styles.iconBtn} ${styles.searchMini}`} type="button" aria-label="Пошук">
+            <button
+              className={`${styles.iconBtn} ${styles.searchMini}`}
+              type="button"
+              aria-label="Пошук"
+              onClick={() => navigate("/search")}
+            >
               <Icon name="search" className={styles.icon} title="Пошук" />
             </button>
 

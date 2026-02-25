@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../auth/useAuth";
 import { useNotification } from "../../shared/NotificationModal/NotificationProvider";
 import { reviewsApi, type ApiComment } from "../../api/reviewsApi";
+import { resolveAvatarUrl } from "../../shared/avatar/resolveAvatarUrl";
 import { BookComments } from "./BookComments";
 import type { CommentItem } from "./BookComments";
 
@@ -74,20 +75,13 @@ function formatTimeAgo(dateString: string): string {
   return date.toLocaleDateString("uk-UA");
 }
 
-function getAvatarUrl(profileImage?: string | null): string | undefined {
-  if (!profileImage) return undefined;
-  if (profileImage.startsWith("http")) return profileImage;
-  const base = import.meta.env.DEV ? "" : (import.meta.env.VITE_API_BASE_URL ?? "");
-  return `${base}${profileImage}`;
-}
-
 // --- Map API comment to UI ---
 
 function mapApiCommentToItem(c: ApiComment, userId: number | null, isOwner: boolean): CommentItem {
   return {
     id: c.id,
     authorName: c.user?.username ?? "Невідомий користувач",
-    authorAvatarUrl: getAvatarUrl(c.user?.profile_image),
+    authorAvatarUrl: resolveAvatarUrl(c.user?.profile_image),
     timeAgo: formatTimeAgo(c.created_at),
     text: c.text,
     likes: c.likes_count ?? 0,

@@ -4,9 +4,10 @@ import styles from "../styles/BookDetail.module.css";
 
 type BookActionsProps = {
   bookId?: number;
+  bookSlug?: string;
 };
 
-export function BookActions({ bookId }: BookActionsProps) {
+export function BookActions({ bookId, bookSlug }: BookActionsProps) {
   return (
     <div className={styles.coverActions}>
       {bookId != null ? (
@@ -16,6 +17,13 @@ export function BookActions({ bookId }: BookActionsProps) {
           В закладки
         </ActionButton>
       )}
+      <ActionButton
+        variant="primary"
+        to={bookSlug ? `/books/${bookSlug}/settings` : undefined}
+        disabled={!bookSlug}
+      >
+        Налаштування
+      </ActionButton>
     </div>
   );
 }
