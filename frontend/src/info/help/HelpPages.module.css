@@ -1,0 +1,214 @@
+.page {
+  width: 100%;
+  padding-block: clamp(20px, 3vw, 42px);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.content {
+  width: min(980px, 100%);
+  margin-inline: auto;
+}
+
+.title {
+  margin: 0 0 clamp(14px, 2vw, 22px);
+  font-family: "Seminaria", serif;
+  font-size: clamp(30px, 3.2vw, 42px);
+  color: #f58807;
+  letter-spacing: 0.03em;
+}
+
+.lead {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: clamp(14px, 1.2vw, 16px);
+  line-height: 1.55;
+}
+
+.gridTwo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 2vw, 24px);
+}
+
+.gridThree {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 1.8vw, 20px);
+}
+
+.stack {
+  display: grid;
+  gap: clamp(12px, 1.8vw, 18px);
+}
+
+.card {
+  border: 1px solid rgba(5, 180, 199, 0.32);
+  border-radius: 12px;
+  padding: clamp(14px, 2vw, 22px);
+  background:
+    linear-gradient(140deg, rgba(5, 180, 199, 0.08), rgba(5, 180, 199, 0.02) 45%, rgba(245, 136, 7, 0.08)),
+    rgba(8, 16, 22, 0.65);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
+}
+
+.cardSoft {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  padding: clamp(14px, 2vw, 22px);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cardTitle {
+  margin: 0 0 10px;
+  font-size: clamp(19px, 2vw, 24px);
+  color: #05b4c7;
+  font-family: "SofiaSansSemiCondensed", system-ui, sans-serif;
+}
+
+.section {
+  display: grid;
+  gap: clamp(12px, 1.8vw, 18px);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: clamp(24px, 2.5vw, 32px);
+  color: #f58807;
+  font-family: "Seminaria", serif;
+}
+
+.text {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.6;
+}
+
+.list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.list li {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.list li::marker {
+  color: #05b4c7;
+}
+
+.badgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.badge {
+  border: 1px solid rgba(12, 178, 8, 0.45);
+  border-radius: 999px;
+  padding: 6px 12px;
+  color: #7fe271;
+  background: rgba(12, 178, 8, 0.12);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.donationIcon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.amount {
+  margin: 0 0 14px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.buttonPrimary,
+.buttonSecondary {
+  appearance: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.buttonPrimary {
+  background: rgba(245, 136, 7, 0.88);
+  border-color: rgba(245, 136, 7, 0.9);
+}
+
+.buttonPrimary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(245, 136, 7, 0.25);
+}
+
+.buttonSecondary {
+  background: rgba(5, 180, 199, 0.16);
+  border-color: rgba(5, 180, 199, 0.58);
+}
+
+.buttonSecondary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(5, 180, 199, 0.22);
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.label {
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 14px;
+}
+
+.control {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.93);
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.control:focus {
+  outline: none;
+  border-color: rgba(5, 180, 199, 0.82);
+  box-shadow: 0 0 0 2px rgba(5, 180, 199, 0.2);
+}
+
+.quickHelp {
+  margin-top: clamp(16px, 2vw, 22px);
+}
+
+.quickHelpTitle {
+  margin: 0 0 8px;
+  color: #f58807;
+  font-size: clamp(18px, 1.8vw, 22px);
+}
+
+.link {
+  color: #05b4c7;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .gridTwo,
+  .gridThree {
+    grid-template-columns: 1fr;
+  }
+}

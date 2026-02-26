@@ -34,9 +34,9 @@ export function Footer() {
 
           <div className={styles.col}>
             <ul className={styles.list}>
-              <li><Link to="/support/FAQ" className={styles.link}>Довідка</Link></li>
+              <li><Link to="/balance-help" className={styles.link}>Довідка</Link></li>
               <li><Link to="/translator-agreement" className={styles.link}>Довідки від автора та перекладача</Link></li>
-              <li><Link to="/support/thanks" className={styles.link}>Сказати дякую!</Link></li>
+              <li><Link to="/say-thanks" className={styles.link}>Сказати дякую!</Link></li>
               <li><Link to="/contacts" className={styles.link}>Контакти</Link></li>
               <li><Link to="/payment" className={styles.link}>Не поповнився баланс?</Link></li>
               <li><Link to="/support" className={styles.link}>Написати у підтримку</Link></li>

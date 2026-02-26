@@ -44,6 +44,17 @@ const ChatPage = lazy(() =>
 const SettingsBook = lazy(() =>
   import("./catalog/settings/SettingsBook").then((m) => ({ default: m.default }))
 );
+const ContactsPage = lazy(() => import("./info/help/contacts"));
+const PaymentPage = lazy(() => import("./info/help/payment"));
+const SayThanksPage = lazy(() => import("./info/help/say-thanks"));
+const SupportPage = lazy(() => import("./info/help/support"));
+const BalanceHelpPage = lazy(() => import("./info/help/faq/balance-help"));
+const AuthorAgreementPage = lazy(() => import("./info/legal/author-agreement"));
+const ContentRulesPage = lazy(() => import("./info/legal/content-rules"));
+const ForCopyrightHoldersPage = lazy(() => import("./info/legal/for-copyright-holders"));
+const PrivacyPolicyPage = lazy(() => import("./info/legal/privacy-policy"));
+const TranslatorAgreementPage = lazy(() => import("./info/legal/translator-agreement"));
+const UserAgreementPage = lazy(() => import("./info/legal/user-agreement"));
 
 const queryClient = new QueryClient();
 
@@ -174,6 +185,94 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <ChatPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/contacts"
+                element={
+                  <Suspense fallback={<div />}>
+                    <ContactsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/payment"
+                element={
+                  <Suspense fallback={<div />}>
+                    <PaymentPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/say-thanks"
+                element={
+                  <Suspense fallback={<div />}>
+                    <SayThanksPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/support"
+                element={
+                  <Suspense fallback={<div />}>
+                    <SupportPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/balance-help"
+                element={
+                  <Suspense fallback={<div />}>
+                    <BalanceHelpPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/author-agreement"
+                element={
+                  <Suspense fallback={<div />}>
+                    <AuthorAgreementPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/content-rules"
+                element={
+                  <Suspense fallback={<div />}>
+                    <ContentRulesPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/for-copyright-holders"
+                element={
+                  <Suspense fallback={<div />}>
+                    <ForCopyrightHoldersPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/privacy-policy"
+                element={
+                  <Suspense fallback={<div />}>
+                    <PrivacyPolicyPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/translator-agreement"
+                element={
+                  <Suspense fallback={<div />}>
+                    <TranslatorAgreementPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/user-agreement"
+                element={
+                  <Suspense fallback={<div />}>
+                    <UserAgreementPage />
                   </Suspense>
                 }
               />
