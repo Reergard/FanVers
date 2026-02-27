@@ -321,8 +321,8 @@ class BookCreateSerializer(serializers.ModelSerializer):
             
         if book_type == 'TRANSLATION' and not data.get('translation_status'):
             errors['translation_status'] = "Оберіть статус перекладу"
-        elif book_type == 'TRANSLATION' and data.get('translation_status'):
-            # Запрещаем создание книг с недопустимыми статусами
+        elif book_type == 'TRANSLATION' and data.get('translation_status') and self.instance is None:
+            # Забороняємо створення книг із забороненими статусами (лише при створенні, не при оновленні)
             invalid_statuses = ['Перерва', 'Закінчено', 'Зупинено', 'ABANDONED', 'COMPLETED', 'STOPPED']
             current_status = data.get('translation_status')
             if current_status in invalid_statuses:
@@ -354,15 +354,33 @@ class BookCreateSerializer(serializers.ModelSerializer):
         genres = validated_data.pop('genres', [])
         tags = validated_data.pop('tags', [])
         fandoms = validated_data.pop('fandoms', [])
-        
+
         book = Book.objects.create(**validated_data)
-        
+
         if genres:
             book.genres.set(genres)
         if tags:
             book.tags.set(tags)
         if fandoms:
             book.fandoms.set(fandoms)
-            
+
         return book
+
+    def update(self, instance, validated_data):
+        genres = validated_data.pop('genres', None)
+        tags = validated_data.pop('tags', None)
+        fandoms = validated_data.pop('fandoms', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if genres is not None:
+            instance.genres.set(genres)
+        if tags is not None:
+            instance.tags.set(tags)
+        if fandoms is not None:
+            instance.fandoms.set(fandoms)
+
+        return instance
 

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { catalogApi, type Book, type Chapter, type Volume } from "../api/catalogApi";
@@ -17,6 +17,10 @@ export default function BookDetailRouter() {
   const navigate = useNavigate();
   const { showSuccessAutoClose } = useNotification();
   const { isAuthenticated, userId, authReady } = useAuth();
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
 
   useEffect(() => {
     if (location.state?.chapterCreated === true) {

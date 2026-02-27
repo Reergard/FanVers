@@ -40,8 +40,10 @@ export interface Book {
   adult_content?: boolean;
   /** Статус перекладу, напр. "Перекладається" (API: translation_status_display) */
   translation_status_display?: string | null;
+  translation_status?: string | null;
   /** Статус випуску, напр. "Виходить" (API: original_status_display) */
   original_status_display?: string | null;
+  original_status?: string | null;
   /** Країна (API: country) */
   country?: BookCountry | null;
   /** Жанри (API: genres) */
@@ -52,6 +54,7 @@ export interface Book {
   fandoms?: BookMetaItem[];
   /** Тип: AUTHOR | TRANSLATION (API: book_type) */
   book_type?: string | null;
+  title_en?: string | null;
   /** Ім'я власника (API: owner_username) */
   owner_username?: string | null;
   /** Ім'я творця/перекладача (API: creator_username) */
@@ -173,17 +176,31 @@ function normalizeCountry(raw: unknown): BookCountry | null {
   return { id, name };
 }
 
+/** Завжди повертає number — для owner/ownerId з API (може бути number або {id: number}). */
+function toOwnerId(raw: unknown): number {
+  if (raw == null) return 0;
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+  if (typeof raw === "object" && raw !== null && "id" in raw) {
+    const id = (raw as { id?: unknown }).id;
+    return typeof id === "number" && Number.isFinite(id) ? id : 0;
+  }
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : 0;
+}
+
 function normalizeBook(raw: Record<string, unknown>): Book {
   const genresRaw = Array.isArray(raw.genres) ? raw.genres : [];
   const tagsRaw = Array.isArray(raw.tags) ? raw.tags : [];
   const fandomsRaw = Array.isArray(raw.fandoms) ? raw.fandoms : [];
 
+  const ownerId = toOwnerId(raw.ownerId ?? raw.owner ?? raw.owner_id);
+
   return {
     id: Number(raw.id),
     slug: String(raw.slug ?? ""),
     title: String(raw.title ?? ""),
-    owner: Number((raw.ownerId ?? raw.owner) ?? 0),
-    ownerId: Number((raw.ownerId ?? raw.owner) ?? 0),
+    owner: ownerId,
+    ownerId,
     isPublic: raw.view_permission !== undefined ? raw.view_permission === "PUBLIC" : undefined,
     chapters_count: raw.chapters_count != null ? Number(raw.chapters_count) : undefined,
     description:
@@ -201,15 +218,24 @@ function normalizeBook(raw: Record<string, unknown>): Book {
       raw.translation_status_display != null && raw.translation_status_display !== ""
         ? String(raw.translation_status_display)
         : null,
+    translation_status:
+      raw.translation_status != null && raw.translation_status !== ""
+        ? String(raw.translation_status)
+        : null,
     original_status_display:
       raw.original_status_display != null && raw.original_status_display !== ""
         ? String(raw.original_status_display)
+        : null,
+    original_status:
+      raw.original_status != null && raw.original_status !== ""
+        ? String(raw.original_status)
         : null,
     country: normalizeCountry(raw.country),
     genres: genresRaw.map(normalizeMetaItem).filter((g): g is BookMetaItem => g != null),
     tags: tagsRaw.map(normalizeMetaItem).filter((t): t is BookMetaItem => t != null),
     fandoms: fandomsRaw.map(normalizeMetaItem).filter((f): f is BookMetaItem => f != null),
     book_type: raw.book_type != null && raw.book_type !== "" ? String(raw.book_type) : null,
+    title_en: raw.title_en != null && raw.title_en !== "" ? String(raw.title_en) : null,
     owner_username:
       raw.owner_username != null && raw.owner_username !== ""
         ? String(raw.owner_username)
@@ -544,6 +570,22 @@ export interface CreateBookPayload {
   image?: File | null;
 }
 
+export interface UpdateBookPayload {
+  title: string;
+  title_en?: string;
+  author: string;
+  description?: string;
+  book_type: "AUTHOR" | "TRANSLATION";
+  translation_status?: string | null;
+  original_status: string;
+  country: number;
+  genres: number[];
+  tags: number[];
+  fandoms: number[];
+  adult_content: boolean;
+  image?: File | null;
+}
+
 /** Відповідь створення книги (повна книга з бекенду). */
 export interface CreateBookResponse {
   id: number;
@@ -582,6 +624,38 @@ export async function createBook(payload: CreateBookPayload): Promise<CreateBook
   return data;
 }
 
+export async function updateBook(slug: string, payload: UpdateBookPayload): Promise<Book> {
+  const form = new FormData();
+  form.append("title", payload.title.trim());
+  if (payload.title_en != null && payload.title_en.trim() !== "") {
+    form.append("title_en", payload.title_en.trim());
+  }
+  form.append("author", payload.author.trim());
+  if (payload.description != null && payload.description.trim() !== "") {
+    form.append("description", payload.description.trim());
+  }
+  form.append("book_type", payload.book_type);
+  form.append("original_status", payload.original_status);
+  form.append("country", String(payload.country));
+  payload.genres.forEach((id) => form.append("genres", String(id)));
+  payload.tags.forEach((id) => form.append("tags", String(id)));
+  payload.fandoms.forEach((id) => form.append("fandoms", String(id)));
+  form.append("adult_content", payload.adult_content ? "true" : "false");
+  if (payload.book_type === "TRANSLATION" && payload.translation_status != null) {
+    form.append("translation_status", payload.translation_status);
+  }
+  if (payload.image) {
+    form.append("image", payload.image);
+  }
+
+  const { data } = await http.put<Record<string, unknown>>(
+    `${CATALOG}/books/${encodeURIComponent(slug)}/update/`,
+    form
+  );
+
+  return normalizeBook(data);
+}
+
 export const catalogApi = {
   getBook,
   getChapters,
@@ -600,6 +674,7 @@ export const catalogApi = {
   getCountries,
   getFandoms,
   createBook,
+  updateBook,
 };
 
 export { STALE_REF };

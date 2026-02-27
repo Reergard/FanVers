@@ -1,5 +1,6 @@
 import { useEffect, useState, Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ScrollToTop } from "./shared/ScrollToTop";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Base } from "./app/Base";
 import HomePage from "./main/HomePage";
@@ -62,6 +63,9 @@ export default function App() {
   const [bootstrapDone, setBootstrapDone] = useState(false);
 
   useEffect(() => {
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
+    }
     bootstrapAuth()
       .finally(() => setBootstrapDone(true));
     const detach = attachAuthAutoRefresh();
@@ -81,6 +85,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <NotificationProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <Base>
             <Routes>
               <Route path="/" element={<HomePage />} />

@@ -489,6 +489,62 @@ def create_book(request):
         )
 
 
+@api_view(['PUT'])
+@parser_classes([MultiPartParser, FormParser])
+@permission_classes([IsAuthenticated])
+def update_book(request, slug):
+    try:
+        book = get_object_or_404(Book, slug=slug)
+        if book.owner != request.user:
+            return Response(
+                {'error': 'У вас немає прав для редагування цієї книги'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        data = request.data.copy() if hasattr(request.data, 'copy') else request.data
+
+        if hasattr(request.data, 'getlist'):
+            processed_data = {}
+            for key in request.data.keys():
+                if key in ['genres', 'tags', 'fandoms']:
+                    values = request.data.getlist(key)
+                    try:
+                        processed_data[key] = [int(v) if isinstance(v, str) and v.isdigit() else v for v in values]
+                    except (ValueError, TypeError):
+                        processed_data[key] = values
+                else:
+                    processed_data[key] = request.data.get(key)
+            data = processed_data
+
+        serializer = BookCreateSerializer(instance=book, data=data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            response_serializer = BookOwnerSerializer(book, context={'request': request})
+            return Response(response_serializer.data, status=status.HTTP_200_OK)
+        else:
+            error_details = {}
+            for field, errors in serializer.errors.items():
+                if isinstance(errors, list):
+                    error_details[field] = errors[0] if errors else 'Помилка валідації'
+                else:
+                    error_details[field] = str(errors)
+            return Response(
+                {
+                    'error': 'Помилка даних',
+                    'details': error_details,
+                    'message': 'Перевірте правильність заповнення всіх полів'
+                },
+                status=HTTP_400_BAD_REQUEST
+            )
+    except Exception as e:
+        logger.error(f"update_book: Ошибка обновления книги: {str(e)}", exc_info=True)
+        return Response(
+            {'error': f'Внутрішня помилка сервера: {str(e)}'},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def owned_books(request):
