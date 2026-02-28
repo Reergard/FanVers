@@ -12,7 +12,7 @@ import { bookmarkKeys } from "./keys";
 import type { Bookmark as BookmarkType, BookmarkBook } from "./types";
 import styles from "./BookmarksPage.module.css";
 import badge18 from "../assets/backgrounds/18+.svg";
-import coverPlaceholder from "../assets/1SR-gLCHT4s.jpg";
+import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 
 const FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "all", label: "Усі" },
@@ -36,19 +36,11 @@ function toTimestamp(value: string | null | undefined): number {
   return Number.isNaN(ts) ? 0 : ts;
 }
 
-function getImageUrl(book: BookmarkBook): string {
-  const img = book.image;
-  if (!img) return "";
-  if (img.startsWith("http")) return img;
-  const base = import.meta.env.VITE_API_BASE_URL ?? "";
-  return base ? `${base.replace(/\/$/, "")}${img}` : img;
-}
-
 function BookmarkCard({ bookmark }: { bookmark: BookmarkType }) {
   const navigate = useNavigate();
   const book = bookmark.book;
   const slug = book.slug;
-  const imageUrl = getImageUrl(book) || "";
+  const imageUrl = resolveBookCoverUrl(book.image);
 
   const handleRead = () => {
     if (slug) navigate(`/books/${slug}`);
@@ -57,7 +49,7 @@ function BookmarkCard({ bookmark }: { bookmark: BookmarkType }) {
   const card = (
     <BookAdCard
       variant="bookmark"
-      coverSrc={imageUrl || coverPlaceholder}
+      coverSrc={imageUrl}
       title={book.title || "Без назви"}
       isAdult={book.adult_content === true}
       adultBadgeSrc={badge18}

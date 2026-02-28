@@ -69,8 +69,25 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "RobotoCondensedLightItalic";
+  src: url("./assets/fonts/roboto-condensed-light-italic.woff2") format("woff2");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
 
 *{ box-sizing: border-box; }
+
+/* Мобільні: font-size >= 16px у полях вводу щоб iOS не зумував при фокусі */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
 
 html {
   overflow-x: hidden; /* предотвращаем горизонтальный скролл */
@@ -81,7 +98,7 @@ body {
   color: var(--text);
   background: #020a0b; /* простой fallback */
   overflow-x: hidden; /* предотвращаем автозум на мобильных */
-  font-family: "Inter", sans-serif;
+  font-family: "RobotoCondensedLightItalic", "Inter", sans-serif;
 }
 
 /* Скрываем нативную полосу прокрутки, но оставляем нативный скролл */
@@ -141,6 +158,29 @@ a{ color:inherit; }
 
 button{ font: inherit; }
 img{ max-width:100%; display:block; }
+
+/* Модалки входу/реєстрації — заголовок */
+.auth-modal h2 {
+  font-family: "Seminaria", cursive, sans-serif;
+}
+
+/* Десктоп (ноутбуки, ПК) — зменшення масштабу та відступів у модалці авторизації */
+@media (min-width: 768px) {
+  .auth-modal {
+    max-width: min(85vw, 400px) !important;
+    width: 100%;
+    padding: 16px 24px !important;
+  }
+  .auth-modal > div:first-child {
+    margin-bottom: 12px !important;
+  }
+  .auth-modal h2 {
+    font-size: 22px !important;
+  }
+  .auth-modal > div:last-child {
+    gap: 10px !important;
+  }
+}
 
 /* Улучшение читабельности на 4K без изменения макета */
 @media (min-width: 2560px) and (min-height: 1400px) {

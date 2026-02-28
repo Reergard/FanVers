@@ -1,8 +1,10 @@
-/* Overlay (backdrop) */
+/* Overlay (backdrop) — напівпрозорий сірий фон (#FFFFFF з 50% прозорістю) */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 2000;
   pointer-events: auto;
   animation: fadeIn 0.2s ease;
@@ -17,26 +19,26 @@
   }
 }
 
-/* Модальное окно */
+/* Модальне вікно — темний фон з 80% непрозорістю (20% прозорості) */
 .modal {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #050d11;
+  background: rgba(39, 48, 58, 0.8);
   z-index: 2001;
   overflow-y: auto;
   overflow-x: hidden;
   max-height: 90vh;
   max-width: min(90vw, 500px);
   width: 100%;
-  /* РАМКА */
+  /* Рамка */
   border: 1px solid rgba(5, 180, 199, 0.55);
-  /* мягкое свечение рамки */
+  /* м'яке свічення рамки */
   box-shadow:
     inset 0 0 0 1px rgba(5, 180, 199, 0.35),
     0 0 24px rgba(5, 180, 199, 0.25);
-  border-radius: clamp(12px, calc(2 * var(--vwu)), 16px);
+  border-radius: clamp(20px, calc(3 * var(--vwu)), 28px);
   padding: clamp(24px, calc(4 * var(--vwu)), 32px);
   animation: slideIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -77,9 +79,9 @@
   width: 32px;
   height: 32px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.4);
+  border: none;
+  border-radius: 0;
+  background: none;
   color: rgba(255, 255, 255, 0.92);
   font-size: 24px;
   line-height: 1;
@@ -87,12 +89,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: color 0.15s ease;
 }
 
 .closeBtn:hover {
-  border-color: rgba(5, 180, 199, 0.7);
-  background: rgba(5, 180, 199, 0.15);
+  color: rgba(5, 180, 199, 0.9);
 }
 
 .content {

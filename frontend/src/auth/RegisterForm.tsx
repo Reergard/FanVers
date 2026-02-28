@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
+import magicBallSvg from "../assets/icons/magic_ball.svg";
+import { AuthModalContent } from "./AuthModalContent";
+import { SocialLoginButton } from "./SocialLoginButton";
 import { registerSession } from "./service";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { extractUserMessage, logDeveloperError } from "../shared/utils/errorUtils";
@@ -41,6 +44,7 @@ export function RegisterForm({ onSuccess }: Props) {
   };
 
   return (
+    <AuthModalContent>
     <form onSubmit={handleSubmit} className={styles.form}>
       <div className={styles.field}>
         <label htmlFor="register-username" className={styles.label}>
@@ -116,6 +120,19 @@ export function RegisterForm({ onSuccess }: Props) {
           {loading ? "Реєстрація..." : "Зареєструватися"}
         </ActionButton>
       </div>
+
+      <div className={styles.orDivider}>
+        <span className={styles.orText}>або</span>
+      </div>
+
+      <div className={styles.socialButtons}>
+        <SocialLoginButton provider="facebook" label="Facebook" />
+        <div className={styles.magicSphere} aria-hidden>
+          <img src={magicBallSvg} alt="" width={40} height={50} />
+        </div>
+        <SocialLoginButton provider="google" label="Google" />
+      </div>
     </form>
+    </AuthModalContent>
   );
 }

@@ -229,6 +229,7 @@ export function UserMenuOverlay({
         open={loginModalOpen}
         onClose={() => setLoginModalOpen(false)}
         title="Вхід"
+        className="auth-modal"
       >
         <LoginForm onSuccess={handleLoginSuccess} />
       </Modal>
@@ -237,6 +238,7 @@ export function UserMenuOverlay({
         open={registerModalOpen}
         onClose={() => setRegisterModalOpen(false)}
         title="Реєстрація"
+        className="auth-modal"
       >
         <RegisterForm onSuccess={handleRegisterSuccess} />
       </Modal>

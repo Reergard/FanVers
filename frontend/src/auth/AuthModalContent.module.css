@@ -1,0 +1,117 @@
+.wrapper {
+  position: relative;
+  isolation: isolate;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Декоративні зірки — помаранчеві, розкидані по краях */
+.star1,
+.star2,
+.star3,
+.star4,
+.star5,
+.star7,
+.star9 {
+  position: absolute;
+  color: #ffa500;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Верхній лівий — зліва від "Логін:" */
+.star1 {
+  top: -5%;
+  left: 25%;
+  width: 16px;
+  height: 16px;
+}
+
+/* Готово. Верхній правий — справа від заголовку "Вхід" */
+.star2 {
+  top: 19%;
+  right: -5%;
+  width: 24px;
+  height: 24px;
+}
+
+/* Готово. Біля кнопки закриття */
+.star3 {
+  top: -11%;
+  right: 9%;
+  width: 14px;
+  height: 14px;
+}
+
+/* Готово. Середній лівий — зліва від "Пароль:" */
+.star4 {
+  top: 55%;
+  left: 2%;
+  width: 22px;
+  height: 22px;
+}
+
+/* Готово, заменить на среднюю. Справа від чекбокса "Запам'ятати мене" */
+.star5 {
+  top: 42%;
+  right: 29%;
+  width: 16px;
+  height: 16px;
+}
+
+/* Нижній правий — справа від "або" */
+.star7 {
+  top: 68%;
+  right: 4%;
+  width: 16px;
+  height: 16px;
+}
+
+/* Справа від волшебного шару (над кнопками) */
+.star9 {
+  top: 78%;
+  right: 38%;
+  width: 16px;
+  height: 16px;
+}
+
+.star1 svg,
+.star2 svg,
+.star3 svg,
+.star4 svg,
+.star5 svg,
+.star7 svg,
+.star9 svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Десктоп — зменшення зірок */
+@media (min-width: 768px) {
+  .star1 {
+    width: 14px;
+    height: 14px;
+  }
+  .star2 {
+    width: 20px;
+    height: 20px;
+  }
+  .star3 {
+    width: 12px;
+    height: 12px;
+  }
+  .star4 {
+    width: 18px;
+    height: 18px;
+  }
+  .star5,
+  .star7,
+  .star9 {
+    width: 14px;
+    height: 14px;
+  }
+}

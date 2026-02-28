@@ -52,6 +52,9 @@ export const API = {
   // Search
   bookSearch: "/api/search/book-search/",
 
+  // Website advertising (книги для реклами на головній)
+  mainPageAds: "/api/website_advertising/advertisements/main_page_ads/",
+
   // Chat
   chat: {
     list: "/api/chat/",

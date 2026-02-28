@@ -2,16 +2,8 @@ import { Link } from "react-router-dom";
 import type { UserTranslationBook } from "../api/catalogApi";
 import badge18 from "../assets/backgrounds/18+.svg";
 import newBadge from "../assets/icons/NEW.svg";
-import coverPlaceholder from "../assets/1SR-gLCHT4s.jpg";
+import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 import "./BookCard.css";
-
-function getImageUrl(book: UserTranslationBook): string {
-  const img = book.image;
-  if (!img) return "";
-  if (img.startsWith("http")) return img;
-  const base = import.meta.env.VITE_API_BASE_URL ?? "";
-  return base ? `${base.replace(/\/$/, "")}${img}` : img;
-}
 
 function formatStat(value: number | string | undefined): string {
   if (value === undefined || value === null) return "—";
@@ -39,7 +31,7 @@ type Props = {
 
 export function BookCard({ book }: Props) {
   const slug = book.slug;
-  const imageUrl = getImageUrl(book) || coverPlaceholder;
+  const imageUrl = resolveBookCoverUrl(book.image);
 
   const cardContent = (
     <article className="book-card">

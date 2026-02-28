@@ -11,9 +11,10 @@
 }
 
 .label {
-  font-size: clamp(12px, calc(1.3 * var(--vwu)), 14px);
+  font-size: clamp(16px, calc(1.7 * var(--vwu)), 19px);
   color: rgba(255, 255, 255, 0.8);
-  font-family: "SofiaSansSemiCondensed", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: "BadScript", cursive, sans-serif;
+  padding-left: 19px;
 }
 
 .input {
@@ -21,7 +22,7 @@
   border: 1px solid rgba(5, 180, 199, 0.3);
   background: rgba(0, 0, 0, 0.2);
   color: rgba(255, 255, 255, 0.92);
-  border-radius: clamp(6px, calc(0.8 * var(--vwu)), 8px);
+  border-radius: 999px;
   font-size: clamp(14px, calc(1.4 * var(--vwu)), 16px);
   font-family: "SofiaSansSemiCondensed", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   transition: border-color 0.2s ease, background 0.2s ease;
@@ -45,6 +46,141 @@
 }
 
 .submitButton {
-  width: 100%;
+  width: 30%;
   justify-content: center;
+  font-size: clamp(15px, calc(1.2 * var(--vwu)), 19px);
+  font-family: "Seminaria", cursive, sans-serif !important;
+}
+
+
+.rememberRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: -4px;
+}
+
+.checkboxBtn {
+  width: 18px;
+  height: 19px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #f58807;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkboxBtn svg {
+  width: 18px;
+  height: 19px;
+}
+
+.rememberLabel {
+  font-size: clamp(16px, calc(1.6 * var(--vwu)), 19px);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  font-family: "BadScript", cursive, sans-serif;
+  user-select: none;
+}
+
+/* Роздільник "або" */
+.orDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: clamp(20px, calc(3 * var(--vwu)), 28px) 0 clamp(12px, calc(1.5 * var(--vwu)), 16px);
+}
+
+.orDivider::before,
+.orDivider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.orText {
+  font-size: clamp(17px, calc(1.7 * var(--vwu)), 20px);
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+  font-family: "BadScript", cursive, sans-serif;
+}
+
+/* Волшебний шар між "або" та кнопками соцмереж (над ними) */
+.magicSphere {
+  display: flex;
+  justify-content: center;
+  margin-bottom: clamp(12px, calc(1.5 * var(--vwu)), 16px);
+}
+
+.magicSphere img {
+  width: 48px;
+  height: 60px;
+  object-fit: contain;
+}
+
+/* Кнопки соцмереж — в ряд */
+.socialButtons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, calc(1 * var(--vwu)), 12px);
+  flex-wrap: wrap;
+}
+
+/* Десктоп — зменшення масштабу (мобільна версія не змінюється) */
+@media (min-width: 768px) {
+  .form {
+    gap: 12px;
+  }
+  .field {
+    gap: 5px;
+  }
+  .label {
+    font-size: 14px;
+    padding-left: 12px;
+  }
+  .input {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+  .actions {
+    margin-top: 6px;
+  }
+  .submitButton {
+    font-size: 16px;
+  }
+  .rememberRow {
+    gap: 8px;
+    margin-top: -2px;
+  }
+  .checkboxBtn,
+  .checkboxBtn svg {
+    width: 16px;
+    height: 17px;
+  }
+  .rememberLabel {
+    font-size: 14px;
+  }
+  .orDivider {
+    margin: 14px 0 10px;
+    gap: 10px;
+  }
+  .orText {
+    font-size: 15px;
+  }
+  .magicSphere {
+    margin-bottom: 10px;
+  }
+  .magicSphere img {
+    width: 40px;
+    height: 50px;
+  }
+  .socialButtons {
+    gap: 8px;
+  }
 }
