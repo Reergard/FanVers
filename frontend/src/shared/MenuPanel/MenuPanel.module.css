@@ -28,6 +28,90 @@
   z-index: 1;
 }
 
+/* ПК/ноутбук — зменшена орбіта і компактні елементи, все вміщується без скролу */
+@media (min-width: 1025px) {
+  .avatarOrbit {
+    transform: scale(0.70) translateX(-70px);
+    transform-origin: center top;
+    margin-bottom: -110px;
+  }
+
+  .menuPanel {
+    padding-bottom: 16px;
+    gap: 0;
+  }
+
+  .nameSection {
+    margin-top: -58px;
+    transform: scale(1.5);
+    transform-origin: right top;
+  }
+
+  .userName {
+    font-size: 14px !important;
+  }
+
+  .ctaSection {
+    margin-top: 2px;
+    transform: scale(1);
+    transform-origin: center top;
+  }
+
+  .ctaButton {
+    font-size: 20px !important;
+    padding: 10px 24px !important;
+  }
+
+  .ctaContent {
+    gap: 8px;
+  }
+
+  .ctaIcon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .menuSection {
+    margin-top: 4px;
+  }
+}
+
+/* 1440px+ — авторизоване меню: більші шрифти, нік вище, більше відступу до Створити книгу */
+@media (min-width: 1440px) {
+  
+  .menuPanel .avatarOrbit {
+    margin-bottom: -219px;
+  }
+
+  .menuPanel .nameSection {
+    margin-top: -75px;
+    margin-bottom: 36px;
+  }
+
+  .menuPanel .userName {
+    font-size: 22px !important;
+  }
+
+  .menuPanel .ctaSection {
+    margin-top: 26px !important;
+  }
+
+  .menuPanel .ctaButton {
+    font-size: 26px !important;
+    padding: 12px 30px !important;
+  }
+
+  /* Як на ПК: margin-top замість auto — тягне Повідомлення…Вихід вгору */
+  .menuPanel .menuSection {
+    margin-top: 50px !important;
+  }
+
+  .ctaIcon {
+    width: 26px !important;
+    height: 26px !important;
+  }
+}
+
 /* Нік — верхній шар, піднімається над нижньою частиною орбіти */
 .nameSection {
   display: flex;
@@ -123,10 +207,4 @@
   margin-top: auto;
 }
 
-/* Xiaomi 12 Lite (1080px) та більші — менший відступ від низу, меню вище */
-@media (min-width: 1080px) {
-  .menuPanel {
-    padding-bottom: 155dvh;
-  }
-}
 

@@ -16703,3 +16703,11 @@ INFO 2026-02-28 13:48:44,207 strategy 22652 24228 Task apps.notification.tasks.s
 INFO 2026-02-28 13:48:44,207 strategy 5072 46784 Task apps.notification.tasks.send_abandoned_notification[acf19f55-8850-4cce-9a87-d81422b66f25] received
 INFO 2026-02-28 13:48:44,243 trace 5072 46784 Task apps.notification.tasks.send_abandoned_notification[acf19f55-8850-4cce-9a87-d81422b66f25] succeeded in 0.031000000424683094s: None
 INFO 2026-02-28 13:48:44,352 trace 22652 24228 Task apps.notification.tasks.send_abandoned_notification[6790223e-7456-424d-8d04-1bfd5848d738] succeeded in 0.14100000075995922s: None
+INFO 2026-02-28 23:15:54,445 connection 10416 39152 Connected to redis://127.0.0.1:6379/2
+INFO 2026-02-28 23:15:54,448 mingle 10416 39152 mingle: searching for neighbors
+INFO 2026-02-28 23:15:55,456 mingle 10416 39152 mingle: all alone
+INFO 2026-02-28 23:15:55,463 worker 10416 39152 celery@DESKTOP-7JOK2DH ready.
+INFO 2026-02-28 23:15:58,878 connection 36128 6660 Connected to redis://127.0.0.1:6379/2
+INFO 2026-02-28 23:15:58,882 mingle 36128 6660 mingle: searching for neighbors
+INFO 2026-02-28 23:15:59,897 mingle 36128 6660 mingle: all alone
+INFO 2026-02-28 23:15:59,906 worker 36128 6660 celery@DESKTOP-7JOK2DH ready.

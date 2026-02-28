@@ -66,10 +66,46 @@
   font-style: italic;
 }
 
-/* Xiaomi 12 Lite (1080px) та більші екрани — підняти меню вище, збільшити інтервал */
-@media (min-width: 1080px) {
+/* ПК — збільшені текст та іконки для зручності */
+@media (min-width: 1025px) {
   .menuList {
-    gap: clamp(7px, calc(0.9 * var(--vwu)), 11px);
+    gap: 6px;
+  }
+
+  .menuLink {
+    padding: 6px 14px;
+    gap: 12px;
+  }
+
+  .menuIcon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .menuLabel {
+    font-size: 18px;
   }
 }
+
+/* 1440px+ — авторизоване меню: більші шрифти та іконки */
+@media (min-width: 1440px) {
+  .menuList {
+    gap: 10px;
+  }
+
+  .menuLink {
+    padding: 10px 22px;
+    gap: 16px;
+  }
+
+  .menuIcon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .menuLabel {
+    font-size: 24px;
+  }
+}
+
 

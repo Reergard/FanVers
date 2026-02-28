@@ -171,7 +171,7 @@ export function UserMenuOverlay({
         <div
           ref={panelRef}
           id={menuId}
-          className={`${styles.panel} ${isDrawer ? styles.panelDrawer : styles.panelPopover}`}
+          className={`${styles.panel} ${isDrawer ? styles.panelDrawer : styles.panelPopover} ${!isDrawer && isAuthenticated ? styles.panelAuthenticated : ""}`}
           role={isDrawer ? "dialog" : "menu"}
           aria-modal={isDrawer ? "true" : undefined}
           aria-label="Меню користувача"
