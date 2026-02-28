@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import styles from "./MenuPanel.module.css";
 import { AvatarOrbit } from "../AvatarOrbit/AvatarOrbit";
 import { MenuList } from "../MenuList/MenuList";
-import { StarSvg } from "../StarSvg/StarSvg";
 import { MenuFrameSvg } from "../MenuFrameSvg/MenuFrameSvg";
 import type { MenuItem } from "../menu/menuData";
 
@@ -16,11 +15,10 @@ type Props = {
 export function MenuPanel({ name, avatarUrl, items, onSelect }: Props) {
   return (
     <div className={styles.menuPanel}>
-      {/* Аватар с орбитой */}
-      <div className={styles.avatarSection}>
-        <AvatarOrbit avatarUrl={avatarUrl} name={name} />
+      {/* Аватар с орбитой — 1:1 як у гостевому меню */}
+      <div className={styles.avatarOrbit}>
+        <AvatarOrbit avatarUrl={avatarUrl} name={name} variant="fullWidth" />
       </div>
-      <StarSvg className={styles.orbitStar} />
 
       {/* Имя пользователя */}
       <div className={styles.nameSection}>

@@ -1,44 +1,54 @@
 .menuPanel {
+  --panel-padding-inline: clamp(18px, calc(2.5 * var(--vwu)), 26px);
   display: flex;
   flex-direction: column;
-  gap: clamp(16px, calc(3 * var(--vwu)), 24px);
-  padding: 0;
+  gap: clamp(4px, calc(0.8 * var(--vwu)), 8px);
+  padding: var(--panel-padding-inline);
+  padding-top: 0;
+  padding-bottom: 3dvh;
+  margin-top: 0;
   background: #050d11;
   min-height: 100%;
+  height: 100%;
   font-family: "BadScript", sans-serif;
+  overflow: visible;
+  position: relative;
 }
 
-.avatarSection {
+/* Орбіта впритул до лівого й правого краю панелі (однаково на iOS/Android) */
+.avatarOrbit {
+  width: calc(100% + 2 * var(--panel-padding-inline));
+  margin-left: calc(-1 * var(--panel-padding-inline));
+  margin-top: 0;
+  margin-bottom: 0;
   display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  width: 100%;
-  margin-top: -10px;
-  margin-left: -22px;
-  margin-bottom: clamp(-20px, calc(-3 * var(--vwu)), -10px);
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
-.orbitStar {
-  width: clamp(36px, calc(6 * var(--vwu)), 52px);
-  height: auto;
-  flex-shrink: 0;
-  margin: clamp(2px, calc(0.5 * var(--vwu)), 6px) 0;
-  align-self: center;
-}
-
+/* Нік — верхній шар, піднімається над нижньою частиною орбіти */
 .nameSection {
   display: flex;
-  justify-content: flex-end;   /* прижимаем вправо */
-  padding-right: clamp(19px, calc(1.2 * var(--vwu)), 18px);         /* отступ от правого края */
-  margin-top: clamp(19px, calc(-1.5 * var(--vwu)), -10px);
+  justify-content: flex-end;
+  width: 100%;
+  padding-right: clamp(8px, calc(1 * var(--vwu)), 12px);
+  padding-left: 0;
+  margin-top: clamp(-70px, calc(-6 * var(--vwu)), -85px);
+  position: relative;
+  z-index: 2;
 }
 
 .userName {
   margin: 0;
-  font-size: clamp(15px, calc(3 * var(--vwu)), 19px);
-  line-height: 1.0;
+  margin-top: clamp(-12px, calc(-1.5 * var(--vwu)), -20px);
+  font-size: clamp(24px, calc(3.9 * var(--vwu)), 32px);
+  line-height: 1.15;
   color: rgba(255, 255, 255, 0.92);
   text-align: right;
+  font-family: "BadScript", sans-serif;
+  font-style: italic;
 }
 
 .ctaSection {
@@ -46,16 +56,17 @@
   justify-content: center;
   align-items: center;
   padding: 0;
+  margin-top: clamp(16px, calc(2.5 * var(--vwu)), 28px);
 }
 
 .ctaButton {
   position: relative;
-  font-size: clamp(18px, calc(2.5 * var(--vwu)), 24px);
+  font-size: clamp(24px, calc(3.4 * var(--vwu)), 32px);
   line-height: 1.2;
   color: rgba(255, 255, 255, 0.92);
   background: transparent;
   border: none;
-  padding: clamp(10px, calc(2 * var(--vwu)), 14px) clamp(20px, calc(4 * var(--vwu)), 32px);
+  padding: clamp(12px, calc(2.2 * var(--vwu)), 18px) clamp(24px, calc(4.5 * var(--vwu)), 40px);
   cursor: pointer;
   transition: all 0.2s ease;
   text-shadow: 0 0 12px rgba(5, 180, 199, 0.2);
@@ -63,20 +74,22 @@
   align-items: center;
   justify-content: center;
   text-decoration: none;
+  font-family: "BadScript", sans-serif;
+  font-style: italic;
 }
 .ctaContent{
   position: relative;
   z-index: 1;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 .ctaIcon{
-  width: 16px;            /* ← уменьшай/увеличивай тут */
-  height: 16px;
+  width: 20px;
+  height: 20px;
   flex: 0 0 auto;
   opacity: .9;
-  transform: translateY(1px); /* подгонка по вертикали */
+  transform: translateY(1px);
 }
 .ctaFrame {
   position: absolute;
@@ -103,8 +116,17 @@
 }
 
 .menuSection {
-  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  gap: clamp(2px, calc(0.4 * var(--vwu)), 6px);
+  margin-top: auto;
 }
+
+/* Xiaomi 12 Lite (1080px) та більші — менший відступ від низу, меню вище */
+@media (min-width: 1080px) {
+  .menuPanel {
+    padding-bottom: 155dvh;
+  }
+}
+

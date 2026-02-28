@@ -1,8 +1,10 @@
 /* menu_line.svg viewBox 399×583 — орбіта має повністю вміщатись */
+/* Базова розмітка: ширина → aspect-ratio → висота. Без vh для узгодженості iOS/Android */
 .orbitContainer {
   position: relative;
   width: 100%;
-  max-height: min(26vh, 165px);
+  min-width: 0; /* flex child може зменшуватись */
+  min-height: 0; /* iOS: запобігає неправильному розрахунку в flex */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -15,7 +17,12 @@
   backface-visibility: hidden;
 }
 
-/* Орбіта на всю ширину — від краю до краю (дизайн гостевого меню) */
+/* Ліміт для дефолтного варіанту (не fullWidth) — dvh замість vh для iOS */
+.orbitContainer:not(.orbitFullWidth) {
+  max-height: min(26dvh, 165px);
+}
+
+/* Орбіта на всю ширину — масштабування тільки по ширині (як на Xiaomi) */
 .orbitFullWidth {
   max-height: none;
   width: 100%;
@@ -34,7 +41,8 @@
 .orbitSvg {
   display: block;
   width: 100%;
-  max-height: min(26vh, 165px);
+  min-width: 0;
+  max-height: min(26dvh, 165px);
   pointer-events: none;
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
@@ -43,8 +51,13 @@
 .orbitSvg svg {
   width: 100%;
   height: auto;
-  max-height: min(26vh, 165px);
+  max-height: min(26dvh, 165px);
   display: block;
+}
+
+.orbitFullWidth .orbitSvg,
+.orbitFullWidth .orbitSvg svg {
+  max-height: none;
 }
 
 .avatarWrapper {
@@ -59,8 +72,8 @@
 }
 
 .avatar {
-  width: clamp(50px, calc(6 * var(--vwu)), 59px);
-  height: clamp(50px, calc(6 * var(--vwu)), 59px);
+  width: clamp(119px, calc(10.5 * var(--vwu)), 119px);
+  height: clamp(119px, calc(10.5 * var(--vwu)), 119px);
   border-radius: 999px;
   overflow: hidden;
   position: relative;

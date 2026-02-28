@@ -69,6 +69,8 @@
   font-display: swap;
 }
 
+
+/* Основной. Для всего простого текста. */
 @font-face {
   font-family: "RobotoCondensedLightItalic";
   src: url("./assets/fonts/roboto-condensed-light-italic.woff2") format("woff2");

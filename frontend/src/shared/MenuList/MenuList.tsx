@@ -28,10 +28,10 @@ export function MenuList({ items, onSelect }: Props) {
   return (
     <ul className={styles.menuList} role="list">
       {items.map((item) => (
-        <li key={item.to} className={styles.menuItem}>
+        <li key={item.to} className={item.to === "/logout" ? styles.menuItemCentered : styles.menuItem}>
           {item.to === "/logout" ? (
             <button
-              className={styles.menuLink}
+              className={`${styles.menuLink} ${styles.menuLinkCentered}`}
               onClick={(e) => handleClick(item, e)}
               type="button"
             >
