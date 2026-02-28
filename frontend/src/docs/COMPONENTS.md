@@ -63,7 +63,7 @@
 - `users/Authors.tsx`
 - `users/TranslatorsList.tsx`
 - `notification/NotificationsPage.tsx`
-- `catalog/CreateBookPage.tsx` (для груп тегів)
+- `catalog/components/BookForm/BookForm.tsx` (для груп тегів — у CreateBookPage та GeneralSettings)
 - `search/search.tsx`
 
 **Деталі:** `docs/PAGINATION_SHOW_MORE_FRONTEND.md`.
@@ -113,6 +113,71 @@
 
 **Місця використання:**
 - `search/search.tsx`
+
+---
+
+### `BookForm`
+
+**Призначення:** Універсальна форма для створення та оновлення книги (поля: назва, автор, опис, жанри, теги, фандоми, зображення тощо).
+
+**Файли:**
+- `catalog/components/BookForm/BookForm.tsx`
+- `catalog/components/BookForm/BookForm.module.css`
+- `catalog/components/BookForm/bookForm.utils.ts`
+
+**Особливості:**
+- `mode="create"` — всі поля редаговні, початкові з `initialFormData`.
+- `mode="update"` — title, title_en, author, book_type, country тільки для читання; решта редаговна.
+- Теги: на create — спочатку 1 група + «Показати ще» (показує всі); на update — одразу всі групи без кнопки.
+- Чекбокс 18+ синхронізований з тегом «18+» (adultTagId). Валідація через `validateBookForm`, формування payload через `normalizeBookPayload`.
+
+**Місця використання:**
+- `catalog/CreateBookPage.tsx` (mode="create")
+- `catalog/settings/GeneralSettings.tsx` (mode="update")
+
+**Деталі:** `docs/BOOK_CREATE_SETTINGS_FLOW.md`.
+
+---
+
+### `SettingsBook`
+
+**Призначення:** Сторінка налаштувань книги з вкладками Загальні, Підписка, Реклама, Доступ.
+
+**Файли:**
+- `catalog/settings/SettingsBook.tsx`
+- `catalog/settings/SettingsBook.css`
+
+**Особливості:**
+- Перевірка власника: `book.owner === userId`; при порушенні — showError, navigate на книгу.
+- Вкладка «Загальні» рендерить `GeneralSettings` з BookForm.
+
+**Маршрут:** `/books/:slug/settings`
+
+---
+
+### `GeneralSettings`
+
+**Призначення:** Вкладка «Загальні» налаштувань — форма редагування основних полів книги.
+
+**Файл:** `catalog/settings/GeneralSettings.tsx`
+
+**Особливості:**
+- Завантажує книгу через `useBookBySlug(slug)`, формує `initialValues` для BookForm.
+- При сабміті перевіряє `book.owner === userId`, викликає `updateBook` (PUT), при успіху — invalidate, showSuccess, scrollTo(0,0), navigate на книгу.
+
+---
+
+### `ScrollToTop`
+
+**Призначення:** Скрол вікна у верх при зміні маршруту.
+
+**Файл:** `shared/ScrollToTop.tsx`
+
+**Як працює:**
+- Використовує `useLocation()` та `useLayoutEffect` з залежністю від `pathname`.
+- При зміні pathname викликає `window.scrollTo(0, 0)`.
+
+**Місце:** Монтується в `App.tsx` всередині BrowserRouter (разом з Base).
 
 ---
 
@@ -184,7 +249,7 @@
 - `widgets/footer/Footer.tsx` — іконки соцмереж (Facebook, Instagram, YouTube)
 - `shared/MenuPanel/MenuPanel.tsx` — іконка рамки для CTA-кнопки
 - `shared/MenuList/MenuList.tsx` — іконки пунктів меню користувача
-- `catalog/CreateBookPage.tsx` — іконка чекбокса "Контент 18+"
+- `catalog/components/BookForm/BookForm.tsx` — іконка чекбокса "Контент 18+" (у формі створення/редагування книги)
 - `catalog/AbandonedTranslations.tsx` — іконки чекбоксів у фільтрах
 
 **Приклад використання:**

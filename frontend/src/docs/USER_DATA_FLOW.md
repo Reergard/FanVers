@@ -164,3 +164,20 @@ Header і unread:
 Нюанс:
 
 - у лівому списку чатів окремий бейдж unread не рендериться, але `unreadTotal` зберігається в store і використовується в Header.
+
+## Створення книги та Налаштування книги
+
+**Сторінка створення** (`/create-book`):
+
+- Обгорнута в `RequireAuth` — при невдалій перевірці авторизації (authStatus/refreshSession) редірект на `/login`.
+- `useBookFormMeta()` завантажує genres, tags, countries, fandoms (паралельні useQuery).
+- Сабміт: `createBook` (POST FormData) → успіх → navigate на `/my-translations`.
+
+**Сторінка налаштувань** (`/books/:slug/settings`):
+
+- `useBookBySlug(slug)` — завантаження книги; `useAuth()` — userId.
+- Перевірка: `book.owner === userId`; якщо ні — showError, navigate на книгу.
+- `useBookFormMeta()` — для форми (genres, tags тощо).
+- Сабміт: `updateBook(slug, payload)` (PUT FormData) → успіх → invalidateQueries(catalogKeys.book), showSuccess, navigate на книгу.
+
+Деталі: `docs/BOOK_CREATE_SETTINGS_FLOW.md`, `backend/docs/BOOK_CREATE_UPDATE_BACKEND.md`.

@@ -50,7 +50,24 @@ frontend/src/
 │   ├── BookDetailReader.tsx
 │   ├── BookDetailRouter.tsx
 │   ├── BookDetailSkeleton.tsx
+│   ├── CreateBookPage.tsx
+│   ├── components/
+│   │   └── BookForm/
+│   │       ├── BookForm.tsx
+│   │       ├── BookForm.module.css
+│   │       └── bookForm.utils.ts
+│   ├── hooks/
+│   │   ├── useBookBySlug.ts
+│   │   ├── useBookFormMeta.ts
+│   │   └── useBookUpdate.ts
 │   ├── sections/
+│   ├── settings/
+│   │   ├── SettingsBook.tsx
+│   │   ├── SettingsBook.css
+│   │   ├── GeneralSettings.tsx
+│   │   ├── Subscription.tsx
+│   │   ├── Advertising.tsx
+│   │   └── AccessRights.tsx
 │   ├── assets/
 │   ├── styles/
 │   │   └── AddChapter.module.css
@@ -104,6 +121,7 @@ frontend/src/
 │   ├── MenuList/
 │   ├── AvatarOrbit/
 │   ├── ScrollIndicator/
+│   ├── ScrollToTop.tsx
 │   ├── ActionButton/
 │   ├── Modal/
 │   ├── NotificationModal/
@@ -131,6 +149,7 @@ frontend/src/
 ├── docs/
 │   ├── ABANDONED_TRANSLATIONS_FRONTEND.md
 │   ├── ADD_CHAPTER_FLOW.md
+│   ├── BOOK_CREATE_SETTINGS_FLOW.md
 │   ├── AUTHENTICATION_FRONTEND.md
 │   ├── USER_DATA_FLOW.md
 │   ├── BOOK_PAGE_DATA_FLOW.md
@@ -192,7 +211,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 ```tsx
 // Bootstrap auth перед показом Routes; QueryClientProvider, NotificationProvider
 // Маршрути: /, /profile, /bookmarks, /my-translations, /authors, /translators, /login, /messages, /chat, /catalog, /abandoned, /create-book, /books/:slug/settings, /books/:slug/add-chapter, /books/:bookSlug/chapters/:chapterSlug, /books/:slug
-// Suspense + lazy для сторінок (Profile, BookmarksPage, UserTranslations, Authors, TranslatorsList, LoginPage, NotificationsPage, Catalog, MagicalGuide, AbandonedTranslations, SearchPage, ChatPage, CreateBookPage, AddChapter, ChapterDetailRouter, BookDetailRouter)
+// Suspense + lazy для сторінок (Profile, BookmarksPage, UserTranslations, Authors, TranslatorsList, LoginPage, NotificationsPage, Catalog, MagicalGuide, AbandonedTranslations, SearchPage, ChatPage, CreateBookPage, SettingsBook, AddChapter, ChapterDetailRouter, BookDetailRouter)
 ```
 
 ---
@@ -551,9 +570,9 @@ export function AppRoutes() {
 
 ## `catalog/` — фіча Каталог (сторінка книги)
 
-**Що це:** сторінка книги `/books/:slug` — BookDetailRouter, BookDetailLayout, BookDetailOwner, BookDetailReader, секції (BookHero, BookDescription, BookChapters, **BookCommentsContainer**, **BookRatingStars** тощо). Також у фічі `catalog/` знаходяться: сторінка глави `ChapterDetailRouter` + `ChapterDetail` для маршруту `/books/:bookSlug/chapters/:chapterSlug`, сторінка додавання глави `AddChapter.tsx` для `/books/:slug/add-chapter`, і сторінка покинутих перекладів `AbandonedTranslations.tsx` для `/abandoned`.
+**Що це:** сторінка книги `/books/:slug` — BookDetailRouter, BookDetailLayout, BookDetailOwner, BookDetailReader, секції (BookHero, BookDescription, BookChapters, **BookCommentsContainer**, **BookRatingStars** тощо). Також у фічі `catalog/`: сторінка глави `ChapterDetailRouter` + `ChapterDetail` для `/books/:bookSlug/chapters/:chapterSlug`, сторінка додавання глави `AddChapter.tsx` для `/books/:slug/add-chapter`, сторінка створення книги `CreateBookPage.tsx` для `/create-book`, сторінка налаштувань книги `SettingsBook.tsx` для `/books/:slug/settings`, покинуті переклади `AbandonedTranslations.tsx` для `/abandoned`.
 
-**Маршрути (App.tsx):** `/abandoned` → AbandonedTranslations, `/books/:slug/add-chapter` → AddChapter (оголошується **перед** `/books/:slug`), `/books/:bookSlug/chapters/:chapterSlug` → ChapterDetailRouter, `/books/:slug` → BookDetailRouter.
+**Маршрути (App.tsx):** `/create-book` → CreateBookPage, `/books/:slug/settings` → SettingsBook, `/books/:slug/add-chapter` → AddChapter (оголошується **перед** `/books/:slug`), `/books/:bookSlug/chapters/:chapterSlug` → ChapterDetailRouter, `/books/:slug` → BookDetailRouter, `/abandoned` → AbandonedTranslations.
 
 ---
 
