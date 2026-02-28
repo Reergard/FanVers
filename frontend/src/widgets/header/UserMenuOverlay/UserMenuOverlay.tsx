@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
 import styles from "./UserMenuOverlay.module.css";
 import { MenuPanel } from "../../../shared/MenuPanel/MenuPanel";
-import { useMedia } from "../../../shared/hooks/useMedia";
 import { useScrollLock } from "../../../shared/hooks/useScrollLock";
 import type { MenuItem } from "../../../shared/menu/menuData";
-import { ActionButton } from "../../../shared/ActionButton/ActionButton";
+import { AvatarOrbit } from "../../../shared/AvatarOrbit/AvatarOrbit";
+import { MenuFrameSvg } from "../../../shared/MenuFrameSvg/MenuFrameSvg";
 import { Modal } from "../../../shared/Modal/Modal";
 import { LoginForm } from "../../../auth/LoginForm";
 import { RegisterForm } from "../../../auth/RegisterForm";
@@ -39,8 +40,10 @@ export function UserMenuOverlay({
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
 
+  const isDrawer = mode === "drawer";
+
   // Блокируем скролл только в drawer режиме
-  useScrollLock(open && mode === "drawer");
+  useScrollLock(open && isDrawer);
 
   // Закрываем при изменении роута
   const prevPathnameRef = useRef(location.pathname);
@@ -74,16 +77,22 @@ export function UserMenuOverlay({
     // Сохраняем предыдущий фокус
     previousFocusRef.current = document.activeElement as HTMLElement;
 
-    // Фокусируемся на панели
+    // На touch-устройствах (drawer) не фокусируем кнопку — Safari iOS рисует лишнюю рамку
+    const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
     requestAnimationFrame(() => {
       if (panelRef.current) {
-        const firstFocusable = panelRef.current.querySelector<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        if (firstFocusable) {
-          firstFocusable.focus();
-        } else {
+        if (isTouchDevice && isDrawer) {
           panelRef.current.focus();
+        } else {
+          const firstFocusable = panelRef.current.querySelector<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          if (firstFocusable) {
+            firstFocusable.focus();
+          } else {
+            panelRef.current.focus();
+          }
         }
       }
     });
@@ -98,7 +107,7 @@ export function UserMenuOverlay({
         }
       });
     };
-  }, [open, anchorRef]);
+  }, [open, anchorRef, mode]);
 
   // Закрытие по клику вне меню (только для popover режима)
   // В drawer режиме закрытие делается только через overlay onClick и Esc
@@ -146,67 +155,74 @@ export function UserMenuOverlay({
     // Состояние обновится реактивно через useAuth в Header
   }, [onClose]);
 
-  const isDrawer = mode === "drawer";
+  const overlayContent =
+    open ? (
+      <>
+        {/* Overlay для drawer */}
+        {isDrawer && (
+          <div
+            className={styles.overlay}
+            onClick={onClose}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Панель меню — рендер в body для корректного position:fixed относительно viewport */}
+        <div
+          ref={panelRef}
+          id={menuId}
+          className={`${styles.panel} ${isDrawer ? styles.panelDrawer : styles.panelPopover}`}
+          role={isDrawer ? "dialog" : "menu"}
+          aria-modal={isDrawer ? "true" : undefined}
+          aria-label="Меню користувача"
+          tabIndex={-1}
+        >
+          {isAuthenticated ? (
+            <MenuPanel
+              name={name}
+              avatarUrl={avatarUrl}
+              items={items}
+              onSelect={handleSelect}
+            />
+          ) : (
+            <div className={styles.guestMenu}>
+              <div className={styles.guestOrbit}>
+                <AvatarOrbit name="guest" variant="fullWidth" />
+              </div>
+              <div className={styles.guestActions}>
+                <button
+                  type="button"
+                  className={styles.frameButton}
+                  onClick={() => {
+                    setLoginModalOpen(true);
+                    onClose();
+                  }}
+                >
+                  <MenuFrameSvg className={styles.frameSvg} />
+                  <span className={styles.frameText}>Вхід</span>
+                </button>
+                <div className={styles.orText}>або</div>
+                <button
+                  type="button"
+                  className={styles.frameButton}
+                  onClick={() => {
+                    setRegisterModalOpen(true);
+                    onClose();
+                  }}
+                >
+                  <MenuFrameSvg className={styles.frameSvg} />
+                  <span className={styles.frameText}>Реєстрація</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </>
+    ) : null;
 
   return (
     <>
-      {/* Overlay и панель меню - только когда open */}
-      {open && (
-        <>
-          {/* Overlay для drawer */}
-          {isDrawer && (
-            <div
-              className={styles.overlay}
-              onClick={onClose}
-              aria-hidden="true"
-            />
-          )}
-
-          {/* Панель меню */}
-          <div
-            ref={panelRef}
-            id={menuId}
-            className={`${styles.panel} ${isDrawer ? styles.panelDrawer : styles.panelPopover}`}
-            role={isDrawer ? "dialog" : "menu"}
-            aria-modal={isDrawer ? "true" : undefined}
-            aria-label="Меню користувача"
-            tabIndex={-1}
-          >
-            {isAuthenticated ? (
-              <MenuPanel
-                name={name}
-                avatarUrl={avatarUrl}
-                items={items}
-                onSelect={handleSelect}
-              />
-            ) : (
-              <div className={styles.authButtons}>
-                <div className={styles.authTitle}>Вхід / Реєстрація</div>
-                <div className={styles.authActions}>
-                  <ActionButton
-                    onClick={() => {
-                      setLoginModalOpen(true);
-                      onClose();
-                    }}
-                    className={styles.authButton}
-                  >
-                    Вхід
-                  </ActionButton>
-                  <ActionButton
-                    onClick={() => {
-                      setRegisterModalOpen(true);
-                      onClose();
-                    }}
-                    className={styles.authButton}
-                  >
-                    Реєстрація
-                  </ActionButton>
-                </div>
-              </div>
-            )}
-          </div>
-        </>
-      )}
+      {overlayContent != null && createPortal(overlayContent, document.body)}
 
       {/* Модалки логина и регистрации - всегда рендерятся, независимо от open */}
       <Modal

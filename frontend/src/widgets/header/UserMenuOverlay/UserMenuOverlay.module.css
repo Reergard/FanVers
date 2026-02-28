@@ -15,6 +15,9 @@
   z-index: 1001;
   overflow-y: auto;
   overflow-x: hidden;
+  /* iOS: предотвратить прокрутку меню при свайпе (меню фиксировано, как на Android) */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   /* РАМКА */
   border: 1px solid rgba(5, 180, 199, 0.55);
   /* мягкое свечение рамки */
@@ -53,16 +56,15 @@
   }
 }
 
-/* Drawer режим (mobile/tablet) */
+/* Drawer режим (mobile/tablet) — растягиваем через top/bottom, без height */
 .panelDrawer {
-  /* Позиционирование в правом углу страницы */
   top: 0;
   right: 0;
-  bottom: 0;        /* мобильный: на весь экран */
-  height: 100dvh;
-  max-height: 100dvh;
-  width: clamp(240px, calc(72 * var(--vwu)), 320px); /* на телефоне пусть шире */
+  bottom: 0;
+  width: clamp(240px, calc(72 * var(--vwu)), 320px);
   max-width: min(calc(85 * var(--vwu)), 400px);
+  box-sizing: border-box;
+  padding-bottom: env(safe-area-inset-bottom);
   /* Анимация появления */
   animation: slideInRight 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -109,35 +111,97 @@
   background: rgba(5, 180, 199, 0.5);
 }
 
-/* Стили для кнопок авторизации */
-.authButtons {
+/* ===== Guest (not authenticated) menu — 1:1 like design ===== */
+
+.guestMenu {
   display: flex;
   flex-direction: column;
-  gap: clamp(20px, calc(3 * var(--vwu)), 28px);
-  padding: clamp(20px, calc(3 * var(--vwu)), 28px);
+  align-items: center;
+  padding: clamp(16px, calc(2.2 * var(--vwu)), 22px);
+  padding-top: 0;
+  margin-top: 0;
+  gap: clamp(10px, calc(1.6 * var(--vwu)), 16px);
+  overflow: hidden;
+}
+
+/* Орбіта від краю до краю панелі, впритул до верхнього краю */
+.guestOrbit {
+  --guest-padding: clamp(16px, calc(2.2 * var(--vwu)), 22px);
+  width: calc(100% + 2 * var(--guest-padding));
+  margin-left: calc(-1 * var(--guest-padding));
+  margin-top: 0;
+  margin-bottom: clamp(6px, calc(1.2 * var(--vwu)), 10px);
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.guestActions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, calc(1.6 * var(--vwu)), 14px);
+}
+
+/* frame button like "Створити книгу" (menu_frame) */
+.frameButton {
+  position: relative;
+  width: min(220px, 100%);
+  height: 44px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
+
+  filter: drop-shadow(0 0 10px rgba(5, 180, 199, 0.18));
+
+  /* iOS Safari: убрать tap highlight и лишнюю рамку при фокусе от tap */
+  -webkit-tap-highlight-color: transparent;
 }
 
-.authTitle {
-  font-size: clamp(18px, calc(2.5 * var(--vwu)), 24px);
-  line-height: 1.2;
-  color: rgba(255, 255, 255, 0.92);
+.frameButton:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.frameButton:focus-visible {
+  outline: 2px solid rgba(5, 180, 199, 0.65);
+  outline-offset: 3px;
+  border-radius: 14px;
+}
+
+.frameSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 1;
+  /* iOS Safari: crisp SVG rendering */
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+}
+
+.frameText {
+  position: relative;
+  z-index: 1;
   font-family: "BadScript", sans-serif;
-  text-align: center;
-  text-shadow: 0 0 12px rgba(5, 180, 199, 0.2);
+  font-size: 16px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0 12px rgba(5, 180, 199, 0.15);
+  transform: translateY(1px);
 }
 
-.authActions {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(12px, calc(1.8 * var(--vwu)), 16px);
-  width: 100%;
-  max-width: 200px;
-}
-
-.authButton {
-  width: 100%;
-  justify-content: center;
+.orText {
+  font-family: "BadScript", sans-serif;
+  font-size: 14px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.55);
+  text-shadow: 0 0 10px rgba(5, 180, 199, 0.12);
+  margin: 2px 0;
 }

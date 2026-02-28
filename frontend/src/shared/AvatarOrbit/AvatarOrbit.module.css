@@ -1,23 +1,50 @@
+/* menu_line.svg viewBox 399×583 — орбіта має повністю вміщатись */
 .orbitContainer {
   position: relative;
   width: 100%;
-  max-height: 34vh;
+  max-height: min(26vh, 165px);
   display: flex;
   justify-content: center;
   align-items: center;
   pointer-events: none;
-  /* Используем aspect-ratio для сохранения пропорций SVG */
-  aspect-ratio: 669 / 979;
-  transform: scale(1.5) translate(-57px, -10px);
-  transform-origin: top left;
+  aspect-ratio: 399 / 583;
+  transform: scale(1);
+  transform-origin: center center;
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Орбіта на всю ширину — від краю до краю (дизайн гостевого меню) */
+.orbitFullWidth {
+  max-height: none;
+  width: 100%;
+}
+
+.orbitFullWidth .orbitSvg {
+  max-height: none;
+}
+
+.orbitFullWidth .orbitSvg svg {
+  width: 100%;
+  height: auto;
+  max-height: none;
 }
 
 .orbitSvg {
-  max-height: 34vh;
   display: block;
+  width: 100%;
+  max-height: min(26vh, 165px);
   pointer-events: none;
-  /* Центрируем SVG */
-  object-fit: contain;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+}
+
+.orbitSvg svg {
+  width: 100%;
+  height: auto;
+  max-height: min(26vh, 165px);
+  display: block;
 }
 
 .avatarWrapper {

@@ -18,6 +18,14 @@
   margin-bottom: clamp(-20px, calc(-3 * var(--vwu)), -10px);
 }
 
+.orbitStar {
+  width: clamp(36px, calc(6 * var(--vwu)), 52px);
+  height: auto;
+  flex-shrink: 0;
+  margin: clamp(2px, calc(0.5 * var(--vwu)), 6px) 0;
+  align-self: center;
+}
+
 .nameSection {
   display: flex;
   justify-content: flex-end;   /* прижимаем вправо */
@@ -76,6 +84,9 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
+  /* iOS Safari: crisp SVG rendering */
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
 }
 
 .ctaText {

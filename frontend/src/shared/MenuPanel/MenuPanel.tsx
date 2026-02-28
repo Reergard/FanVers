@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import styles from "./MenuPanel.module.css";
 import { AvatarOrbit } from "../AvatarOrbit/AvatarOrbit";
 import { MenuList } from "../MenuList/MenuList";
-import { Icon } from "../Icon";
+import { StarSvg } from "../StarSvg/StarSvg";
+import { MenuFrameSvg } from "../MenuFrameSvg/MenuFrameSvg";
 import type { MenuItem } from "../menu/menuData";
 
 type Props = {
@@ -19,6 +20,7 @@ export function MenuPanel({ name, avatarUrl, items, onSelect }: Props) {
       <div className={styles.avatarSection}>
         <AvatarOrbit avatarUrl={avatarUrl} name={name} />
       </div>
+      <StarSvg className={styles.orbitStar} />
 
       {/* Имя пользователя */}
       <div className={styles.nameSection}>
@@ -29,7 +31,7 @@ export function MenuPanel({ name, avatarUrl, items, onSelect }: Props) {
       <div className={styles.ctaSection}>
         <Link to="/create-book" className={styles.ctaButton} onClick={onSelect}>
           {/* рамка */}
-          <Icon name="menu_frame" className={styles.ctaFrame} aria-hidden="true" />
+          <MenuFrameSvg className={styles.ctaFrame} />
 
           {/* контент */}
           <span className={styles.ctaContent}>
