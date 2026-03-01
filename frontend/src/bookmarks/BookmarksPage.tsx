@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/useAuth";
+import { useAuthModal } from "../auth/AuthModalContext";
 import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
 import { SortByNavigation } from "../navigation/SortByNavigation.tsx";
 import { Container } from "../shared/Container";
@@ -77,6 +78,7 @@ export default function BookmarksPage() {
   const [sortBy, setSortBy] = useState<SortKey>("updated");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const { isAuthenticated, userId, authReady } = useAuth();
+  const { openLoginModal } = useAuthModal();
 
   const {
     data: bookmarks = [],
@@ -131,9 +133,9 @@ export default function BookmarksPage() {
           <div className={styles.authRequired}>
             <h2>Для перегляду закладок необхідно увійти в систему</h2>
             <p>Увійдіть або зареєструйтесь, щоб мати доступ до ваших закладок</p>
-            <Link to="/login">
-              <ActionButton variant="primary">Увійти</ActionButton>
-            </Link>
+            <ActionButton variant="primary" onClick={() => openLoginModal("/bookmarks")}>
+              Увійти
+            </ActionButton>
           </div>
         </Container>
       </section>

@@ -158,12 +158,12 @@
   width: 100%;
   text-align: center;
   font-family: "Seminaria", serif;
-  font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+  font-size: clamp(0.85rem, 1.4vw, 1rem);
   color: #00eafd;
-  -webkit-text-stroke: 1px rgba(0, 56, 255, 0.79);
+  -webkit-text-stroke: 0.5px rgba(0, 56, 255, 0.79);
   text-shadow:
     0 0 10px rgba(0, 234, 253, 0.15),
-    0 0 1px rgba(0, 56, 255, 0.79);
+    0 0 0.5px rgba(0, 56, 255, 0.79);
 }
 
 /* Legacy: coverCol for backward compat if needed */
@@ -243,8 +243,10 @@
   align-self: center;
 }
 
-.coverActions button {
+.coverActions button,
+.coverActions a {
   font-family: "Seminaria", serif;
+  font-size: clamp(16px, calc(1.5 * var(--vwu)), 18px);
 }
 
 .coverActions .settingsBtn {
@@ -547,7 +549,7 @@
   max-width: 100%;
   overflow-wrap: break-word;
   word-break: break-word;
-  color: var(--text);
+  color: #05B4C7;
   font-size: clamp(14px, 1.2vw, 15px);
   line-height: 1.6;
   font-family: "RobotoCondensedLightItalic", "Inter", sans-serif !important;
@@ -958,7 +960,7 @@
   flex-shrink: 0;
   font-size: clamp(1rem, 1.8vw, 1.25rem);
   font-weight: 700;
-  color: #fff;
+  color: #f58807;
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -967,7 +969,7 @@
   flex: 1;
   min-width: 0;
   height: 0;
-  border-bottom: 1px solid var(--comment-accent);
+  border-bottom: 1px solid #888;
   align-self: center;
 }
 
@@ -1288,6 +1290,7 @@
   color: rgba(255, 255, 255, 0.7);
   font-size: 14px;
   margin: 0 0 16px 0;
+  text-align: center;
 }
 
 .commentEmpty {
@@ -1295,6 +1298,7 @@
   color: rgba(255, 255, 255, 0.6);
   font-size: 14px;
   padding: 16px 0;
+  text-align: center;
 }
 
 /* ===== АДАПТИВ: тільки grid-template-areas на брейкпоінтах ===== */
@@ -1342,7 +1346,7 @@
 
   .coverActions {
     flex-direction: row;
-    justify-content: flex-start;
+    justify-content: center;
   }
 
   .skeletonGrid {
@@ -1418,16 +1422,16 @@
     align-self: center;
     text-align: right;
     font-family: "WindSong", cursive, serif;
-    font-size: 38px;
+    font-size: 28px;
     color: #00EAFD;
-    -webkit-text-stroke: 0.5px rgba(0, 56, 255, 0.79);
+    -webkit-text-stroke: 0.35px rgba(0, 56, 255, 0.79);
     text-shadow:
       0 0 10px rgba(0, 234, 253, 0.15),
-      0 0 0.5px rgba(0, 56, 255, 0.79);
+      0 0 0.35px rgba(0, 56, 255, 0.79);
   }
 
   .heroAuthorMark::first-letter {
-    font-size: 60px;
+    font-size: 46px;
   }
 
   .heroRating .thankAuthorLabel {
@@ -1438,15 +1442,50 @@
     font-size: 17px;
   }
 
-  /* Якщо Стати не показується — Авторська по центру */
+  /* Якщо Стати не показується — Авторська по центру, поточний розмір */
   .heroGrid:not(:has(.heroActions > *)) .heroAuthorMark {
     grid-area: ratingBottomL;
     grid-column: 1 / -1;
     text-align: center;
   }
 
+  /* Коли є кнопка Стати новим перекладачем — зменшуємо шрифт і відстань */
+  .heroGrid:has(.heroActions > *) .heroAuthorMark {
+    font-size: 22px;
+    margin-left: -8px;
+  }
+
+  .heroGrid:has(.heroActions > *) .heroAuthorMark::first-letter {
+    font-size: 38px;
+  }
+
   .coverActions {
     flex-direction: column;
+    align-items: center;
+  }
+
+  /* Кристали — під блоком коментарів, прозорість 50% */
+  .comments {
+    margin-bottom: 150px;
+  }
+
+  .commentsCrystalLeft {
+    bottom: -140px;
+    left: -50px;
+    z-index: -1;
+    opacity: 0.5;
+  }
+
+  .commentsCrystalRight {
+    bottom: -115px;
+    right: -10px;
+    z-index: -1;
+    opacity: 0.5;
+  }
+
+  .commentEmpty {
+    padding-top: clamp(60px, 12vw, 100px);
+    padding-bottom: clamp(200px, 38vw, 320px);
   }
 
   .heroMetaChips .metaTags,

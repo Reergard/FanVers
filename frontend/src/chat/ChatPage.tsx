@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/useAuth";
+import { useAuthModal } from "../auth/AuthModalContext";
 import styles from "./Chat.module.css";
 import { ChatList } from "./components/ChatList";
 import { ChatWindow } from "./components/ChatWindow";
@@ -11,10 +11,13 @@ import { getChatStoreSnapshot } from "./store/chatStore";
 import { chatWs } from "./ws/chatWs";
 import type { ChatMessage } from "./api/types";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
+import { Container } from "../shared/Container";
+import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { getMyProfile } from "../users/profileService";
 
 export default function ChatPage() {
   const { isAuthenticated, authReady, username, userId } = useAuth();
+  const { openLoginModal } = useAuthModal();
   const { state, actions } = useChat();
   const { showWarning, showError } = useNotification();
   const [createOpen, setCreateOpen] = useState(false);
@@ -120,7 +123,19 @@ export default function ChatPage() {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return (
+      <section className={styles.page}>
+        <Container>
+          <div style={{ padding: "48px 24px", textAlign: "center", color: "rgba(255,255,255,0.8)" }}>
+            <h2 style={{ marginBottom: "16px" }}>Для перегляду чатів необхідно увійти в систему</h2>
+            <p style={{ marginBottom: "24px" }}>Увійдіть або зареєструйтесь, щоб мати доступ до чатів</p>
+            <ActionButton variant="primary" onClick={() => openLoginModal("/chat")}>
+              Увійти
+            </ActionButton>
+          </div>
+        </Container>
+      </section>
+    );
   }
 
   return (

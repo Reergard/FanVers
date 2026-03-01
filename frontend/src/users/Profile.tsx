@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import styles from "./Profile.module.css";
 import crownSvg from "./assets/icons/crown.svg";
@@ -8,6 +7,7 @@ import includedView from "./assets/icons/included_view.svg";
 import { SaveButton } from "../shared/SaveButton/SaveButton";
 import crystalProfile from "./assets/icons/crysral_profile.svg";
 import { useAuth } from "../auth/useAuth";
+import { useAuthModal } from "../auth/AuthModalContext";
 import { refreshAuthStatus } from "../auth/service";
 import {
   getMyProfile,
@@ -364,15 +364,21 @@ export default function Profile() {
     );
   }
 
+  const { openLoginModal } = useAuthModal();
+
   if (!isAuthenticated) {
     return (
       <section className={styles.page}>
         <div className={styles.wrap}>
           <div className={styles.authRequired}>
             <p>Увійдіть, щоб відкрити профіль</p>
-            <Link to="/login" className={styles.linkCyan}>
+            <button
+              type="button"
+              className={`${styles.linkCyan} ${styles.linkCyanBtn}`}
+              onClick={() => openLoginModal("/profile")}
+            >
               Увійти
-            </Link>
+            </button>
           </div>
         </div>
       </section>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/useAuth";
+import { useAuthModal } from "../auth/AuthModalContext";
 import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
 import { Container } from "../shared/Container";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
@@ -14,6 +14,7 @@ const PAGE_SIZE = 1;
 
 export default function UserTranslations() {
   const { isAuthenticated, userId, authReady } = useAuth();
+  const { openLoginModal } = useAuthModal();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const {
@@ -65,9 +66,9 @@ export default function UserTranslations() {
               Увійдіть або зареєструйтесь, щоб мати доступ до ваших перекладів
               та авторських творів
             </p>
-            <Link to="/login">
-              <ActionButton variant="primary">Увійти</ActionButton>
-            </Link>
+            <ActionButton variant="primary" onClick={() => openLoginModal("/my-translations")}>
+              Увійти
+            </ActionButton>
           </div>
         </Container>
       </section>

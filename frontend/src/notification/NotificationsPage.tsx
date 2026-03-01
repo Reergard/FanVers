@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import styles from "./NotificationsPage.module.css";
 import { Container } from "../shared/Container";
@@ -8,6 +7,7 @@ import { SaveButton } from "../shared/SaveButton/SaveButton";
 import { FilterCheckbox } from "../shared/FilterCheckbox/FilterCheckbox";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { useAuth } from "../auth/useAuth";
+import { useAuthModal } from "../auth/AuthModalContext";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { useNotifications } from "./useNotifications";
 import { getMyProfile, updateNotificationSettings } from "../users/profileService";
@@ -40,6 +40,7 @@ function formatDate(createdAt: string): string {
 
 export function NotificationsPage() {
   const { isAuthenticated, authReady } = useAuth();
+  const { openLoginModal } = useAuthModal();
   const { showSuccess, showError } = useNotification();
   const queryClient = useQueryClient();
   const { query, markRead, remove } = useNotifications(isAuthenticated);
@@ -137,9 +138,9 @@ export function NotificationsPage() {
           <div className={styles.authRequired}>
             <h2>Для перегляду повідомлень необхідно увійти в систему</h2>
             <p>Увійдіть або зареєструйтесь, щоб мати доступ до ваших повідомлень</p>
-            <Link to="/login">
-              <ActionButton variant="primary">Увійти</ActionButton>
-            </Link>
+            <ActionButton variant="primary" onClick={() => openLoginModal("/messages")}>
+              Увійти
+            </ActionButton>
           </div>
         </Container>
       </section>

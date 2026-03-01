@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useState } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
 import styles from "./UserMenuOverlay.module.css";
@@ -7,9 +7,7 @@ import { useScrollLock } from "../../../shared/hooks/useScrollLock";
 import type { MenuItem } from "../../../shared/menu/menuData";
 import { AvatarOrbit } from "../../../shared/AvatarOrbit/AvatarOrbit";
 import { MenuFrameSvg } from "../../../shared/MenuFrameSvg/MenuFrameSvg";
-import { Modal } from "../../../shared/Modal/Modal";
-import { LoginForm } from "../../../auth/LoginForm";
-import { RegisterForm } from "../../../auth/RegisterForm";
+import { useAuthModal } from "../../../auth/AuthModalContext";
 
 type Props = {
   open: boolean;
@@ -37,8 +35,7 @@ export function UserMenuOverlay({
   const location = useLocation();
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const [registerModalOpen, setRegisterModalOpen] = useState(false);
+  const { openLoginModal, openRegisterModal } = useAuthModal();
 
   const isDrawer = mode === "drawer";
 
@@ -143,17 +140,6 @@ export function UserMenuOverlay({
     onClose();
   }, [onClose]);
 
-  const handleLoginSuccess = useCallback(() => {
-    setLoginModalOpen(false);
-    onClose();
-    // Состояние обновится реактивно через useAuth в Header
-  }, [onClose]);
-
-  const handleRegisterSuccess = useCallback(() => {
-    setRegisterModalOpen(false);
-    onClose();
-    // Состояние обновится реактивно через useAuth в Header
-  }, [onClose]);
 
   const overlayContent =
     open ? (
@@ -194,7 +180,7 @@ export function UserMenuOverlay({
                   type="button"
                   className={styles.frameButton}
                   onClick={() => {
-                    setLoginModalOpen(true);
+                    openLoginModal(location.pathname);
                     onClose();
                   }}
                 >
@@ -206,7 +192,7 @@ export function UserMenuOverlay({
                   type="button"
                   className={styles.frameButton}
                   onClick={() => {
-                    setRegisterModalOpen(true);
+                    openRegisterModal(location.pathname);
                     onClose();
                   }}
                 >
@@ -223,25 +209,6 @@ export function UserMenuOverlay({
   return (
     <>
       {overlayContent != null && createPortal(overlayContent, document.body)}
-
-      {/* Модалки логина и регистрации - всегда рендерятся, независимо от open */}
-      <Modal
-        open={loginModalOpen}
-        onClose={() => setLoginModalOpen(false)}
-        title="Вхід"
-        className="auth-modal"
-      >
-        <LoginForm onSuccess={handleLoginSuccess} />
-      </Modal>
-
-      <Modal
-        open={registerModalOpen}
-        onClose={() => setRegisterModalOpen(false)}
-        title="Реєстрація"
-        className="auth-modal"
-      >
-        <RegisterForm onSuccess={handleRegisterSuccess} />
-      </Modal>
     </>
   );
 }

@@ -6,6 +6,7 @@ import { Base } from "./app/Base";
 import HomePage from "./main/HomePage";
 const Profile = lazy(() => import("./users/Profile"));
 import { bootstrapAuth, attachAuthAutoRefresh } from "./auth/bootstrap";
+import { AuthModalProvider } from "./auth/AuthModalContext";
 import { NotificationProvider } from "./shared/NotificationModal/NotificationProvider";
 import BookDetailSkeleton from "./catalog/BookDetailSkeleton";
 
@@ -14,7 +15,6 @@ const BookmarksPage = lazy(() => import("./bookmarks/BookmarksPage"));
 const UserTranslations = lazy(() => import("./users/UserTranslations"));
 const Authors = lazy(() => import("./users/Authors"));
 const TranslatorsList = lazy(() => import("./users/TranslatorsList"));
-const LoginPage = lazy(() => import("./auth/LoginPage"));
 const NotificationsPage = lazy(() =>
   import("./notification/NotificationsPage").then((m) => ({ default: m.NotificationsPage }))
 );
@@ -85,8 +85,9 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <NotificationProvider>
         <BrowserRouter>
-          <ScrollToTop />
-          <Base>
+          <AuthModalProvider>
+            <ScrollToTop />
+            <Base>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route
@@ -134,14 +135,6 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <TranslatorsList />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/login"
-                element={
-                  <Suspense fallback={<div />}>
-                    <LoginPage />
                   </Suspense>
                 }
               />
@@ -315,6 +308,7 @@ export default function App() {
               />
             </Routes>
           </Base>
+          </AuthModalProvider>
         </BrowserRouter>
       </NotificationProvider>
     </QueryClientProvider>

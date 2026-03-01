@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
+import { useAuthModal } from "../auth/AuthModalContext";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import {
@@ -28,8 +29,8 @@ export function BookmarkButton({ bookId }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const location = useLocation();
+  const { openLoginModal } = useAuthModal();
   const { isAuthenticated, authReady } = useAuth();
   const { showError } = useNotification();
 
@@ -90,7 +91,7 @@ export function BookmarkButton({ bookId }: Props) {
 
   const handleStatusChange = (newStatus: BookmarkStatus) => {
     if (!isAuthenticated) {
-      navigate("/login", { state: { from: location.pathname } });
+      openLoginModal(location.pathname);
       return;
     }
     if (!authReady) return;
@@ -104,7 +105,7 @@ export function BookmarkButton({ bookId }: Props) {
 
   const handleButtonClick = () => {
     if (!isAuthenticated) {
-      navigate("/login", { state: { from: location.pathname } });
+      openLoginModal(location.pathname);
       return;
     }
     if (!authReady) return;

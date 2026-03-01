@@ -265,7 +265,7 @@ export function BookComments({
     <section className={styles.comments} aria-labelledby="comments-heading">
       <div className={styles.commentsHeadingWrap}>
         <h3 id="comments-heading" className={styles.commentsTitle}>
-          КОМЕНТАРІ
+          КОМЕНТАРІ:
         </h3>
         <span className={styles.commentsHeadingLine} aria-hidden="true" />
       </div>
