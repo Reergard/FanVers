@@ -81,13 +81,16 @@ export function BookHero({
   return (
     <section className={styles.hero} aria-labelledby="book-title-ua">
       <div className={styles.heroInner}>
-        {/* TITLE BAR (UA над обложкой + "/" + EN справа от обложки ниже UA) */}
+        {/* TITLE BAR: UA зліва, "/" на початку EN назви (наполовину заходить на неї), EN з відступом 45px */}
         <header className={styles.heroTitleBar}>
           <h1 id="book-title-ua" className={styles.heroTitlePrimary}>
             {title}
           </h1>
           {titleSecondary ? (
-            <h2 className={styles.heroTitleSecondary}>{titleSecondary}</h2>
+            <div className={styles.heroTitleSecondaryWrap}>
+              <span className={styles.heroTitleSlash} aria-hidden>/</span>
+              <h2 className={styles.heroTitleSecondary}>{titleSecondary}</h2>
+            </div>
           ) : null}
         </header>
 

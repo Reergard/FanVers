@@ -22,8 +22,13 @@ export default defineConfig({
           });
         },
       },
-      // Медіа-файли (аватарки) з бекенду — щоб img src працював з того ж origin
+      // Медіа-файли (аватарки, обкладинки книг) з бекенду — щоб img src працював з того ж origin (ПК і мобільний)
       '/media': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/static': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,

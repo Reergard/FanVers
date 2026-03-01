@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import type { Book, Chapter, Volume } from "../api/catalogApi";
+import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 import { BookDetailLayout } from "./BookDetailLayout";
 import { BookHero } from "./sections/BookHero";
 import { BookDescription } from "./sections/BookDescription";
@@ -80,7 +81,7 @@ export default function BookDetailReader({
         <BookHero
           title={book.title}
           titleSecondary={book.titleSecondary ?? undefined}
-          coverImageUrl={book.image ?? null}
+          coverImageUrl={book.image ? resolveBookCoverUrl(book.image) : null}
           showAgeBadge={book.adult_content === true}
           authorMarkText={authorMarkText ?? undefined}
           metaRows={metaRows}

@@ -15,7 +15,7 @@
   min-height: 0;
   /* Фоновая картинка: без заливки поверх, чтобы SVG был виден */
   background-color: transparent;
-  background-image: url("../assets/backgrounds/book_background.svg");
+  background-image: url("../assets/backgrounds/background_book.png");
   background-repeat: no-repeat;
   background-position: 50% var(--page-cover-top);
   background-size: var(--page-bg-width) var(--page-bg-height);
@@ -39,16 +39,17 @@
   margin-inline: auto;
 }
 
-/* Title bar: UA над обложкой, "/" и EN справа от обложки ниже UA */
+/* Title bar: UA зліва, EN з відступом 45px, "/" на початку EN */
 .heroTitleBar {
-  display: grid;
-  grid-template-columns: minmax(260px, 360px) 1fr;
-  column-gap: clamp(18px, calc(3 * var(--vwu)), 42px);
-  align-items: end;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, calc(1 * var(--vwu)), 12px);
   margin-bottom: clamp(14px, calc(2.5 * var(--vwu)), 22px);
 }
 
 .heroTitlePrimary {
+  display: inline;
+  align-self: flex-start;
   margin: 0;
   font-family: "Seminaria", serif;
   font-weight: normal;
@@ -57,26 +58,34 @@
   color: #f58807; /* UA title */
 }
 
-.heroTitleSlash {
-  display: none; /* визуально "/" будет частью EN-блока ниже */
+.heroTitleSecondaryWrap {
+  position: relative;
+  margin-left: 45px;
 }
 
-/* EN title sits in second column, slightly lower than UA */
+/* "/" — на початку EN назви, наполовину заходить на неї */
+.heroTitleSlash {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-100%, -40%);
+  font-family: "Seminaria", serif;
+  font-size: clamp(1.9rem, calc(3.2 * var(--vwu)), 2.7rem);
+  line-height: 1;
+  color: #a47b4c;
+  pointer-events: none;
+}
+
+/* EN title: зліва з відступом 45px */
 .heroTitleSecondary {
   margin: 0;
-  padding-top: clamp(10px, calc(1.4 * var(--vwu)), 16px); /* опускаем ниже UA */
+  text-align: left;
   font-family: "Seminaria", serif;
   font-weight: normal;
   font-size: clamp(1.35rem, calc(2.2 * var(--vwu)), 1.85rem);
   line-height: 1.2;
   color: #a47b4c; /* EN title */
-}
-
-.heroTitleSecondary::before {
-  content: "/";
-  margin-right: 10px;
-  color: #f58807; /* "/" как на макете */
-  opacity: 0.95;
+  text-transform: uppercase;
 }
 
 /* Main grid: cover | meta | right. ПК/4К: полный размер; ноутбук и меньше — уменьшенная обложка */
@@ -323,14 +332,6 @@
 
 /* ===== HERO adaptive ===== */
 @media (max-width: 1024px) {
-  .heroTitleBar {
-    grid-template-columns: 1fr;
-  }
-
-  .heroTitleSecondary {
-    padding-top: 6px;
-  }
-
   .heroGrid {
     grid-template-columns: 1fr;
   }
@@ -1225,6 +1226,49 @@
 }
 
 @media (max-width: 480px) {
+  .page {
+    background-position: 19% calc(var(--page-cover-top) - 21px);
+  }
+
+  /* Обкладинка книги: фіксований розмір 160×236, 19px від лівого краю екрану */
+  .coverCol {
+    width: 160px;
+    max-width: 160px;
+    margin-left: calc(19px - var(--gutter));
+    margin-right: auto;
+  }
+
+  .coverWrap {
+    width: 160px;
+    height: 236px;
+    min-height: 236px;
+    aspect-ratio: 160 / 236;
+    border-radius: 0 22px 22px 0;
+  }
+
+  .coverWrap .coverImage {
+    width: 160px;
+    height: 236px;
+    object-fit: cover;
+  }
+
+  .coverLinear {
+    left: 14px;
+  }
+
+  .ageBadgeIcon {
+    width: 33px;
+    height: 33px;
+    right: 6px;
+    top: 4px;
+  }
+
+  .coverBadgeA {
+    bottom: 6px;
+    right: 12px;
+    font-size: 19px;
+  }
+
   .titleBlock h2 {
     display: none;
   }
@@ -1252,6 +1296,16 @@
   .chapterRow .chapterDate,
   .chapterRow .chapterRowActions {
     grid-column: 1;
+  }
+
+  .skeletonCover {
+    width: 160px;
+    height: 236px;
+    min-height: 236px;
+    aspect-ratio: 160 / 236;
+    border-radius: 0 22px 22px 0;
+    margin-left: calc(19px - var(--gutter));
+    margin-right: auto;
   }
 }
 

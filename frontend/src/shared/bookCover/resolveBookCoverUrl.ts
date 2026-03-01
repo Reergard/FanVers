@@ -20,12 +20,21 @@ export function resolveBookCoverUrl(image?: string | null): string {
   ) {
     return DEFAULT_COVER_URL;
   }
-  if (
-    normalized.startsWith("http://") ||
-    normalized.startsWith("https://") ||
-    normalized.startsWith("data:") ||
-    normalized.startsWith("blob:")
-  ) {
+  if (normalized.startsWith("data:") || normalized.startsWith("blob:")) {
+    return normalized;
+  }
+  // Повні URL з бекенду (http://127.0.0.1:8000/media/...) → в dev повертаємо pathname для Vite proxy
+  // Інакше на мобільному 127.0.0.1 вказує на сам пристрій, а не на dev-сервер
+  if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
+    try {
+      const url = new URL(normalized);
+      if (url.pathname.startsWith("/media/") || url.pathname.startsWith("/static/")) {
+        if (import.meta.env.DEV) return url.pathname;
+        return normalized;
+      }
+    } catch {
+      /* ignore */
+    }
     return normalized;
   }
   if (
@@ -35,7 +44,9 @@ export function resolveBookCoverUrl(image?: string | null): string {
     const envBase = (import.meta.env.VITE_API_BASE_URL ?? "").trim();
     const isAbsoluteBase = /^https?:\/\//i.test(envBase);
     const absoluteBaseOrigin = isAbsoluteBase ? new URL(envBase).origin : "";
-    if (import.meta.env.DEV) return `http://127.0.0.1:8000${normalized}`;
+    // В DEV: відносний шлях /media/... → Vite proxy на бекенд. Так працює і на ПК, і на мобільному (доступ з мережі).
+    // Жорстке 127.0.0.1:8000 на мобільному вказує на сам пристрій, а не на dev-сервер.
+    if (import.meta.env.DEV) return normalized;
     if (absoluteBaseOrigin) return `${absoluteBaseOrigin}${normalized}`;
     return normalized;
   }
@@ -43,8 +54,9 @@ export function resolveBookCoverUrl(image?: string | null): string {
   if (base) {
     return `${base}${normalized.startsWith("/") ? normalized : `/${normalized}`}`;
   }
+  // В DEV: відносний шлях → Vite proxy (для /media, /static). На мобільному працює через origin сторінки.
   if (import.meta.env.DEV && normalized.startsWith("/")) {
-    return `http://127.0.0.1:8000${normalized}`;
+    return normalized;
   }
   return normalized;
 }

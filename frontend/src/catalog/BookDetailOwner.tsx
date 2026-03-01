@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { catalogApi, type Book, type Chapter, type Volume } from "../api/catalogApi";
+import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 import { BookDetailLayout } from "./BookDetailLayout";
 import { BookHero } from "./sections/BookHero";
 import { BookDescription } from "./sections/BookDescription";
@@ -125,7 +126,7 @@ export default function BookDetailOwner({
         <BookHero
           title={book.title}
           titleSecondary={book.titleSecondary ?? undefined}
-          coverImageUrl={book.image ?? null}
+          coverImageUrl={book.image ? resolveBookCoverUrl(book.image) : null}
           showAgeBadge={book.adult_content === true}
           authorMarkText={authorMarkText ?? undefined}
           metaRows={metaRows}

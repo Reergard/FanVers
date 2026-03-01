@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNotification } from "../../shared/NotificationModal/NotificationProvider";
 import { useAuth } from "../../auth/useAuth";
 import { catalogKeys, type UpdateBookPayload } from "../../api/catalogApi";
+import { resolveBookCoverUrl } from "../../shared/bookCover/resolveBookCoverUrl";
 import { BookForm, initialFormData, type BookFormData } from "../components/BookForm/BookForm";
 import { useBookBySlug } from "../hooks/useBookBySlug";
 import { useBookUpdate } from "../hooks/useBookUpdate";
@@ -78,7 +79,7 @@ export default function GeneralSettings() {
     <BookForm
       mode="update"
       initialValues={initialValues}
-      initialImagePreview={book.image ?? null}
+      initialImagePreview={book.image ? resolveBookCoverUrl(book.image) : null}
       meta={meta}
       submitLabel="Зберегти зміни"
       submitting={updateBookMutation.isPending}
