@@ -40,11 +40,33 @@
   z-index: 1;
 }
 
-/* Mobile/Tablet: оранжевый цвет навигации */
+/* PC+ (≥1025px): оранжевый цвет, рамка при активной странице, крупнее шрифт, меньше отступы */
+@media (min-width: 1025px) {
+  .frameLink {
+    padding-inline: 21px;
+  }
+
+  .text {
+    color: #F58807;
+    text-shadow: 0 0 18px rgba(245, 136, 7, 0.18);
+    font-size: clamp(22px, calc(2.2 * var(--vwu)), 34px);
+  }
+
+  .frameLink.active {
+    background-image: url("../../assets/backgrounds/nav_frame.svg");
+  }
+}
+
+/* Mobile/Tablet: оранжевый цвет, рамка при активной странице */
 @media (max-width: 1024px) {
   .text {
     color: #F58807;
     text-shadow: 0 0 18px rgba(245, 136, 7, 0.18);
+  }
+
+  /* Рамка видна на активной странице (нет hover на touch) */
+  .frameLink.active {
+    background-image: url("../../assets/backgrounds/nav_frame.svg");
   }
 }
 
@@ -60,15 +82,16 @@
   }
 }
 
-/* ===== MOBILE (до 480px): компактнее ===== */
+/* ===== MOBILE (до 480px): компактнее, шрифт крупнее ===== */
 @media (max-width: 480px) {
   .frameLink {
     padding-inline: 15px;
     height: clamp(38px, calc(4 * var(--vwu)), 50px);
+    margin-top: 1px;
   }
 
   .text {
-    font-size: clamp(14px, calc(1.5 * var(--vwu)), 17px);
+    font-size: clamp(18px, calc(1.9 * var(--vwu)), 21px);
   }
 }
 
@@ -79,6 +102,6 @@
   }
 
   .text {
-    font-size: 13px;
+    font-size: 15px;
   }
 }

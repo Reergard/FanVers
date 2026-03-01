@@ -13,6 +13,7 @@
   grid-template-columns: 1fr auto 1fr; /* left / logo / right */
   align-items: center;
   gap: 16px;
+  overflow: visible;
 }
 
 /* regions */
@@ -101,6 +102,7 @@
   align-items: center;
   justify-content: center;
 
+  font-family: "Seminaria", sans-serif;
   font-size: 12px;
   line-height: 1;
   color: #0b0b0b;
@@ -235,6 +237,7 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
+  opacity: 0.75;
 
   box-shadow:
     /* тонкое кольцо (не жирное!) */
@@ -298,17 +301,50 @@
   padding-bottom: 6px;
 }
 
-/* ✦ separators */
+/* ✦ separators — как в спрайте: звезда + синее свечение снизу (dy≈8px, blur) */
 .navSeparator {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 33px;
   height: 37px;
   margin-top: 17px;
   opacity: 0.7;
   flex-shrink: 0;
   align-self: center;
+  color: #05B4C7;
+  margin-inline: -8px;
+  overflow: visible;
 }
 
+/* Фон под звездой — как в спрайте: смещение вниз + blur + цвет #05B4C7 */
+.navSeparator::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(calc(-50% + 3px), calc(-50% + 3px));
+  width: 95%;
+  height: 95%;
+  background: radial-gradient(ellipse at center, rgba(5, 180, 199, 0.5) 0%, rgba(5, 180, 199, 0.25) 50%, transparent 75%);
+  filter: blur(6px);
+  pointer-events: none;
+  z-index: -1;
+}
 
+.navSeparatorIcon {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+/* PC+ (≥1025px): меньше отступы между звездой и ссылками */
+@media (min-width: 1025px) {
+  .navSeparator {
+    margin-inline: -10px;
+  }
+}
 
 /* ============================================================
    TABLET & MOBILE (<= 1024)
@@ -377,6 +413,27 @@
     text-shadow: 0 0 14px rgba(5, 180, 199, 0.18);
   }
 
+  .coinsLineText {
+    display: block;
+    min-width: 0;
+  }
+
+  /* Фон под балансом — CSS-реализация (как SVG: #F58807 + blur 15) */
+  .coinsLine::before {
+    content: "";
+    position: absolute;
+    left: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 112%;
+    height: 1.2em;
+    background: #F58807;
+    filter: blur(25px);
+    border-radius: 9999px;
+    pointer-events: none;
+    z-index: -1;
+  }
+
   .coinsLabel {
     font-family: "BadScript", sans-serif;
     opacity: 0.95;
@@ -385,17 +442,6 @@
   .coinsValue {
     font-family: "Arizonia", sans-serif;
     color: rgba(5, 180, 199, 0.95);
-  }
-
-  .balanceGlow {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: -1;
   }
 
   .compactActions {
@@ -407,6 +453,7 @@
 
   .rightCompact {
     justify-content: flex-end;
+    overflow: visible;
   }
 
   .burgerPill {
@@ -433,31 +480,22 @@
   }
 
   .searchMini {
-    position: relative;
-    padding-bottom: 8px;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    color: rgba(5, 180, 199, 0.95);
+    padding: 6px 0 0;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    filter: drop-shadow(0 0 10px rgba(5, 180, 199, 0.18));
+    overflow: visible;
   }
 
-  .searchMini::before {
-    content: "";
-    position: absolute;
-    left: 8px;
-    right: 8px;
-    bottom: 2px;
-    height: 1px;
-    background: rgba(5, 180, 199, 0.9);
-    box-shadow: 0 0 10px rgba(5, 180, 199, 0.18);
-  }
-
-  .searchMini::after {
-    content: "";
-    position: absolute;
-    right: 10px;
-    bottom: 6px;
-    width: 3px;
-    height: 3px;
-    border-radius: 999px;
-    background: rgba(5, 180, 199, 0.95);
-    box-shadow: -6px 0 0 rgba(5, 180, 199, 0.95), -12px 0 0 rgba(5, 180, 199, 0.95);
+  .searchMiniSvg {
+    display: block;
+    width: 48px;
+    height: 44px;
   }
 
   .navRows {
@@ -658,16 +696,19 @@
 
 /* ============================================================
    MOBILE narrow (<= 480) — плотнее, как на 440
+   Лого фиксировано (не сдвигается), левый блок получает максимум места
    ============================================================ */
 @media (max-width: 480px) {
   .top {
     padding-block: 8px;
   }
 
-  /* 1) ГЛАВНОЕ: фиксируем пропорции колонок, чтобы лого не сжималось */
+  /* Больше места: меньше padding, меньше gap */
   .topInner {
-    grid-template-columns: minmax(0, 35vw) auto minmax(0, 86px);
-    gap: 6px;
+    position: relative;
+    padding-inline: 8px;
+    grid-template-columns: minmax(0, 1fr) minmax(92px, 92px) minmax(0, 86px);
+    gap: 4px;
   }
 
   /* чтобы текст/контент в колонках мог сжиматься, а не ломать сетку */
@@ -677,10 +718,24 @@
     overflow: visible;
   }
 
-  /* 2) УМЕНЬШАЕМ левый блок */
+  /* Центр — плейсхолдер для сетки (лого вынесено в отдельный слой) */
+  .center {
+    justify-self: center;
+  }
+
+  /* Лого по центру экрана — абсолютно, выше остального */
+  .center .logo {
+    position: absolute;
+    left: 50%;
+    top: -6px;
+    transform: translateX(-50%);
+    z-index: 2;
+  }
+
+  /* 2) Левый блок занимает всю доступную ширину ячейки (1fr) */
   .compactLeft {
     width: 100%;
-    max-width: 35vw;
+    max-width: 100%;
   }
 
   .avatar {
@@ -688,45 +743,88 @@
     height: 46px;
   }
 
+  .avatar::before {
+    inset: -7px;
+  }
+
+  .avatar::after {
+    inset: 1px;
+  }
+
   .compactMeta {
     min-width: 0;
+  }
+
+  .compactActions {
+    margin-left: 2px;
   }
 
   .iconBtn {
     padding: 3px; /* было 6px */
   }
 
-  .icon {
-    width: 19px;
-    height: 19px;
+  /* Значки уведомлений и сообщений — только в compactActions */
+  .compactActions .icon {
+    width: 27px;
+    height: 27px;
   }
 
-  .badge {
-    top: -5px;
-    right: -7px;
-    min-width: 16px;
-    height: 16px;
-    font-size: 11px;
-    padding-inline: 4px;
+  /* Значок уведомлений — сдвиг вправо на 1px */
+  .compactActions .iconBtn:nth-child(1) .icon {
+    transform: translate(1px, 0);
+  }
+
+  /* Значок сообщений — на 2px больше, сдвиг вверх и влево на 1px */
+  .compactActions .iconBtn:nth-child(2) .icon {
+    width: 29px;
+    height: 29px;
+    transform: translate(-1px, -1px);
+  }
+
+  /* Кружки с цифрами: снизу значков, цвет #F58807 как на скрине */
+  .compactActions .badge {
+    top: auto;
+    bottom: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    font-size: 12px;
+    padding-inline: 5px;
+    background: #F58807;
+    box-shadow: 0 0 12px rgba(245, 136, 7, 0.4);
   }
 
   .coinsLine {
-    font-size: 12px;
+    margin-top: 6px;
+    font-size: 15px;
     line-height: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
     max-width: 100%;
   }
 
-  /* фон-свечение под coins на узких лучше убрать — оно визуально раздувает блок */
-  .balanceGlow {
-    display: none;
+  .coinsLineText {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .coinsLabel {
+    display: none; /* только на мобильном скрываем "FanCoins:" */
+  }
+
+  .coinsValue {
+    font-size: 18px;
   }
 
   /* 3) УМЕНЬШАЕМ правый блок (поиск + бургер) */
   .rightCompact {
-    gap: 6px;
+    gap: 10px;
+  }
+
+  .searchMiniSvg {
+    width: 42px;
+    height: 38px;
   }
 
   .burgerPill {
@@ -754,9 +852,17 @@
 
   .navSeparator {
     width: 24px;
+    min-width: 24px;
     height: 24px;
     margin-top: 10px;
-    opacity: 0.65;
+    opacity: 1;
+    flex-shrink: 0;
+    color: #05B4C7;
+    margin-inline: -8px;
+  }
+
+  .navSeparator::before {
+    filter: blur(5px);
   }
 }
 
@@ -774,7 +880,11 @@
   }
 
   .avatar::before {
-    inset: -20px; /* уменьшаем ореол */
+    inset: -16px;
+  }
+
+  .avatar::after {
+    inset: 2px;
   }
 
   .compactActions {
@@ -785,13 +895,31 @@
     padding: 2px;
   }
 
-  .icon {
-    width: 20px;
-    height: 20px;
+  .compactActions .icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .compactActions .iconBtn:nth-child(1) .icon {
+    transform: translate(1px, 0);
+  }
+
+  .compactActions .iconBtn:nth-child(2) .icon {
+    width: 26px;
+    height: 26px;
+    transform: translate(-3px, -1px);
   }
 
   .coinsLine {
-    font-size: 11px;
+    font-size: 13px;
+  }
+
+  .coinsLabel {
+    font-size: 13px;
+  }
+
+  .coinsValue {
+    font-size: 16px;
   }
 
   .rightCompact {

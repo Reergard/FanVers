@@ -1,6 +1,7 @@
 import styles from "./Header.module.css";
 import { Container } from "../../shared/Container";
 import { Icon } from "../../shared/Icon";
+import { StarSvg } from "../../shared/StarSvg/StarSvg";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FrameLink } from "../../shared/FrameLink/FrameLink";
 import React, { useState, useRef, useCallback, useEffect } from "react";
@@ -40,6 +41,72 @@ const NAV_ROW_2 = [
   { to: "/search", label: "Пошук" },
   { to: "/faq", label: "FAQ" },
 ];
+
+/* Иконка поиска: слева точки, справа лупа (минимальный зазор, можно с перекрытием), под ними линия */
+const SearchIcon = ({ className }: { className?: string }) => {
+  const stroke = 1.5;
+  const dotR = 1.5;
+  const dotSpacing = 6;
+  const dot1 = 9; /* точки сдвинуты правее */
+  const dot2 = dot1 + dotSpacing;
+  const dot3 = dot2 + dotSpacing;
+  const rowY = 7;
+  const glassCx = 25; /* лупа сдвинута вместе с точками */
+  const glassCy = -5; /* лупа чуть выше */
+  const glassR = 7; /* увеличенная лупа */
+  const handleAngle = Math.PI / 4;
+  const handleStartX = glassCx + glassR * Math.cos(handleAngle);
+  const handleStartY = glassCy + glassR * Math.sin(handleAngle);
+  const handleLen = 7;
+  const handleEndX = handleStartX + handleLen * Math.cos(handleAngle);
+  const handleEndY = handleStartY + handleLen * Math.sin(handleAngle);
+  const lineY = 15;
+
+  return (
+    <svg
+      className={className}
+      viewBox="0 -14 40 36"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      {/* Точки слева */}
+      <circle cx={dot1} cy={rowY} r={dotR} fill="currentColor" />
+      <circle cx={dot2} cy={rowY} r={dotR} fill="currentColor" />
+      <circle cx={dot3} cy={rowY} r={dotR} fill="currentColor" />
+
+      {/* Лупа справа */}
+      <circle
+        cx={glassCx}
+        cy={glassCy}
+        r={glassR}
+        stroke="currentColor"
+        strokeWidth={stroke}
+        fill="none"
+      />
+      <line
+        x1={handleStartX}
+        y1={handleStartY}
+        x2={handleEndX}
+        y2={handleEndY}
+        stroke="currentColor"
+        strokeWidth={stroke}
+        strokeLinecap="round"
+      />
+
+      {/* Линия под точками и лупой */}
+      <line
+        x1="0"
+        y1={lineY}
+        x2="48"
+        y2={lineY}
+        stroke="currentColor"
+        strokeWidth={stroke}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+};
 
 export function Header() {
   const { isAuthenticated, username, balance } = useAuth();
@@ -223,9 +290,10 @@ export function Header() {
                 </div>
 
                 <div className={styles.coinsLine}>
-                  <span className={styles.coinsLabel}>FanCoins:</span>{" "}
-                  <span className={styles.coinsValue}>{user.coins}</span>
-                  <Icon name="back_balance" className={styles.balanceGlow} aria-hidden="true" />
+                  <span className={styles.coinsLineText}>
+                    <span className={styles.coinsLabel}>FanCoins:</span>{" "}
+                    <span className={styles.coinsValue}>{user.coins}</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -295,14 +363,13 @@ export function Header() {
 
           {/* ===== Compact RIGHT: search + burger (pill) ===== */}
           <div className={[styles.right, styles.rightCompact].filter(Boolean).join(" ")}>
-            <button
-              className={`${styles.iconBtn} ${styles.searchMini}`}
-              type="button"
+            <Link
+              to="/search"
+              className={styles.searchMini}
               aria-label="Пошук"
-              onClick={() => navigate("/search")}
             >
-              <Icon name="search" className={styles.icon} title="Пошук" />
-            </button>
+              <SearchIcon className={styles.searchMiniSvg} />
+            </Link>
 
             <button
               ref={burgerBtnRef}
@@ -329,18 +396,25 @@ export function Header() {
                   <React.Fragment key={i.to}>
                     <FrameLink to={i.to}>{i.label}</FrameLink>
                     {idx < NAV_ROW_1.length - 1 && (
-                      <Icon name="Star_icon" className={styles.navSeparator} aria-hidden="true" />
+                      <span className={styles.navSeparator}>
+                        <StarSvg className={styles.navSeparatorIcon} />
+                      </span>
                     )}
                   </React.Fragment>
                 ))}
               </div>
 
               <div className={styles.navRow}>
+                <span className={styles.navSeparator}>
+                  <StarSvg className={styles.navSeparatorIcon} />
+                </span>
                 {NAV_ROW_2.map((i, idx) => (
                   <React.Fragment key={i.to}>
                     <FrameLink to={i.to}>{i.label}</FrameLink>
                     {idx < NAV_ROW_2.length - 1 && (
-                      <Icon name="Star_icon" className={styles.navSeparator} aria-hidden="true" />
+                      <span className={styles.navSeparator}>
+                        <StarSvg className={styles.navSeparatorIcon} />
+                      </span>
                     )}
                   </React.Fragment>
                 ))}
@@ -351,9 +425,11 @@ export function Header() {
               {NAV_MENU_OLD.map((i, index) => (
                 <React.Fragment key={i.to}>
                   <FrameLink to={i.to}>{i.label}</FrameLink>
-                  {index < NAV_MENU_OLD.length - 1 && (
-                    <Icon name="Star_icon" className={styles.navSeparator} aria-hidden="true" />
-                  )}
+                    {index < NAV_MENU_OLD.length - 1 && (
+                      <span className={styles.navSeparator}>
+                        <StarSvg className={styles.navSeparatorIcon} />
+                      </span>
+                    )}
                 </React.Fragment>
               ))}
             </div>
