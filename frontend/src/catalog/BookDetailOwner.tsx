@@ -49,11 +49,11 @@ export default function BookDetailOwner({
         label: "Фендом:",
         value: book.fandoms?.length ? book.fandoms.map((f) => f.name).join(", ") : "—",
       },
-      { label: "Країна:", value: book.country?.name ?? "—" },
       {
         label: "Статус перекладу:",
         value: book.translation_status_display ?? (book.isPublic ? "Публічна" : "Перекладається"),
       },
+      { label: "Країна:", value: book.country?.name ?? "—" },
       {
         label: "Статус випуску твору:",
         value: book.original_status_display ?? "Виходить",

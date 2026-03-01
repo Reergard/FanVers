@@ -10,15 +10,21 @@ export default function BookDetailSkeleton() {
         </div>
         <div className={styles.skeletonGrid}>
           <div className={styles.skeletonCover} />
-          <div className={styles.skeletonMeta}>
-            {[1, 2, 3, 4, 5].map((i) => (
+          <div className={styles.skeletonMetaShort}>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className={styles.skeletonMetaRow} />
             ))}
           </div>
-          <div className={styles.skeletonMeta}>
+          <div className={styles.skeletonMetaChips}>
+            <div className={styles.skeletonMetaRow} />
             <div className={styles.skeletonMetaRow} />
             <div className={styles.skeletonMetaRow} />
           </div>
+          <div className={styles.skeletonRating}>
+            <div className={styles.skeletonMetaRow} />
+            <div className={styles.skeletonMetaRow} />
+          </div>
+          <div className={styles.skeletonAuthorMark} />
         </div>
       </div>
     </section>

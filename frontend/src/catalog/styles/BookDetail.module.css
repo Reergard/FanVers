@@ -1,3 +1,12 @@
+/* Шрифт для білого та синього тексту — підключаємо тут, щоб гарантувати завантаження на сторінці книги */
+@font-face {
+  font-family: "RobotoCondensedLightItalic";
+  src: url("../../assets/fonts/roboto-condensed-light-italic.woff2") format("woff2");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
 /* ===== Страница книги: токены и общий каркас ===== */
 .page {
   --book-accent: #d4a84b;
@@ -12,13 +21,26 @@
   --page-bg-width: clamp(320px, calc(42.33 * var(--vwu)), 578px);
   --page-bg-height: clamp(427px, calc(56.44 * var(--vwu)), 771px);
   color: var(--text);
+  font-family: "RobotoCondensedLightItalic", "Inter", sans-serif !important;
+  font-weight: 300;
+  font-style: italic;
   min-height: 0;
-  /* Фоновая картинка: без заливки поверх, чтобы SVG был виден */
+  position: relative;
+  /* Фоновая картинка: 70% прозрачность, сдвинута влево */
   background-color: transparent;
+}
+
+.page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-image: url("../assets/backgrounds/background_book.png");
   background-repeat: no-repeat;
-  background-position: 50% var(--page-cover-top);
+  background-position: 5% var(--page-cover-top);
   background-size: var(--page-bg-width) var(--page-bg-height);
+  opacity: 0.7;
 }
 
 .content {
@@ -88,14 +110,63 @@
   text-transform: uppercase;
 }
 
-/* Main grid: cover | meta | right. ПК/4К: полный размер; ноутбук и меньше — уменьшенная обложка */
+/* Hero grid: одна DOM-структура, управление через grid-template-areas */
 .heroGrid {
   display: grid;
-  grid-template-columns: minmax(260px, 360px) 1fr minmax(220px, 280px);
+  grid-template-columns: 380px 1fr 280px;
+  grid-template-areas: "cover meta rating";
   gap: clamp(18px, calc(3 * var(--vwu)), 44px);
   align-items: start;
 }
 
+.heroCover {
+  grid-area: cover;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, calc(2 * var(--vwu)), 20px);
+  min-width: 0;
+}
+
+.heroMetaShort {
+  grid-area: meta;
+  min-width: 0;
+  padding-top: clamp(48px, calc(6 * var(--vwu)), 88px);
+}
+
+.heroMetaChips {
+  grid-area: meta;
+  min-width: 0;
+}
+
+.heroRating {
+  grid-area: rating;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, calc(2 * var(--vwu)), 20px);
+  padding-top: clamp(64px, calc(7 * var(--vwu)), 92px);
+}
+
+.heroActions {
+  grid-area: meta;
+  align-self: flex-end;
+  margin-top: clamp(16px, calc(2.5 * var(--vwu)), 24px);
+}
+
+.heroAuthorMark {
+  grid-area: rating;
+  width: 100%;
+  text-align: center;
+  font-family: "Seminaria", serif;
+  font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+  color: #00eafd;
+  -webkit-text-stroke: 1px rgba(0, 56, 255, 0.79);
+  text-shadow:
+    0 0 10px rgba(0, 234, 253, 0.15),
+    0 0 1px rgba(0, 56, 255, 0.79);
+}
+
+/* Legacy: coverCol for backward compat if needed */
 .coverCol {
   display: flex;
   flex-direction: column;
@@ -168,10 +239,17 @@
   flex-wrap: wrap;
   gap: clamp(8px, calc(1.5 * var(--vwu)), 12px);
   font-family: "Seminaria", serif;
+  justify-content: center;
+  align-self: center;
 }
 
 .coverActions button {
   font-family: "Seminaria", serif;
+}
+
+.coverActions .settingsBtn {
+  padding-left: clamp(12px, calc(1.2 * var(--vwu)), 16px);
+  padding-right: clamp(12px, calc(1.2 * var(--vwu)), 16px);
 }
 
 .metaCol {
@@ -179,16 +257,6 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  /* опускаем содержимое (характеристики) ниже, обложка и правая колонка остаются на месте */
-  padding-top: clamp(48px, calc(6 * var(--vwu)), 88px);
-}
-
-/* right column: aligns roughly with meta area (as on макете) */
-.rightCol {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(14px, calc(2 * var(--vwu)), 20px);
-  padding-top: clamp(64px, calc(7 * var(--vwu)), 92px); /* чтобы "Подякувати" было рядом с жанрами/тегами */
 }
 
 /* Donate box: SVG + label */
@@ -222,9 +290,6 @@
   align-items: center;
   justify-content: center;
   gap: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #d4a84b;
   pointer-events: none;
   text-align: center;
 }
@@ -235,9 +300,22 @@
   font-family: "Seminaria", serif;
 }
 
+.thankAuthorCoins p:first-child {
+  font-size: 22px;
+  margin-top: 9px;
+  font-weight: 600;
+  color: #d4a84b;
+}
+
+.thankAuthorCoins p:last-child {
+  font-size: 19px;
+  font-weight: 400;
+  color: #d4a84b;
+}
+
 .thankAuthorLabel {
-  font-size: 13px;
-  color: rgba(212, 168, 75, 0.95);
+  font-size: 17px;
+  color: #F58807;
   text-align: center;
   font-family: "Seminaria", serif;
 }
@@ -310,11 +388,10 @@
   color: #f0d34a;
 }
 
-/* Авторська книга: #00EAFD + контур #0038FF 79%, по центру блоку */
 .authorMarkRight {
   width: 100%;
   text-align: center;
-  font-family: "Seminaria", serif; /* потом заменишь на скриптовый как в макете */
+  font-family: "Seminaria", serif;
   font-size: clamp(1.05rem, 1.8vw, 1.25rem);
   color: #00eafd;
   -webkit-text-stroke: 1px rgba(0, 56, 255, 0.79);
@@ -323,28 +400,11 @@
     0 0 1px rgba(0, 56, 255, 0.79);
 }
 
-/* Become translator button (в колонці характеристик, прижата вправо; стиль — ActionButton variant outline) */
 .becomeTranslatorBtn {
-  align-self: flex-end;
-  margin-top: clamp(16px, calc(2.5 * var(--vwu)), 24px);
-  padding: clamp(5px, calc(0.9 * var(--vwu)), 7px) 
+  padding: clamp(5px, calc(0.9 * var(--vwu)), 7px);
 }
 
 /* ===== HERO adaptive ===== */
-@media (max-width: 1024px) {
-  .heroGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .metaCol {
-    padding-top: 0;
-  }
-
-  .rightCol {
-    padding-top: 0;
-    align-items: flex-start;
-  }
-}
 
 .metaBlock {
   display: flex;
@@ -374,8 +434,8 @@
 .metaLabel,
 .metaValue {
   color: #05b4c7;
-  font-size: clamp(13px, 1.2vw, 14px);
-  font-family: "Inter", sans-serif;
+  font-size: clamp(17px, 1.6vw, 18px);
+  font-family: "RobotoCondensedLightItalic", "Inter", sans-serif !important;
 }
 
 .metaTags {
@@ -389,10 +449,58 @@
 .tag {
   padding: 2px 8px;
   border-radius: 4px;
-  font-size: clamp(12px, 1.1vw, 13px);
+  font-size: clamp(16px, 1.5vw, 17px);
   color: #05b4c7;
   border: 1px solid rgba(5, 180, 199, 0.35);
   background: rgba(5, 180, 199, 0.08);
+}
+
+/* Chips variant: Жанр, Теги, Фендом — label по содержимому, values заполняют всё до правого края */
+.metaBlockChips {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.metaChipsRow {
+  display: grid;
+  grid-template-columns: minmax(7.5ch, 7.5ch) 1fr;
+  gap: clamp(12px, 2vw, 16px);
+  padding-block: clamp(6px, 1vw, 10px);
+  border-bottom: 1px solid var(--book-border);
+  align-items: baseline;
+  min-width: 0;
+}
+
+.metaChipsRow:last-child {
+  border-bottom: none;
+}
+
+.metaChipsLabel {
+  color: #05b4c7;
+  font-size: clamp(17px, 1.6vw, 18px);
+  font-family: "RobotoCondensedLightItalic", "Inter", sans-serif !important;
+  white-space: nowrap;
+}
+
+.metaChipsValues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+
+.metaChip {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: clamp(16px, 1.5vw, 17px);
+  color: #05b4c7;
+  border: 1px solid rgba(5, 180, 199, 0.35);
+  background: rgba(5, 180, 199, 0.08);
+  font-family: "RobotoCondensedLightItalic", "Inter", sans-serif !important;
 }
 
 /* ===== ОПИС КНИГИ ===== */
@@ -401,7 +509,7 @@
   min-width: 0;
   max-width: 100%;
   overflow-wrap: break-word;
-  font-family: "Inter", sans-serif;
+  font-family: "RobotoCondensedLightItalic", "Inter", sans-serif !important;
 }
 
 .headingWithLine {
@@ -419,7 +527,7 @@
   text-transform: uppercase;
   letter-spacing: 0.02em;
   text-align: left;
-  font-family: "Inter", sans-serif;
+  font-family: "RobotoCondensedLightItalic", "Inter", sans-serif !important;
 }
 
 .headingLine {
@@ -442,7 +550,7 @@
   color: var(--text);
   font-size: clamp(14px, 1.2vw, 15px);
   line-height: 1.6;
-  font-family: "Inter", sans-serif;
+  font-family: "RobotoCondensedLightItalic", "Inter", sans-serif !important;
 }
 
 .description .text p {
@@ -1189,49 +1297,290 @@
   padding: 16px 0;
 }
 
-/* ===== АДАПТИВ ===== */
-/* Ноутбуки и экраны до 1440px: обложка симметрично меньше; ПК и 4К (выше 1440px) — без изменений */
-@media (max-width: 1440px) {
+/* ===== АДАПТИВ: тільки grid-template-areas на брейкпоінтах ===== */
+
+/* Tablet: cover | meta в рядку 1, cover | rating в рядку 2 (ПК layout зберігається до 1024px) */
+@media (max-width: 1024px) {
+  .metaCol {
+    padding-top: 0;
+  }
+
+  .rightCol {
+    padding-top: 0;
+    align-items: flex-start;
+  }
+
   .heroGrid {
-    grid-template-columns: minmax(200px, 280px) 1fr minmax(200px, 260px);
+    grid-template-columns: 320px 1fr;
+    grid-template-areas:
+      "cover meta"
+      "cover rating";
+  }
+
+  .heroMetaShort,
+  .heroMetaChips,
+  .heroActions {
+    grid-area: meta;
+  }
+
+  .heroRating,
+  .heroAuthorMark {
+    grid-area: rating;
+  }
+
+  .heroMetaShort {
+    padding-top: 0;
+  }
+
+  .heroRating {
+    padding-top: 0;
   }
 
   .coverWrap {
     min-height: clamp(160px, calc(16 * var(--vwu)), 220px);
   }
-}
-
-@media (max-width: 1024px) {
-  .heroGrid {
-    grid-template-columns: 1fr;
-    gap: clamp(20px, 4vw, 32px);
-  }
-
-  .coverCol {
-    max-width: 360px;
-    margin-inline: auto;
-    width: 100%;
-  }
 
   .coverActions {
     flex-direction: row;
-    justify-content: center;
+    justify-content: flex-start;
+  }
+
+  .skeletonGrid {
+    grid-template-columns: 320px 1fr;
+    grid-template-areas: "cover meta" "cover rating";
+  }
+
+  .skeletonMetaShort,
+  .skeletonMetaChips {
+    grid-area: meta;
+  }
+
+  .skeletonRating,
+  .skeletonAuthorMark {
+    grid-area: rating;
   }
 }
 
+/* Mobile: 5 рядів — thank|ratings на одному рядку, Стати|Авторська знизу */
 @media (max-width: 768px) {
+  .heroGrid {
+    grid-template-columns: 180px 1fr;
+    grid-template-areas:
+      "cover metaShort"
+      "metaChips metaChips"
+      "rating rating"
+      "ratingBottomL ratingBottomR";
+    gap: clamp(12px, 2vw, 20px);
+  }
+
+  .heroCover {
+    grid-area: cover;
+  }
+
+  .heroMetaShort {
+    grid-area: metaShort;
+    padding-top: 0;
+  }
+
+  .heroMetaChips {
+    grid-area: metaChips;
+    padding-top: 0;
+  }
+
+  .heroRating {
+    grid-area: rating;
+    padding-top: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: clamp(12px, 2vw, 16px);
+  }
+
+  .heroRating .thankAuthor {
+    flex-shrink: 0;
+  }
+
+  .heroRating .ratingsStack {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .heroActions {
+    grid-area: ratingBottomL;
+    align-self: flex-start;
+    margin-top: 0;
+  }
+
+  .heroAuthorMark {
+    grid-area: ratingBottomR;
+    align-self: center;
+    text-align: right;
+    font-family: "WindSong", cursive, serif;
+    font-size: 38px;
+    color: #00EAFD;
+    -webkit-text-stroke: 0.5px rgba(0, 56, 255, 0.79);
+    text-shadow:
+      0 0 10px rgba(0, 234, 253, 0.15),
+      0 0 0.5px rgba(0, 56, 255, 0.79);
+  }
+
+  .heroAuthorMark::first-letter {
+    font-size: 60px;
+  }
+
+  .heroRating .thankAuthorLabel {
+    font-size: 20px;
+  }
+
+  .heroRating .ratingTitle {
+    font-size: 17px;
+  }
+
+  /* Якщо Стати не показується — Авторська по центру */
+  .heroGrid:not(:has(.heroActions > *)) .heroAuthorMark {
+    grid-area: ratingBottomL;
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+
   .coverActions {
     flex-direction: column;
+  }
+
+  .heroMetaChips .metaTags,
+  .heroMetaChips .metaList {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Chips: label left, values right, gray separators, #05B4C7 frame 1px radius */
+  .metaChipsRow {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .metaChipsRow:last-child {
+    border-bottom: none;
+  }
+
+  .metaChip {
+    border: 1px solid #05b4c7;
+    border-radius: 5px;
+    color: #05b4c7;
+    font-family: "RobotoCondensedLightItalic", "Inter", sans-serif !important;
+    text-align: center;
+  }
+
+  .metaChipsLabel {
+    font-family: "RobotoCondensedLightItalic", "Inter", sans-serif !important;
+  }
+
+  .heroMetaShort .metaLabel,
+  .heroMetaShort .metaValue {
+    font-family: "RobotoCondensedLightItalic", "Inter", sans-serif !important;
+  }
+
+  /* Short meta: назва на одному рядку, значення з БД на іншому; рамка #05B4C7; width fit-content */
+  .heroMetaShort .metaList {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    align-items: stretch;
+  }
+
+  .heroMetaShort .metaRow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 4px 8px 4px;
+    border: 1px solid #05b4c7;
+    border-radius: 999px;
+    position: relative;
+    width: fit-content;
+    min-width: 85px;
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .heroMetaShort .metaRow:nth-child(odd) {
+    align-self: flex-start;
+  }
+
+  .heroMetaShort .metaRow:nth-child(even) {
+    align-self: flex-end;
+  }
+
+  .heroMetaShort .metaRow::after {
+    content: "";
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 4px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    background: repeating-linear-gradient(
+      to right,
+      #05b4c7 0,
+      #05b4c7 2px,
+      transparent 2px,
+      transparent 6px
+    );
+    background-position: 3px 0;
+  }
+
+  .heroMetaShort .metaLabel {
+    font-size: 15px;
+    line-height: 1;
+    opacity: 0.85;
+    display: block;
+  }
+
+  .heroMetaShort .metaValue {
+    font-size: 17px;
+    line-height: 1.1;
+    display: block;
+  }
+
+  .skeletonGrid {
+    grid-template-columns: 180px 1fr;
+    grid-template-areas:
+      "cover metaShort"
+      "metaChips metaChips"
+      "rating rating"
+      "ratingBottomL ratingBottomR";
+  }
+
+  .skeletonMetaShort {
+    grid-area: metaShort;
+  }
+
+  .skeletonMetaChips {
+    grid-area: metaChips;
+  }
+
+  .skeletonRating {
+    grid-area: rating;
+  }
+
+  .skeletonAuthorMark {
+    grid-area: ratingBottomL;
+    grid-column: 1 / -1;
   }
 }
 
 @media (max-width: 480px) {
   .page {
-    background-position: 19% calc(var(--page-cover-top) - 21px);
+    background-position: 25% calc(var(--page-cover-top) - 24px);
   }
 
-  /* Обкладинка книги: фіксований розмір 160×236, 19px від лівого краю екрану */
-  .coverCol {
+  .heroGrid {
+    grid-template-columns: 160px 1fr;
+  }
+
+  .heroCover {
     width: 160px;
     max-width: 160px;
     margin-left: calc(19px - var(--gutter));
@@ -1267,10 +1616,6 @@
     bottom: 6px;
     right: 12px;
     font-size: 19px;
-  }
-
-  .titleBlock h2 {
-    display: none;
   }
 
   .metaRow {
@@ -1348,12 +1693,14 @@
 
 .skeletonGrid {
   display: grid;
-  grid-template-columns: minmax(260px, 360px) 1fr minmax(220px, 280px);
+  grid-template-columns: 380px 1fr 280px;
+  grid-template-areas: "cover meta rating";
   gap: clamp(18px, calc(3 * var(--vwu)), 44px);
   align-items: start;
 }
 
 .skeletonCover {
+  grid-area: cover;
   width: 100%;
   aspect-ratio: 2 / 3;
   min-height: clamp(200px, calc(20 * var(--vwu)), 280px);
@@ -1362,7 +1709,31 @@
   animation: skeletonPulse 1.5s ease-in-out infinite;
 }
 
-.skeletonMeta {
+.skeletonMetaShort,
+.skeletonMetaChips {
+  grid-area: meta;
+}
+
+.skeletonRating {
+  grid-area: rating;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: clamp(48px, calc(6 * var(--vwu)), 88px);
+}
+
+.skeletonAuthorMark {
+  grid-area: rating;
+  height: 1.5rem;
+  max-width: 140px;
+  margin-inline: auto;
+  background: var(--book-card-bg);
+  border-radius: 4px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.skeletonMetaShort,
+.skeletonMetaChips {
   display: flex;
   flex-direction: column;
   gap: 12px;

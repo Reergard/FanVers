@@ -8,9 +8,40 @@ export type MetaRow = {
 
 type BookMetaProps = {
   rows: MetaRow[];
+  /** Chips: label left, values right */
+  variant?: "default" | "chips";
 };
 
-export function BookMeta({ rows }: BookMetaProps) {
+function parseChipsValue(value: ReactNode): string[] {
+  if (value == null) return ["—"];
+  const s = String(value).trim();
+  if (!s || s === "—") return ["—"];
+  return s.split(/\s*,\s*/).filter(Boolean);
+}
+
+export function BookMeta({ rows, variant = "default" }: BookMetaProps) {
+  if (variant === "chips") {
+    return (
+      <div className={`${styles.metaBlock} ${styles.metaBlockChips}`} role="list">
+        {rows.map(({ label, value }, i) => {
+          const chips = parseChipsValue(value);
+          return (
+            <div key={i} className={styles.metaChipsRow} role="listitem">
+              <span className={styles.metaChipsLabel}>{label}</span>
+              <div className={styles.metaChipsValues}>
+                {chips.map((chip, j) => (
+                  <span key={j} className={styles.metaChip}>
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className={styles.metaBlock} role="list">
       <div className={styles.metaList}>

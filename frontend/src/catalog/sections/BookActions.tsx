@@ -21,6 +21,7 @@ export function BookActions({ bookId, bookSlug }: BookActionsProps) {
         variant="primary"
         to={bookSlug ? `/books/${bookSlug}/settings` : undefined}
         disabled={!bookSlug}
+        className={styles.settingsBtn}
       >
         Налаштування
       </ActionButton>

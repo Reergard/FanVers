@@ -55,7 +55,7 @@
 }
 @font-face {
   font-family: "WindSong";
-  src: url("./assets/fonts/WindSong-Medium.ttf") format("truetype");
+  src: url("./assets/fonts/WindSong%20Medium.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -101,6 +101,8 @@ body {
   background: #020a0b; /* простой fallback */
   overflow-x: hidden; /* предотвращаем автозум на мобильных */
   font-family: "RobotoCondensedLightItalic", "Inter", sans-serif;
+  font-weight: 300;
+  font-style: italic;
 }
 
 /* Скрываем нативную полосу прокрутки, но оставляем нативный скролл */

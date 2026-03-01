@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import styles from "../styles/BookDetail.module.css";
 import { ActionButton } from "../../shared/ActionButton/ActionButton";
@@ -10,28 +11,22 @@ import icon18Big from "../assets/icons/18+big.svg";
 import linearIcon from "../assets/icons/linear.svg";
 import newTranslaterIcon from "../assets/backgrounds/new_translater.svg";
 
+const SHORT_META_LABELS = ["Автор:", "Перекладач:", "Розділів:", "Статус перекладу:", "Країна:", "Статус випуску твору:"];
+const CHIPS_META_LABELS = ["Жанр:", "Теги:", "Фендом:"];
+
 export type BookHeroProps = {
-  title: string; // UA
-  titleSecondary?: string; // EN
+  title: string;
+  titleSecondary?: string;
   coverImageUrl?: string | null;
   coverImageAlt?: string;
   showAgeBadge?: boolean;
-
-  // То, что по дизайну справа (под рейтингами)
   authorMarkText?: string | null;
-
   metaRows: MetaRow[];
-
-  /** Slug книги для завантаження та відправки рейтингів (РЕЙТИНГ ТВОРУ + ЯКІСТЬ ПЕРЕКЛАДУ). */
   bookSlug?: string;
-
-  // Заглушки, якщо bookSlug не передано
   ratingValue?: number | null;
   ratingCount?: number | null;
-
   thankAuthorLabel?: string;
   thankAuthorCoins?: string | number;
-
   bookId?: number;
   onBecomeTranslator?: () => void;
 };
@@ -55,6 +50,16 @@ export function BookHero({
 }: BookHeroProps) {
   const queryClient = useQueryClient();
   const slugForRatings = (bookSlug && String(bookSlug).trim()) || "";
+
+  const { shortMetaRows, chipsMetaRows } = useMemo(() => {
+    const short: MetaRow[] = [];
+    const chips: MetaRow[] = [];
+    for (const row of metaRows) {
+      if (CHIPS_META_LABELS.includes(row.label)) chips.push(row);
+      else if (SHORT_META_LABELS.includes(row.label)) short.push(row);
+    }
+    return { shortMetaRows: short, chipsMetaRows: chips };
+  }, [metaRows]);
 
   const ratingsQuery = useQuery({
     queryKey: ["book-ratings", slugForRatings],
@@ -81,7 +86,6 @@ export function BookHero({
   return (
     <section className={styles.hero} aria-labelledby="book-title-ua">
       <div className={styles.heroInner}>
-        {/* TITLE BAR: UA зліва, "/" на початку EN назви (наполовину заходить на неї), EN з відступом 45px */}
         <header className={styles.heroTitleBar}>
           <h1 id="book-title-ua" className={styles.heroTitlePrimary}>
             {title}
@@ -94,10 +98,9 @@ export function BookHero({
           ) : null}
         </header>
 
-        {/* GRID: cover | meta | right */}
         <div className={styles.heroGrid}>
-          {/* LEFT: cover + actions */}
-          <div className={styles.coverCol}>
+          {/* 1. COVER */}
+          <div className={styles.heroCover}>
             <div className={styles.coverWrap}>
               {coverImageUrl ? (
                 <img
@@ -110,43 +113,27 @@ export function BookHero({
               ) : (
                 <div aria-hidden="true" className={styles.coverPlaceholder} />
               )}
-
-              <img
-                src={linearIcon}
-                alt=""
-                className={styles.coverLinear}
-                aria-hidden
-              />
-
+              <img src={linearIcon} alt="" className={styles.coverLinear} aria-hidden />
               <span className={styles.coverBadgeA} aria-hidden>A</span>
-
               {showAgeBadge && (
-                <img
-                  src={icon18Big}
-                  alt="18+"
-                  className={styles.ageBadgeIcon}
-                />
+                <img src={icon18Big} alt="18+" className={styles.ageBadgeIcon} />
               )}
             </div>
-
             <BookActions bookId={bookId} bookSlug={bookSlug} />
           </div>
 
-          {/* MIDDLE: meta + кнопка після опису жанрів/тегів */}
-          <div className={styles.metaCol}>
-            <BookMeta rows={metaRows} />
-            <ActionButton
-              variant="outline"
-              className={styles.becomeTranslatorBtn}
-              onClick={onBecomeTranslator}
-              leftIcon={<img src={newTranslaterIcon} alt="" width={22} height={34} />}
-            >
-              Стати новим перекладачем
-            </ActionButton>
+          {/* 2. META SHORT */}
+          <div className={styles.heroMetaShort}>
+            <BookMeta rows={shortMetaRows} />
           </div>
 
-          {/* RIGHT: thank + ratings + author mark + button */}
-          <aside className={styles.rightCol} aria-label="Панель рейтингу та підтримки автора">
+          {/* 3. META CHIPS */}
+          <div className={styles.heroMetaChips}>
+            <BookMeta rows={chipsMetaRows} variant="chips" />
+          </div>
+
+          {/* 4. RATING */}
+          <aside className={styles.heroRating} aria-label="Панель рейтингу та підтримки автора">
             <div className={styles.thankAuthor}>
               <div className={styles.thankAuthorIconWrap}>
                 <img src={backBalanceIcon} alt="" className={styles.thankAuthorIcon} aria-hidden />
@@ -157,8 +144,6 @@ export function BookHero({
               </div>
               <span className={styles.thankAuthorLabel}>{thankAuthorLabel}</span>
             </div>
-
-            {/* Рейтинг твору + якість перекладу (живі дані при наявності bookSlug) */}
             <div className={styles.ratingsStack}>
               {slugForRatings ? (
                 <>
@@ -205,10 +190,26 @@ export function BookHero({
                 </>
               )}
             </div>
-
-            <div className={styles.authorMarkRight}>{authorMarkText ?? "Авторська книга"}</div>
-
           </aside>
+
+          {/* 5. ACTIONS — рендеримо порожній div, щоб :has() працював для центрування Авторська */}
+          <div className={styles.heroActions}>
+            {onBecomeTranslator ? (
+              <ActionButton
+                variant="outline"
+                className={styles.becomeTranslatorBtn}
+                onClick={onBecomeTranslator}
+                leftIcon={<img src={newTranslaterIcon} alt="" width={22} height={34} />}
+              >
+                Стати новим перекладачем
+              </ActionButton>
+            ) : null}
+          </div>
+
+          {/* 6. AUTHOR MARK */}
+          <div className={styles.heroAuthorMark}>
+            {authorMarkText ?? "Авторська книга"}
+          </div>
         </div>
       </div>
     </section>
