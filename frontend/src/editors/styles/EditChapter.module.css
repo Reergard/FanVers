@@ -1,0 +1,197 @@
+/* Стилі для сторінки редагування розділу (як у AddChapter) */
+.page {
+  --gold: #F58807;
+  --goldSoft: rgba(245, 136, 7, 0.35);
+  --panelBg: rgba(6, 15, 18, 0.55);
+  --panelBg2: rgba(6, 15, 18, 0.35);
+  --line: rgba(245, 136, 7, 0.55);
+
+  display: grid;
+  gap: clamp(18px, calc(2.2 * var(--vwu)), 34px);
+  padding-bottom: clamp(28px, calc(3.5 * var(--vwu)), 64px);
+}
+
+.top {
+  display: grid;
+  gap: 10px;
+}
+
+.breadcrumbs {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.85;
+  font-size: 14px;
+}
+
+.crumb {
+  text-decoration: none;
+  color: #F58807;
+}
+
+.crumbSep {
+  opacity: 0.6;
+  color: #F58807;
+}
+
+.h1 {
+  margin: 0;
+  font-family: var(--font-decor);
+  font-weight: 400;
+  font-size: clamp(22px, calc(2.6 * var(--vwu)), 34px);
+  color: var(--gold);
+}
+
+.gridTwo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(16px, calc(2.2 * var(--vwu)), 28px);
+}
+
+.field {
+  position: relative;
+  display: block;
+}
+
+.fieldPill {
+  position: absolute;
+  top: -12px;
+  left: 16px;
+  z-index: 2;
+  display: inline-flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--goldSoft);
+  color: var(--gold);
+  font-size: 13px;
+  line-height: 1.1;
+}
+
+.fieldBody {
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--panelBg), var(--panelBg2));
+  padding: 18px 16px 14px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15) inset;
+}
+
+.field:focus-within .fieldBody {
+  border-color: rgba(5, 180, 199, 0.75);
+  box-shadow: 0 0 18px rgba(5, 180, 199, 0.15);
+}
+
+.field:focus-within .fieldPill {
+  border-color: rgba(5, 180, 199, 0.55);
+}
+
+.input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: #F58807;
+  font-size: 16px;
+  padding: 6px 2px 4px;
+}
+
+.hiddenInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mainImageDrop {
+  width: clamp(160px, calc(220 * 100vw / 1366), 220px);
+  height: clamp(240px, calc(340 * 100vw / 1366), 340px);
+  border-radius: 0 18px 18px 0;
+  border: 1px dashed rgba(245, 136, 7, 0.45);
+  border-left: none;
+  background: rgba(5, 180, 199, 0.15);
+  cursor: pointer;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  padding: 16px;
+  color: #F58807;
+  position: relative;
+}
+
+.uploadCircle {
+  width: clamp(70px, calc(101 * 100vw / 1366), 101px);
+  height: clamp(70px, calc(101 * 100vw / 1366), 101px);
+  border-radius: 50%;
+  border: 1px solid rgba(245, 136, 7, 0.55);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.uploadIconMain {
+  width: clamp(26px, calc(51 * 100vw / 1366), 51px);
+  height: clamp(22px, calc(43 * 100vw / 1366), 43px);
+  color: #F58807;
+}
+
+.uploadText {
+  font-size: 12px;
+  color: #F58807;
+}
+
+.pillSelect {
+  position: relative;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--panelBg), var(--panelBg2));
+  padding: 18px 14px 14px;
+}
+
+.pillLabel {
+  position: absolute;
+  top: -12px;
+  left: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--goldSoft);
+  color: var(--gold);
+  font-size: 13px;
+}
+
+.pillSelectNative {
+  width: 100%;
+  padding: 8px 4px;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: #F58807;
+  font-size: 14px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23F58807' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  padding-right: 20px;
+}
+
+.pillSelectNative option {
+  background: rgba(10, 18, 20, 0.98);
+  color: #F58807;
+}
+
+.submitRow {
+  display: grid;
+  place-items: center;
+  padding-top: 8px;
+}
+
+@media (max-width: 1024px) {
+  .gridTwo {
+    grid-template-columns: 1fr;
+  }
+}

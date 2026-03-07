@@ -40,13 +40,7 @@ class ChapterSerializer(serializers.ModelSerializer):
     volume_title = serializers.SerializerMethodField()
     book_title = serializers.CharField(source='book.title', read_only=True)
     slug = serializers.CharField(read_only=True)
-    position = serializers.DecimalField(
-        max_digits=10,
-        decimal_places=1,
-        source='_position',
-        required=False,
-        coerce_to_string=False
-    )
+    order = serializers.IntegerField(read_only=True)
     volume = serializers.PrimaryKeyRelatedField(
         queryset=Volume.objects.all(),
         required=False,
@@ -65,7 +59,7 @@ class ChapterSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'book', 'book_title', 'slug', 'file', 
             'is_paid', 'is_purchased', 'volume', 
-            'volume_title', 'position', 'book_slug', 'price', 'created_at'
+            'volume_title', 'order', 'book_slug', 'price', 'created_at'
         ]
         read_only_fields = ['id', 'slug', 'is_purchased', 'created_at']
 
@@ -86,7 +80,7 @@ class ChapterSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['position'] = float(instance._position) if instance._position else 0.0
+        representation['order'] = instance.order
         representation['price'] = float(instance.price) if instance.price else 1.00
         representation['slug'] = instance.slug
         

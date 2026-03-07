@@ -29,6 +29,13 @@ export default function BookDetailRouter() {
     }
   }, [location.state?.chapterCreated, location.pathname, navigate, showSuccessAutoClose]);
 
+  useEffect(() => {
+    if (location.state?.chapterUpdated === true) {
+      showSuccessAutoClose("Розділ успішно оновлено");
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state?.chapterUpdated, location.pathname, navigate, showSuccessAutoClose]);
+
   const bookQ = useQuery({
     queryKey: ["book", slug],
     queryFn: () => catalogApi.getBook(slug),
@@ -72,7 +79,9 @@ export default function BookDetailRouter() {
   if (!book) return <div>Книгу не знайдено</div>;
 
   const volumes: Volume[] = volumesQ.data ?? [];
-  const chapters: Chapter[] = chaptersQ.data ?? [];
+  const chaptersData = chaptersQ.data;
+  const chapters: Chapter[] = chaptersData?.chapters ?? [];
+  const containerVersions = chaptersData?.container_versions ?? {};
   const ownerId = book.ownerId ?? book.owner;
 
   if (!authReady) {
@@ -91,6 +100,7 @@ export default function BookDetailRouter() {
         book={book as Book}
         volumes={volumes}
         chapters={chapters}
+        containerVersions={containerVersions}
         chaptersLoading={chaptersQ.isLoading}
         volumesLoading={volumesQ.isLoading}
       />

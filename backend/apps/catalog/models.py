@@ -1,5 +1,6 @@
 import os
 from django.db import models
+from django.db.models import Q
 from django.utils.text import slugify
 from django.urls import reverse
 import docx
@@ -368,14 +369,42 @@ def process_table(table):
 class Volume(models.Model):
     book = models.ForeignKey(Book, related_name="volumes", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
+    order = models.PositiveIntegerField(default=0, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.book.title} - {self.title}"
 
     class Meta:
-        ordering = ['created_at']
+        ordering = ['order', 'created_at']
         unique_together = ('book', 'title')
+
+
+class ChapterOrderContainer(models.Model):
+    """
+    Версія контейнера порядку для optimistic concurrency.
+    Контейнер = (book_id, volume_id). volume_id=NULL = "без тому".
+    """
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='chapter_order_containers')
+    volume = models.ForeignKey(
+        Volume, on_delete=models.CASCADE, null=True, blank=True, related_name='chapter_order_containers'
+    )
+    version = models.PositiveIntegerField(default=1)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['book', 'volume'],
+                name='uniq_chapter_container',
+                condition=Q(volume__isnull=False),
+            ),
+            models.UniqueConstraint(
+                fields=['book'],
+                name='uniq_chapter_container_no_vol',
+                condition=Q(volume__isnull=True),
+            ),
+        ]
 
 
 class Chapter(models.Model):
@@ -391,13 +420,9 @@ class Chapter(models.Model):
     slug = models.SlugField(unique=True, blank=True)
     file = models.FileField(upload_to=chapter_directory_path, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
     is_paid = models.BooleanField(default=False)
-    _position = models.DecimalField(
-        max_digits=10, 
-        decimal_places=1, 
-        default=Decimal('0'),
-        db_column='position'
-    )
+    order = models.PositiveIntegerField(default=1, db_index=True)
     characters_count = models.IntegerField(default=0, verbose_name='Кількість символів')
     html_content = models.TextField(blank=True, null=True)
     html_file_path = models.CharField(max_length=255, blank=True, null=True)
@@ -412,7 +437,19 @@ class Chapter(models.Model):
     min_reading_time = models.IntegerField(default=0)  # мінімальний час для зарахування прочитання
 
     class Meta:
-        ordering = ['_position']
+        ordering = ['order']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['book', 'volume', 'order'],
+                name='uniq_chapter_order_in_volume',
+                condition=Q(volume__isnull=False),
+            ),
+            models.UniqueConstraint(
+                fields=['book', 'order'],
+                name='uniq_chapter_order_no_volume',
+                condition=Q(volume__isnull=True),
+            ),
+        ]
 
     def generate_unique_slug(self):
         """Генерує унікальний слаг для розділів"""
@@ -462,14 +499,6 @@ class Chapter(models.Model):
 
     def __str__(self):
         return f"{self.book.title} - {self.title}"
-
-    @property
-    def position(self):
-        return float(self._position) if self._position is not None else 0.0
-
-    @position.setter
-    def position(self, value):
-        self._position = value
 
     def generate_html_filename(self):
         return f'books/{self.book.slug}/chapters/html/{self.slug}.html'
@@ -531,6 +560,10 @@ class Chapter(models.Model):
 
 
 class ChapterOrder(models.Model):
+    """
+    DEPRECATED: Порядок глав зберігається в Chapter.order.
+    Ця модель не використовується API. Залишена для міграцій.
+    """
     volume = models.ForeignKey(Volume, on_delete=models.CASCADE)
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE)
     position = models.DecimalField(max_digits=10, decimal_places=1, default=Decimal('0'))

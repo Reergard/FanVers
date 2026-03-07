@@ -24,7 +24,7 @@ class ChapterNavigationView(APIView):
             current_chapter = get_object_or_404(Chapter, book=book, slug=chapter_slug)
             
             # Отримуємо всі розділи книги, відсортовані за позицією
-            all_chapters = list(book.chapters.all().order_by('_position'))
+            all_chapters = list(book.chapters.select_related('volume').order_by('volume__order', 'order'))
             
             if not all_chapters:
                 return Response({
@@ -196,7 +196,7 @@ class ChapterViewSet(viewsets.ModelViewSet):
             # Получаем только главы в указанном диапазоне
             chapters = Chapter.objects.filter(
                 book_id=book_id
-            ).order_by('_position')[start_chapter-1:end_chapter]
+            ).select_related('volume').order_by('volume__order', 'order')[start_chapter-1:end_chapter]
             
             serializer = self.get_serializer(chapters, many=True)
             

@@ -8,6 +8,7 @@ from .views import (
     create_book, update_book, abandoned_translations, user_translations, register_book_view,
     update_book_access_rights, check_book_access
 )
+from apps.editors.api.views import reorder_chapters, move_chapter
 
 router = DefaultRouter()
 router.register(r'books/owner', BookOwnerViewSet, basename='book-owner')
@@ -22,12 +23,14 @@ urlpatterns = [
     path('fandoms/', fandoms_list, name='fandoms_list'),
     path('books/<slug:slug>/add_chapter/', add_chapter, name='add_chapter'),
     path('books/<slug:book_slug>/chapters/', chapter_list, name='chapter_list'),
+    path('books/<slug:book_slug>/chapters/reorder/', reorder_chapters, name='reorder_chapters'),
+    path('books/<slug:book_slug>/chapters/<int:chapter_id>/move/', move_chapter, name='move_chapter'),
+    path('books/<slug:book_slug>/chapters/<int:chapter_id>/delete/', delete_chapter, name='delete_chapter'),
     path('books/<slug:book_slug>/chapters/<slug:chapter_slug>/', chapter_detail, name='chapter_detail'),
     path('books/<slug:book_slug>/volumes/', volume_list, name='volume_list'),
     path('books/<slug:book_slug>/create-volume/', create_volume, name='create_volume'),
     path('owned-books/', owned_books, name='owned-books'),
     path('user-translations/', user_translations, name='user-translations'),
-    path('books/<slug:book_slug>/chapters/<int:chapter_id>/delete/', delete_chapter, name='delete_chapter'),
     path('books/info/<slug:slug>/', BookInfoView.as_view(), name='book-info'),
     path('books/create/', create_book, name='book-create'),
     path('books/<slug:slug>/update/', update_book, name='book-update'),

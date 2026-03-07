@@ -24,6 +24,9 @@ const CreateBookPage = lazy(() =>
 const AddChapter = lazy(() =>
   import("./catalog/AddChapter").then((m) => ({ default: m.default }))
 );
+const EditChapter = lazy(() =>
+  import("./editors/EditChapter").then((m) => ({ default: m.default }))
+);
 const ChapterDetailRouter = lazy(() =>
   import("./catalog/ChapterDetailRouter").then((m) => ({ default: m.default }))
 );
@@ -287,6 +290,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <AddChapter />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/books/:bookSlug/edit-chapter/:chapterId"
+                element={
+                  <Suspense fallback={<div />}>
+                    <EditChapter />
                   </Suspense>
                 }
               />

@@ -1,5 +1,5 @@
 from rest_framework.response import Response
-from apps.catalog.models import Book, Chapter, Genres, Tag, Country, Fandom, Volume, ChapterOrder
+from apps.catalog.models import Book, Chapter, Genres, Tag, Country, Fandom, Volume, ChapterOrder, ChapterOrderContainer
 from apps.catalog.api.serializers import (
     ChapterSerializer, GenresSerializer, TagSerializer,
     CountrySerializer, FandomSerializer, VolumeSerializer, ChapterOrderSerializer,
@@ -18,6 +18,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
 from apps.navigation.models import Bookmark
 from django.db import transaction
+from django.db.models import Max
 from django.core.exceptions import ObjectDoesNotExist
 from decimal import Decimal
 from django.conf import settings
@@ -94,15 +95,22 @@ def Catalog(request):
 def chapter_list(request, book_slug):
     try:
         book = Book.objects.get(slug=book_slug)
-        chapters = Chapter.objects.filter(book=book).order_by('_position')
-        
+        chapters = Chapter.objects.filter(book=book).select_related('volume').order_by(
+            'volume__order', 'order'
+        )
         serializer = ChapterSerializer(
             chapters,
             many=True,
             context={'request': request}
         )
-        
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        containers = ChapterOrderContainer.objects.filter(
+            book=book
+        ).values('volume_id', 'version')
+        container_versions = {str(c['volume_id']) if c['volume_id'] else 'null': c['version'] for c in containers}
+        return Response({
+            'chapters': serializer.data,
+            'container_versions': container_versions,
+        }, status=status.HTTP_200_OK)
         
     except Book.DoesNotExist:
         return Response(
@@ -258,15 +266,21 @@ def add_chapter(request, slug):
                 {'error': 'Файл розділу обов\'язковий'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
-        chapter = Chapter.objects.create(
-            book=book,
-            title=title,
-            file=request.FILES['file'],
-            volume_id=volume_id if volume_id else None,
-            is_paid=is_paid,
-            price=price
-        )
+
+        vol_id = int(volume_id) if volume_id else None
+        with transaction.atomic():
+            Book.objects.select_for_update().get(id=book.id)
+            agg = Chapter.objects.filter(book=book, volume_id=vol_id).aggregate(Max('order'))
+            next_order = (agg['order__max'] or 0) + 1
+            chapter = Chapter.objects.create(
+                book=book,
+                title=title,
+                file=request.FILES['file'],
+                volume_id=vol_id,
+                is_paid=is_paid,
+                price=price,
+                order=next_order,
+            )
         
         # Обновляем last_updated книги при создании главы
         book.last_updated = timezone.now()
@@ -391,10 +405,13 @@ def create_volume(request, book_slug):
                 status=status.HTTP_400_BAD_REQUEST
             )
             
-        volume = Volume.objects.create(
-            book=book,
-            title=request.data['title']
-        )
+        with transaction.atomic():
+            max_order = Volume.objects.filter(book=book).aggregate(Max('order'))['order__max'] or 0
+            volume = Volume.objects.create(
+                book=book,
+                title=request.data['title'],
+                order=max_order + 1,
+            )
         
         serializer = VolumeSerializer(volume)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -631,6 +648,22 @@ def user_translations(request):
         )
 
 
+def _normalize_container_order(book_id, volume_id):
+    """Нормалізує order в контейнері до 1, 2, 3... Двофазно, щоб уникнути UniqueConstraint."""
+    chapters = list(
+        Chapter.objects.filter(book_id=book_id, volume_id=volume_id)
+        .order_by('order', 'id')
+    )
+    OFFSET = 100000
+    for i, ch in enumerate(chapters, start=1):
+        if ch.order != i:
+            ch.order = OFFSET + ch.id
+            ch.save(update_fields=['order'])
+    for i, ch in enumerate(chapters, start=1):
+        ch.order = i
+        ch.save(update_fields=['order'])
+
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_chapter(request, book_slug, chapter_id):
@@ -655,9 +688,10 @@ def delete_chapter(request, book_slug, chapter_id):
             if os.path.exists(html_path):
                 os.remove(html_path)
         
-        # Видаляємо главу
+        book = chapter.book
+        vol_id = chapter.volume_id
         chapter.delete()
-        
+        _normalize_container_order(book.id, vol_id)
         return Response(status=status.HTTP_204_NO_CONTENT)
         
     except Chapter.DoesNotExist:

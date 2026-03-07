@@ -1,7 +1,6 @@
 import { http } from "./http";
 
 const CATALOG = "/api/catalog";
-const EDITORS = "/api/editors";
 
 // --- Контракты данных (минимальные поля для Router/Owner/Reader) ---
 
@@ -88,9 +87,13 @@ export interface Chapter {
   id: number;
   slug?: string;
   title: string;
-  position: number;
+  /** Порядок з backend (order). Єдине джерело правди. */
+  order: number;
+  /** @deprecated Використовуйте order */
+  position?: number;
   volume?: number | null;
   volumeId?: number | null;
+  volume_title?: string | null;
   /** Платний розділ (з API) */
   is_paid?: boolean;
   /** Чи купив поточний користувач цей розділ */
@@ -280,15 +283,18 @@ function normalizeAbandonedTranslation(raw: Record<string, unknown>): AbandonedT
 }
 
 function normalizeChapter(raw: Record<string, unknown>): Chapter {
-  const pos = raw.position ?? raw._position;
+  const pos = raw.order ?? raw.position ?? raw._position;
   const priceVal = raw.price;
+  const orderVal = typeof pos === "number" ? pos : Number(pos ?? 1);
   return {
     id: Number(raw.id),
     slug: raw.slug != null ? String(raw.slug) : undefined,
     title: String(raw.title ?? ""),
-    position: typeof pos === "number" ? pos : Number(pos ?? 0),
+    order: orderVal,
+    position: orderVal,
     volumeId: raw.volume != null ? Number(raw.volume) : null,
     volume: raw.volume != null ? Number(raw.volume) : null,
+    volume_title: raw.volume_title != null ? String(raw.volume_title) : null,
     is_paid: raw.is_paid === true,
     is_purchased: raw.is_purchased === true,
     price: priceVal != null ? Number(priceVal) : undefined,
@@ -411,11 +417,26 @@ export async function getBook(slug: string): Promise<Book> {
   return normalizeBook(data);
 }
 
-export async function getChapters(slug: string): Promise<Chapter[]> {
-  const { data } = await http.get<Record<string, unknown>[]>(
+export interface ChaptersResponse {
+  chapters: Chapter[];
+  container_versions: Record<string, number>;
+}
+
+export async function getChapters(slug: string): Promise<ChaptersResponse> {
+  const { data } = await http.get<{ chapters?: unknown[]; container_versions?: Record<string, number> } | unknown[]>(
     `${CATALOG}/books/${encodeURIComponent(slug)}/chapters/`
   );
-  return Array.isArray(data) ? data.map(normalizeChapter) : [];
+  if (data && typeof data === "object" && "chapters" in data && Array.isArray(data.chapters)) {
+    return {
+      chapters: data.chapters.map((c) => normalizeChapter(c as Record<string, unknown>)),
+      container_versions: (data.container_versions as Record<string, number>) ?? {},
+    };
+  }
+  const arr = Array.isArray(data) ? data : [];
+  return {
+    chapters: arr.map((c) => normalizeChapter(c as Record<string, unknown>)),
+    container_versions: {},
+  };
 }
 
 export async function getVolumes(slug: string): Promise<Volume[]> {
@@ -442,6 +463,13 @@ export async function getChapterDetail(
   return normalized;
 }
 
+/** Видалення розділу (тільки власник книги) */
+export async function deleteChapter(bookSlug: string, chapterId: number): Promise<void> {
+  await http.delete(
+    `${CATALOG}/books/${encodeURIComponent(bookSlug)}/chapters/${chapterId}/delete/`
+  );
+}
+
 export async function getChapterNavigation(
   bookSlug: string,
   chapterSlug: string
@@ -460,23 +488,61 @@ export async function createVolume(slug: string, title: string): Promise<Volume>
   return normalizeVolume(data);
 }
 
-/** Обновление порядка глав в одном томе. Payload: { chapter_id, position }[] */
-export async function updateChapterOrder(
-  volumeId: number,
-  chapterOrders: { chapter_id: number; position: number }[]
-): Promise<void> {
-  await http.post(`${EDITORS}/volumes/${volumeId}/update-order/`, {
-    chapter_orders: chapterOrders,
-  });
+export interface ReorderChaptersResponse {
+  volume_id: number | null;
+  container_version: number;
+  chapters: { id: number; order: number }[];
 }
 
-/** Обновление порядка глав без привязки к тому (глобально). */
-export async function updateChapterOrderNoVolume(
-  chapterOrders: { chapter_id: number; position: number; volume_id?: number | null }[]
-): Promise<void> {
-  await http.post(`${EDITORS}/chapters/update-order/`, {
-    chapter_orders: chapterOrders,
-  });
+export interface ReorderChaptersConflictResponse {
+  detail: string;
+  container_version: number;
+  chapters: { id: number; order: number }[];
+}
+
+export interface MoveChapterResponse {
+  chapters: Chapter[];
+  container_versions: Record<string, number>;
+}
+
+/** Перемістити розділ в інший том або "без тому". */
+export async function moveChapter(
+  bookSlug: string,
+  chapterId: number,
+  toVolumeId: number | null,
+  toOrder?: number
+): Promise<MoveChapterResponse> {
+  const { data } = await http.post<{ chapters: unknown[]; container_versions: Record<string, number> }>(
+    `${CATALOG}/books/${encodeURIComponent(bookSlug)}/chapters/${chapterId}/move/`,
+    {
+      to_volume_id: toVolumeId,
+      ...(toOrder != null && toOrder >= 1 && { to_order: toOrder }),
+    }
+  );
+  return {
+    chapters: Array.isArray(data.chapters)
+      ? data.chapters.map((c) => normalizeChapter(c as Record<string, unknown>))
+      : [],
+    container_versions: data.container_versions ?? {},
+  };
+}
+
+/** Reorder глав в контейнері. Єдиний endpoint для зміни порядку. */
+export async function reorderChapters(
+  bookSlug: string,
+  volumeId: number | null,
+  orderedIds: number[],
+  containerVersion?: number
+): Promise<ReorderChaptersResponse> {
+  const { data } = await http.post<ReorderChaptersResponse>(
+    `${CATALOG}/books/${encodeURIComponent(bookSlug)}/chapters/reorder/`,
+    {
+      volume_id: volumeId,
+      ordered_ids: orderedIds,
+      ...(containerVersion != null && { container_version: containerVersion }),
+    }
+  );
+  return data;
 }
 
 /**
@@ -661,10 +727,11 @@ export const catalogApi = {
   getChapters,
   getVolumes,
   getChapterDetail,
+  deleteChapter,
   getChapterNavigation,
   createVolume,
-  updateChapterOrder,
-  updateChapterOrderNoVolume,
+  reorderChapters,
+  moveChapter,
   uploadChapter,
   getAllCatalogBooks,
   getUserTranslations,
