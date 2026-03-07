@@ -60,7 +60,16 @@ def update_chapter(request, chapter_id):
             
         if 'volume' in request.data:
             volume_id = request.data.get('volume')
-            chapter.volume = Volume.objects.get(id=volume_id) if volume_id else None
+            if volume_id:
+                vol = Volume.objects.filter(id=volume_id, book=chapter.book).first()
+                if not vol:
+                    return Response(
+                        {'error': 'Обраний том не належить цій книзі'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                chapter.volume = vol
+            else:
+                chapter.volume = None
 
         if 'file' in request.FILES:
             if old_file:

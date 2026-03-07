@@ -20,7 +20,7 @@ interface BookDetailReaderProps {
 
 export default function BookDetailReader({
   book,
-  volumes: _volumes,
+  volumes,
   chapters,
   chaptersLoading = false,
   volumesLoading: _volumesLoading,
@@ -98,6 +98,7 @@ export default function BookDetailReader({
       chapters={
         <BookChapters
           chapters={chapters}
+          volumes={volumes}
           isOwner={false}
           loading={chaptersLoading}
           onRead={(ch) => navigate(`/books/${book.slug}/chapters/${ch.slug ?? ch.id}`)}

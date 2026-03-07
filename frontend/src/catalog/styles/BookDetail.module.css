@@ -128,33 +128,48 @@
   min-width: 0;
 }
 
-.heroMetaShort {
+/* Обгортка meta: short + chips + actions — flex column для коректного стека на десктопі */
+.heroMetaWrap {
   grid-area: meta;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.5vw, 20px);
+  align-items: flex-start;
+}
+
+.heroMetaShort {
+  min-width: 0;
+  width: 100%;
   padding-top: clamp(48px, calc(6 * var(--vwu)), 88px);
 }
 
 .heroMetaChips {
-  grid-area: meta;
   min-width: 0;
+  width: 100%;
+}
+
+.heroActions {
+  align-self: flex-start;
+  margin-top: clamp(16px, calc(2.5 * var(--vwu)), 24px);
+}
+
+/* ПК: обгортка для правильного порядку — спочатку Подякувати автору + рейтинги, потім Авторська книга */
+.heroRatingWrap {
+  grid-area: rating;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, calc(2 * var(--vwu)), 20px);
 }
 
 .heroRating {
-  grid-area: rating;
   display: flex;
   flex-direction: column;
   gap: clamp(14px, calc(2 * var(--vwu)), 20px);
   padding-top: clamp(64px, calc(7 * var(--vwu)), 92px);
 }
 
-.heroActions {
-  grid-area: meta;
-  align-self: flex-end;
-  margin-top: clamp(16px, calc(2.5 * var(--vwu)), 24px);
-}
-
 .heroAuthorMark {
-  grid-area: rating;
   width: 100%;
   text-align: center;
   font-family: "Seminaria", serif;
@@ -709,6 +724,23 @@
 
 .chapterRow + .chapterRow {
   border-top: 0.5px solid #ffffff;
+}
+
+.chapterEmptyRow {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto minmax(120px, auto);
+  gap: clamp(12px, 2vw, 20px);
+  align-items: center;
+  padding: clamp(12px, 1.5vw, 16px) 0;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.15);
+  font-size: clamp(13px, 1.2vw, 14px);
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.chapterEmptyPlaceholder {
+  grid-column: 2 / 3;
+  font-style: italic;
 }
 
 .chapterRowService {
@@ -1423,9 +1455,7 @@
       "cover rating";
   }
 
-  .heroMetaShort,
-  .heroMetaChips,
-  .heroActions {
+  .heroMetaWrap {
     grid-area: meta;
   }
 
@@ -1479,6 +1509,11 @@
     gap: clamp(12px, 2vw, 20px);
   }
 
+  /* Обгортка зникає — діти стають прямими grid-елементами */
+  .heroMetaWrap {
+    display: contents;
+  }
+
   .heroCover {
     grid-area: cover;
   }
@@ -1491,6 +1526,11 @@
   .heroMetaChips {
     grid-area: metaChips;
     padding-top: 0;
+  }
+
+  /* Мобільна: обгортка не впливає на сітку — діти залишаються grid-елементами */
+  .heroRatingWrap {
+    display: contents;
   }
 
   .heroRating {

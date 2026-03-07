@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { ActionButton } from "../../shared/ActionButton/ActionButton";
 import styles from "../styles/BookDetail.module.css";
-import type { Chapter } from "../../api/catalogApi";
+import type { Chapter, Volume } from "../../api/catalogApi";
 import checkIcon from "../assets/icons/check.svg";
 import deleteIcon from "../assets/icons/Delete.svg";
 import editIcon from "../assets/icons/Edit.svg";
@@ -15,38 +15,71 @@ function toVolumeId(ch: Chapter): number | null {
   return typeof v === "number" ? v : null;
 }
 
-/** Групує глави по томах. Backend вже віддає в правильному порядку — не змінюємо його. */
+/** Групує глави по томах. Завжди показує ВСІ томи (включно з порожніми) і ВСІ глави. */
 type VolumeGroup = {
   volumeId: number | "no-volume";
   title: string;
   chapters: Chapter[];
 };
 
-function groupChapters(chapters: Chapter[]): VolumeGroup[] {
-  const map = new Map<number | "no-volume", VolumeGroup>();
+function groupChapters(chapters: Chapter[], volumes?: Volume[]): VolumeGroup[] {
+  const chaptersByVolume = new Map<number | "no-volume", Chapter[]>();
+
   for (const ch of chapters) {
     const vid = toVolumeId(ch);
     const key: number | "no-volume" = vid != null ? vid : "no-volume";
-    if (!map.has(key)) {
-      map.set(key, {
-        volumeId: key,
-        title: key === "no-volume" ? "Розділи без тому" : (ch.volume_title ?? `Том ${key}`),
-        chapters: [],
+    if (!chaptersByVolume.has(key)) {
+      chaptersByVolume.set(key, []);
+    }
+    chaptersByVolume.get(key)!.push(ch);
+  }
+
+  const result: VolumeGroup[] = [];
+
+  // 1. Усі томи з API (включно з порожніми) — у порядку
+  if (volumes && volumes.length > 0) {
+    for (const vol of volumes) {
+      const chs = chaptersByVolume.get(vol.id) ?? [];
+      const title = chs.length > 0 && chs[0].volume_title
+        ? chs[0].volume_title
+        : (vol.title ?? `Том ${vol.id}`);
+      result.push({
+        volumeId: vol.id,
+        title,
+        chapters: chs,
       });
     }
-    map.get(key)!.chapters.push(ch);
+  } else {
+    // Fallback: volumes не завантажено — показуємо тільки томи, що мають глави
+    const volKeys = Array.from(chaptersByVolume.keys()).filter((k) => k !== "no-volume") as number[];
+    volKeys.sort((a, b) => a - b);
+    for (const k of volKeys) {
+      const chs = chaptersByVolume.get(k)!;
+      result.push({
+        volumeId: k,
+        title: chs[0]?.volume_title ?? `Том ${k}`,
+        chapters: chs,
+      });
+    }
   }
-  const result: VolumeGroup[] = [];
-  const keys = Array.from(map.keys());
-  const noVol = keys.find((k) => k === "no-volume");
-  const volKeys = keys.filter((k) => k !== "no-volume").sort((a, b) => (a as number) - (b as number));
-  for (const k of volKeys) result.push(map.get(k)!);
-  if (noVol) result.push(map.get(noVol)!);
+
+  // 2. Розділи без тому — завжди в кінці
+  const noVolChapters = chaptersByVolume.get("no-volume");
+  if (noVolChapters) {
+    result.push({
+      volumeId: "no-volume",
+      title: "Розділи без тому",
+      chapters: noVolChapters,
+    });
+  }
+
   return result;
 }
 
 export type BookChaptersProps = {
   chapters: Chapter[];
+  /** Список томів — якщо передано, показуються й порожні томи */
+  volumes?: Volume[];
   isOwner?: boolean;
   loading?: boolean;
   /** Якщо задано — кнопка «Додати розділ» рендериться як Link на цей шлях */
@@ -83,6 +116,7 @@ export type BookChaptersProps = {
 
 export function BookChapters({
   chapters,
+  volumes,
   isOwner = false,
   loading = false,
   addChapterTo,
@@ -110,7 +144,7 @@ export function BookChapters({
   const [editingChapterId, setEditingChapterId] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState("");
 
-  const grouped = useMemo(() => groupChapters(chapters), [chapters]);
+  const grouped = useMemo(() => groupChapters(chapters, volumes), [chapters, volumes]);
 
   useEffect(() => {
     if (!reorderMode) setEditingChapterId(null);
@@ -253,6 +287,11 @@ export function BookChapters({
               <div className={styles.chapterVolumeHeader} role="row">
                 <span className={styles.chapterVolumeTitle}>{group.title}</span>
               </div>
+              {group.chapters.length === 0 && group.volumeId !== "no-volume" ? (
+                <div className={styles.chapterEmptyRow} role="row" aria-label={`${group.title} — порожній том`}>
+                  <span className={styles.chapterEmptyPlaceholder}>Немає розділів</span>
+                </div>
+              ) : null}
               {group.chapters.map((chapter, idx) => {
                 globalIndex++;
                 const displayOrder = getDisplayOrder(chapter);

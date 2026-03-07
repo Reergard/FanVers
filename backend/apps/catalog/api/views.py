@@ -19,6 +19,7 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAu
 from apps.navigation.models import Bookmark
 from django.db import transaction
 from django.db.models import Max
+from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
 from decimal import Decimal
 from django.conf import settings
@@ -107,9 +108,12 @@ def chapter_list(request, book_slug):
             book=book
         ).values('volume_id', 'version')
         container_versions = {str(c['volume_id']) if c['volume_id'] else 'null': c['version'] for c in containers}
+        volumes = Volume.objects.filter(book=book).order_by('order', 'created_at')
+        volumes_data = VolumeSerializer(volumes, many=True).data
         return Response({
             'chapters': serializer.data,
             'container_versions': container_versions,
+            'volumes': volumes_data,
         }, status=status.HTTP_200_OK)
         
     except Book.DoesNotExist:
@@ -268,6 +272,12 @@ def add_chapter(request, slug):
             )
 
         vol_id = int(volume_id) if volume_id else None
+        if vol_id is not None:
+            if not Volume.objects.filter(id=vol_id, book=book).exists():
+                return Response(
+                    {'error': 'Обраний том не належить цій книзі'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         with transaction.atomic():
             Book.objects.select_for_update().get(id=book.id)
             agg = Chapter.objects.filter(book=book, volume_id=vol_id).aggregate(Max('order'))
@@ -374,7 +384,7 @@ def volume_list(request, book_slug):
     book = get_object_or_404(Book, slug=book_slug)
     
     if request.method == 'GET':
-        volumes = Volume.objects.filter(book=book)
+        volumes = Volume.objects.filter(book=book).order_by('order', 'created_at')
         serializer = VolumeSerializer(volumes, many=True)
         return Response(serializer.data)
     
@@ -384,6 +394,18 @@ def volume_list(request, book_slug):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+def _get_unique_volume_title(book, base_title):
+    """Якщо base_title вже існує, повертає унікальний варіант: «Новий том 2», «Новий том 3» тощо."""
+    existing = set(Volume.objects.filter(book=book).values_list('title', flat=True))
+    if base_title not in existing:
+        return base_title
+    for i in range(2, 1000):
+        candidate = f"{base_title} {i}"
+        if candidate not in existing:
+            return candidate
+    return f"{base_title} {int(timezone.now().timestamp())}"
 
 
 @api_view(['POST'])
@@ -404,12 +426,15 @@ def create_volume(request, book_slug):
                 {'error': 'Назва тому обов\'язкова'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        base_title = str(request.data['title']).strip() or 'Новий том'
+        title = _get_unique_volume_title(book, base_title)
             
         with transaction.atomic():
             max_order = Volume.objects.filter(book=book).aggregate(Max('order'))['order__max'] or 0
             volume = Volume.objects.create(
                 book=book,
-                title=request.data['title'],
+                title=title,
                 order=max_order + 1,
             )
         
@@ -421,9 +446,20 @@ def create_volume(request, book_slug):
             {'error': 'Книгу не знайдено'}, 
             status=status.HTTP_404_NOT_FOUND
         )
-    except Exception as e:
+    except IntegrityError:
         return Response(
-            {'error': str(e)}, 
+            {'error': 'Том з такою назвою вже існує. Спробуйте іншу назву.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except Exception as e:
+        logger.exception("create_volume failed: %s", e)
+        if settings.DEBUG:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        return Response(
+            {'error': 'Внутрішня помилка сервера'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 

@@ -108,6 +108,7 @@ export interface Volume {
   id: number;
   title: string;
   book?: number;
+  order?: number;
   position?: number;
 }
 
@@ -354,6 +355,7 @@ function normalizeVolume(raw: Record<string, unknown>): Volume {
     id: Number(raw.id),
     title: String(raw.title ?? ""),
     book: raw.book != null ? Number(raw.book) : undefined,
+    order: raw.order != null ? Number(raw.order) : undefined,
     position: raw.position != null ? Number(raw.position) : undefined,
   };
 }
@@ -420,16 +422,25 @@ export async function getBook(slug: string): Promise<Book> {
 export interface ChaptersResponse {
   chapters: Chapter[];
   container_versions: Record<string, number>;
+  volumes?: Volume[];
 }
 
 export async function getChapters(slug: string): Promise<ChaptersResponse> {
-  const { data } = await http.get<{ chapters?: unknown[]; container_versions?: Record<string, number> } | unknown[]>(
+  const { data } = await http.get<{
+    chapters?: unknown[];
+    container_versions?: Record<string, number>;
+    volumes?: unknown[];
+  } | unknown[]>(
     `${CATALOG}/books/${encodeURIComponent(slug)}/chapters/`
   );
   if (data && typeof data === "object" && "chapters" in data && Array.isArray(data.chapters)) {
+    const volumes = Array.isArray(data.volumes)
+      ? data.volumes.map((v) => normalizeVolume(v as Record<string, unknown>))
+      : undefined;
     return {
       chapters: data.chapters.map((c) => normalizeChapter(c as Record<string, unknown>)),
       container_versions: (data.container_versions as Record<string, number>) ?? {},
+      volumes,
     };
   }
   const arr = Array.isArray(data) ? data : [];

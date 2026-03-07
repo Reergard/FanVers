@@ -247,7 +247,7 @@ class BookReaderSerializer(serializers.ModelSerializer):
 class VolumeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Volume
-        fields = ['id', 'title', 'book']
+        fields = ['id', 'title', 'book', 'order']
 
 
 class ChapterOrderSerializer(serializers.ModelSerializer):

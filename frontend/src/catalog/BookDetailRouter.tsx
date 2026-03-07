@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { catalogApi, type Book, type Chapter, type Volume } from "../api/catalogApi";
@@ -62,6 +62,20 @@ export default function BookDetailRouter() {
     refetchOnWindowFocus: false,
   });
 
+  /** Пряме завантаження томів (як на сторінці add-chapter) — гарантує всі томи включно з порожніми */
+  const [directVolumes, setDirectVolumes] = useState<Volume[] | null>(null);
+  const [volumesRefreshKey, setVolumesRefreshKey] = useState(0);
+  useEffect(() => {
+    if (!slug || !book) return;
+    let cancelled = false;
+    catalogApi.getVolumes(slug).then((vols) => {
+      if (!cancelled) setDirectVolumes(vols);
+    }).catch(() => {
+      if (!cancelled) setDirectVolumes([]);
+    });
+    return () => { cancelled = true; };
+  }, [slug, book?.id, volumesRefreshKey]);
+
   if (bookQ.isLoading) return <BookDetailSkeleton />;
 
   if (bookQ.isError) {
@@ -78,10 +92,17 @@ export default function BookDetailRouter() {
   }
   if (!book) return <div>Книгу не знайдено</div>;
 
-  const volumes: Volume[] = volumesQ.data ?? [];
   const chaptersData = chaptersQ.data;
   const chapters: Chapter[] = chaptersData?.chapters ?? [];
   const containerVersions = chaptersData?.container_versions ?? {};
+  /** volumes: пріоритет прямому запиту (як add-chapter); fallback — merge з інших джерел */
+  const fromDirect = directVolumes ?? [];
+  const fromMerge = [...(volumesQ.data ?? []), ...(chaptersData?.volumes ?? [])];
+  const volumesById = new Map<number, Volume>();
+  for (const v of [...fromMerge, ...fromDirect]) volumesById.set(v.id, v);
+  const volumes: Volume[] = Array.from(volumesById.values()).sort(
+    (a, b) => (a.order ?? a.position ?? a.id) - (b.order ?? b.position ?? b.id)
+  );
   const ownerId = book.ownerId ?? book.owner;
 
   if (!authReady) {
@@ -94,6 +115,8 @@ export default function BookDetailRouter() {
     ownerId !== undefined &&
     ownerId === userId;
 
+  const refreshVolumes = () => setVolumesRefreshKey((k) => k + 1);
+
   if (isOwner) {
     return (
       <BookDetailOwner
@@ -101,8 +124,9 @@ export default function BookDetailRouter() {
         volumes={volumes}
         chapters={chapters}
         containerVersions={containerVersions}
-        chaptersLoading={chaptersQ.isLoading}
+        chaptersLoading={chaptersQ.isLoading || volumesQ.isLoading || directVolumes === null}
         volumesLoading={volumesQ.isLoading}
+        onVolumesRefresh={refreshVolumes}
       />
     );
   }
@@ -112,7 +136,7 @@ export default function BookDetailRouter() {
       book={book as Book}
       volumes={volumes}
       chapters={chapters}
-      chaptersLoading={chaptersQ.isLoading}
+      chaptersLoading={chaptersQ.isLoading || volumesQ.isLoading || directVolumes === null}
       volumesLoading={volumesQ.isLoading}
     />
   );

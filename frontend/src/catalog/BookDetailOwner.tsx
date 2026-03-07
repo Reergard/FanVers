@@ -10,6 +10,7 @@ import { BookDescription } from "./sections/BookDescription";
 import { AuthorWorks } from "./sections/AuthorWorks";
 import { BookChapters } from "./sections/BookChapters";
 import { MoveChapterModal } from "./sections/MoveChapterModal";
+import { CreateVolumeModal } from "./sections/CreateVolumeModal";
 import { BookCommentsContainer } from "./sections/BookCommentsContainer";
 import styles from "./styles/BookDetail.module.css";
 
@@ -20,6 +21,7 @@ interface BookDetailOwnerProps {
   containerVersions?: Record<string, number>;
   chaptersLoading?: boolean;
   volumesLoading?: boolean;
+  onVolumesRefresh?: () => void;
 }
 
 export default function BookDetailOwner({
@@ -29,6 +31,7 @@ export default function BookDetailOwner({
   containerVersions = {},
   chaptersLoading = false,
   volumesLoading: _volumesLoading,
+  onVolumesRefresh,
 }: BookDetailOwnerProps) {
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -40,6 +43,7 @@ export default function BookDetailOwner({
   const [isSavingOrder, setIsSavingOrder] = useState(false);
   const [chapterToMove, setChapterToMove] = useState<Chapter | null>(null);
   const [isMovingChapter, setIsMovingChapter] = useState(false);
+  const [createVolumeModalOpen, setCreateVolumeModalOpen] = useState(false);
   const [isCreatingVolume, setIsCreatingVolume] = useState(false);
 
   const metaRows = useMemo(
@@ -112,6 +116,7 @@ export default function BookDetailOwner({
       await catalogApi.createVolume(book.slug, title);
       await qc.invalidateQueries({ queryKey: catalogKeys.volumes(book.slug) });
       await qc.invalidateQueries({ queryKey: catalogKeys.chapters(book.slug) });
+      onVolumesRefresh?.();
       showSuccessAutoClose("Том успішно створено");
     } catch (err) {
       const axErr = err as { response?: { data?: { error?: string; title?: string[] } } };
@@ -228,7 +233,7 @@ export default function BookDetailOwner({
             isOwner
             loading={chaptersLoading}
             addChapterTo={`/books/${book.slug}/add-chapter`}
-            onCreateVolume={() => handleCreateVolume("Новий том")}
+            onCreateVolume={() => setCreateVolumeModalOpen(true)}
             isCreatingVolume={isCreatingVolume}
             onChangeOrder={enterReorderMode}
             onRead={(ch) => navigate(`/books/${book.slug}/chapters/${ch.slug ?? ch.id}`)}
@@ -278,6 +283,12 @@ export default function BookDetailOwner({
             volumes={volumes}
             onConfirm={handleMoveChapter}
             isSubmitting={isMovingChapter}
+          />
+          <CreateVolumeModal
+            open={createVolumeModalOpen}
+            onClose={() => setCreateVolumeModalOpen(false)}
+            onConfirm={handleCreateVolume}
+            isSubmitting={isCreatingVolume}
           />
         </>
       }

@@ -122,29 +122,42 @@ export function BookHero({
             <BookActions bookId={bookId} bookSlug={bookSlug} />
           </div>
 
-          {/* 2. META SHORT */}
-          <div className={styles.heroMetaShort}>
-            <BookMeta rows={shortMetaRows} />
-          </div>
-
-          {/* 3. META CHIPS */}
-          <div className={styles.heroMetaChips}>
-            <BookMeta rows={chipsMetaRows} variant="chips" />
-          </div>
-
-          {/* 4. RATING */}
-          <aside className={styles.heroRating} aria-label="Панель рейтингу та підтримки автора">
-            <div className={styles.thankAuthor}>
-              <div className={styles.thankAuthorIconWrap}>
-                <img src={backBalanceIcon} alt="" className={styles.thankAuthorIcon} aria-hidden />
-                <div className={styles.thankAuthorCoins}>
-                  <p>10</p>
-                  <p>FanCoins</p>
-                </div>
-              </div>
-              <span className={styles.thankAuthorLabel}>{thankAuthorLabel}</span>
+          {/* 2–4. META (short + chips + actions) — обгортка для коректного стека на десктопі */}
+          <div className={styles.heroMetaWrap}>
+            <div className={styles.heroMetaShort}>
+              <BookMeta rows={shortMetaRows} />
             </div>
-            <div className={styles.ratingsStack}>
+            <div className={styles.heroMetaChips}>
+              <BookMeta rows={chipsMetaRows} variant="chips" />
+            </div>
+            <div className={styles.heroActions}>
+              {onBecomeTranslator ? (
+                <ActionButton
+                  variant="outline"
+                  className={styles.becomeTranslatorBtn}
+                  onClick={onBecomeTranslator}
+                  leftIcon={<img src={newTranslaterIcon} alt="" width={22} height={34} />}
+                >
+                  Стати новим перекладачем
+                </ActionButton>
+              ) : null}
+            </div>
+          </div>
+
+          {/* 5. RATING + AUTHOR MARK — обгортка для правильного порядку на ПК (спочатку рейтинг, потім Авторська книга) */}
+          <div className={styles.heroRatingWrap}>
+            <aside className={styles.heroRating} aria-label="Панель рейтингу та підтримки автора">
+              <div className={styles.thankAuthor}>
+                <div className={styles.thankAuthorIconWrap}>
+                  <img src={backBalanceIcon} alt="" className={styles.thankAuthorIcon} aria-hidden />
+                  <div className={styles.thankAuthorCoins}>
+                    <p>10</p>
+                    <p>FanCoins</p>
+                  </div>
+                </div>
+                <span className={styles.thankAuthorLabel}>{thankAuthorLabel}</span>
+              </div>
+              <div className={styles.ratingsStack}>
               {slugForRatings ? (
                 <>
                   <BookRatingStars
@@ -189,26 +202,11 @@ export function BookHero({
                   </div>
                 </>
               )}
+              </div>
+            </aside>
+            <div className={styles.heroAuthorMark}>
+              {authorMarkText ?? "Авторська книга"}
             </div>
-          </aside>
-
-          {/* 5. ACTIONS — рендеримо порожній div, щоб :has() працював для центрування Авторська */}
-          <div className={styles.heroActions}>
-            {onBecomeTranslator ? (
-              <ActionButton
-                variant="outline"
-                className={styles.becomeTranslatorBtn}
-                onClick={onBecomeTranslator}
-                leftIcon={<img src={newTranslaterIcon} alt="" width={22} height={34} />}
-              >
-                Стати новим перекладачем
-              </ActionButton>
-            ) : null}
-          </div>
-
-          {/* 6. AUTHOR MARK */}
-          <div className={styles.heroAuthorMark}>
-            {authorMarkText ?? "Авторська книга"}
           </div>
         </div>
       </div>
