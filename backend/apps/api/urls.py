@@ -2,6 +2,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('auth/', include('djoser.urls')),
+    path('auth/', include('social_django.urls', namespace='social')),
     path('users/', include('apps.users.api.urls')),
     path('main/', include('apps.main.api.urls')),
     path('catalog/', include('apps.catalog.api.urls')),

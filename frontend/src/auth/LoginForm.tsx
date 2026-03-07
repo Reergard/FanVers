@@ -25,7 +25,7 @@ export function LoginForm({ onSuccess }: Props) {
     setLoading(true);
 
     try {
-      await loginSession({ username, password });
+      await loginSession({ username, password, remember_me: rememberMe });
       notification.showSuccess("Успішний вхід!");
       onSuccess?.();
     } catch (error: unknown) {
@@ -39,13 +39,14 @@ export function LoginForm({ onSuccess }: Props) {
 
   return (
     <AuthModalContent>
-      <form onSubmit={handleSubmit} className={styles.form}>
+      <form onSubmit={handleSubmit} className={styles.form} autoComplete="on">
         <div className={styles.field}>
           <label htmlFor="login-username" className={styles.label}>
             Логін:
           </label>
           <input
             id="login-username"
+            name="username"
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -62,6 +63,7 @@ export function LoginForm({ onSuccess }: Props) {
           </label>
           <input
             id="login-password"
+            name="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

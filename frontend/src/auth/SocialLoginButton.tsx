@@ -1,6 +1,8 @@
-import React from "react";
 import { Icon } from "../shared/Icon";
+import { API } from "../api/endpoints";
 import styles from "./SocialLoginButton.module.css";
+
+const baseURL = import.meta.env.DEV ? "" : (import.meta.env.VITE_API_BASE_URL ?? "");
 
 type Props = {
   provider: "facebook" | "google";
@@ -10,13 +12,14 @@ type Props = {
 };
 
 /**
- * Кнопка входу через соцмережу (Facebook або Google) з двома станами:
- * - за замовчуванням: світла рамка, прозорий фон, світло-сірий текст, бірюзовий круг іконки
- * - hover/active: біла рамка, темний фон, білий текст
+ * Кнопка входу через соцмережу (Facebook або Google).
+ * За замовчуванням — посилання на backend OAuth URL.
  */
 export function SocialLoginButton({ provider, label, href, onClick }: Props) {
   const iconName = provider === "facebook" ? "facebook-btn" : "google";
   const iconColorClass = provider === "facebook" ? styles.iconFacebook : styles.iconGoogle;
+  const oauthProvider = provider === "facebook" ? "facebook" : "google-oauth2";
+  const defaultHref = `${baseURL}${API.oauthBegin(oauthProvider)}`;
 
   const content = (
     <>
@@ -29,9 +32,13 @@ export function SocialLoginButton({ provider, label, href, onClick }: Props) {
 
   const className = `${styles.button} ${iconColorClass}`;
 
-  if (href) {
+  if (href ?? defaultHref) {
     return (
-      <a href={href} className={className} aria-label={`Увійти через ${label}`}>
+      <a
+        href={href ?? defaultHref}
+        className={className}
+        aria-label={`Увійти через ${label}`}
+      >
         {content}
       </a>
     );

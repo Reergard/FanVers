@@ -5,6 +5,8 @@ export const API = {
   refresh: "/api/users/refresh/",
   logout: "/api/users/logout/",
   authStatus: "/api/users/auth-status/",
+  oauthExchange: "/api/users/oauth-exchange/",
+  oauthBegin: (provider: "google-oauth2" | "facebook") => `/api/auth/o/${provider}/`,
 
   // Profile
   userProfile: "/api/users/profile/",

@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'apps.rating.apps.RatingConfig',
     'channels',
     'django_celery_beat',
+    'social_django',
 ]
 
 MIDDLEWARE = [
@@ -457,6 +458,34 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
 
+# OAuth (Google, Facebook) — credentials з .env
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'social_core.backends.facebook.FacebookOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = env('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY', default='')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = env('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET', default='')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email', 'profile']
+SOCIAL_AUTH_FACEBOOK_KEY = env('SOCIAL_AUTH_FACEBOOK_KEY', default='')
+SOCIAL_AUTH_FACEBOOK_SECRET = env('SOCIAL_AUTH_FACEBOOK_SECRET', default='')
+SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'public_profile']
+SOCIAL_AUTH_FACEBOOK_API_VERSION = 'v18.0'
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'social_core.pipeline.user.get_username',
+    'social_core.pipeline.user.create_user',
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details',
+)
+FRONTEND_URL = env('FRONTEND_URL', default=('http://127.0.0.1:5173' if DEBUG else 'https://fan-vers.com'))
+LOGIN_REDIRECT_URL = '/api/users/oauth-complete/'
+LOGIN_ERROR_URL = '/api/users/oauth-error/'
+
 # Настройки логирования для Celery
 LOGGING = {
     'version': 1,
@@ -528,16 +557,15 @@ CACHES = {
 # CSRF_TRUSTED_ORIGINS - домены, которым Django доверяет для CSRF
 # Должны включать все домены, с которых могут приходить запросы
 if DEBUG:
-    # Dev настройки
-    CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
-        'http://127.0.0.1:5173',
-        'http://localhost:5173',
-        'http://127.0.0.1:8000',
-        'http://localhost:8000',
-        # Локальна мережа — для тестування з телефону
-        'http://192.168.1.105:5173',
-        'http://192.168.1.105:5174',
-    ])
+    # Dev: базовый список + всегда добавляем ключевые origins (на случай переопределения в .env)
+    _csrf_dev_base = [
+        'http://127.0.0.1:5173', 'http://localhost:5173',
+        'http://127.0.0.1:8000', 'http://localhost:8000',
+        'http://192.168.1.105:5173', 'http://192.168.1.105:5174',
+        'http://10.0.2.2:5173', 'http://10.0.2.2:5174',  # Android emulator
+    ]
+    _csrf_from_env = env.list('CSRF_TRUSTED_ORIGINS', default=[])
+    CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(_csrf_from_env + _csrf_dev_base))
 else:
     # Prod настройки
     CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
@@ -545,10 +573,10 @@ else:
         'https://www.fan-vers.com',
     ])
 
-# --- Optional: override dev CORS from .env ---
+# --- Optional: merge dev CORS from .env (дополняем, не заменяем полностью) ---
 CORS_DEV_ORIGINS = env.list('CORS_DEV_ORIGINS', default=[])
 if DEBUG and CORS_DEV_ORIGINS:
-    CORS_ALLOWED_ORIGINS = CORS_DEV_ORIGINS
+    CORS_ALLOWED_ORIGINS = list(dict.fromkeys(CORS_DEV_ORIGINS + CORS_ALLOWED_ORIGINS))
 
 # --- Proxy headers (work behind Nginx) ---
 if not DEBUG:

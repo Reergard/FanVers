@@ -1,7 +1,7 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 from django.contrib.auth import get_user_model
 from rest_framework import status, generics, permissions
-from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
@@ -19,17 +19,21 @@ import logging
 from django.db import transaction
 from django.contrib.auth import update_session_auth_hash
 from django.core.files.storage import default_storage
+from django.core.cache import cache
+from django.shortcuts import redirect
 from django.conf import settings
 import os
+import secrets
 import time
 
 logger = logging.getLogger(__name__)
 
 # Константи для cookie-based refresh
 REFRESH_COOKIE_NAME = "refresh_token"
-REFRESH_MAX_AGE = 60 * 60 * 24 * 7  # 7 днів
+REFRESH_MAX_AGE = 60 * 60 * 24 * 7  # 7 днів (remember_me=False) — тиждень бездіяльності
+REFRESH_MAX_AGE_REMEMBER = 60 * 60 * 24 * 30  # 30 днів (remember_me=True) — довга сесія
 
-def _cookie_params():
+def _cookie_params(remember_me=False):
     """
     Параметри для refresh cookie
     ВАЖНО: Настройки зависят от DEBUG режима для правильной работы в dev/prod
@@ -52,20 +56,21 @@ def _cookie_params():
         domain = getattr(settings, 'SESSION_COOKIE_DOMAIN', os.getenv('SESSION_COOKIE_DOMAIN', '.fan-vers.com'))
     
     if settings.DEBUG:
-        logger.info(f"🔐 [CookieParams] Cookie parameters: secure={secure}, samesite={samesite}, domain={domain or 'None'}")
+        logger.info(f"🔐 [CookieParams] Cookie parameters: secure={secure}, samesite={samesite}, domain={domain or 'None'}, remember_me={remember_me}")
     
+    max_age = REFRESH_MAX_AGE_REMEMBER if remember_me else REFRESH_MAX_AGE
     return dict(
         httponly=True,
         secure=secure,
         samesite=samesite,
         domain=domain,  # None в dev, .fan-vers.com в prod
         path='/',       # кука видна всьому сайту
-        max_age=REFRESH_MAX_AGE,
+        max_age=max_age,
     )
 
-def set_refresh_cookie(response, refresh_str: str):
+def set_refresh_cookie(response, refresh_str: str, remember_me: bool = False):
     """Встановити refresh cookie"""
-    params = _cookie_params()
+    params = _cookie_params(remember_me=remember_me)
     if settings.DEBUG:
         logger.info(f"🍪 [set_refresh_cookie] Устанавливаем refresh cookie...")
         logger.info(f"🍪 [set_refresh_cookie] Cookie name: {REFRESH_COOKIE_NAME}")
@@ -80,7 +85,7 @@ def del_refresh_cookie(response):
     ВАЖНО: Используем те же параметры (domain/path/samesite), что и при установке,
     иначе браузер не удалит старую куку
     """
-    params = _cookie_params()
+    params = _cookie_params(remember_me=False)
     if settings.DEBUG:
         logger.info(f"🍪 [del_refresh_cookie] Удаляем refresh cookie...")
         logger.info(f"🍪 [del_refresh_cookie] Cookie name: {REFRESH_COOKIE_NAME}")
@@ -147,6 +152,52 @@ def get_csrf_token(request):
     return Response({"csrfToken": csrf_token})
 
 
+def oauth_complete_redirect(request):
+    """
+    Після успішного OAuth (Google/Facebook) social-auth редіректить сюди.
+    Генеруємо JWT, зберігаємо одноразовий code у cache, редіректимо на фронт з ?code=XXX.
+    """
+    if not request.user.is_authenticated:
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://127.0.0.1:5173')
+        return redirect(f"{frontend_url}/?oauth=error&message=not_authenticated")
+
+    user = request.user
+    if not user.is_active:
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://127.0.0.1:5173')
+        return redirect(f"{frontend_url}/?oauth=error&message=inactive")
+
+    code = secrets.token_urlsafe(32)
+    refresh = RefreshToken.for_user(user)
+    access = str(refresh.access_token)
+    cache.set(f"oauth_code_{code}", {'user_id': user.id, 'access': access, 'refresh': str(refresh)}, timeout=60)
+
+    login(request, user)
+    return redirect(f"{settings.FRONTEND_URL}/oauth/callback?code={code}")
+
+
+def _oauth_exchange_impl(request):
+    code = request.data.get('code')
+    if not code:
+        return Response({'detail': 'Code required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    data = cache.get(f"oauth_code_{code}")
+    if not data:
+        return Response({'detail': 'Invalid or expired code'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    cache.delete(f"oauth_code_{code}")
+    resp = Response({'access': data['access']})
+    set_refresh_cookie(resp, data['refresh'], remember_me=False)
+    return resp
+
+
+_oauth_exchange_impl.throttle_scope = 'auth_login'
+oauth_exchange_view = csrf_exempt(
+    api_view(['POST'])(permission_classes([AllowAny])(
+        throttle_classes([ScopedRateThrottle])(_oauth_exchange_impl)
+    ))
+)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def save_token_view(request):
@@ -166,45 +217,47 @@ def save_token_view(request):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class RegisterView(APIView):
-    # throttle_classes = [ProfileThrottle]  # Розкоментувати на продакшені
-
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth_login"  # той самий ліміт, що й login
     authentication_classes = []  # чтобы CSRF/Session не мешали на JWT-эндпоинте
 
     def post(self, request):
-        logger.info(f"📝 [RegisterView] === START REGISTER ===")
-        logger.info(f"📝 [RegisterView] Method: {request.method}")
-        logger.info(f"📝 [RegisterView] Path: {request.path}")
         if settings.DEBUG:
-            logger.info(f"📝 [RegisterView] Headers: {dict(request.headers)}")
-        logger.info(f"📝 [RegisterView] Data: username={request.data.get('username', 'N/A')}, email={request.data.get('email', 'N/A')}")
-        logger.info(f"📝 [RegisterView] META REMOTE_ADDR: {request.META.get('REMOTE_ADDR')}")
-        logger.info(f"📝 [RegisterView] META HTTP_ORIGIN: {request.META.get('HTTP_ORIGIN')}")
+            logger.info(f"📝 [RegisterView] === START REGISTER ===")
+            logger.info(f"📝 [RegisterView] Method: {request.method}, Path: {request.path}")
+            logger.info(f"📝 [RegisterView] Data: username={request.data.get('username', 'N/A')}, email={request.data.get('email', 'N/A')}")
         
         serializer = CreateUserSerializer(data=request.data)
         if serializer.is_valid():
-            logger.info(f"📝 [RegisterView] Шаг 1: Serializer валиден, создаем пользователя...")
+            if settings.DEBUG:
+                logger.info(f"📝 [RegisterView] Шаг 1: Serializer валиден, создаем пользователя...")
             user = serializer.save()
-            logger.info(f"📝 [RegisterView] Шаг 1: Пользователь создан: {user.username} (ID: {user.id})")
-            
-            logger.info(f"📝 [RegisterView] Шаг 2: Генерируем токены...")
+            if settings.DEBUG:
+                logger.info(f"📝 [RegisterView] Шаг 1: Пользователь создан: {user.username} (ID: {user.id})")
+                logger.info(f"📝 [RegisterView] Шаг 2: Генерируем токены...")
             refresh = RefreshToken.for_user(user)
             access = str(refresh.access_token)
-            logger.info(f"📝 [RegisterView] Шаг 2: Токены созданы, access length: {len(access)}")
+            if settings.DEBUG:
+                logger.info(f"📝 [RegisterView] Шаг 2: Токены созданы")
 
-            logger.info(f"📝 [RegisterView] Шаг 3: Формируем ответ...")
+            if settings.DEBUG:
+                logger.info(f"📝 [RegisterView] Шаг 3: Формируем ответ...")
+            remember_me = request.data.get('remember_me', False) in (True, 'true', '1')
             resp = Response({
                 'user': serializer.data,
                 'access': access,
-                # можно оставить 'refresh' в теле или убрать — фронт его не читает
-                # 'refresh': str(refresh),
             }, status=status.HTTP_201_CREATED)
 
-            # ВАЖНО: ставим refresh в HttpOnly cookie (как в LoginView)
-            logger.info(f"📝 [RegisterView] Шаг 4: Устанавливаем refresh cookie...")
-            set_refresh_cookie(resp, str(refresh))
-            logger.info(f"📝 [RegisterView] Шаг 4: Refresh cookie установлена")
-            logger.info(f"📝 [RegisterView] === REGISTER SUCCESS ===")
+            # Сесія для WebSocket cookie-based auth
+            login(request, user)
+
+            # ВАЖНО: ставим refresh в HttpOnly cookie (як у LoginView)
+            if settings.DEBUG:
+                logger.info(f"📝 [RegisterView] Шаг 4: Устанавливаем refresh cookie (remember_me={remember_me})...")
+            set_refresh_cookie(resp, str(refresh), remember_me=remember_me)
+            if settings.DEBUG:
+                logger.info(f"📝 [RegisterView] === REGISTER SUCCESS ===")
             return resp
 
         logger.error(f"📝 [RegisterView] Serializer не валиден: {serializer.errors}")
@@ -220,30 +273,22 @@ class LoginView(APIView):
     throttle_scope = "auth_login"
 
     def post(self, request):
-        logger.info(f"🔐 [LoginView] === START LOGIN REQUEST ===")
-        logger.info(f"🔐 [LoginView] Method: {request.method}")
-        logger.info(f"🔐 [LoginView] Path: {request.path}")
         if settings.DEBUG:
-            logger.info(f"🔐 [LoginView] Headers: {dict(request.headers)}")
-        logger.info(f"🔐 [LoginView] META REMOTE_ADDR: {request.META.get('REMOTE_ADDR')}")
-        logger.info(f"🔐 [LoginView] META HTTP_X_FORWARDED_FOR: {request.META.get('HTTP_X_FORWARDED_FOR')}")
-        logger.info(f"🔐 [LoginView] META HTTP_ORIGIN: {request.META.get('HTTP_ORIGIN')}")
-        logger.info(f"🔐 [LoginView] META HTTP_REFERER: {request.META.get('HTTP_REFERER')}")
-        if settings.DEBUG:
-            logger.info(f"🔐 [LoginView] CSRF token in cookies: {request.COOKIES.get('csrftoken', 'NOT SET')[:50] if request.COOKIES.get('csrftoken') else 'NOT SET'}")
-            logger.info(f"🔐 [LoginView] X-CSRFToken header: {request.headers.get('X-CSRFToken', 'NOT SET')[:50] if request.headers.get('X-CSRFToken') else 'NOT SET'}")
-            logger.info(f"🔐 [LoginView] X-Requested-With header: {request.headers.get('X-Requested-With', 'NOT SET')}")
+            logger.info(f"🔐 [LoginView] === START LOGIN REQUEST ===")
+            logger.info(f"🔐 [LoginView] Method: {request.method}, Path: {request.path}")
         
         username = request.data.get('username')
         password = request.data.get('password')
         
-        logger.info(f"🔐 [LoginView] Username received: {username}")
-        logger.info(f"🔐 [LoginView] Password received: {'***' if password else 'NOT SET'}")
+        if settings.DEBUG:
+            logger.info(f"🔐 [LoginView] Username received: {username}")
         
         try:
-            logger.info(f"🔐 [LoginView] Шаг 1: Аутентификация пользователя...")
+            if settings.DEBUG:
+                logger.info(f"🔐 [LoginView] Шаг 1: Аутентификация пользователя...")
             user = authenticate(request, username=username, password=password)
-            logger.info(f"🔐 [LoginView] Шаг 1: Authenticate result: {user.username if user else 'FAILED'}")
+            if settings.DEBUG:
+                logger.info(f"🔐 [LoginView] Шаг 1: Authenticate result: {user.username if user else 'FAILED'}")
             
             if not user:
                 logger.warning(f"🔐 [LoginView] Шаг 1: Authentication failed for username: {username}")
@@ -257,20 +302,27 @@ class LoginView(APIView):
                     status=status.HTTP_403_FORBIDDEN
                 )
 
-            logger.info(f"🔐 [LoginView] Шаг 1: User authenticated: {user.username} (ID: {user.id}, is_active: {user.is_active})")
-            
-            logger.info(f"🔐 [LoginView] Шаг 2: Генерируем токены...")
+            if settings.DEBUG:
+                logger.info(f"🔐 [LoginView] Шаг 1: User authenticated: {user.username} (ID: {user.id})")
+                logger.info(f"🔐 [LoginView] Шаг 2: Генерируем токены...")
             refresh = RefreshToken.for_user(user)
             access = str(refresh.access_token)
-            logger.info(f"🔐 [LoginView] Шаг 2: Tokens generated, access length: {len(access)}")
+            if settings.DEBUG:
+                logger.info(f"🔐 [LoginView] Шаг 2: Tokens generated")
             
-            logger.info(f"🔐 [LoginView] Шаг 3: Формируем ответ...")
+            if settings.DEBUG:
+                logger.info(f"🔐 [LoginView] Шаг 3: Формируем ответ...")
+            remember_me = request.data.get('remember_me', False) in (True, 'true', '1')
             resp = Response({"access": access}, status=status.HTTP_200_OK)
-            
-            logger.info(f"🔐 [LoginView] Шаг 4: Устанавливаем refresh cookie...")
-            set_refresh_cookie(resp, str(refresh))
-            logger.info(f"🔐 [LoginView] Шаг 4: Refresh cookie установлена")
-            logger.info(f"🔐 [LoginView] === LOGIN SUCCESS ===")
+
+            # Сесія для WebSocket cookie-based auth
+            login(request, user)
+
+            if settings.DEBUG:
+                logger.info(f"🔐 [LoginView] Шаг 4: Устанавливаем refresh cookie (remember_me={remember_me})...")
+            set_refresh_cookie(resp, str(refresh), remember_me=remember_me)
+            if settings.DEBUG:
+                logger.info(f"🔐 [LoginView] === LOGIN SUCCESS ===")
             return resp
         except AuthenticationFailed as e:
             logger.error(f"🔐 [LoginView] AuthenticationFailed: {str(e)}")
@@ -291,34 +343,22 @@ class LogoutView(APIView):
     throttle_scope = "auth_logout"
 
     def post(self, request):
-        logger.info(f"🚪 [LogoutView] === START LOGOUT ===")
-        logger.info(f"🚪 [LogoutView] Method: {request.method}")
-        logger.info(f"🚪 [LogoutView] Path: {request.path}")
         if settings.DEBUG:
-            logger.info(f"🚪 [LogoutView] Headers: X-CSRFToken={request.headers.get('X-CSRFToken', 'NOT SET')[:50] if request.headers.get('X-CSRFToken') else 'NOT SET'}")
-            logger.info(f"🚪 [LogoutView] CSRF token проверен Django middleware - запрос дошел до view")
+            logger.info(f"🚪 [LogoutView] === START LOGOUT ===")
         
-        # Пытаемся заблэклистить refresh из cookie
-        if settings.DEBUG:
-            logger.info(f"🚪 [LogoutView] Шаг 1: Проверяем refresh cookie...")
         refresh_cookie = request.COOKIES.get(REFRESH_COOKIE_NAME)
-        if settings.DEBUG:
-            logger.info(f"🚪 [LogoutView] Шаг 1: Refresh cookie: {'PRESENT' if refresh_cookie else 'NOT SET'}")
         
         if refresh_cookie:
             try:
-                logger.info(f"🚪 [LogoutView] Шаг 2: Добавляем refresh token в blacklist...")
                 token = RefreshToken(refresh_cookie)
                 token.blacklist()
-                logger.info(f"🚪 [LogoutView] Шаг 2: Refresh token добавлен в blacklist")
             except Exception as e:
-                logger.warning(f"🚪 [LogoutView] Шаг 2: Не удалось добавить в blacklist: {e}")
+                logger.warning(f"🚪 [LogoutView] Не удалось добавить в blacklist: {e}")
 
-        logger.info(f"🚪 [LogoutView] Шаг 3: Удаляем refresh cookie...")
         resp = Response(status=status.HTTP_205_RESET_CONTENT)
         del_refresh_cookie(resp)
-        logger.info(f"🚪 [LogoutView] Шаг 3: Refresh cookie удалена")
-        logger.info(f"🚪 [LogoutView] === LOGOUT SUCCESS ===")
+        if settings.DEBUG:
+            logger.info(f"🚪 [LogoutView] === LOGOUT SUCCESS ===")
         return resp
 
 
@@ -334,56 +374,35 @@ class CookieTokenRefreshView(APIView):
     throttle_scope = "auth_refresh"
 
     def post(self, request):
-        logger.info(f"🔐 [CookieTokenRefreshView] === START REFRESH REQUEST ===")
-        logger.info(f"🔐 [CookieTokenRefreshView] Method: {request.method}")
-        logger.info(f"🔐 [CookieTokenRefreshView] Path: {request.path}")
         if settings.DEBUG:
-            logger.info(f"🔐 [CookieTokenRefreshView] Headers: {dict(request.headers)}")
-            logger.info(f"🔐 [CookieTokenRefreshView] X-CSRFToken header: {request.headers.get('X-CSRFToken', 'NOT SET')[:50] if request.headers.get('X-CSRFToken') else 'NOT SET'}")
-            logger.info(f"🔐 [CookieTokenRefreshView] CSRF token in cookies: {request.COOKIES.get('csrftoken', 'NOT SET')[:50] if request.COOKIES.get('csrftoken') else 'NOT SET'}")
-            logger.info(f"🔐 [CookieTokenRefreshView] CSRF token проверен Django middleware - запрос дошел до view")
+            logger.info(f"🔐 [CookieTokenRefreshView] === START REFRESH REQUEST ===")
         
-        if settings.DEBUG:
-            logger.info(f"🔐 [CookieTokenRefreshView] Шаг 1: Проверяем refresh cookie...")
         refresh_cookie = request.COOKIES.get(REFRESH_COOKIE_NAME)
-        if settings.DEBUG:
-            logger.info(f"🔐 [CookieTokenRefreshView] Шаг 1: Refresh cookie: {'PRESENT' if refresh_cookie else 'NOT SET'}")
         
         if not refresh_cookie:
-            logger.warning(f"🔐 [CookieTokenRefreshView] Шаг 1: No refresh cookie")
+            logger.warning(f"🔐 [CookieTokenRefreshView] No refresh cookie")
             return Response({"detail": "No refresh cookie"}, status=status.HTTP_401_UNAUTHORIZED)
 
         try:
-            logger.info(f"🔐 [CookieTokenRefreshView] Шаг 2: Валидируем refresh token...")
             old = RefreshToken(refresh_cookie)
-            logger.info(f"🔐 [CookieTokenRefreshView] Шаг 2: Refresh token валиден")
             
-            # Ротация: заносим старый в blacklist (если включен), выдаем новый refresh и access
             try:
-                logger.info(f"🔐 [CookieTokenRefreshView] Шаг 3: Добавляем старый refresh token в blacklist...")
                 old.blacklist()
-                logger.info(f"🔐 [CookieTokenRefreshView] Шаг 3: Старый refresh token добавлен в blacklist")
             except Exception as e:
-                logger.warning(f"🔐 [CookieTokenRefreshView] Шаг 3: Не удалось добавить в blacklist: {e}")
+                logger.warning(f"🔐 [CookieTokenRefreshView] Не удалось добавить в blacklist: {e}")
 
-            logger.info(f"🔐 [CookieTokenRefreshView] Шаг 4: Получаем user_id из токена...")
             user_id = old.get("user_id")
-            logger.info(f"🔐 [CookieTokenRefreshView] Шаг 4: User ID: {user_id}")
-            
             User = get_user_model()
             user = User.objects.get(id=user_id)
-            logger.info(f"🔐 [CookieTokenRefreshView] Шаг 4: User найден: {user.username}")
 
-            logger.info(f"🔐 [CookieTokenRefreshView] Шаг 5: Генерируем новые токены...")
+            if settings.DEBUG:
+                logger.info(f"🔐 [CookieTokenRefreshView] Генерируем новые токены...")
             new_refresh = RefreshToken.for_user(user)
             new_access = str(new_refresh.access_token)
-            logger.info(f"🔐 [CookieTokenRefreshView] Шаг 5: Новые токены созданы, access length: {len(new_access)}")
-
-            logger.info(f"🔐 [CookieTokenRefreshView] Шаг 6: Формируем ответ и устанавливаем cookie...")
             resp = Response({"access": new_access}, status=status.HTTP_200_OK)
             set_refresh_cookie(resp, str(new_refresh))
-            logger.info(f"🔐 [CookieTokenRefreshView] Шаг 6: Refresh cookie установлена")
-            logger.info(f"🔐 [CookieTokenRefreshView] === REFRESH SUCCESS ===")
+            if settings.DEBUG:
+                logger.info(f"🔐 [CookieTokenRefreshView] === REFRESH SUCCESS ===")
             return resp
 
         except Exception as e:
@@ -711,28 +730,30 @@ def get_authors_list(request):
         )
 
 
-@api_view(['GET'])
-# @throttle_classes([ProfileThrottle])  # Розкоментувати на продакшені
-def get_user_profile(request, username):
+def _get_user_profile(request, username):
     try:
         profile = Profile.objects.select_related('user').get(
             user__username=username
         )
-        
         serializer = UsersProfilesSerializer(profile)
         return Response(serializer.data)
-        
     except Profile.DoesNotExist:
         return Response(
-            {'error': 'Профіль не знайдено'}, 
+            {'error': 'Профіль не знайдено'},
             status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
         logger.error(f"Помилка в get_user_profile: {str(e)}", exc_info=True)
         return Response(
-            {'error': 'Внутрішня помилка сервера'}, 
+            {'error': 'Внутрішня помилка сервера'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+_get_user_profile.throttle_scope = 'profile'
+get_user_profile = api_view(['GET'])(permission_classes([AllowAny])(
+    throttle_classes([ScopedRateThrottle])(_get_user_profile)
+))
 
 
 @api_view(['POST'])

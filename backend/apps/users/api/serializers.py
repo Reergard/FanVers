@@ -26,10 +26,18 @@ User = get_user_model()
 
 
 class CreateUserSerializer(UserCreateSerializer):
+    re_password = serializers.CharField(write_only=True, required=True)
+
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password')
+        fields = ('id', 'username', 'email', 'password', 're_password')
         extra_kwargs = {'password': {'write_only': True}}
+
+    def validate(self, attrs):
+        if attrs.get('password') != attrs.get('re_password'):
+            raise serializers.ValidationError({'re_password': 'Паролі не співпадають'})
+        attrs.pop('re_password', None)
+        return attrs
     
     def save(self, **kwargs):
         logger.info(f"📧 [CreateUserSerializer] === START USER CREATION ===")

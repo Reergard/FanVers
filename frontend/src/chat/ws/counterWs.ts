@@ -1,4 +1,3 @@
-import { getAccess } from "../../auth/token";
 import type { ChatMessage } from "../api/types";
 
 type CounterHandler = (payload: { chatId: number; message: ChatMessage }) => void;
@@ -13,6 +12,7 @@ type CounterWireMessage = {
   created_at?: string;
 };
 
+/** WebSocket base URL. Cookie-based auth — токен в URL не передається (OWASP). */
 function resolveWsBaseUrl(): string {
   const wsBase = (import.meta.env.VITE_WS_BASE_URL as string | undefined)?.trim();
   if (wsBase) return wsBase.replace(/\/+$/, "");
@@ -24,7 +24,7 @@ function resolveWsBaseUrl(): string {
     if (normalized.startsWith("http://")) return normalized.replace("http://", "ws://");
   }
 
-  if (import.meta.env.DEV) return "ws://127.0.0.1:8000";
+  if (import.meta.env.DEV) return "";
 
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
   return `${protocol}://${window.location.host}`;
@@ -55,15 +55,13 @@ class CounterWsService {
   private handlers = new Set<CounterHandler>();
 
   connect(): boolean {
-    const token = getAccess();
-    if (!token) return false;
-
     if (this.socket && this.socket.readyState <= WebSocket.OPEN) return true;
 
     this.disconnect();
 
     const base = resolveWsBaseUrl();
-    const url = `${base}/ws/counter/?token=${encodeURIComponent(token)}`;
+    const path = "/ws/counter/";
+    const url = base ? `${base}${path}` : path;
     const socket = new WebSocket(url);
     this.socket = socket;
 

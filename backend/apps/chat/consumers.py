@@ -3,62 +3,11 @@ import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from .models import Chat, Message
-from channels.middleware import BaseMiddleware
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
-class TokenAuthMiddleware(BaseMiddleware):
-    """Middleware для аутентификации WebSocket соединений через JWT токены"""
-    
-    async def __call__(self, scope, receive, send):
-        print("🔐 [TokenAuthMiddleware] === START ===")
-        print(f"🔐 [TokenAuthMiddleware] Scope type: {scope['type']}")
-        print(f"🔐 [TokenAuthMiddleware] Scope path: {scope['path']}")
-        print(f"🔐 [TokenAuthMiddleware] Scope query_string: {scope.get('query_string', b'')}")
-        print(f"🔐 [TokenAuthMiddleware] Scope headers: {scope.get('headers', [])}")
-        
-        if scope['type'] == 'websocket':
-            # Извлекаем токен из query string
-            query_string = scope.get('query_string', b'').decode()
-            print(f"🔐 [TokenAuthMiddleware] Decoded query_string: {query_string}")
-            
-            token = None
-            if 'token=' in query_string:
-                token = query_string.split('token=')[-1]
-                print(f"🔐 [TokenAuthMiddleware] Extracted token: {token[:20]}...")
-            
-            if token:
-                print("🔐 [TokenAuthMiddleware] Validating token...")
-                try:
-                    access_token = AccessToken(token)
-                    user = await self.get_user_from_token(access_token)
-                    if user:
-                        scope['user'] = user
-                        print(f"🔐 [TokenAuthMiddleware] Found user: {user.username} (ID: {user.id})")
-                        print(f"🔐 [TokenAuthMiddleware] Final scope user: {user.email}")
-                    else:
-                        print("🔐 [TokenAuthMiddleware] User not found")
-                except (InvalidToken, TokenError) as e:
-                    print(f"🔐 [TokenAuthMiddleware] Token validation failed: {e}")
-                    scope['user'] = None
-            else:
-                print("🔐 [TokenAuthMiddleware] No token provided")
-                scope['user'] = None
-        
-        print("🔐 [TokenAuthMiddleware] === END ===")
-        return await super().__call__(scope, receive, send)
-    
-    @database_sync_to_async
-    def get_user_from_token(self, token):
-        try:
-            user_id = token['user_id']
-            return User.objects.get(id=user_id)
-        except (User.DoesNotExist, KeyError):
-            return None
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -132,14 +81,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'sender': event['sender'],
             'timestamp': event['timestamp']
         }))
-
-    @database_sync_to_async
-    def get_user_from_token(self, token):
-        try:
-            user_id = token['user_id']
-            return User.objects.get(id=user_id)
-        except (User.DoesNotExist, KeyError):
-            return None
 
     @database_sync_to_async
     def is_chat_participant(self, chat_id, user):

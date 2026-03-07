@@ -30,9 +30,13 @@ export async function bootstrapAuth() {
           username: data?.username ?? null,
           balance: data?.balance ?? null,
         });
-      } catch {
-        // authStatus неуспешен — очищаем всё (токен мог быть невалидным)
-        clearAuth();
+      } catch (err: any) {
+        // Только 401 = невалидный токен → clearAuth. Сетевые/5xx — оставляем залогиненным.
+        if (err?.response?.status === 401) {
+          clearAuth();
+        } else {
+          setAuthAuthenticated({ userId: null, username: null, balance: null });
+        }
       }
     } else {
       setAuthAnonymous();

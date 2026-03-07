@@ -29,9 +29,21 @@ function shouldProactivelyRefresh(): boolean {
 // ПУБЛИЧНЫЕ ФУНКЦИИ ДЛЯ АВТОРИЗАЦИИ
 // ============================================================================
 
-export async function loginSession(payload: { username: string; password: string }) {
+export async function loginSession(payload: {
+  username: string;
+  password: string;
+  remember_me?: boolean;
+}) {
   try {
-    const { data } = await http.post(API.login, payload, { withCredentials: true });
+    const { data } = await http.post(
+      API.login,
+      {
+        username: payload.username,
+        password: payload.password,
+        remember_me: payload.remember_me ?? false,
+      },
+      { withCredentials: true }
+    );
     setAccess(data.access);
     authLog("LOGIN_OK", { hasAccess: !!data?.access });
 
@@ -60,9 +72,20 @@ export async function registerSession(payload: {
   email: string;
   password: string;
   re_password: string;
+  remember_me?: boolean;
 }) {
   try {
-    const { data } = await http.post(API.register, payload, { withCredentials: true });
+    const { data } = await http.post(
+      API.register,
+      {
+        username: payload.username,
+        email: payload.email,
+        password: payload.password,
+        re_password: payload.re_password,
+        remember_me: payload.remember_me ?? false,
+      },
+      { withCredentials: true }
+    );
     if (data?.access) {
       setAccess(data.access);
       authLog("LOGIN_OK", { source: "register", hasAccess: true });

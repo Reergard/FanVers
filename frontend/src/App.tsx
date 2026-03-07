@@ -59,6 +59,9 @@ const ForCopyrightHoldersPage = lazy(() => import("./info/legal/for-copyright-ho
 const PrivacyPolicyPage = lazy(() => import("./info/legal/privacy-policy"));
 const TranslatorAgreementPage = lazy(() => import("./info/legal/translator-agreement"));
 const UserAgreementPage = lazy(() => import("./info/legal/user-agreement"));
+const OAuthCallbackPage = lazy(() =>
+  import("./auth/OAuthCallbackPage").then((m) => ({ default: m.OAuthCallbackPage }))
+);
 
 const queryClient = new QueryClient();
 
@@ -93,6 +96,14 @@ export default function App() {
             <Base>
             <Routes>
               <Route path="/" element={<HomePage />} />
+              <Route
+                path="/oauth/callback"
+                element={
+                  <Suspense fallback={<div style={{ padding: 48, textAlign: "center", color: "rgba(255,255,255,0.8)" }}>Завантаження…</div>}>
+                    <OAuthCallbackPage />
+                  </Suspense>
+                }
+              />
               <Route
                 path="/create-book"
                 element={
