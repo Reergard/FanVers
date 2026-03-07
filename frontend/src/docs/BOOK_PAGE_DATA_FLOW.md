@@ -56,9 +56,11 @@ URL /books/:slug
 
 - `GET /api/catalog/books/info/<slug>/` -> данные книги
 - `GET /api/catalog/books/<slug>/volumes/` -> тома
-- `GET /api/catalog/books/<slug>/chapters/` -> главы
+- `GET /api/catalog/books/<slug>/chapters/` -> главы (включая container_versions)
 - `POST /api/catalog/books/<slug>/create-volume/` -> создание тома
 - `POST /api/catalog/books/<slug>/add_chapter/` -> добавление главы
+- `POST /api/catalog/books/<slug>/chapters/reorder/` -> изменение порядка глав (см. CHAPTER_REORDER_FRONTEND.md)
+- `POST /api/catalog/books/<slug>/chapters/<id>/move/` -> перемещение главы между томами
 
 ---
 
