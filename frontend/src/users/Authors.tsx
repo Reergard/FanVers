@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SortByNavigation } from "../navigation/SortByNavigation.tsx";
+import { PageTitle } from "../navigation/PageTitle";
 import { Container } from "../shared/Container";
 import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
 import styles from "./Authors.module.css";
@@ -13,6 +14,13 @@ const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: "comments", label: "К-сть коментарів" },
   { value: "lastVisit", label: "Останнє відвідування" },
 ];
+
+function getSortLabelAndValue(sort: SortKey, row: AuthorRow): { label: string; value: string | number } {
+  const opt = SORT_OPTIONS.find((o) => o.value === sort);
+  const label = opt?.label ?? "";
+  const value = sort === "books" ? row.booksCount : sort === "comments" ? row.commentsCount : row.lastVisit;
+  return { label, value };
+}
 
 type AuthorRow = {
   rank: number;
@@ -82,7 +90,7 @@ export default function Authors() {
       <Container>
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <h1 className={styles.title}>Автори</h1>
+            <PageTitle>Автори</PageTitle>
             <p className={styles.sub}>Показано {sortedRows.length} робіт</p>
           </div>
 
@@ -99,22 +107,15 @@ export default function Authors() {
         <div className={styles.tableScroll}>
           <div className={styles.tableFrame}>
             <div className={`${styles.row} ${styles.rowHead}`} role="row">
-              <div className={styles.cell} role="columnheader">
-                Місце в рейтингу
-              </div>
-              <div className={styles.cell} role="columnheader">
-                Нікнейм
-              </div>
-              <div className={`${styles.cell} ${styles.cellCenter}`} role="columnheader">
+              <div className={`${styles.cell} ${styles.cellHeaderRank} ${styles.cellHead}`} role="columnheader">Місце<br />в<br />рейтингу</div>
+              <div className={`${styles.cell} ${styles.cellHead}`} role="columnheader">Нікнейм</div>
+              <div className={`${styles.cell} ${styles.cellDesktopOnly} ${styles.cellHead}`} role="columnheader">
                 <span className={styles.headOrnament} aria-hidden="true" />
                 К-сть книг
               </div>
-              <div className={`${styles.cell} ${styles.cellCenter}`} role="columnheader">
-                К-сть коментарів
-              </div>
-              <div className={`${styles.cell} ${styles.cellCenter}`} role="columnheader">
-                Останнє відвідування
-              </div>
+              <div className={`${styles.cell} ${styles.cellDesktopOnly} ${styles.cellHead}`} role="columnheader">К-сть<br />коментарів</div>
+              <div className={`${styles.cell} ${styles.cellDesktopOnly} ${styles.cellHead}`} role="columnheader">Останнє відвідування</div>
+              <div className={`${styles.cell} ${styles.cellMobileOnly} ${styles.cellHead}`} role="columnheader">{SORT_OPTIONS.find((o) => o.value === sort)?.label ?? ""}</div>
             </div>
 
             <div className={styles.body} role="rowgroup">
@@ -122,19 +123,23 @@ export default function Authors() {
                 <div className={styles.row} role="row">
                   <div className={styles.cell} role="cell">Завантаження...</div>
                   <div className={styles.cell} role="cell" />
-                  <div className={styles.cell} role="cell" />
-                  <div className={styles.cell} role="cell" />
-                  <div className={styles.cell} role="cell" />
+                  <div className={`${styles.cell} ${styles.cellDesktopOnly}`} role="cell" />
+                  <div className={`${styles.cell} ${styles.cellDesktopOnly}`} role="cell" />
+                  <div className={`${styles.cell} ${styles.cellDesktopOnly}`} role="cell" />
+                  <div className={`${styles.cell} ${styles.cellMobileOnly}`} role="cell" />
                 </div>
               ) : isError ? (
                 <div className={styles.row} role="row">
                   <div className={styles.cell} role="cell">Помилка завантаження</div>
                   <div className={styles.cell} role="cell" />
-                  <div className={styles.cell} role="cell" />
-                  <div className={styles.cell} role="cell" />
-                  <div className={styles.cell} role="cell" />
+                  <div className={`${styles.cell} ${styles.cellDesktopOnly}`} role="cell" />
+                  <div className={`${styles.cell} ${styles.cellDesktopOnly}`} role="cell" />
+                  <div className={`${styles.cell} ${styles.cellDesktopOnly}`} role="cell" />
+                  <div className={`${styles.cell} ${styles.cellMobileOnly}`} role="cell" />
                 </div>
-              ) : visibleRows.map((row) => (
+              ) : visibleRows.map((row) => {
+                const { label: sortLabel, value: sortValue } = getSortLabelAndValue(sort, row);
+                return (
                 <div key={`${row.nickname}-${row.rank}`} className={styles.row} role="row" tabIndex={0}>
                   <span className={styles.rowHoverFrame} aria-hidden="true">
                     <svg
@@ -153,17 +158,20 @@ export default function Authors() {
                   <div className={`${styles.cell} ${styles.cellNick}`} role="cell">
                     {row.nickname}
                   </div>
-                  <div className={`${styles.cell} ${styles.cellCenter} ${styles.cellItalic}`} role="cell">
+                  <div className={`${styles.cell} ${styles.cellCenter} ${styles.cellItalic} ${styles.cellDesktopOnly}`} role="cell">
                     {row.booksCount}
                   </div>
-                  <div className={`${styles.cell} ${styles.cellCenter} ${styles.cellItalic}`} role="cell">
+                  <div className={`${styles.cell} ${styles.cellCenter} ${styles.cellItalic} ${styles.cellDesktopOnly}`} role="cell">
                     {row.commentsCount}
                   </div>
-                  <div className={`${styles.cell} ${styles.cellCenter} ${styles.cellItalic}`} role="cell">
+                  <div className={`${styles.cell} ${styles.cellCenter} ${styles.cellItalic} ${styles.cellDesktopOnly}`} role="cell">
                     {row.lastVisit}
                   </div>
+                  <div className={`${styles.cell} ${styles.cellCenter} ${styles.cellItalic} ${styles.cellMobileOnly}`} role="cell" title={sortLabel}>
+                    {sortValue}
+                  </div>
                 </div>
-              ))}
+              );})}
             </div>
           </div>
         </div>

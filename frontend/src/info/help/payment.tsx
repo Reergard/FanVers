@@ -1,5 +1,6 @@
 import { Container } from "../../shared/Container";
 import { Breadcrumb } from "../../navigation/Breadcrumb";
+import { PageTitle } from "../../navigation/PageTitle";
 import styles from "./HelpPages.module.css";
 
 export default function PaymentPage() {
@@ -8,7 +9,7 @@ export default function PaymentPage() {
       <Container>
         <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Оплата" }]} />
         <div className={styles.content}>
-          <h1 className={styles.title}>Оплата</h1>
+          <PageTitle>Оплата</PageTitle>
 
           <div className={styles.stack}>
             <section className={styles.section}>

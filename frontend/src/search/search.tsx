@@ -7,6 +7,7 @@ import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation";
 import { SortByNavigation } from "../navigation/SortByNavigation";
 import { FilterDropdown } from "../navigation/FilterDropdown";
 import { FiltersSidebar } from "../navigation/FiltersSidebar";
+import { PageTitle } from "../navigation/PageTitle";
 import { Icon } from "../shared/Icon";
 import { Modal } from "../shared/Modal/Modal";
 import {
@@ -318,7 +319,7 @@ export default function SearchPage() {
       <Container>
         <div className="abandoned-layout">
           <div className="abandoned-main-col">
-            <h1 className="abandoned-title">Пошук</h1>
+            <PageTitle>Пошук</PageTitle>
 
             <p className="abandoned-note">*Результати пошуку за заданими параметрами</p>
 

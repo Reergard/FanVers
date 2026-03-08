@@ -96,14 +96,29 @@
   font-family: "BadScript", cursive;
   font-size: 24px;
   line-height: 1.2;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .rowHead .cell {
   color: var(--header-text);
   font-family: "BadScript", cursive;
-  font-size: 24px;
-  line-height: 1;
+  font-size: clamp(18px, 1.6vw, 22px);
+  line-height: 1.2;
   font-weight: 400;
+}
+
+/* Заголовки: жёсткий сброс отступов и центрирование текста */
+.rowHead .cellHead {
+  margin: 0 !important;
+  padding: 14px 18px !important;
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+  text-align: center !important;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .cellCenter {
@@ -166,6 +181,14 @@
   z-index: 1;
 }
 
+.cellDesktopOnly {
+  /* на ПК завжди видимий */
+}
+
+.cellMobileOnly {
+  display: none; /* на ПК прихований */
+}
+
 .footer {
   display: flex;
   justify-content: center;
@@ -196,5 +219,63 @@
 @media (max-width: 480px) {
   .title {
     font-size: 24px;
+  }
+}
+
+/* Мобільна версія (телефони): 3 стовпці, третій — обраний у «Сортувати за» */
+@media (max-width: 640px) {
+  .cellDesktopOnly {
+    display: none !important;
+  }
+
+  .cellMobileOnly {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+  }
+
+  /* Заголовки: без padding щоб не виходити за колонку, текст по центру */
+  .rowHead .cell,
+  .rowHead .cellHead {
+    padding: 0 !important;
+    text-align: center !important;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+  }
+
+  .rowHead .cellHeaderRank {
+    font-size: 0;
+    line-height: 0;
+    overflow: hidden;
+  }
+
+  .tableFrame {
+    min-width: unset;
+    background-size:
+      1px 100%,
+      1px 100%;
+    background-position:
+      var(--c1) 0,
+      calc(var(--c1) + var(--c2)) 0;
+  }
+
+  .row,
+  .rowHead {
+    grid-template-columns: 60px minmax(0, 1fr) minmax(100px, 1fr);
+  }
+
+  .row .cell {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .headOrnament {
+    display: none;
   }
 }

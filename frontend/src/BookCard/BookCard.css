@@ -340,6 +340,21 @@
    Ряд 2: [Обкладинка] | Характеристики (фендоми, теги, жанри)
    Ряд 3: [Статус] | Кнопка Читати */
 @media (max-width: 768px) {
+  /* Збільшений значок 18+ для всіх мобільних карток */
+  .bookCard__badge-18-wrap {
+    --badge-18-size: clamp(48px, 7vw, 58px);
+    top: -6px;
+    right: -6px;
+  }
+
+  .bookCard__badge-18-wrap::before {
+    inset: clamp(10px, calc(1.2 * var(--vwu)), 14px);
+  }
+
+  .bookCard__badge-18 {
+    width: clamp(32px, 6vw, 42px);
+  }
+
   .bookCard--withTags {
     --cover-w: 120px;
     display: grid;
@@ -380,14 +395,6 @@
 
   .bookCard--withTags .bookCard__cover::after {
     width: clamp(8px, calc(1.2 * var(--vwu)), 12px);
-  }
-
-  .bookCard--withTags .bookCard__badge-18-wrap {
-    --badge-18-size: clamp(40px, 6vw, 48px);
-  }
-
-  .bookCard--withTags .bookCard__badge-18 {
-    width: clamp(28px, 5vw, 36px);
   }
 
   .bookCard__corner-a {
@@ -502,5 +509,94 @@
 @media (max-width: 639px) {
   .catalog-page .bookCard {
     --cover-w: clamp(170px, 62vw, 240px);
+  }
+}
+
+/* ========== Mobile grid для Catalog і Власні переклади (default card) ========== */
+/* Ряд 1: [пусто] | Назва
+   Ряд 2: [Обкладинка] | Мета (дати, перегляди, дохід) */
+@media (max-width: 768px) {
+  .catalog-page .bookCard:not(.bookCard--withTags),
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) {
+    --cover-w: 120px;
+    display: grid;
+    grid-template-columns: var(--cover-w) 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      ". title"
+      "cover meta";
+    gap: clamp(8px, 2vw, 12px) clamp(10px, 2vw, 16px);
+    align-items: start;
+    width: 100%;
+    overflow: visible;
+  }
+
+  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__content,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__content {
+    display: contents;
+  }
+
+  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__cover,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__cover {
+    grid-area: cover;
+    width: var(--cover-w);
+    height: clamp(140px, 28vh, 180px);
+    margin: 0;
+    border-radius: 0 clamp(18px, calc(2.5 * var(--vwu)), 26px)
+      clamp(18px, calc(2.5 * var(--vwu)), 26px) 0;
+  }
+
+  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__cover::after,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__cover::after {
+    width: clamp(8px, calc(1.2 * var(--vwu)), 12px);
+    left: clamp(8px, calc(1.2 * var(--vwu)), 12px);
+  }
+
+  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__cover-img,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__cover-img {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: inherit;
+  }
+
+  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__title,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__title {
+    grid-area: title;
+    grid-column: 1 / -1;
+    font-size: clamp(18px, 4vw, 22px);
+    text-align: center;
+    width: 100%;
+    white-space: normal;
+    margin: 0;
+    padding: 0 0 clamp(8px, 1.5vw, 12px);
+    overflow: visible;
+    line-height: 1.3;
+  }
+
+  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__meta,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__meta {
+    grid-area: meta;
+    gap: 6px;
+    min-width: 0;
+    overflow: visible;
+  }
+
+  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__row,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__label,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__label {
+    min-width: 52px;
+    font-size: clamp(13px, 2.5vw, 15px);
+  }
+
+  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__value,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__value {
+    font-size: clamp(13px, 2.5vw, 15px);
   }
 }

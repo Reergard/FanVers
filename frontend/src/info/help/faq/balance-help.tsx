@@ -1,4 +1,5 @@
 import { Container } from "../../../shared/Container";
+import { PageTitle } from "../../../navigation/PageTitle";
 import styles from "../HelpPages.module.css";
 
 export default function BalanceHelpPage() {
@@ -6,10 +7,12 @@ export default function BalanceHelpPage() {
     <section className={styles.page}>
       <Container>
         <div className={styles.content}>
-          <h1 className={styles.title}>Не поповнився баланс?</h1>
+          <PageTitle>FAQ</PageTitle>
 
-          <div className={styles.stack}>
-            <article className={styles.card}>
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Не поповнився баланс?</h2>
+            <div className={styles.stack}>
+              <article className={styles.card}>
               <h2 className={styles.cardTitle}>Перевірте статус платежу</h2>
               <p className={styles.text}>
                 Якщо платіж не пройшов, перевірте статус у вашому банку або електронному
@@ -32,7 +35,8 @@ export default function BalanceHelpPage() {
                 можливих обмежень.
               </p>
             </article>
-          </div>
+            </div>
+          </section>
         </div>
       </Container>
     </section>

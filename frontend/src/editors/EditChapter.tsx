@@ -11,6 +11,7 @@ import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { FilterCheckbox } from "../shared/FilterCheckbox/FilterCheckbox";
 import styles from "./styles/EditChapter.module.css";
 import { Breadcrumb } from "../navigation/Breadcrumb";
+import { PageTitle } from "../navigation/PageTitle";
 
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
@@ -69,7 +70,7 @@ function EditChapterLoader({ bookSlug }: { bookSlug: string }) {
               { label: "Редагувати розділ" },
             ]}
           />
-          <h1 className={styles.h1}>Редагувати розділ</h1>
+          <PageTitle>Редагувати розділ</PageTitle>
         </header>
         <div style={{ textAlign: "center", padding: "48px 16px", color: "rgba(255,255,255,0.8)" }}>
           Завантаження…
@@ -264,7 +265,7 @@ export default function EditChapter() {
               { label: "Редагувати розділ" },
             ]}
           />
-          <h1 className={styles.h1}>Редагувати розділ</h1>
+          <PageTitle>Редагувати розділ</PageTitle>
         </header>
 
         <div className={styles.gridTwo}>

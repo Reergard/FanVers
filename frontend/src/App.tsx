@@ -233,6 +233,14 @@ export default function App() {
                 }
               />
               <Route
+                path="/faq"
+                element={
+                  <Suspense fallback={<div />}>
+                    <BalanceHelpPage />
+                  </Suspense>
+                }
+              />
+              <Route
                 path="/balance-help"
                 element={
                   <Suspense fallback={<div />}>

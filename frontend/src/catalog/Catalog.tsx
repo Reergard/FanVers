@@ -9,6 +9,7 @@ import {
 import { Container } from "../shared/Container";
 import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
 import { SortByNavigation } from "../navigation/SortByNavigation.tsx";
+import { PageTitle } from "../navigation/PageTitle";
 import "./Catalog.css";
 
 type SortKey = "created" | "views" | "incomeDay" | "incomeMonth";
@@ -76,8 +77,10 @@ export default function Catalog() {
   return (
     <section className="catalog-page">
       <Container>
+        <PageTitle>Каталог</PageTitle>
         <div className="catalog-page__topbar">
           <SortByNavigation
+            className="catalog-page__sort"
             value={sortBy}
             options={SORT_OPTIONS}
             onChange={(nextValue) => setSortBy(nextValue as SortKey)}

@@ -24,6 +24,7 @@ import { useNotification } from "../shared/NotificationModal/NotificationProvide
 import { Modal } from "../shared/Modal/Modal";
 import { useAdultContent } from "../settings/useAdultContent";
 import { Breadcrumb } from "../navigation/Breadcrumb";
+import { PageTitle } from "../navigation/PageTitle";
 import { resolveAvatarUrl } from "../shared/avatar/resolveAvatarUrl";
 import type { UserProfile, NotificationSettingsPatch, BalanceHistoryItem } from "./types";
 
@@ -408,7 +409,7 @@ export default function Profile() {
       <div className={styles.wrap}>
         <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Профіль" }]} />
         <header className={styles.header}>
-          <h1 className={styles.title}>ПРОФІЛЬ</h1>
+          <PageTitle>ПРОФІЛЬ</PageTitle>
           <div className={styles.loginBlock}>
             <img src={crownSvg} className={styles.crown} alt="" width={61} height={40} aria-hidden="true" />
             <div className={styles.loginRow}>

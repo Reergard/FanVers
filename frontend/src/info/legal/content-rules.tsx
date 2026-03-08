@@ -1,5 +1,6 @@
 import { Container } from "../../shared/Container";
 import { Breadcrumb } from "../../navigation/Breadcrumb";
+import { PageTitle } from "../../navigation/PageTitle";
 import styles from "./LegalPages.module.css";
 
 export default function ContentRulesPage() {
@@ -8,7 +9,7 @@ export default function ContentRulesPage() {
       <Container>
         <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Правила контенту" }]} />
         <div className={styles.content}>
-          <h1 className={styles.title}>Правила розміщення авторського контенту</h1>
+          <PageTitle>Правила розміщення авторського контенту</PageTitle>
 
           <div className={styles.introCard}>
             <p className={styles.text}>

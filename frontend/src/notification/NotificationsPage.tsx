@@ -14,6 +14,7 @@ import { getMyProfile, updateNotificationSettings } from "../users/profileServic
 import type { AppNotification } from "./types";
 import type { NotificationSettingsPatch } from "../users/types";
 import { Breadcrumb } from "../navigation/Breadcrumb";
+import { PageTitle } from "../navigation/PageTitle";
 
 const NOTIFICATION_FILTERS: { key: keyof NotificationSettingsPatch; label: string }[] = [
   { key: "comment_notifications", label: "Коментарі у ваших постах та відповіді на ваші коментарі" },
@@ -155,7 +156,7 @@ export function NotificationsPage() {
       <Container>
         <header className={styles.header}>
           <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Повідомлення" }]} />
-          <h1 className={styles.title}>Повідомлення</h1>
+          <PageTitle>Повідомлення</PageTitle>
 
           <div className={styles.headerMid}>
             <span className={styles.count}>

@@ -1,5 +1,6 @@
 import { Container } from "../../shared/Container";
 import { Breadcrumb } from "../../navigation/Breadcrumb";
+import { PageTitle } from "../../navigation/PageTitle";
 import styles from "./LegalPages.module.css";
 
 export default function UserAgreementPage() {
@@ -8,7 +9,7 @@ export default function UserAgreementPage() {
       <Container>
         <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Угода користувача" }]} />
         <div className={styles.content}>
-          <h1 className={styles.title}>УГОДА КОРИСТУВАЧА</h1>
+          <PageTitle>УГОДА КОРИСТУВАЧА</PageTitle>
 
           <div className={styles.introCard}>
             <p className={styles.text}>

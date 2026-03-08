@@ -1,6 +1,7 @@
 import { useState, useLayoutEffect, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Breadcrumb } from "../navigation/Breadcrumb";
+import { PageTitle } from "../navigation/PageTitle";
 import { useQueryClient } from "@tanstack/react-query";
 import { catalogApi, catalogKeys, type Book, type Volume } from "../api/catalogApi";
 import { useAuth } from "../auth/useAuth";
@@ -74,7 +75,7 @@ function AddChapterLoader({ slug }: { slug: string }) {
               { label: "Додати розділ" },
             ]}
           />
-          <h1 className={styles.h1}>Додати розділ</h1>
+          <PageTitle>Додати розділ</PageTitle>
         </header>
         <div style={{ textAlign: "center", padding: "48px 16px", color: "rgba(255,255,255,0.8)" }}>
           Завантаження…
@@ -266,7 +267,7 @@ export default function AddChapter() {
               { label: "Додати розділ" },
             ]}
           />
-          <h1 className={styles.h1}>Додати розділ</h1>
+          <PageTitle>Додати розділ</PageTitle>
         </header>
 
         <div className={styles.gridTwo}>

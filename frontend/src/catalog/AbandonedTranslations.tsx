@@ -10,6 +10,7 @@ import { BookCard } from "../BookCard/BookCard";
 import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
 import { SortByNavigation } from "../navigation/SortByNavigation.tsx";
 import { FiltersSidebar } from "../navigation/FiltersSidebar";
+import { PageTitle } from "../navigation/PageTitle";
 import { Icon } from "../shared/Icon";
 import "./AbandonedTranslations.css";
 
@@ -96,7 +97,7 @@ export default function AbandonedTranslations() {
       <Container>
         <div className="abandoned-layout">
           <div className="abandoned-main-col">
-            <h1 className="abandoned-title">Покинуті переклади</h1>
+            <PageTitle>Покинуті переклади</PageTitle>
 
             <p className="abandoned-note">
               *Забрати покинутий переклад можуть користувачі, які зареєстровані на сайті більше 90 днів

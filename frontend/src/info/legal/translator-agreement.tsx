@@ -1,5 +1,6 @@
 import { Container } from "../../shared/Container";
 import { Breadcrumb } from "../../navigation/Breadcrumb";
+import { PageTitle } from "../../navigation/PageTitle";
 import styles from "./LegalPages.module.css";
 
 export default function TranslatorAgreementPage() {
@@ -8,7 +9,7 @@ export default function TranslatorAgreementPage() {
       <Container>
         <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Договір перекладача" }]} />
         <div className={styles.content}>
-          <h1 className={styles.title}>ДОГОВІР № __</h1>
+          <PageTitle>ДОГОВІР № __</PageTitle>
           <p className={styles.subtitle}>місто _________, «___» ____________ 20__ року</p>
 
           <div className={styles.introCard}>

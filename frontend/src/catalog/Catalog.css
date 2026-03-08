@@ -90,7 +90,16 @@
 
 @media (max-width: 639px) {
   .catalog-page__topbar {
-    justify-content: center;
+    justify-content: flex-end;
+  }
+
+  .catalog-page__sort {
+    font-size: clamp(15px, 2.2vw, 17px);
+  }
+
+  .catalog-page__sort span,
+  .catalog-page__sort label {
+    font-size: inherit;
   }
 
   .catalog-page__grid {

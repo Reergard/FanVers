@@ -11,6 +11,7 @@ import {
 import { BookForm, initialFormData } from "./components/BookForm/BookForm";
 import { useBookFormMeta } from "./hooks/useBookFormMeta";
 import { Breadcrumb } from "../navigation/Breadcrumb";
+import { PageTitle } from "../navigation/PageTitle";
 
 function CreateBookPageInner() {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ function CreateBookPageInner() {
         <section className={styles.page} aria-label="Створення книги">
           <header className={styles.top}>
             <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Створення" }]} />
-            <h1 className={styles.h1}>Створення</h1>
+            <PageTitle>Створення</PageTitle>
           </header>
           <div style={{ textAlign: "center", padding: "48px 16px", color: "rgba(255,255,255,0.8)" }}>
             Завантаження даних…
@@ -61,7 +62,7 @@ function CreateBookPageInner() {
       <section className={styles.page} aria-label="Створення книги">
         <header className={styles.top}>
           <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Створення" }]} />
-          <h1 className={styles.h1}>Створення</h1>
+          <PageTitle>Створення</PageTitle>
         </header>
 
         <BookForm

@@ -1,5 +1,6 @@
 import { Container } from "../../shared/Container";
 import { Breadcrumb } from "../../navigation/Breadcrumb";
+import { PageTitle } from "../../navigation/PageTitle";
 import styles from "./LegalPages.module.css";
 
 export default function PrivacyPolicyPage() {
@@ -8,7 +9,7 @@ export default function PrivacyPolicyPage() {
       <Container>
         <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Політика конфіденційності" }]} />
         <div className={styles.content}>
-          <h1 className={styles.title}>Політика конфіденційності та захисту персональних даних</h1>
+          <PageTitle>Політика конфіденційності та захисту персональних даних</PageTitle>
 
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>1. Загальні положення</h2>

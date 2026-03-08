@@ -1,5 +1,6 @@
 import { Container } from "../../shared/Container";
 import { Breadcrumb } from "../../navigation/Breadcrumb";
+import { PageTitle } from "../../navigation/PageTitle";
 import styles from "./HelpPages.module.css";
 
 export default function ContactsPage() {
@@ -8,7 +9,7 @@ export default function ContactsPage() {
       <Container>
         <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Контакти" }]} />
         <div className={styles.content}>
-          <h1 className={styles.title}>Контакти</h1>
+          <PageTitle>Контакти</PageTitle>
 
           <div className={styles.gridTwo}>
             <div className={styles.stack}>

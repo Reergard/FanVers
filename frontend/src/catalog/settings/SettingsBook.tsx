@@ -10,6 +10,7 @@ import Advertising from "./Advertising";
 import AccessRights from "./AccessRights";
 import "./SettingsBook.css";
 import { Breadcrumb } from "../../navigation/Breadcrumb";
+import { PageTitle } from "../../navigation/PageTitle";
 
 type SettingsTab = "general" | "subscription" | "advertising" | "access";
 
@@ -66,7 +67,7 @@ export default function SettingsBook() {
               { label: "Налаштування" },
             ]}
           />
-          <h1 className="settings-title">Налаштування книги</h1>
+          <PageTitle>Налаштування книги</PageTitle>
         </header>
 
         <div className="settings-tabs" role="tablist" aria-label="Вкладки налаштувань">

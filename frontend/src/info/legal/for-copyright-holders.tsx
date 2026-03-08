@@ -1,5 +1,6 @@
 import { Container } from "../../shared/Container";
 import { Breadcrumb } from "../../navigation/Breadcrumb";
+import { PageTitle } from "../../navigation/PageTitle";
 import styles from "./LegalPages.module.css";
 
 export default function ForCopyrightHoldersPage() {
@@ -8,7 +9,7 @@ export default function ForCopyrightHoldersPage() {
       <Container>
         <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Для правовласників" }]} />
         <div className={styles.content}>
-          <h1 className={styles.title}>Для правовласників</h1>
+          <PageTitle>Для правовласників</PageTitle>
 
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>1. Загальні положення</h2>

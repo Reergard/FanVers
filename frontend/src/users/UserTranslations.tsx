@@ -10,6 +10,7 @@ import { getUserTranslations, catalogKeys, type UserTranslationBook } from "../a
 import { getMyProfile } from "./profileService";
 import styles from "./UserTranslations.module.css";
 import { Breadcrumb } from "../navigation/Breadcrumb";
+import { PageTitle } from "../navigation/PageTitle";
 
 const PAGE_SIZE = 1;
 
@@ -79,12 +80,12 @@ export default function UserTranslations() {
   }
 
   return (
-    <section className={styles.page}>
+    <section className={`${styles.page} bookCard-mobile-grid`}>
       <Container>
         <div className={styles.layout}>
           <div className={styles.mainCol}>
             <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Власні переклади" }]} />
-            <h1 className={styles.title}>Власні переклади</h1>
+            <PageTitle>Власні переклади</PageTitle>
 
             {error ? (
               <div className={styles.error}>

@@ -1,5 +1,6 @@
 import { Container } from "../../shared/Container";
 import { Breadcrumb } from "../../navigation/Breadcrumb";
+import { PageTitle } from "../../navigation/PageTitle";
 import styles from "./LegalPages.module.css";
 
 export default function AuthorAgreementPage() {
@@ -8,7 +9,7 @@ export default function AuthorAgreementPage() {
       <Container>
         <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Договір з автором" }]} />
         <div className={styles.content}>
-          <h1 className={styles.title}>ДОГОВІР З АВТОРОМ</h1>
+          <PageTitle>ДОГОВІР З АВТОРОМ</PageTitle>
           <p className={styles.subtitle}>на поширення та відтворення творів</p>
 
           <div className={styles.introCard}>

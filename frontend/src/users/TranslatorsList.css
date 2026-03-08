@@ -152,14 +152,26 @@
   font-family: "BadScript", cursive;
   font-size: 24px;
   line-height: 1.2;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .translators-list-row-head .translators-list-cell {
   color: var(--tl-header-text);
   font-family: "BadScript", cursive;
-  font-size: 24px;
-  line-height: 1;
+  font-size: clamp(18px, 1.6vw, 22px);
+  line-height: 1.2;
   font-weight: 400;
+}
+
+/* Заголовки: жёсткий сброс отступов и центрирование текста */
+.translators-list-row-head .translators-list-cell-head {
+  margin: 0 !important;
+  text-align: center !important;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .translators-list-cell-center {
@@ -222,6 +234,14 @@
   z-index: 1;
 }
 
+.translators-list-cell-desktop-only {
+  /* на ПК завжди видимий */
+}
+
+.translators-list-cell-mobile-only {
+  display: none; /* на ПК прихований */
+}
+
 .translators-list-footer {
   display: flex;
   justify-content: center;
@@ -252,5 +272,63 @@
 @media (max-width: 480px) {
   .translators-list-title {
     font-size: 24px;
+  }
+}
+
+/* Мобільна версія (телефони): 3 стовпці, третій — обраний у «Сортувати за» */
+@media (max-width: 640px) {
+  .translators-list-cell-desktop-only {
+    display: none !important;
+  }
+
+  .translators-list-cell-mobile-only {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+  }
+
+  /* Заголовки: без padding щоб не виходити за колонку, текст по центру */
+  .translators-list-row-head .translators-list-cell,
+  .translators-list-row-head .translators-list-cell-head {
+    padding: 0 !important;
+    text-align: center !important;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+  }
+
+  .translators-list-row-head .translators-list-cell-header-rank {
+    font-size: 0;
+    line-height: 0;
+    overflow: hidden;
+  }
+
+  .translators-list-table-frame {
+    min-width: unset;
+    background-size:
+      1px 100%,
+      1px 100%;
+    background-position:
+      var(--tl-c1) 0,
+      calc(var(--tl-c1) + var(--tl-c2)) 0;
+  }
+
+  .translators-list-row,
+  .translators-list-row-head {
+    grid-template-columns: 60px minmax(0, 1fr) minmax(100px, 1fr);
+  }
+
+  .translators-list-row .translators-list-cell {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .translators-list-head-ornament {
+    display: none;
   }
 }
