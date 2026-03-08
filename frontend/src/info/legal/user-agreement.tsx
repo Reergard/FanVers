@@ -1,10 +1,12 @@
 import { Container } from "../../shared/Container";
+import { Breadcrumb } from "../../navigation/Breadcrumb";
 import styles from "./LegalPages.module.css";
 
 export default function UserAgreementPage() {
   return (
     <section className={styles.page}>
       <Container>
+        <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Угода користувача" }]} />
         <div className={styles.content}>
           <h1 className={styles.title}>УГОДА КОРИСТУВАЧА</h1>
 

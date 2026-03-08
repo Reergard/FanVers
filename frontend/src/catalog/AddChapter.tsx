@@ -1,5 +1,6 @@
 import { useState, useLayoutEffect, useEffect, useCallback, useRef } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { Breadcrumb } from "../navigation/Breadcrumb";
 import { useQueryClient } from "@tanstack/react-query";
 import { catalogApi, catalogKeys, type Book, type Volume } from "../api/catalogApi";
 import { useAuth } from "../auth/useAuth";
@@ -66,13 +67,13 @@ function AddChapterLoader({ slug }: { slug: string }) {
     <Container>
       <section className={styles.page} aria-label="Додати розділ">
         <header className={styles.top}>
-          <nav className={styles.breadcrumbs} aria-label="Breadcrumbs">
-            <Link className={styles.crumb} to="/">Головна</Link>
-            <span className={styles.crumbSep}>›</span>
-            <Link className={styles.crumb} to={`/books/${slug}`}>Книга</Link>
-            <span className={styles.crumbSep}>›</span>
-            <span className={styles.crumb} aria-current="page">Додати розділ</span>
-          </nav>
+          <Breadcrumb
+            items={[
+              { label: "Головна", to: "/" },
+              { label: "Книга", to: `/books/${slug}` },
+              { label: "Додати розділ" },
+            ]}
+          />
           <h1 className={styles.h1}>Додати розділ</h1>
         </header>
         <div style={{ textAlign: "center", padding: "48px 16px", color: "rgba(255,255,255,0.8)" }}>
@@ -258,19 +259,13 @@ export default function AddChapter() {
         aria-label="Форма додавання розділу"
       >
         <header className={styles.top}>
-          <nav className={styles.breadcrumbs} aria-label="Breadcrumbs">
-            <Link className={styles.crumb} to="/">
-              Головна
-            </Link>
-            <span className={styles.crumbSep}>›</span>
-            <Link className={styles.crumb} to={`/books/${slug}`}>
-              {book.title}
-            </Link>
-            <span className={styles.crumbSep}>›</span>
-            <span className={styles.crumb} aria-current="page">
-              Додати розділ
-            </span>
-          </nav>
+          <Breadcrumb
+            items={[
+              { label: "Головна", to: "/" },
+              { label: book.title, to: `/books/${slug}` },
+              { label: "Додати розділ" },
+            ]}
+          />
           <h1 className={styles.h1}>Додати розділ</h1>
         </header>
 

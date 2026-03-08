@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Container } from "../shared/Container";
 import { BookCard } from "../BookCard/BookCard";
@@ -7,7 +7,6 @@ import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation";
 import { SortByNavigation } from "../navigation/SortByNavigation";
 import { FilterDropdown } from "../navigation/FilterDropdown";
 import { FiltersSidebar } from "../navigation/FiltersSidebar";
-import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { Icon } from "../shared/Icon";
 import { Modal } from "../shared/Modal/Modal";
 import {
@@ -319,14 +318,6 @@ export default function SearchPage() {
       <Container>
         <div className="abandoned-layout">
           <div className="abandoned-main-col">
-            <nav className="abandoned-breadcrumb" aria-label="breadcrumb">
-              <Link className="abandoned-breadcrumb-item abandoned-breadcrumb-link" to="/">
-                Головна
-              </Link>
-              <span className="abandoned-breadcrumb-sep">›</span>
-              <span className="abandoned-breadcrumb-item abandoned-breadcrumb-item--active">Пошук</span>
-            </nav>
-
             <h1 className="abandoned-title">Пошук</h1>
 
             <p className="abandoned-note">*Результати пошуку за заданими параметрами</p>

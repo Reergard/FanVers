@@ -1,10 +1,12 @@
 import { useCallback, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { catalogApi, catalogKeys } from "../api/catalogApi";
 import { useAuth } from "../auth/useAuth";
 import { Modal } from "../shared/Modal/Modal";
+import { Container } from "../shared/Container";
+import { Breadcrumb } from "../navigation/Breadcrumb";
 import ChapterDetail from "./ChapterDetail";
 
 const STALE_TIME = 2 * 60_000;
@@ -81,9 +83,15 @@ export default function ChapterDetailRouter() {
 
   return (
     <>
-      <p style={{ margin: "12px 0 0 0" }}>
-        <Link to={`/books/${resolvedBookSlug}`}>До книги: {chapter.book_title || "Повернутися до книги"}</Link>
-      </p>
+      <Container>
+        <Breadcrumb
+          items={[
+            { label: "Головна", to: "/" },
+            { label: chapter.book_title || "Книга", to: `/books/${resolvedBookSlug}` },
+            { label: chapter.title },
+          ]}
+        />
+      </Container>
       <ChapterDetail
         bookSlug={resolvedBookSlug}
         chapterSlug={chapter.slug || chapterSlug}

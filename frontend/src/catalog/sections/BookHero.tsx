@@ -29,6 +29,8 @@ export type BookHeroProps = {
   thankAuthorCoins?: string | number;
   bookId?: number;
   onBecomeTranslator?: () => void;
+  /** Показувати кнопку Налаштування (тільки для власників книги) */
+  showSettings?: boolean;
 };
 
 const RATINGS_STALE_TIME = 60_000;
@@ -47,6 +49,7 @@ export function BookHero({
   thankAuthorLabel = "подякувати автору",
   bookId,
   onBecomeTranslator,
+  showSettings = false,
 }: BookHeroProps) {
   const queryClient = useQueryClient();
   const slugForRatings = (bookSlug && String(bookSlug).trim()) || "";
@@ -119,7 +122,7 @@ export function BookHero({
                 <img src={icon18Big} alt="18+" className={styles.ageBadgeIcon} />
               )}
             </div>
-            <BookActions bookId={bookId} bookSlug={bookSlug} />
+            <BookActions bookId={bookId} bookSlug={bookSlug} showSettings={showSettings} />
           </div>
 
           {/* 2–4. META (short + chips + actions) — обгортка для коректного стека на десктопі */}

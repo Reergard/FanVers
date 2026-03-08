@@ -1,10 +1,12 @@
 import { Container } from "../../shared/Container";
+import { Breadcrumb } from "../../navigation/Breadcrumb";
 import styles from "./HelpPages.module.css";
 
 export default function PaymentPage() {
   return (
     <section className={styles.page}>
       <Container>
+        <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Оплата" }]} />
         <div className={styles.content}>
           <h1 className={styles.title}>Оплата</h1>
 

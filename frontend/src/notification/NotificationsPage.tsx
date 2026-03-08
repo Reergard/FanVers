@@ -13,6 +13,7 @@ import { useNotifications } from "./useNotifications";
 import { getMyProfile, updateNotificationSettings } from "../users/profileService";
 import type { AppNotification } from "./types";
 import type { NotificationSettingsPatch } from "../users/types";
+import { Breadcrumb } from "../navigation/Breadcrumb";
 
 const NOTIFICATION_FILTERS: { key: keyof NotificationSettingsPatch; label: string }[] = [
   { key: "comment_notifications", label: "Коментарі у ваших постах та відповіді на ваші коментарі" },
@@ -125,6 +126,7 @@ export function NotificationsPage() {
     return (
       <section className={styles.page}>
         <Container>
+          <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Повідомлення" }]} />
           <div className={styles.loading}>Завантаження…</div>
         </Container>
       </section>
@@ -135,6 +137,7 @@ export function NotificationsPage() {
     return (
       <section className={styles.page}>
         <Container>
+          <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Повідомлення" }]} />
           <div className={styles.authRequired}>
             <h2>Для перегляду повідомлень необхідно увійти в систему</h2>
             <p>Увійдіть або зареєструйтесь, щоб мати доступ до ваших повідомлень</p>
@@ -151,6 +154,7 @@ export function NotificationsPage() {
     <section className={styles.page}>
       <Container>
         <header className={styles.header}>
+          <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Повідомлення" }]} />
           <h1 className={styles.title}>Повідомлення</h1>
 
           <div className={styles.headerMid}>

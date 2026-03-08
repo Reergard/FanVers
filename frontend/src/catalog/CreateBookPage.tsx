@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import styles from "./components/BookForm/BookForm.module.css";
 import { Container } from "../shared/Container";
@@ -10,6 +10,7 @@ import {
 } from "../api/catalogApi";
 import { BookForm, initialFormData } from "./components/BookForm/BookForm";
 import { useBookFormMeta } from "./hooks/useBookFormMeta";
+import { Breadcrumb } from "../navigation/Breadcrumb";
 
 function CreateBookPageInner() {
   const navigate = useNavigate();
@@ -44,11 +45,7 @@ function CreateBookPageInner() {
       <Container>
         <section className={styles.page} aria-label="Створення книги">
           <header className={styles.top}>
-            <nav className={styles.breadcrumbs} aria-label="Breadcrumbs">
-              <Link className={styles.crumb} to="/">Головна</Link>
-              <span className={styles.crumbSep}>›</span>
-              <span className={styles.crumb} aria-current="page">Створення</span>
-            </nav>
+            <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Створення" }]} />
             <h1 className={styles.h1}>Створення</h1>
           </header>
           <div style={{ textAlign: "center", padding: "48px 16px", color: "rgba(255,255,255,0.8)" }}>
@@ -63,11 +60,7 @@ function CreateBookPageInner() {
     <Container>
       <section className={styles.page} aria-label="Створення книги">
         <header className={styles.top}>
-          <nav className={styles.breadcrumbs} aria-label="Breadcrumbs">
-            <Link className={styles.crumb} to="/">Головна</Link>
-            <span className={styles.crumbSep}>›</span>
-            <span className={styles.crumb} aria-current="page">Створення</span>
-          </nav>
+          <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Створення" }]} />
           <h1 className={styles.h1}>Створення</h1>
         </header>
 

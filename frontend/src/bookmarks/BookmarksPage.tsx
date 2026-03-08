@@ -14,6 +14,7 @@ import type { Bookmark as BookmarkType, BookmarkBook } from "./types";
 import styles from "./BookmarksPage.module.css";
 import badge18 from "../assets/backgrounds/18+.svg";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
+import { Breadcrumb } from "../navigation/Breadcrumb";
 
 const FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "all", label: "Усі" },
@@ -120,6 +121,7 @@ export default function BookmarksPage() {
     return (
       <section className={styles.page}>
         <Container>
+          <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Закладки" }]} />
           <div className={styles.loading}>Завантаження…</div>
         </Container>
       </section>
@@ -130,6 +132,7 @@ export default function BookmarksPage() {
     return (
       <section className={styles.page}>
         <Container>
+          <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Закладки" }]} />
           <div className={styles.authRequired}>
             <h2>Для перегляду закладок необхідно увійти в систему</h2>
             <p>Увійдіть або зареєструйтесь, щоб мати доступ до ваших закладок</p>
@@ -147,6 +150,7 @@ export default function BookmarksPage() {
       <Container>
         <div className={styles.layout}>
           <div className={styles.mainCol}>
+            <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Закладки" }]} />
             <h1 className={styles.title}>Закладки</h1>
             <p className={styles.subtitle}>
               *Радимо Вам додавати книги, які Вам сподобалися — це допоможе в

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Container } from "../../shared/Container";
 import { useAuth } from "../../auth/useAuth";
 import { useNotification } from "../../shared/NotificationModal/NotificationProvider";
@@ -9,6 +9,7 @@ import Subscription from "./Subscription";
 import Advertising from "./Advertising";
 import AccessRights from "./AccessRights";
 import "./SettingsBook.css";
+import { Breadcrumb } from "../../navigation/Breadcrumb";
 
 type SettingsTab = "general" | "subscription" | "advertising" | "access";
 
@@ -58,13 +59,13 @@ export default function SettingsBook() {
     <Container>
       <section className="settings-page" aria-label="Налаштування книги">
         <header className="settings-head">
-          <nav className="settings-breadcrumbs" aria-label="Breadcrumbs">
-            <Link className="settings-crumb" to="/">Головна</Link>
-            <span className="settings-sep">›</span>
-            <Link className="settings-crumb" to={`/books/${slug}`}>{book.title}</Link>
-            <span className="settings-sep">›</span>
-            <span className="settings-crumb" aria-current="page">Налаштування</span>
-          </nav>
+          <Breadcrumb
+            items={[
+              { label: "Головна", to: "/" },
+              { label: book.title, to: `/books/${slug}` },
+              { label: "Налаштування" },
+            ]}
+          />
           <h1 className="settings-title">Налаштування книги</h1>
         </header>
 

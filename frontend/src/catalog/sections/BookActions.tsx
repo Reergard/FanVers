@@ -5,9 +5,11 @@ import styles from "../styles/BookDetail.module.css";
 type BookActionsProps = {
   bookId?: number;
   bookSlug?: string;
+  /** Показувати кнопку Налаштування тільки власникам книги */
+  showSettings?: boolean;
 };
 
-export function BookActions({ bookId, bookSlug }: BookActionsProps) {
+export function BookActions({ bookId, bookSlug, showSettings = false }: BookActionsProps) {
   return (
     <div className={styles.coverActions}>
       {bookId != null ? (
@@ -17,14 +19,16 @@ export function BookActions({ bookId, bookSlug }: BookActionsProps) {
           В закладки
         </ActionButton>
       )}
-      <ActionButton
-        variant="primary"
-        to={bookSlug ? `/books/${bookSlug}/settings` : undefined}
-        disabled={!bookSlug}
-        className={styles.settingsBtn}
-      >
-        Налаштування
-      </ActionButton>
+      {showSettings && (
+        <ActionButton
+          variant="primary"
+          to={bookSlug ? `/books/${bookSlug}/settings` : undefined}
+          disabled={!bookSlug}
+          className={styles.settingsBtn}
+        >
+          Налаштування
+        </ActionButton>
+      )}
     </div>
   );
 }

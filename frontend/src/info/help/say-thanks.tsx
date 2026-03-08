@@ -1,10 +1,12 @@
 import { Container } from "../../shared/Container";
+import { Breadcrumb } from "../../navigation/Breadcrumb";
 import styles from "./HelpPages.module.css";
 
 export default function SayThanksPage() {
   return (
     <section className={styles.page}>
       <Container>
+        <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Сказати «Дякую!»" }]} />
         <div className={styles.content}>
           <h1 className={styles.title}>Сказати «Дякую!»</h1>
 

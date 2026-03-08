@@ -9,6 +9,7 @@ import { BookCard } from "../BookCard/BookCard";
 import { getUserTranslations, catalogKeys, type UserTranslationBook } from "../api/catalogApi";
 import { getMyProfile } from "./profileService";
 import styles from "./UserTranslations.module.css";
+import { Breadcrumb } from "../navigation/Breadcrumb";
 
 const PAGE_SIZE = 1;
 
@@ -50,6 +51,7 @@ export default function UserTranslations() {
     return (
       <section className={styles.page}>
         <Container>
+          <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Власні переклади" }]} />
           <div className={styles.loading}>Завантаження…</div>
         </Container>
       </section>
@@ -60,6 +62,7 @@ export default function UserTranslations() {
     return (
       <section className={styles.page}>
         <Container>
+          <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Власні переклади" }]} />
           <div className={styles.authRequired}>
             <h2>Для перегляду власних перекладів необхідно увійти в систему</h2>
             <p>
@@ -80,6 +83,7 @@ export default function UserTranslations() {
       <Container>
         <div className={styles.layout}>
           <div className={styles.mainCol}>
+            <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Власні переклади" }]} />
             <h1 className={styles.title}>Власні переклади</h1>
 
             {error ? (

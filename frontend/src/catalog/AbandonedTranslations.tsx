@@ -1,5 +1,4 @@
 import { useMemo, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Container } from "../shared/Container";
 import {
@@ -97,16 +96,6 @@ export default function AbandonedTranslations() {
       <Container>
         <div className="abandoned-layout">
           <div className="abandoned-main-col">
-            <nav className="abandoned-breadcrumb" aria-label="breadcrumb">
-              <Link className="abandoned-breadcrumb-item abandoned-breadcrumb-link" to="/">
-                Головна
-              </Link>
-              <span className="abandoned-breadcrumb-sep">›</span>
-              <span className="abandoned-breadcrumb-item abandoned-breadcrumb-item--active">
-                Покинуті переклади
-              </span>
-            </nav>
-
             <h1 className="abandoned-title">Покинуті переклади</h1>
 
             <p className="abandoned-note">

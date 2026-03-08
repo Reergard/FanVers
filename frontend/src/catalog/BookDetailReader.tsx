@@ -77,6 +77,10 @@ export default function BookDetailReader({
 
   return (
     <BookDetailLayout
+      breadcrumbItems={[
+        { label: "Головна", to: "/" },
+        { label: book.title },
+      ]}
       hero={
         <BookHero
           title={book.title}
@@ -90,6 +94,7 @@ export default function BookDetailReader({
           ratingCount={book.ratingCount ?? null}
           thankAuthorCoins={book.thankAuthorCoins ?? 10}
           bookId={book.id}
+          showSettings={false}
           onBecomeTranslator={isAuthenticated ? () => {} : undefined}
         />
       }

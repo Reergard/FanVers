@@ -14,6 +14,7 @@ import { useNotification } from "../shared/NotificationModal/NotificationProvide
 import { Container } from "../shared/Container";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { getMyProfile } from "../users/profileService";
+import { Breadcrumb } from "../navigation/Breadcrumb";
 
 export default function ChatPage() {
   const { isAuthenticated, authReady, username, userId } = useAuth();
@@ -115,9 +116,10 @@ export default function ChatPage() {
   if (!authReady) {
     return (
       <section className={styles.page}>
-        <div className={styles.layout}>
+        <Container>
+          <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Чат" }]} />
           <div className={styles.emptyState}>Завантаження…</div>
-        </div>
+        </Container>
       </section>
     );
   }
@@ -126,6 +128,7 @@ export default function ChatPage() {
     return (
       <section className={styles.page}>
         <Container>
+          <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Чат" }]} />
           <div style={{ padding: "48px 24px", textAlign: "center", color: "rgba(255,255,255,0.8)" }}>
             <h2 style={{ marginBottom: "16px" }}>Для перегляду чатів необхідно увійти в систему</h2>
             <p style={{ marginBottom: "24px" }}>Увійдіть або зареєструйтесь, щоб мати доступ до чатів</p>
@@ -140,6 +143,9 @@ export default function ChatPage() {
 
   return (
     <section className={styles.page}>
+      <Container>
+        <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Чат" }]} />
+      </Container>
       <div className={styles.layout}>
         <ChatList
           chats={state.chats}

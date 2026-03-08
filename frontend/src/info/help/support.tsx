@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { Container } from "../../shared/Container";
+import { Breadcrumb } from "../../navigation/Breadcrumb";
 import styles from "./HelpPages.module.css";
 
 export default function SupportPage() {
   return (
     <section className={styles.page}>
       <Container>
+        <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Написати у підтримку" }]} />
         <div className={styles.content}>
           <h1 className={styles.title}>Написати у підтримку</h1>
 

@@ -1,0 +1,29 @@
+.breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 14px;
+  color: #05b4c7;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sep {
+  opacity: 0.7;
+  color: #05b4c7;
+}
+
+.crumb {
+  text-decoration: none;
+  color: #05b4c7;
+}
+
+.crumb:hover {
+  text-decoration: underline;
+}

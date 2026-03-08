@@ -1,5 +1,5 @@
 import { useState, useLayoutEffect, useEffect, useCallback, useRef } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { editorsApi, type ChapterForEdit } from "../api/editorsApi";
 import { catalogApi, catalogKeys } from "../api/catalogApi";
@@ -10,6 +10,7 @@ import { Container } from "../shared/Container";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { FilterCheckbox } from "../shared/FilterCheckbox/FilterCheckbox";
 import styles from "./styles/EditChapter.module.css";
+import { Breadcrumb } from "../navigation/Breadcrumb";
 
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
@@ -61,13 +62,13 @@ function EditChapterLoader({ bookSlug }: { bookSlug: string }) {
     <Container>
       <section className={styles.page} aria-label="Редагувати розділ">
         <header className={styles.top}>
-          <nav className={styles.breadcrumbs} aria-label="Breadcrumbs">
-            <Link className={styles.crumb} to="/">Головна</Link>
-            <span className={styles.crumbSep}>›</span>
-            <Link className={styles.crumb} to={`/books/${bookSlug}`}>Книга</Link>
-            <span className={styles.crumbSep}>›</span>
-            <span className={styles.crumb} aria-current="page">Редагувати розділ</span>
-          </nav>
+          <Breadcrumb
+            items={[
+              { label: "Головна", to: "/" },
+              { label: "Книга", to: `/books/${bookSlug}` },
+              { label: "Редагувати розділ" },
+            ]}
+          />
           <h1 className={styles.h1}>Редагувати розділ</h1>
         </header>
         <div style={{ textAlign: "center", padding: "48px 16px", color: "rgba(255,255,255,0.8)" }}>
@@ -256,15 +257,13 @@ export default function EditChapter() {
         aria-label="Форма редагування розділу"
       >
         <header className={styles.top}>
-          <nav className={styles.breadcrumbs} aria-label="Breadcrumbs">
-            <Link className={styles.crumb} to="/">Головна</Link>
-            <span className={styles.crumbSep}>›</span>
-            <Link className={styles.crumb} to={`/books/${originalData.book_slug}`}>
-              {originalData.book_title ?? "Книга"}
-            </Link>
-            <span className={styles.crumbSep}>›</span>
-            <span className={styles.crumb} aria-current="page">Редагувати розділ</span>
-          </nav>
+          <Breadcrumb
+            items={[
+              { label: "Головна", to: "/" },
+              { label: originalData.book_title ?? "Книга", to: `/books/${originalData.book_slug}` },
+              { label: "Редагувати розділ" },
+            ]}
+          />
           <h1 className={styles.h1}>Редагувати розділ</h1>
         </header>
 
