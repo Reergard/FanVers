@@ -15,6 +15,7 @@ import type { AppNotification } from "./types";
 import type { NotificationSettingsPatch } from "../users/types";
 import { Breadcrumb } from "../navigation/Breadcrumb";
 import { PageTitle } from "../navigation/PageTitle";
+import { FiltersSidebar } from "../navigation/FiltersSidebar";
 
 const NOTIFICATION_FILTERS: { key: keyof NotificationSettingsPatch; label: string }[] = [
   { key: "comment_notifications", label: "Коментарі у ваших постах та відповіді на ваші коментарі" },
@@ -22,7 +23,15 @@ const NOTIFICATION_FILTERS: { key: keyof NotificationSettingsPatch; label: strin
   { key: "chapter_subscription_notifications", label: "Зняття розділу з передплати" },
   { key: "chapter_comment_notifications", label: "Коментарі до розділу" },
 ];
-const PAGE_SIZE = 1;
+
+const NOTIFICATION_MODAL_EXTRA_ITEMS: string[] = [
+  "Помилка в тексті",
+  "Отримання перекладу від іншого перекладача",
+  "Зміна статусу замовлення реклами",
+  "Вихід нових розділів",
+  "Коментарі до книг",
+];
+const PAGE_SIZE = 10;
 
 function pluralize(count: number): string {
   const mod10 = count % 10;
@@ -160,51 +169,127 @@ export function NotificationsPage() {
 
           <div className={styles.headerMid}>
             <span className={styles.count}>
-              Показано {notifications.length} {pluralize(notifications.length)}
+              Усього {notifications.length} {pluralize(notifications.length)}
             </span>
             <span className={styles.topLine} aria-hidden="true" />
           </div>
         </header>
 
         <div className={styles.layout}>
-          {/* LEFT: filters card */}
-          <aside className={styles.sidebar} aria-label="Фільтри повідомлень">
-            <div className={styles.frame} aria-hidden="true" />
-            <div className={styles.sidebarInner}>
-              <h2 className={styles.sidebarTitle}>ПОВІДОМЛЕННЯ</h2>
-
-              <form className={styles.filters} onSubmit={(e) => e.preventDefault()}>
-                {NOTIFICATION_FILTERS.map(({ key, label }, idx) => {
-                  const id = `msg-filter-${idx}`;
-                  return (
-                    <FilterCheckbox
-                      key={id}
-                      id={id}
-                      label={label}
-                      checked={filters[key] ?? true}
-                      onChange={(checked) => handleFilterChange(key as keyof NotificationSettingsPatch, checked)}
-                    />
-                  );
-                })}
-
-                <div className={styles.sidebarActions}>
-                  <SaveButton
-                    type="button"
-                    onClick={handleSaveFilters}
-                    variant="default"
-                    disabled={!canSaveFilters || saveFiltersMutation.isPending}
-                    loading={saveFiltersMutation.isPending}
-                  />
+          {/* LEFT: filters card (desktop) / floating button + modal (mobile) */}
+          <FiltersSidebar
+            sidebarClassName={styles.sidebar}
+            modalClassName={styles.notificationModal}
+            modalContentClassName={styles.notificationModalWrapper}
+            modalCloseBtnClassName={styles.notificationModalCloseBtn}
+            modalChildren={
+              <div className={styles.notificationModalPanel}>
+                <div className={styles.notificationModalFrame} aria-hidden="true" />
+                <div className={styles.notificationModalScroll}>
+                  <div className={styles.notificationModalContent}>
+                    <div className={styles.notificationModalInner}>
+                    <h2 className={styles.notificationModalTitle}>ПОВІДОМЛЕННЯ</h2>
+                    <form
+                      className={styles.notificationModalForm}
+                      onSubmit={(e) => e.preventDefault()}
+                    >
+                      <div className={styles.notificationModalOptions}>
+                        {NOTIFICATION_FILTERS.map(({ key, label }, idx) => {
+                          const id = `msg-modal-filter-${idx}`;
+                          return (
+                            <label
+                              key={id}
+                              className={styles.notificationModalOption}
+                              htmlFor={id}
+                            >
+                              <input
+                                type="checkbox"
+                                id={id}
+                                checked={filters[key] ?? true}
+                                onChange={(e) =>
+                                  handleFilterChange(key as keyof NotificationSettingsPatch, e.target.checked)
+                                }
+                              />
+                              <span>{label}</span>
+                            </label>
+                          );
+                        })}
+                        {NOTIFICATION_MODAL_EXTRA_ITEMS.map((label, idx) => {
+                          const id = `msg-modal-extra-${idx}`;
+                          return (
+                            <label
+                              key={id}
+                              className={`${styles.notificationModalOption} ${styles.notificationModalOptionDisabled}`}
+                              htmlFor={id}
+                            >
+                              <input
+                                type="checkbox"
+                                id={id}
+                                disabled
+                                defaultChecked={false}
+                              />
+                              <span>{label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      <div className={styles.notificationModalActions}>
+                        <SaveButton
+                          type="button"
+                          onClick={handleSaveFilters}
+                          variant="default"
+                          disabled={!canSaveFilters || saveFiltersMutation.isPending}
+                          loading={saveFiltersMutation.isPending}
+                        />
+                      </div>
+                    </form>
+                  </div>
                 </div>
-              </form>
+                </div>
+              </div>
+            }
+            hideModalTitle
+          >
+            <div className={styles.filtersWrapper}>
+              <div className={styles.frame} aria-hidden="true" />
+              <div className={styles.sidebarInner}>
+                <h2 className={styles.sidebarTitle}>ПОВІДОМЛЕННЯ</h2>
+
+                <div className={styles.filtersFrame}>
+                  <form className={styles.filters} onSubmit={(e) => e.preventDefault()}>
+                    {NOTIFICATION_FILTERS.map(({ key, label }, idx) => {
+                      const id = `msg-filter-${idx}`;
+                      return (
+                        <FilterCheckbox
+                          key={id}
+                          id={id}
+                          label={label}
+                          checked={filters[key] ?? true}
+                          onChange={(checked) => handleFilterChange(key as keyof NotificationSettingsPatch, checked)}
+                        />
+                      );
+                    })}
+
+                    <div className={styles.sidebarActions}>
+                      <SaveButton
+                        type="button"
+                        onClick={handleSaveFilters}
+                        variant="default"
+                        disabled={!canSaveFilters || saveFiltersMutation.isPending}
+                        loading={saveFiltersMutation.isPending}
+                      />
+                    </div>
+                  </form>
+                </div>
+              </div>
             </div>
-          </aside>
+          </FiltersSidebar>
 
           {/* RIGHT: messages list */}
           <main className={styles.content} aria-label="Список повідомлень">
             <div className={styles.contentHeader}>
               <span className={styles.contentCount}>
-                Показано {notifications.length} {pluralize(notifications.length)}
+                Показано {visibleNotifications.length} {pluralize(visibleNotifications.length)}
               </span>
               <span className={styles.contentLine} aria-hidden="true" />
             </div>

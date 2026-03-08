@@ -6,8 +6,20 @@ const MOBILE_BREAKPOINT = 768;
 
 type Props = {
   children: React.ReactNode;
+  /** Контент для модалки (якщо відрізняється від sidebar). Якщо задано — у модалці рендериться це, а не children */
+  modalChildren?: React.ReactNode;
   /** Додатковий className для sidebar (desktop) */
   sidebarClassName?: string;
+  /** Додатковий className для модалки (Modal) */
+  modalClassName?: string;
+  /** Додатковий className для контенту в модалці (mobile) */
+  modalContentClassName?: string;
+  /** Додатковий className для кнопки закриття (коли hideModalTitle) */
+  modalCloseBtnClassName?: string;
+  /** Приховати заголовок модалки (коли заголовок всередині контенту) */
+  hideModalTitle?: boolean;
+  /** Заголовок модалки (за замовчуванням "Фільтри") */
+  modalTitle?: string;
 };
 
 /**
@@ -16,7 +28,16 @@ type Props = {
  * - Телефон (<768px): sidebar прихований, фіксована кнопка "Фільтри" (вертикальний текст) справа,
  *   при натисканні — модальне вікно з фільтрами
  */
-export function FiltersSidebar({ children, sidebarClassName }: Props) {
+export function FiltersSidebar({
+  children,
+  modalChildren,
+  sidebarClassName,
+  modalClassName,
+  modalContentClassName,
+  modalCloseBtnClassName,
+  hideModalTitle = false,
+  modalTitle = "Фільтри",
+}: Props) {
   const [isMobile, setIsMobile] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -60,10 +81,25 @@ export function FiltersSidebar({ children, sidebarClassName }: Props) {
         <Modal
           open={modalOpen}
           onClose={() => setModalOpen(false)}
-          title="Фільтри"
-          className={styles.filtersModal}
+          title={hideModalTitle ? undefined : modalTitle}
+          className={`${styles.filtersModal} ${modalClassName ?? ""}`.trim()}
+          showCloseButton={!hideModalTitle}
         >
-          <div className={styles.filtersModalContent}>{children}</div>
+          <div
+            className={`${styles.filtersModalContent} ${modalContentClassName ?? ""}`.trim()}
+          >
+            {hideModalTitle && (
+              <button
+                type="button"
+                className={`${styles.modalCloseBtn} ${modalCloseBtnClassName ?? ""}`.trim()}
+                onClick={() => setModalOpen(false)}
+                aria-label="Закрити"
+              >
+                ×
+              </button>
+            )}
+            {modalChildren ?? children}
+          </div>
         </Modal>
       )}
     </>
