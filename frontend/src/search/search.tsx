@@ -64,11 +64,6 @@ function parseNumberInput(value: string): number | "" {
   return parsed;
 }
 
-function getTagNames(items: BookMetaItem[] | undefined): string[] {
-  if (!items?.length) return [];
-  return items.map((item) => `#${item.name}`);
-}
-
 export default function SearchPage() {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -399,85 +394,13 @@ export default function SearchPage() {
             ) : (
               <>
                 <div className="abandoned-grid">
-                  {visibleBooks.map((book) => {
-                    const fandomTags = getTagNames(book.fandoms).slice(0, 2);
-                    const rowTags = getTagNames(book.tags);
-                    const genreTags = getTagNames(book.genres);
-                    const limitedRowTags = rowTags.slice(0, 2);
-                    const limitedGenres = genreTags.slice(0, 2);
-                    const statusText = (book.translation_status_display ?? "Без статусу").toUpperCase();
-
-                    return (
-                      <div key={book.id} className="abandoned-card-cell">
-                        <div className="abandoned-card-surface">
-                          <BookCard book={book} />
-                          <div className="abandoned-book-extra">
-                            <div className="abandoned-book-status">Статус: {statusText}</div>
-
-                            <div className="abandoned-meta-row">
-                              <span className="abandoned-meta-label">Фендом:</span>
-                              <div className="abandoned-tags">
-                                {fandomTags.length > 0 ? (
-                                  fandomTags.map((tag) => (
-                                    <span key={tag} className="abandoned-tag">
-                                      {tag}
-                                    </span>
-                                  ))
-                                ) : (
-                                  <span className="abandoned-tag abandoned-tag-empty">—</span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="abandoned-meta-row">
-                              <span className="abandoned-meta-label">Теги:</span>
-                              <div className="abandoned-tags">
-                                {limitedRowTags.length > 0 ? (
-                                  limitedRowTags.map((tag) => (
-                                    <span key={tag} className="abandoned-tag">
-                                      {tag}
-                                    </span>
-                                  ))
-                                ) : (
-                                  <span className="abandoned-tag abandoned-tag-empty">—</span>
-                                )}
-                                {rowTags.length > 2 && <span className="abandoned-tags-more">▼</span>}
-                              </div>
-                            </div>
-
-                            <div className="abandoned-meta-row">
-                              <span className="abandoned-meta-label">Жанри:</span>
-                              <div className="abandoned-tags">
-                                {limitedGenres.length > 0 ? (
-                                  limitedGenres.map((tag) => (
-                                    <span key={tag} className="abandoned-tag">
-                                      {tag}
-                                    </span>
-                                  ))
-                                ) : (
-                                  <span className="abandoned-tag abandoned-tag-empty">—</span>
-                                )}
-                                {genreTags.length > 2 && <span className="abandoned-tags-more">▼</span>}
-                              </div>
-                            </div>
-
-                            <div className="abandoned-read-wrap">
-                              <ActionButton
-                                to={book.slug ? `/books/${book.slug}` : undefined}
-                                disabled={!book.slug}
-                                variant="default"
-                                size="sm"
-                                className="abandoned-read-btn"
-                                ariaLabel={`Читати ${book.title}`}
-                              >
-                                Читати
-                              </ActionButton>
-                            </div>
-                          </div>
-                        </div>
+                  {visibleBooks.map((book) => (
+                    <div key={book.id} className="abandoned-card-cell">
+                      <div className="abandoned-card-surface">
+                        <BookCard book={book} variant="withTags" />
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
 
                 <ShowMoreNavigation
