@@ -1,0 +1,69 @@
+/* Sidebar — на desktop видимий, на mobile прихований */
+.sidebar {
+  /* Стилі успадковуються з abandoned-sidebar — не перевизначаємо */
+}
+
+.sidebarHidden {
+  display: none !important;
+}
+
+/* Фіксована кнопка "Фільтри" справа, вертикальний текст, відступ 15px від краю */
+.filtersFloatingBtn {
+  position: fixed;
+  right: 15px;
+  bottom: 87px;
+  z-index: 999;
+  width: 40px;
+  min-height: 110px;
+  padding: 8px 6px;
+  border: 1px solid rgba(245, 136, 7, 0.8);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    inset 0 0 20px rgba(245, 136, 7, 0.2),
+    inset 0 0 40px rgba(245, 136, 7, 0.1),
+    -4px 0 20px rgba(0, 0, 0, 0.4);
+}
+
+.filtersFloatingBtn:hover {
+  background: rgba(245, 136, 7, 0.15);
+  filter: brightness(1.08);
+}
+
+.filtersFloatingBtn:active {
+  filter: brightness(0.95);
+}
+
+.filtersFloatingText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-family: "SofiaSansSemiCondensed", sans-serif;
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 600;
+  color: rgba(245, 136, 7, 0.95);
+}
+
+.filtersFloatingLetter {
+  display: block;
+  line-height: 1.2;
+}
+
+/* Модальне вікно — ширше для фільтрів */
+.filtersModal {
+  max-width: min(95vw, 520px) !important;
+}
+
+/* Контент фільтрів у модалці */
+.filtersModalContent {
+  max-height: min(85vh, 600px);
+  overflow-y: auto;
+  padding: 4px 0;
+}

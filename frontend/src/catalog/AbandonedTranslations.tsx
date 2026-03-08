@@ -11,6 +11,7 @@ import {
 import { BookCard } from "../BookCard/BookCard";
 import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
 import { SortByNavigation } from "../navigation/SortByNavigation.tsx";
+import { FiltersSidebar } from "../navigation/FiltersSidebar";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { Icon } from "../shared/Icon";
 import "./AbandonedTranslations.css";
@@ -257,7 +258,7 @@ export default function AbandonedTranslations() {
             )}
           </div>
 
-          <aside className="abandoned-sidebar">
+          <FiltersSidebar sidebarClassName="abandoned-sidebar">
             <div className="filters-panel">
               <h2 className="filters-title">Фільтри</h2>
 
@@ -399,7 +400,7 @@ export default function AbandonedTranslations() {
                 Пошук
               </button>
             </div>
-          </aside>
+          </FiltersSidebar>
         </div>
       </Container>
     </section>

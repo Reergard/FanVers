@@ -6,6 +6,7 @@ import { BookCard } from "../BookCard/BookCard";
 import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation";
 import { SortByNavigation } from "../navigation/SortByNavigation";
 import { FilterDropdown } from "../navigation/FilterDropdown";
+import { FiltersSidebar } from "../navigation/FiltersSidebar";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { Icon } from "../shared/Icon";
 import { Modal } from "../shared/Modal/Modal";
@@ -489,7 +490,7 @@ export default function SearchPage() {
             )}
           </div>
 
-          <aside className="abandoned-sidebar">
+          <FiltersSidebar sidebarClassName="abandoned-sidebar">
             <div className="filters-panel">
               <h2 className="filters-title">Фільтри</h2>
 
@@ -705,7 +706,7 @@ export default function SearchPage() {
                 Пошук
               </button>
             </div>
-          </aside>
+          </FiltersSidebar>
         </div>
       </Container>
 
