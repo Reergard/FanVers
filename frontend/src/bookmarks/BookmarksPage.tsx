@@ -16,6 +16,7 @@ import badge18 from "../assets/backgrounds/18+.svg";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 import { Breadcrumb } from "../navigation/Breadcrumb";
 import { PageTitle } from "../navigation/PageTitle";
+import { FiltersSidebar } from "../navigation/FiltersSidebar";
 
 const FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "all", label: "Усі" },
@@ -25,7 +26,7 @@ const FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "dropped", label: "Покинуті" },
   { value: "completed", label: "Прочитані" },
 ];
-const PAGE_SIZE = 1;
+const PAGE_SIZE = 10;
 type SortKey = "updated" | "created" | "title";
 const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: "updated", label: "Останньою активністю" },
@@ -148,7 +149,7 @@ export default function BookmarksPage() {
 
   return (
     <section className={styles.page}>
-      <Container>
+      <Container className={styles.bookmarksContainer}>
         <div className={styles.layout}>
           <div className={styles.mainCol}>
             <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Закладки" }]} />
@@ -160,8 +161,15 @@ export default function BookmarksPage() {
 
             <div className={styles.topBar}>
               <span className={styles.shownCount}>
-                Показано {sortedBookmarks.length} робіт
+                Показано {visibleBookmarks.length} робіт
               </span>
+              <div className={styles.topBarFoundRow}>
+                <span className={styles.foundLabel}>Знайдено:</span>
+                <div className={styles.bookmarkRibbon}>
+                  <span className={styles.bookmarkCount}>{bookmarks.length}</span>
+                  <span className={styles.bookmarkWord}>закладок</span>
+                </div>
+              </div>
               <div className={styles.sortWrap}>
                 <SortByNavigation
                   value={sortBy}
@@ -234,7 +242,10 @@ export default function BookmarksPage() {
             )}
           </div>
 
-          <aside className={styles.sidebar}>
+          <FiltersSidebar
+            sidebarClassName={styles.sidebar}
+            modalContentClassName={styles.bookmarksModalContent}
+          >
             <h2 className={styles.sidebarTitle}>Фільтри</h2>
             <div className={styles.filterBox}>
               {FILTER_OPTIONS.map(({ value, label }) => (
@@ -257,7 +268,7 @@ export default function BookmarksPage() {
                 <span className={styles.bookmarkWord}>закладок</span>
               </div>
             </div>
-          </aside>
+          </FiltersSidebar>
         </div>
       </Container>
     </section>

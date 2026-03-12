@@ -5,6 +5,13 @@
   padding-block: clamp(24px, 3vw, 48px);
 }
 
+/* Мобільна: менший padding, щоб 2 картки (402px) вміщалися; кнопка Фільтри поверх */
+@media (max-width: 768px) {
+  .bookmarksContainer {
+    padding-inline: 12px;
+  }
+}
+
 /* === 2-col layout: main left + sidebar right === */
 .layout {
   display: grid;
@@ -53,6 +60,11 @@
   font-family: "SofiaSansSemiCondensed", system-ui, sans-serif;
   font-size: clamp(13px, calc(1.2 * var(--vwu)), 15px);
   color: #05b4c7;
+}
+
+/* Desktop: приховати topBarFoundRow (показується тільки на мобільній) */
+.topBarFoundRow {
+  display: none;
 }
 
 .sortWrap {
@@ -122,9 +134,37 @@
   }
 }
 
-@media (max-width: 480px) {
+/* Mobile: 2 картки в ряд, менший line-height, Знайдено замість Показано */
+@media (max-width: 768px) {
+  .subtitle {
+    font-size: 16px;
+    line-height: 1.25;
+  }
+
+  .shownCount {
+    display: none;
+  }
+
+  .topBarFoundRow {
+    display: flex;
+    align-items: center;
+    gap: clamp(10px, 1.2vw, 14px);
+  }
+
+  .sortWrap [class*="sortLabel"],
+  .sortWrap [class*="sortPillText"] {
+    font-size: 15px;
+  }
+
+  /* Адаптивні картки: 2 в ряд, при 430px ≈195px, менший екран — менші картки */
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .grid > * {
+    min-width: 0;
+    justify-self: stretch;
   }
 }
 
@@ -197,6 +237,11 @@
   display: flex;
   align-items: center;
   gap: clamp(10px, 1.2vw, 14px);
+}
+
+/* Мобільна модалка: приховати foundRow (показується в topBar замість) */
+.bookmarksModalContent .foundRow {
+  display: none;
 }
 
 .foundLabel {

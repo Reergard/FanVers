@@ -2,6 +2,7 @@ import styles from "./BookAdCard.module.css";
 import { ActionButton } from "../../shared/ActionButton/ActionButton";
 import { Icon } from "../../shared/Icon";
 import ellipseBg from "../../assets/backgrounds/Ellipse_for_book.svg";
+import newBadge from "../../assets/icons/NEW.svg";
 
 export type BookAdCardVariant = "ad" | "bookmark";
 
@@ -32,6 +33,17 @@ export function BookAdCard({
       style={isBookmark ? undefined : { "--ellipse-bg": `url(${ellipseBg})` } as React.CSSProperties}
     >
       <div className={`${styles.coverWrap} ${isBookmark ? styles.variantBookmarkCover : ""}`}>
+        {isBookmark && (
+          <span className={styles.badgeNewWrap} aria-hidden>
+            <img
+              className={styles.badgeNew}
+              src={newBadge}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+          </span>
+        )}
         <img
           className={styles.cover}
           src={coverSrc}
@@ -40,18 +52,35 @@ export function BookAdCard({
           decoding="async"
         />
         {isAdult && (
-          <img
-            className={styles.badge18}
-            src={adultBadgeSrc}
-            alt="18+"
-            loading="lazy"
-            decoding="async"
-          />
+          isBookmark ? (
+            <span className={styles.badge18Wrap}>
+              <img
+                className={styles.badge18}
+                src={adultBadgeSrc}
+                alt="18+"
+                loading="lazy"
+                decoding="async"
+              />
+            </span>
+          ) : (
+            <img
+              className={styles.badge18}
+              src={adultBadgeSrc}
+              alt="18+"
+              loading="lazy"
+              decoding="async"
+            />
+          )
         )}
         {isBookmark ? (
-          <span className={styles.bookmarkIcon} aria-hidden>
-            <Icon name="zakladki" />
-          </span>
+          <>
+            <span className={styles.bookmarkIcon} aria-hidden>
+              <Icon name="zakladki" />
+            </span>
+            <div className={styles.cornerA} aria-hidden="true">
+              A
+            </div>
+          </>
         ) : (
           <div className={styles.cornerA} aria-hidden="true">
             A
