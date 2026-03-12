@@ -520,7 +520,7 @@
   .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) {
     --cover-w: 120px;
     display: grid;
-    grid-template-columns: var(--cover-w) 1fr;
+    grid-template-columns: var(--cover-w) minmax(0, 1fr);
     grid-template-rows: auto 1fr;
     grid-template-areas:
       ". title"
@@ -528,6 +528,7 @@
     gap: clamp(8px, 2vw, 12px) clamp(10px, 2vw, 16px);
     align-items: start;
     width: 100%;
+    min-width: 0;
     overflow: visible;
   }
 
@@ -587,6 +588,7 @@
   .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__row {
     align-items: flex-start;
     flex-wrap: wrap;
+    min-width: 0;
   }
 
   .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__label,
@@ -598,5 +600,8 @@
   .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__value,
   .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__value {
     font-size: clamp(13px, 2.5vw, 15px);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }

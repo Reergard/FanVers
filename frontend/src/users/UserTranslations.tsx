@@ -12,7 +12,7 @@ import styles from "./UserTranslations.module.css";
 import { Breadcrumb } from "../navigation/Breadcrumb";
 import { PageTitle } from "../navigation/PageTitle";
 
-const PAGE_SIZE = 1;
+const PAGE_SIZE = 10;
 
 export default function UserTranslations() {
   const { isAuthenticated, userId, authReady } = useAuth();

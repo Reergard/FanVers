@@ -1,8 +1,10 @@
 /* === Page === */
 .page {
   width: 100%;
+  min-width: 0;
   min-height: 60vh;
   padding-block: clamp(24px, 3vw, 48px);
+  overflow-x: clip;
 }
 
 /* === 2-col layout: main left + sidebar right === */
@@ -11,11 +13,14 @@
   grid-template-columns: 1fr minmax(220px, 300px);
   gap: clamp(24px, 3vw, 40px);
   align-items: start;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
 }
 
 @media (max-width: 1024px) {
   .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -24,6 +29,7 @@
   display: flex;
   flex-direction: column;
   gap: clamp(16px, 2vw, 24px);
+  min-width: 0;
 }
 
 .title {
@@ -36,8 +42,9 @@
 /* === Grid of cards === */
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(16px, 2vw, 24px);
+  min-width: 0;
 }
 
 .showMore {
@@ -46,24 +53,44 @@
 
 @media (max-width: 1024px) {
   .grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 639px) {
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 .cardCell {
   width: 100%;
+  min-width: 0;
+}
+
+/* Мобільна: як у Каталогу — flex, центрування, padding для коректного розміщення картки */
+@media (max-width: 768px) {
+  .grid {
+    gap: clamp(20px, 2.2vw, 34px) clamp(16px, 1.8vw, 26px);
+  }
+
+  .cardCell {
+    display: flex;
+    justify-content: center;
+    padding: clamp(8px, 0.8vw, 12px);
+  }
+
+  .cardCell > * {
+    max-width: 100%;
+    min-width: 0;
+  }
 }
 
 /* === Sidebar: Статистика діяльності === */
 .sidebar {
   position: sticky;
   top: clamp(24px, 3vw, 40px);
+  min-width: 0;
 }
 
 .sidebarTitle {
@@ -87,6 +114,8 @@
   align-items: center;
   padding: clamp(10px, 1.2vw, 14px) 0;
   border-bottom: 1px solid #F58807;
+  gap: clamp(8px, 1vw, 12px);
+  min-width: 0;
 }
 
 .statRow:last-child {
@@ -97,6 +126,7 @@
   font-family: "BadScript", cursive;
   font-size: clamp(13px, 1.2vw, 15px);
   color: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
 }
 
 .statValue {
@@ -104,6 +134,10 @@
   font-size: clamp(16px, 1.8vw, 20px);
   font-weight: 600;
   color: #f58807;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .commissionRow {
@@ -113,18 +147,22 @@
   display: flex;
   align-items: center;
   gap: clamp(12px, 1.5vw, 18px);
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .commissionLabel {
   font-family: "BadScript", cursive;
   font-size: clamp(13px, 1.2vw, 15px);
   color: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
 }
 
 /* Оранжевий банер з загостреним кінцем для комісії */
 .commissionBanner {
   position: relative;
   min-width: clamp(72px, 8vw, 96px);
+  max-width: 100%;
   height: clamp(40px, 4.5vw, 52px);
   display: flex;
   align-items: center;
@@ -133,6 +171,7 @@
   background: linear-gradient(90deg, #f58807 0%, #e67a00 50%, #f58807 100%);
   clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
   box-shadow: 0 2px 12px rgba(245, 136, 7, 0.4);
+  flex-shrink: 0;
 }
 
 .commissionValue {
@@ -145,7 +184,7 @@
 /* === Empty state === */
 .empty {
   width: 100%;
-  max-width: 612px;
+  max-width: min(612px, 100%);
   padding: clamp(32px, 5vw, 48px) clamp(24px, 4vw, 40px);
   background: linear-gradient(20deg, rgba(5, 13, 17, 0.2) 0%, rgba(5, 180, 199, 0.2) 100%), #050d11;
   border: 1px solid #f58807;
