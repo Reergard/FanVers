@@ -6,6 +6,10 @@ import turnedOffView from "./assets/icons/turned_off_view.svg";
 import includedView from "./assets/icons/included_view.svg";
 import { SaveButton } from "../shared/SaveButton/SaveButton";
 import crystalProfile from "./assets/icons/crysral_profile.svg";
+import vectorProfile from "./assets/icons/Vector_Profile.svg";
+import paymentIcon from "./assets/icons/payment.svg";
+import cashWithdrawalIcon from "./assets/icons/cash_withdrawal.svg";
+import historyIcon from "./assets/icons/history.svg";
 import { useAuth } from "../auth/useAuth";
 import { useAuthModal } from "../auth/AuthModalContext";
 import { refreshAuthStatus } from "../auth/service";
@@ -26,7 +30,7 @@ import { useAdultContent } from "../settings/useAdultContent";
 import { Breadcrumb } from "../navigation/Breadcrumb";
 import { PageTitle } from "../navigation/PageTitle";
 import { resolveAvatarUrl } from "../shared/avatar/resolveAvatarUrl";
-import type { UserProfile, NotificationSettingsPatch, BalanceHistoryItem } from "./types";
+import type { NotificationSettingsPatch, BalanceHistoryItem } from "./types";
 
 const AVATAR_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -45,16 +49,13 @@ async function validateAvatarMagicBytes(file: File): Promise<boolean> {
   try {
     const buffer = await file.arrayBuffer();
     const bytes = new Uint8Array(buffer);
-    // JPEG: FF D8 FF
     const isJpeg =
       bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
-    // PNG: 89 50 4E 47 0D 0A 1A 0A
     const isPng =
       bytes[0] === 0x89 &&
       bytes[1] === 0x50 &&
       bytes[2] === 0x4e &&
       bytes[3] === 0x47;
-    // WebP: RIFF....WEBP
     const isWebp =
       bytes.length >= 12 &&
       bytes[0] === 0x52 &&
@@ -71,7 +72,6 @@ async function validateAvatarMagicBytes(file: File): Promise<boolean> {
   }
 }
 
-/** Парсинг балансу: "10.50" | "10,50" | "10500" → number */
 function parseBalance(value: string | number | undefined): number {
   if (value == null) return 0;
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
@@ -134,10 +134,6 @@ export default function Profile() {
   const isLoading = profileQuery.isLoading;
 
   useEffect(() => {
-    if (profile?.email) setNewEmail(profile.email);
-  }, [profile?.email]);
-
-  useEffect(() => {
     if (profile?.hide_adult_content == null) return;
     setHideAdultContent(Boolean(profile.hide_adult_content));
   }, [profile?.hide_adult_content, setHideAdultContent]);
@@ -161,7 +157,7 @@ export default function Profile() {
 
   const updateEmailMutation = useMutation({
     mutationFn: updateEmail,
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       setNewEmail("");
       showSuccess("Email успішно оновлено");
@@ -408,8 +404,10 @@ export default function Profile() {
     <section className={styles.page}>
       <div className={styles.wrap}>
         <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Профіль" }]} />
-        <header className={styles.header}>
-          <PageTitle>ПРОФІЛЬ</PageTitle>
+        <PageTitle>ПРОФІЛЬ</PageTitle>
+
+        {/* Row 1: Login — full width, separate from main grid */}
+        <header className={styles.row1Header}>
           <div className={styles.loginBlock}>
             <img src={crownSvg} className={styles.crown} alt="" width={61} height={40} aria-hidden="true" />
             <div className={styles.loginRow}>
@@ -420,8 +418,9 @@ export default function Profile() {
           <div className={styles.headerLine} aria-hidden="true" />
         </header>
 
-        <div className={styles.topGrid}>
-          <aside className={styles.leftTop}>
+        {/* Row 2 & 3: Main upper block — единая сетка 2×3 с замкнутыми линиями */}
+        <div className={styles.upperBlock}>
+          <aside className={styles.colPhoto}>
             <div className={styles.avatarCard}>
               <div className={styles.avatarOrbit} aria-hidden="true" />
               <div className={styles.avatarFrame}>
@@ -434,83 +433,6 @@ export default function Profile() {
                 />
               </div>
             </div>
-          </aside>
-
-          <section className={styles.rightTop}>
-            <div className={styles.about}>
-              <div className={styles.aboutHead}>
-                <span className={styles.aboutLabel}>Про себе:</span>
-              </div>
-              <p className={styles.aboutText}>
-                {profile.about ?? "Немає опису."}
-              </p>
-              <a className={styles.linkCyan} href="#edit-about">
-                Змінити
-              </a>
-            </div>
-
-            <div className={styles.sectionLine} aria-hidden="true" />
-
-            <div className={styles.stats}>
-              <div className={styles.statsHeaderRow}>
-                <div className={styles.statsHeaderLeft}>
-                  <span className={styles.statsKey}>Тип профілю:</span>
-                  <span className={styles.statsVal}>{profile.role}</span>
-                </div>
-                {profile.role === "Читач" && (
-                  <button
-                    type="button"
-                    className={styles.linkCyanBtn}
-                    onClick={() => becomeTranslatorMutation.mutate()}
-                    disabled={becomeTranslatorMutation.isPending}
-                  >
-                    {becomeTranslatorMutation.isPending ? "Зміна ролі..." : "Стати перекладачем"}
-                  </button>
-                )}
-                {profile.role === "Перекладач" && (
-                  <button
-                    type="button"
-                    className={styles.linkCyanBtn}
-                    onClick={() => becomeAuthorMutation.mutate()}
-                    disabled={becomeAuthorMutation.isPending}
-                  >
-                    {becomeAuthorMutation.isPending ? "Зміна ролі..." : "Стати літератором"}
-                  </button>
-                )}
-              </div>
-
-              <div className={styles.statsRows}>
-                <div className={styles.statRow}>
-                  <span className={styles.statLabel}>Загальна кількість перекладених символів:</span>
-                  <span className={styles.statValue}>{profile.total_characters ?? 0}</span>
-                </div>
-                <div className={styles.statRow}>
-                  <span className={styles.statLabel}>Загальна кількість розділів:</span>
-                  <span className={styles.statValue}>{profile.total_chapters ?? 0}</span>
-                </div>
-                <div className={styles.statRow}>
-                  <span className={styles.statLabel}>Загальна кількість безкоштовних розділів:</span>
-                  <span className={styles.statValue}>{profile.free_chapters ?? 0}</span>
-                </div>
-                <div className={styles.statRow}>
-                  <span className={styles.statLabel}>Середній рейтинг перекладів:</span>
-                  <span className={styles.statValue}>{profile.average_rating ?? "Н/Д"}</span>
-                </div>
-                <div className={styles.statRow}>
-                  <span className={styles.statLabel}>Кількість авторських книжок:</span>
-                  <span className={styles.statValue}>{profile.total_author ?? 0}</span>
-                </div>
-                <div className={styles.statRow}>
-                  <span className={styles.statLabel}>Кількість перекладів:</span>
-                  <span className={styles.statValue}>{profile.total_translations ?? 0}</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <div className={styles.sectionLineFull} aria-hidden="true" />
-
-          <div className={styles.leftButtons}>
             <input
               ref={fileInputRef}
               type="file"
@@ -521,73 +443,124 @@ export default function Profile() {
             />
             <button
               type="button"
-              className={styles.btnOutlineGold}
+              className={`${styles.btnOutlineGold} ${styles.btnPhotoChange}`}
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadAvatarMutation.isPending}
             >
               {uploadAvatarMutation.isPending ? "Завантаження..." : "Змінити фото профілю"}
+              <svg className={styles.iconPhotoChange} viewBox="0 0 21 21" aria-hidden="true">
+                <use href="#photo-change" />
+              </svg>
             </button>
+          </aside>
+
+          <section className={styles.colAbout} id="edit-about">
+            <h3 className={styles.aboutLabel}>Про себе:</h3>
+            <p className={styles.aboutText}>
+              {profile.about ?? "Немає опису."}
+            </p>
             <button
               type="button"
-              className={styles.btnOutlineGold}
-              onClick={handleTransactionHistory}
+              className={`${styles.btnOutlineGold} ${styles.btnPhotoChange}`}
+              onClick={() => document.getElementById("edit-about")?.scrollIntoView?.({ behavior: "smooth" })}
             >
-              Історія транзакцій
+              Змінити
+              <svg className={styles.iconPhotoChange} viewBox="0 0 22 22" aria-hidden="true">
+                <use href="#pencil" />
+              </svg>
             </button>
-          </div>
-
-          <div className={styles.balanceRow}>
-            <div className={styles.balanceLine1}>
-              <div className={styles.balanceMeta}>
-                <span className={styles.mutedGold}>Комісія:</span>
-                <span className={styles.cyan}>{profile.commission ?? 15}%</span>
-              </div>
-            </div>
-            <div className={styles.balanceLine2}>
-              <div className={styles.balanceMeta}>
-                <span className={styles.mutedGold}>Баланс:</span>
-                <span className={styles.green}>{profile.balance}</span>
-              </div>
-              <div className={styles.balanceActions}>
-                <button
-                  type="button"
-                  className={styles.btnGreen}
-                  onClick={() => setDepositModalOpen(true)}
-                  disabled={depositMutation.isPending}
-                >
-                  {depositMutation.isPending ? "Завантаження..." : "Поповнити баланс"}
-                </button>
-                <button
-                  type="button"
-                  className={styles.btnRed}
-                  onClick={() => setWithdrawModalOpen(true)}
-                  disabled={withdrawMutation.isPending || balanceNum <= 0}
-                >
-                  {withdrawMutation.isPending ? "Завантаження..." : "Вивести кошти"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.bottomGrid}>
-          <section className={styles.leftBottom}>
-            <div className={styles.formBlock}>
-              <h3 className={styles.blockTitle}>Змінити email</h3>
-              <label className={styles.field}>
-                <span className={styles.fieldLabel}>Новий email :</span>
-                <span className={styles.fieldBox}>
-                  <input
-                    className={styles.input}
-                    type="email"
-                    placeholder={profile.email || "name@gmail.com"}
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    autoComplete="email"
-                    disabled={updateEmailMutation.isPending}
-                  />
+            <div className={styles.profileTypeSection}>
+              <div className={styles.profileTypeRow}>
+                <span className={styles.profileTypeLabel}>Тип профілю:</span>
+                <span className={styles.profileTypeActive}>
+                  {profile.role}
                 </span>
-              </label>
+                {(profile.role === "Читач" || profile.role === "Перекладач") && (
+                  profile.role === "Читач" ? (
+                    <button
+                      type="button"
+                      className={`${styles.linkCyanBtn} ${styles.profileTypeRoleBtn}`}
+                      style={{ backgroundImage: `url(${vectorProfile})` }}
+                      onClick={() => becomeTranslatorMutation.mutate()}
+                      disabled={becomeTranslatorMutation.isPending}
+                    >
+                      {becomeTranslatorMutation.isPending ? "Зміна ролі..." : "Стати перекладачем"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`${styles.linkCyanBtn} ${styles.profileTypeRoleBtn}`}
+                      style={{ backgroundImage: `url(${vectorProfile})` }}
+                      onClick={() => becomeAuthorMutation.mutate()}
+                      disabled={becomeAuthorMutation.isPending}
+                    >
+                      {becomeAuthorMutation.isPending ? "Зміна ролі..." : "Стати літератором"}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className={styles.colStats}>
+              <div className={styles.statRow}>
+                <span className={styles.statLabel}>Загальна кількість перекладених символів:</span>
+                <span className={styles.statValue}>{profile.total_characters ?? 0}</span>
+              </div>
+              <div className={styles.statRow}>
+                <span className={styles.statLabel}>Загальна кількість розділів:</span>
+                <span className={styles.statValue}>{profile.total_chapters ?? 0}</span>
+              </div>
+              <div className={styles.statRow}>
+                <span className={styles.statLabel}>Загальна кількість безкоштовних розділів:</span>
+                <span className={styles.statValue}>{profile.free_chapters ?? 0}</span>
+              </div>
+              <div className={styles.statRow}>
+                <span className={styles.statLabel}>Середній рейтинг перекладів:</span>
+                <span className={styles.statValue}>{profile.average_rating ?? "Н/Д"}</span>
+              </div>
+              <div className={styles.statRow}>
+                <span className={styles.statLabel}>Кількість авторських книжок:</span>
+                <span className={styles.statValue}>{profile.total_author ?? 0}</span>
+              </div>
+              <div className={styles.statRow}>
+                <span className={styles.statLabel}>Кількість перекладів:</span>
+                <span className={styles.statValue}>{profile.total_translations ?? 0}</span>
+              </div>
+          </section>
+
+          <div className={styles.colEmailCurrent}>
+            <h3 className={styles.sectionTitle}>Змінити email:</h3>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Поточний email :</span>
+              <span className={`${styles.fieldBox} ${styles.fieldBoxEmailCurrent}`}>
+                <input
+                  className={styles.input}
+                  type="text"
+                  value={profile.email || ""}
+                  readOnly
+                  aria-readonly="true"
+                />
+              </span>
+            </label>
+          </div>
+
+          <div className={styles.colEmailNew}>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Новий email :</span>
+              <span className={styles.fieldBox}>
+                <input
+                  className={styles.input}
+                  type="email"
+                  placeholder="name@gmail.com"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  autoComplete="email"
+                  disabled={updateEmailMutation.isPending}
+                />
+              </span>
+            </label>
+            <div className={styles.saveButtonWrap}>
               <SaveButton
                 type="button"
                 onClick={handleEmailSubmit}
@@ -596,53 +569,99 @@ export default function Profile() {
                 variant="default"
               />
             </div>
+          </div>
 
-            <div className={styles.formBlock}>
-              <h3 className={styles.blockTitle}>Змінити пароль</h3>
+          <div className={styles.colBalance}>
+              <div className={styles.balanceLine}>
+                <span className={styles.mutedGold}>Комісія:</span>
+                <span className={styles.balanceCommissionValue}>{profile.commission ?? 15}%</span>
+                <button
+                  type="button"
+                  className={styles.btnRed}
+                  onClick={() => setWithdrawModalOpen(true)}
+                  disabled={withdrawMutation.isPending || balanceNum <= 0}
+                >
+                  <img src={cashWithdrawalIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
+                  <span className={styles.btnBalanceText}>
+                    {withdrawMutation.isPending ? "Завантаження..." : <>Вивести<br />кошти</>}
+                  </span>
+                </button>
+              </div>
+              <div className={styles.balanceLine}>
+                <span className={styles.mutedGold}>Баланс:</span>
+                <span className={styles.balanceCommissionValue}>{profile.balance}</span>
+                <button
+                  type="button"
+                  className={styles.btnGreen}
+                  onClick={() => setDepositModalOpen(true)}
+                  disabled={depositMutation.isPending}
+                >
+                  <img src={paymentIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
+                  <span className={styles.btnBalanceText}>
+                    {depositMutation.isPending ? "Завантаження..." : <>Поповнити<br />баланс</>}
+                  </span>
+                </button>
+              </div>
+              <button
+                type="button"
+                className={styles.btnOutlineGold}
+                onClick={handleTransactionHistory}
+              >
+                <img src={historyIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
+                Історія транзакцій
+              </button>
+          </div>
+        </div>
+
+        {/* Row 4: Password change block */}
+        <section className={styles.row5Password}>
+          <h3 className={styles.sectionTitle}>Змінити пароль:</h3>
+          <div className={styles.passwordFields}>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Старий пароль :</span>
+              <span className={styles.fieldBox}>
+                <input
+                  className={styles.input}
+                  type={showOldPass ? "text" : "password"}
+                  value={passwords.old}
+                  onChange={(e) => setPasswords((p) => ({ ...p, old: e.target.value }))}
+                  autoComplete="current-password"
+                  disabled={changePasswordMutation.isPending}
+                />
+                <button
+                  type="button"
+                  className={styles.eyeBtn}
+                  onClick={() => setShowOldPass(!showOldPass)}
+                  aria-label={showOldPass ? "Сховати пароль" : "Показати пароль"}
+                >
+                  <img src={showOldPass ? turnedOffView : includedView} alt="" className={styles.eyeIcon} aria-hidden="true" />
+                </button>
+              </span>
+            </label>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Новий пароль :</span>
+              <span className={styles.fieldBox}>
+                <input
+                  className={styles.input}
+                  type={showNewPass ? "text" : "password"}
+                  value={passwords.new}
+                  onChange={(e) => setPasswords((p) => ({ ...p, new: e.target.value }))}
+                  autoComplete="new-password"
+                  disabled={changePasswordMutation.isPending}
+                />
+                <button
+                  type="button"
+                  className={styles.eyeBtn}
+                  onClick={() => setShowNewPass(!showNewPass)}
+                  aria-label={showNewPass ? "Сховати пароль" : "Показати пароль"}
+                >
+                  <img src={showNewPass ? turnedOffView : includedView} alt="" className={styles.eyeIcon} aria-hidden="true" />
+                </button>
+              </span>
+            </label>
+            <div className={styles.passwordConfirmWithSave}>
               <label className={styles.field}>
-                <span className={styles.fieldLabel}>Старий пароль</span>
-                <span className={styles.fieldBox}>
-                  <input
-                    className={styles.input}
-                    type={showOldPass ? "text" : "password"}
-                    value={passwords.old}
-                    onChange={(e) => setPasswords((p) => ({ ...p, old: e.target.value }))}
-                    autoComplete="current-password"
-                    disabled={changePasswordMutation.isPending}
-                  />
-                  <button
-                    type="button"
-                    className={styles.eyeBtn}
-                    onClick={() => setShowOldPass(!showOldPass)}
-                    aria-label={showOldPass ? "Сховати пароль" : "Показати пароль"}
-                  >
-                    <img src={showOldPass ? includedView : turnedOffView} alt="" className={styles.eyeIcon} aria-hidden="true" />
-                  </button>
-                </span>
-              </label>
-              <label className={styles.field}>
-                <span className={styles.fieldLabel}>Новий пароль</span>
-                <span className={styles.fieldBox}>
-                  <input
-                    className={styles.input}
-                    type={showNewPass ? "text" : "password"}
-                    value={passwords.new}
-                    onChange={(e) => setPasswords((p) => ({ ...p, new: e.target.value }))}
-                    autoComplete="new-password"
-                    disabled={changePasswordMutation.isPending}
-                  />
-                  <button
-                    type="button"
-                    className={styles.eyeBtn}
-                    onClick={() => setShowNewPass(!showNewPass)}
-                    aria-label={showNewPass ? "Сховати пароль" : "Показати пароль"}
-                  >
-                    <img src={showNewPass ? includedView : turnedOffView} alt="" className={styles.eyeIcon} aria-hidden="true" />
-                  </button>
-                </span>
-              </label>
-              <label className={styles.field}>
-                <span className={styles.fieldLabel}>Підтвердити пароль</span>
+                <span className={styles.fieldLabel}>Підтвердити пароль :</span>
                 <span className={styles.fieldBox}>
                   <input
                     className={styles.input}
@@ -658,120 +677,114 @@ export default function Profile() {
                     onClick={() => setShowConfirmPass(!showConfirmPass)}
                     aria-label={showConfirmPass ? "Сховати пароль" : "Показати пароль"}
                   >
-                    <img src={showConfirmPass ? includedView : turnedOffView} alt="" className={styles.eyeIcon} aria-hidden="true" />
+                    <img src={showConfirmPass ? turnedOffView : includedView} alt="" className={styles.eyeIcon} aria-hidden="true" />
                   </button>
                 </span>
               </label>
-              <SaveButton
-                type="button"
-                onClick={handlePasswordSubmit}
-                disabled={
-                  changePasswordMutation.isPending ||
-                  !passwords.old ||
-                  !passwords.new ||
-                  !passwords.confirm
-                }
-                loading={changePasswordMutation.isPending}
-                variant="green"
-              />
+              <div className={styles.saveButtonWrap}>
+                <SaveButton
+                  type="button"
+                  onClick={handlePasswordSubmit}
+                  disabled={
+                    changePasswordMutation.isPending ||
+                    !passwords.old ||
+                    !passwords.new ||
+                    !passwords.confirm
+                  }
+                  loading={changePasswordMutation.isPending}
+                  variant="default"
+                />
+              </div>
             </div>
-          </section>
+          </div>
+        </section>
 
-          <section className={styles.rightBottom}>
-            <div className={styles.settingsBlock}>
-              <h3 className={styles.blockTitleCenter}>Налаштування акаунту</h3>
-              <label className={styles.check}>
-                <input
-                  type="checkbox"
-                  checked={profile.notifications_enabled ?? true}
-                  onChange={(e) => handleNotificationChange("notifications_enabled", e.target.checked)}
-                />
-                <span>Сповіщення</span>
-              </label>
-              <label className={styles.check}>
-                <input
-                  type="checkbox"
-                  checked={hideAdultContent}
-                  onChange={(e) => handleAdultContentToggle(e.target.checked)}
-                />
-                <span>Прибрати 18+</span>
-              </label>
-              <label className={styles.check}>
-                <input
-                  type="checkbox"
-                  checked={profile.private_messages_enabled ?? true}
-                  onChange={(e) => handleNotificationChange("private_messages_enabled", e.target.checked)}
-                />
-                <span>Отримувати приватні повідомлення</span>
-              </label>
-              <label className={styles.checkNote}>
-                <input
-                  type="checkbox"
-                  checked={profile.age_confirmed ?? false}
-                  onChange={(e) => {
-                    const nextAgeConfirmed = e.target.checked;
-                    if (nextAgeConfirmed) {
-                      void handleAdultPreferencesUpdate(
-                        {
-                          age_confirmed: true,
-                          hide_adult_content: false,
-                        },
-                        false
-                      );
-                      return;
-                    }
+        {/* Row 6: Bottom zone — account settings | notification settings + crystal */}
+        <div className={styles.row6Grid}>
+          <section className={styles.colAccountSettings}>
+            <h3 className={styles.sectionTitle}>Налаштування акаунту:</h3>
+            <label className={styles.check}>
+              <input
+                type="checkbox"
+                checked={hideAdultContent}
+                onChange={(e) => handleAdultContentToggle(e.target.checked)}
+              />
+              <span>Прибрати 18+</span>
+            </label>
+            <label className={styles.check}>
+              <input
+                type="checkbox"
+                checked={profile.private_messages_enabled ?? true}
+                onChange={(e) => handleNotificationChange("private_messages_enabled", e.target.checked)}
+              />
+              <span>Отримувати приватні повідомлення</span>
+            </label>
+            <label className={styles.checkNote}>
+              <input
+                type="checkbox"
+                checked={profile.age_confirmed ?? false}
+                onChange={(e) => {
+                  const nextAgeConfirmed = e.target.checked;
+                  if (nextAgeConfirmed) {
                     void handleAdultPreferencesUpdate(
                       {
-                        age_confirmed: false,
-                        hide_adult_content: true,
+                        age_confirmed: true,
+                        hide_adult_content: false,
                       },
-                      true
+                      false
                     );
-                  }}
-                />
-                <span>
-                  Я підтверджую, що мені виповнилося 18 років, і я можу переглядати
-                  контент, призначений для дорослих.
-                </span>
-              </label>
-            </div>
+                    return;
+                  }
+                  void handleAdultPreferencesUpdate(
+                    {
+                      age_confirmed: false,
+                      hide_adult_content: true,
+                    },
+                    true
+                  );
+                }}
+              />
+              <span>
+                Я підтверджую, що мені виповнилося 18 років, і я можу переглядати
+                контент, призначений для дорослих.
+              </span>
+            </label>
+          </section>
 
-            <div className={styles.settingsBlock}>
-              <h3 className={styles.blockTitleCenter}>Налаштування сповіщень</h3>
-              <label className={styles.check}>
-                <input
-                  type="checkbox"
-                  checked={profile.comment_notifications ?? true}
-                  onChange={(e) => handleNotificationChange("comment_notifications", e.target.checked)}
-                />
-                <span>Коментарі у ваших постах та відповіді на ваші коментарі</span>
-              </label>
-              <label className={styles.check}>
-                <input
-                  type="checkbox"
-                  checked={profile.translation_status_notifications ?? true}
-                  onChange={(e) => handleNotificationChange("translation_status_notifications", e.target.checked)}
-                />
-                <span>Зміна статусу перекладу</span>
-              </label>
-              <label className={styles.check}>
-                <input
-                  type="checkbox"
-                  checked={profile.chapter_subscription_notifications ?? true}
-                  onChange={(e) => handleNotificationChange("chapter_subscription_notifications", e.target.checked)}
-                />
-                <span>Зняття розділу з передплати</span>
-              </label>
-              <label className={styles.check}>
-                <input
-                  type="checkbox"
-                  checked={profile.chapter_comment_notifications ?? true}
-                  onChange={(e) => handleNotificationChange("chapter_comment_notifications", e.target.checked)}
-                />
-                <span>Коментарі до розділу</span>
-              </label>
-            </div>
-
+          <section className={styles.colNotificationSettings}>
+            <h3 className={styles.sectionTitle}>Налаштування сповіщень:</h3>
+            <label className={styles.check}>
+              <input
+                type="checkbox"
+                checked={profile.comment_notifications ?? true}
+                onChange={(e) => handleNotificationChange("comment_notifications", e.target.checked)}
+              />
+              <span>Коментарі у ваших постах та відповіді на ваші коментарі</span>
+            </label>
+            <label className={styles.check}>
+              <input
+                type="checkbox"
+                checked={profile.translation_status_notifications ?? true}
+                onChange={(e) => handleNotificationChange("translation_status_notifications", e.target.checked)}
+              />
+              <span>Зміна статусу перекладу</span>
+            </label>
+            <label className={styles.check}>
+              <input
+                type="checkbox"
+                checked={profile.chapter_subscription_notifications ?? true}
+                onChange={(e) => handleNotificationChange("chapter_subscription_notifications", e.target.checked)}
+              />
+              <span>Поява/припинення абонементів в книгах</span>
+            </label>
+            <label className={styles.check}>
+              <input
+                type="checkbox"
+                checked={profile.chapter_comment_notifications ?? true}
+                onChange={(e) => handleNotificationChange("chapter_comment_notifications", e.target.checked)}
+              />
+              <span>Коментарі до розділу</span>
+            </label>
             <div className={styles.crystal} aria-hidden="true">
               <img src={crystalProfile} alt="" className={styles.crystalImg} />
             </div>

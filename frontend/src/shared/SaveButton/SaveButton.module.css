@@ -9,7 +9,7 @@
   color: rgba(255, 255, 255, 0.84);
 
   padding: clamp(7px, 1vw, 10px) clamp(12px, 1.4vw, 18px);
-  border-radius: 7px;
+  border-radius: 12px;
 
   font-size: clamp(12px, 1.05vw, 14px);
   font-family: inherit;
@@ -45,11 +45,12 @@
 }
 
 .variant_green {
-  border: 1px solid rgba(12, 178, 8, 0.75);
-  background: rgba(0, 0, 0, 0.16);
-  color: #0cb208;
+  border: 1px solid #05FF00;
+  background: rgba(5, 255, 0, 0.1);
+  color: #05FF00;
 }
 
 .variant_green:hover:not(:disabled) {
-  border-color: #0cb208;
+  border-color: #05FF00;
+  box-shadow: 0 0 0 1px rgba(5, 255, 0, 0.2) inset;
 }

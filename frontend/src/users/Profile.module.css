@@ -1,8 +1,13 @@
-/* Page shell */
+/* ============================================
+   Profile Page — Adaptive Layout
+   Rows: 1) Login | 2) Photo|About|Stats | 3) Actions|Type|Balance
+        4) Email | 5) Password | 6) Account|Notifications
+   ============================================ */
+
 .page {
   width: 100%;
   padding-block: clamp(18px, 2.6vw, 34px);
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--text, rgba(255, 255, 255, 0.92));
 }
 
 .loading,
@@ -42,45 +47,18 @@
   cursor: not-allowed;
 }
 
-.modalForm {
-  display: grid;
-  gap: clamp(12px, 2vw, 18px);
-}
-
-.modalHint {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.75);
-  font-size: clamp(12px, 1.05vw, 14px);
-}
-
-.transactionHistory ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.transactionHistory li {
-  padding: clamp(6px, 1vw, 10px) 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-  font-size: clamp(12px, 1.05vw, 14px);
-}
-
 .wrap {
-  max-width: min(1280px, calc(100% - clamp(18px, 3.2vw, 48px) * 2));
+  max-width: var(--container-max, 1280px);
   margin-inline: auto;
+  padding-inline: var(--gutter);
 }
 
-/* Header */
-.header {
-  position: relative;
-}
-
-.title {
-  font-family: var(--font-decor, inherit);
-  font-size: clamp(28px, 3vw, 44px);
-  letter-spacing: 0.08em;
-  color: #F58807;
-  margin: 0 0 clamp(10px, 1.2vw, 16px);
+/* ----------------------------------------
+   Row 1: Login — full width
+   ---------------------------------------- */
+.row1Header {
+  margin-top: clamp(10px, 1.2vw, 16px);
+  margin-bottom: clamp(14px, 2vw, 22px);
 }
 
 .loginBlock {
@@ -88,7 +66,6 @@
   flex-direction: column;
   align-items: flex-start;
   gap: clamp(4px, 0.6vw, 8px);
-  margin-bottom: clamp(10px, 1.2vw, 16px);
 }
 
 .crown {
@@ -102,11 +79,11 @@
   display: inline-flex;
   align-items: center;
   gap: clamp(10px, 1.2vw, 16px);
-  color: rgba(245, 136, 7, 0.9);
+  color: #F58807;
 }
 
 .loginLabel {
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 .loginValue {
@@ -117,30 +94,54 @@
 .headerLine {
   height: 1px;
   width: 100%;
-  background: linear-gradient(90deg, rgba(245, 136, 7, 0.0), rgba(245, 136, 7, 0.45), rgba(245, 136, 7, 0.0));
-  opacity: 0.9;
+  margin-top: clamp(10px, 1.2vw, 16px);
+  background: rgba(128, 128, 128, 0.4);
 }
 
-/* Top grid */
-.topGrid {
+/* ----------------------------------------
+   Row 2 & 3: Upper block — единая сетка 2×3, замкнутые линии
+   ---------------------------------------- */
+.upperBlock {
+  --profile-line: 1px solid rgba(128, 128, 128, 0.4);
   display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: clamp(18px, 3vw, 38px);
-  margin-top: clamp(10px, 2vw, 22px);
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  margin-bottom: clamp(20px, 3vw, 32px);
 }
 
-/* Left top: avatar only */
-.leftTop {
+.upperBlock > * {
+  padding: clamp(14px, 2vw, 22px);
+}
+
+/* Вертикальные линии между колонками */
+.upperBlock > *:nth-child(3n+1),
+.upperBlock > *:nth-child(3n+2) {
+  border-right: var(--profile-line);
+}
+
+/* Убрать линию между Поточний email и Новий email */
+.upperBlock > *:nth-child(4) {
+  border-right: none;
+}
+
+/* Горизонтальная линия между строками */
+.upperBlock > *:nth-child(1),
+.upperBlock > *:nth-child(2),
+.upperBlock > *:nth-child(3) {
+  border-bottom: var(--profile-line);
+}
+
+/* Col 1: Photo */
+.colPhoto {
   display: flex;
   flex-direction: column;
+  gap: clamp(12px, 1.6vw, 18px);
 }
 
 .avatarCard {
   position: relative;
   width: min(340px, 100%);
   aspect-ratio: 1 / 1.2;
-  margin-top: clamp(6px, 1vw, 10px);
 }
 
 .avatarOrbit {
@@ -148,7 +149,7 @@
   inset: -10%;
   border-radius: 999px;
   background:
-    radial-gradient(circle at 50% 50%, rgba(5, 180, 199, 0.22), rgba(5, 180, 199, 0.0) 55%),
+    radial-gradient(circle at 50% 50%, rgba(5, 180, 199, 0.22), rgba(5, 180, 199, 0) 55%),
     radial-gradient(circle at 50% 50%, rgba(5, 180, 199, 0.15), rgba(0, 0, 0, 0) 62%);
   filter: drop-shadow(0 0 18px rgba(5, 180, 199, 0.22));
 }
@@ -172,54 +173,25 @@
   display: block;
 }
 
-/* Left action buttons (below sectionLineFull, grid-column: 1) */
-.leftButtons {
-  grid-column: 1;
+/* Col 2: About */
+.colAbout {
   display: flex;
-  gap: clamp(10px, 1.4vw, 16px);
-  flex-wrap: wrap;
-  padding-top: clamp(14px, 2vw, 22px);
-}
-
-.btnOutlineGold {
-  appearance: none;
-  border: 1px solid rgba(245, 136, 7, 0.55);
-  color: rgba(245, 136, 7, 0.92);
-  background: rgba(0, 0, 0, 0.15);
-  padding: clamp(8px, 1vw, 10px) clamp(12px, 1.4vw, 16px);
-  border-radius: 4px;
-  font-size: clamp(12px, 1.1vw, 14px);
-  letter-spacing: 0.02em;
-  cursor: pointer;
-}
-
-.btnOutlineGold:hover {
-  border-color: rgba(245, 136, 7, 0.85);
-  box-shadow: 0 0 0 1px rgba(245, 136, 7, 0.18) inset;
-}
-
-/* Right top */
-.rightTop {
-  display: grid;
-  gap: clamp(14px, 2.2vw, 22px);
-  padding-top: clamp(4px, 0.8vw, 8px);
-}
-
-.aboutHead {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 14px;
+  flex-direction: column;
+  gap: clamp(8px, 1.2vw, 12px);
+  min-height: min-content;
 }
 
 .aboutLabel {
-  color: rgba(255, 255, 255, 0.75);
-  font-size: clamp(12px, 1.1vw, 14px);
+  font-family: var(--font-decor, "Seminaria"), serif;
+  color: #F58807;
+  font-size: clamp(16px, 1.4vw, 22px);
+  margin: 0;
+  font-weight: 600;
 }
 
 .aboutText {
   margin: 0;
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(255, 255, 255, 0.9);
   font-size: clamp(12px, 1.05vw, 14px);
   line-height: 1.45;
   max-width: 78ch;
@@ -229,303 +201,314 @@
   color: #05B4C7;
   text-decoration: none;
   font-size: clamp(12px, 1.05vw, 14px);
+  align-self: flex-end;
 }
 
 .linkCyan:hover {
   text-decoration: underline;
 }
 
-.sectionLine {
-  height: 1px;
-  width: 100%;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.0), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.0));
+.profileTypeSection {
+  margin-top: auto;
+  padding-top: clamp(12px, 1.6vw, 18px);
+  border-top: 1px solid rgba(128, 128, 128, 0.3);
 }
 
-/* Stats */
-.statsHeaderRow {
+.profileTypeRow {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: baseline;
-  gap: 14px;
+  gap: clamp(10px, 1.4vw, 16px);
+  flex-wrap: wrap;
 }
 
-.statsHeaderLeft {
-  display: inline-flex;
-  gap: 10px;
-  align-items: baseline;
+.profileTypeRow .profileTypeRoleBtn {
+  margin-left: auto;
 }
 
-.statsKey {
-  color: rgba(255, 255, 255, 0.78);
-  font-size: clamp(12px, 1.05vw, 14px);
-}
-
-.statsVal {
-  color: rgba(255, 255, 255, 0.92);
-  font-size: clamp(12px, 1.05vw, 14px);
-}
-
-.statsRows {
-  margin-top: clamp(10px, 1.6vw, 14px);
-  display: grid;
+/* Col 3: Stats */
+.colStats {
+  display: flex;
+  flex-direction: column;
   gap: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .statRow {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 14px;
+  gap: clamp(10px, 1.5vw, 16px);
   padding-block: clamp(8px, 1.2vw, 10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.statRow:last-child {
+  border-bottom: none;
 }
 
 .statLabel {
-  color: rgba(255, 255, 255, 0.78);
-  font-size: clamp(12px, 1.05vw, 14px);
+  font-family: var(--font-decor, "Seminaria"), serif;
+  color: #F58807;
+  font-size: clamp(16px, 1.4vw, 22px);
 }
 
 .statValue {
-  color: rgba(255, 255, 255, 0.92);
-  font-size: clamp(12px, 1.05vw, 14px);
+  font-family: var(--font-decor, "Seminaria"), serif;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(16px, 1.4vw, 22px);
+  text-align: right;
 }
 
-/* Full-width line after stats (under avatar) */
-.sectionLineFull {
-  grid-column: 1 / -1;
-  height: 1px;
-  width: 100%;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.0), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.0));
-}
-
-/* Balance row - right column, grid-column: 2 */
-.balanceRow {
-  grid-column: 2;
+/* Row 3: Email current | Email new | Balance */
+.colEmailCurrent {
   display: flex;
   flex-direction: column;
-  gap: clamp(8px, 1.2vw, 12px);
-  padding-top: clamp(14px, 2vw, 22px);
+  gap: clamp(10px, 1.4vw, 14px);
 }
 
-.balanceLine1 {
+.colEmailNew {
   display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.4vw, 14px);
+  padding-top: clamp(32px, 4.2vw, 50px);
 }
 
-.balanceLine2 {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: clamp(10px, 2vw, 18px);
-  flex-wrap: wrap;
+.colEmailNew .saveButtonWrap {
+  margin-top: auto;
 }
 
-.balanceMeta {
+.profileTypeLabel {
+  font-family: var(--font-decor, "Seminaria"), serif;
+  color: #F58807;
+  font-size: clamp(16px, 1.4vw, 22px);
+}
+
+.profileTypeActive {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(16px, 1.4vw, 22px);
+  font-weight: 600;
+  font-family: var(--font-decor, "Seminaria"), serif;
+}
+
+.profileTypeRoleBtn {
+  padding: clamp(8px, 1vw, 10px) clamp(16px, 1.8vw, 24px);
+  min-height: 36px;
+  border: none;
+  border-radius: 0;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
   display: inline-flex;
-  gap: 10px;
-  align-items: baseline;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(14px, 1.2vw, 18px);
+}
+
+.colBalance {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.4vw, 16px);
+}
+
+.balanceLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(10px, 1.4vw, 18px);
 }
 
 .mutedGold {
-  color: rgba(245, 136, 7, 0.85);
-  font-size: clamp(12px, 1.05vw, 14px);
+  font-family: var(--font-decor, "Seminaria"), serif;
+  color: #F58807;
+  font-size: clamp(14px, 1.2vw, 18px);
+}
+
+.balanceCommissionValue {
+  font-family: "Inter", sans-serif;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  font-size: clamp(14px, 1.2vw, 18px);
 }
 
 .cyan {
+  font-family: var(--font-decor, "Seminaria"), serif;
   color: #05B4C7;
   font-weight: 600;
+  font-size: clamp(14px, 1.2vw, 18px);
 }
 
 .green {
-  color: #0CB208;
+  font-family: var(--font-decor, "Seminaria"), serif;
+  color: #05FF00;
   font-weight: 700;
+  font-size: clamp(14px, 1.2vw, 18px);
 }
 
-.balanceActions {
+.btnOutlineGold {
+  font-family: "Inter", sans-serif;
+  appearance: none;
+  border: 1px solid #05B4C7;
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(0, 0, 0, 0.15);
+  padding: clamp(8px, 1vw, 10px) clamp(12px, 1.4vw, 16px);
+  border-radius: 12px;
+  font-size: clamp(12px, 1.1vw, 14px);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  font: inherit;
   display: inline-flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(6px, 0.8vw, 10px);
+}
+
+.btnOutlineGold:hover {
+  border-color: #05B4C7; 
+  box-shadow: 0 0 0 1px rgba(5, 180, 199, 0.25) inset;
+}
+
+/* Кнопка "Змінити фото профілю" — овальная рамка + иконка */
+.btnPhotoChange {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 0.8vw, 10px);
+  border-radius: 9999px;
+  padding: clamp(8px, 1vw, 10px);
+}
+
+.btnPhotoChange .iconPhotoChange {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: #05B4C7;
 }
 
 .btnGreen,
 .btnRed {
+  font-family: "Inter", sans-serif;
   appearance: none;
-  border-radius: 4px;
+  border-radius: 12px;
   padding: clamp(7px, 1vw, 9px) clamp(12px, 1.4vw, 16px);
   font-size: clamp(12px, 1.05vw, 14px);
   cursor: pointer;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 0.8vw, 10px);
+}
+
+.btnBalanceIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.btnBalanceText {
+  text-align: center;
+  line-height: 1.3;
 }
 
 .btnGreen {
-  border: 1px solid rgba(12, 178, 8, 0.65);
-  background: rgba(12, 178, 8, 0.14);
-  color: #0CB208;
+  border: 1px solid #05FF00;
+  background: rgba(5, 255, 0, 0.1);
+  color: #05FF00;
 }
 
 .btnGreen:hover {
-  border-color: #0CB208;
+  border-color: #05FF00;
+  box-shadow: 0 0 0 1px rgba(5, 255, 0, 0.2) inset;
 }
 
 .btnRed {
-  border: 1px solid rgba(237, 100, 81, 0.65);
-  background: rgba(237, 100, 81, 0.12);
-  color: #ED6451;
+  border: 1px solid #FF0000;
+  background: rgba(255, 0, 0, 0.1);
+  color: #FF0000;
 }
 
 .btnRed:hover {
-  border-color: #ED6451;
+  border-color: #FF0000;
+  box-shadow: 0 0 0 1px rgba(255, 0, 0, 0.2) inset;
 }
 
-/* Bottom grid */
-.bottomGrid {
-  display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: clamp(18px, 3vw, 38px);
-  margin-top: clamp(16px, 3vw, 26px);
-  padding-top: clamp(12px, 2.4vw, 18px);
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.leftBottom,
-.rightBottom {
-  display: grid;
-  gap: clamp(18px, 2.8vw, 26px);
-}
-
-/* Form blocks (left) */
-.formBlock {
-  display: grid;
-  gap: clamp(10px, 1.8vw, 14px);
-}
-
-.blockTitle {
+/* ----------------------------------------
+   Row 4: Email block
+   ---------------------------------------- */
+.sectionTitle {
+  font-family: var(--font-decor, "Seminaria"), serif;
   margin: 0;
   font-weight: 700;
   color: #F58807;
-  font-size: clamp(13px, 1.2vw, 15px);
-  width: fit-content;
+  font-size: clamp(14px, 1.2vw, 18px);
   padding-bottom: clamp(8px, 1.2vw, 12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(128, 128, 128, 0.4);
+  width: fit-content;
 }
 
-.field {
-  display: grid;
-  gap: 8px;
-}
-
-.fieldLabel {
-  color: rgba(255, 255, 255, 0.78);
-  font-size: clamp(12px, 1.05vw, 14px);
-}
-
-.fieldBox {
+.saveButtonWrap {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(0, 0, 0, 0.18);
-  border-radius: 4px;
-  padding: clamp(8px, 1vw, 10px) clamp(10px, 1.2vw, 12px);
+  justify-content: flex-end;
 }
 
-.fieldBox:focus-within {
-  border-color: rgba(5, 180, 199, 0.65);
-  box-shadow: 0 0 0 2px rgba(5, 180, 199, 0.12);
+.saveButtonWrap button {
+  border-color: #05B4C7;
+  color: rgba(255, 255, 255, 0.95);
 }
 
-.input {
-  width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.92);
-  font-size: clamp(12px, 1.05vw, 14px);
+.saveButtonWrap button:hover:not(:disabled) {
+  border-color: #05B4C7;
+  box-shadow: 0 0 0 1px rgba(5, 180, 199, 0.3) inset;
 }
 
-.input::placeholder {
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.eyeBtn {
-  flex: 0 0 auto;
-  padding: 4px;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
+/* ----------------------------------------
+   Row 5: Password block
+   ---------------------------------------- */
+.row5Password {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  gap: clamp(12px, 1.8vw, 18px);
+  padding-block: clamp(16px, 2.4vw, 24px);
+  border-top: 1px solid rgba(128, 128, 128, 0.4);
 }
 
-.eyeIcon {
-  width: 20px;
-  height: 20px;
-  display: block;
-}
-
-/* Save buttons (left) */
-.btnSave,
-.btnGreenOutline {
-  display: inline-flex;
-  align-items: center;
-  gap: clamp(8px, 1vw, 10px);
-}
-
-.btnSaveIcon {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-}
-
-.btnSave {
-  width: fit-content;
-  appearance: none;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(0, 0, 0, 0.18);
-  color: rgba(255, 255, 255, 0.84);
-  padding: clamp(7px, 1vw, 9px) clamp(12px, 1.4vw, 16px);
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btnSave:hover {
-  border-color: rgba(255, 255, 255, 0.45);
-}
-
-.btnGreenOutline {
-  width: fit-content;
-  appearance: none;
-  border: 1px solid rgba(12, 178, 8, 0.75);
-  background: rgba(0, 0, 0, 0.16);
-  color: #0CB208;
-  padding: clamp(7px, 1vw, 9px) clamp(12px, 1.4vw, 16px);
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btnGreenOutline:hover {
-  border-color: #0CB208;
-}
-
-/* Settings (right) */
-.settingsBlock {
+.passwordFields {
   display: grid;
-  gap: clamp(10px, 1.8vw, 14px);
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(16px, 2vw, 24px);
 }
 
-.blockTitleCenter {
-  margin: 0;
-  font-weight: 800;
-  text-align: center;
-  color: #F58807;
-  font-size: clamp(13px, 1.2vw, 15px);
-  width: fit-content;
-  margin-inline: auto;
-  padding-bottom: clamp(8px, 1.2vw, 12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+.passwordConfirmWithSave {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.4vw, 14px);
+}
+
+/* ----------------------------------------
+   Row 6: Bottom zone — 2 columns
+   ---------------------------------------- */
+.row6Grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(24px, 3.5vw, 48px);
+  padding-block: clamp(20px, 3vw, 32px);
+  border-top: 1px solid rgba(128, 128, 128, 0.4);
+  align-items: start;
+}
+
+.colAccountSettings,
+.colNotificationSettings {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.8vw, 18px);
+}
+
+.colNotificationSettings {
+  position: relative;
 }
 
 .check,
 .checkNote {
+  font-family: "Inter", sans-serif;
   display: grid;
   grid-template-columns: 16px 1fr;
   align-items: start;
@@ -548,7 +531,7 @@
 
 /* Decorative crystal */
 .crystal {
-  margin-top: clamp(10px, 2.4vw, 18px);
+  margin-top: clamp(16px, 2.4vw, 24px);
   width: min(260px, 100%);
   justify-self: end;
   display: flex;
@@ -563,27 +546,154 @@
   object-position: right bottom;
 }
 
-/* Responsive */
+/* Form fields (shared) */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 0.8vw, 8px);
+}
+
+.fieldLabel {
+  font-family: "Inter", sans-serif;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: clamp(12px, 1.05vw, 14px);
+}
+
+.fieldBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 12px;
+  padding: clamp(8px, 1vw, 10px) clamp(10px, 1.2vw, 12px);
+}
+
+.fieldBox:focus-within {
+  border-color: #05B4C7;
+  box-shadow: 0 0 0 2px rgba(5, 180, 199, 0.2);
+}
+
+.fieldBoxEmailCurrent {
+  background: rgba(5, 180, 199, 0.15);
+  border-color: rgba(5, 180, 199, 0.4);
+}
+
+.input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: clamp(12px, 1.05vw, 14px);
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.input[readonly] {
+  cursor: default;
+  color: #05B4C7;
+}
+
+.eyeBtn {
+  flex: 0 0 auto;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eyeIcon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+/* Modals */
+.modalForm {
+  display: grid;
+  gap: clamp(12px, 2vw, 18px);
+}
+
+.modalHint {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: clamp(12px, 1.05vw, 14px);
+}
+
+.balanceActions {
+  display: flex;
+  gap: clamp(10px, 1.4vw, 16px);
+  flex-wrap: wrap;
+}
+
+.transactionHistory ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.transactionHistory li {
+  padding: clamp(6px, 1vw, 10px) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: clamp(12px, 1.05vw, 14px);
+}
+
+/* ----------------------------------------
+   Responsive
+   ---------------------------------------- */
+
+/* Tablet: stack to single column */
 @media (max-width: 1024px) {
-  .topGrid,
-  .bottomGrid {
+  .upperBlock {
     grid-template-columns: 1fr;
+    grid-template-rows: repeat(6, auto);
   }
 
-  .balanceRow {
-    grid-column: 1;
+  .upperBlock > *:nth-child(3n+1),
+  .upperBlock > *:nth-child(3n+2) {
+    border-right: none;
   }
 
-  .leftButtons {
-    grid-column: 1;
+  .upperBlock > *:nth-child(n) {
+    border-bottom: 1px solid rgba(128, 128, 128, 0.4);
+  }
+
+  .upperBlock > *:last-child {
+    border-bottom: none;
+  }
+
+  .colPhoto {
+    align-items: center;
   }
 
   .avatarCard {
     margin-inline: auto;
   }
 
-  .leftButtons {
+  .profileTypeRow {
     justify-content: center;
+  }
+
+  .colBalance {
+    align-items: stretch;
+  }
+
+  .balanceLine {
+    justify-content: flex-start;
+  }
+
+  .passwordFields {
+    grid-template-columns: 1fr;
+  }
+
+  .row6Grid {
+    grid-template-columns: 1fr;
   }
 
   .crystal {
@@ -591,17 +701,30 @@
   }
 }
 
-@media (max-width: 520px) {
-  .balanceRow {
+/* Mobile: compact */
+@media (max-width: 768px) {
+  .balanceLine {
+    flex-direction: column;
     align-items: stretch;
   }
 
-  .balanceActions {
+  .balanceLine .btnGreen,
+  .balanceLine .btnRed {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .colBalance .btnOutlineGold {
     width: 100%;
   }
 
-  .btnGreen,
-  .btnRed {
-    flex: 1 1 auto;
+  .profileTypeRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .profileTypeRow .profileTypeRoleBtn {
+    margin-left: 0;
   }
 }
