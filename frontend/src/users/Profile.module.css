@@ -144,6 +144,10 @@
   aspect-ratio: 1 / 1.2;
 }
 
+.avatarBgSvg {
+  display: none;
+}
+
 .avatarOrbit {
   position: absolute;
   inset: -10%;
@@ -181,15 +185,60 @@
   min-height: min-content;
 }
 
+.aboutHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(8px, 1.2vw, 12px);
+}
+
+/* Блок «Про себе»: точки як у BookForm (strokeDasharray 0.1 10), текст поверх */
+.aboutBlock {
+  position: relative;
+  min-height: 7em;
+}
+
+.aboutPlaceholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.aboutPlaceholderLine {
+  display: block;
+  height: 2px;
+  min-width: 40px;
+  flex-shrink: 0;
+}
+
+.aboutPlaceholderLine svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0.85;
+}
+
+.aboutPlaceholderLine:nth-child(1) { width: 90%; }
+.aboutPlaceholderLine:nth-child(2) { width: 70%; }
+.aboutPlaceholderLine:nth-child(3) { width: 50%; }
+.aboutPlaceholderLine:nth-child(n+4) { display: none; }
+
 .aboutLabel {
   font-family: var(--font-decor, "Seminaria"), serif;
-  color: #F58807;
+  color: rgba(255, 255, 255, 0.95);
   font-size: clamp(16px, 1.4vw, 22px);
   margin: 0;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .aboutText {
+  position: relative;
+  z-index: 1;
   margin: 0;
   color: rgba(255, 255, 255, 0.9);
   font-size: clamp(12px, 1.05vw, 14px);
@@ -212,6 +261,14 @@
   margin-top: auto;
   padding-top: clamp(12px, 1.6vw, 18px);
   border-top: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.profileTypeSectionDesktop {
+  display: block;
+}
+
+.profileTypeSectionMobile {
+  display: none;
 }
 
 .profileTypeRow {
@@ -309,11 +366,19 @@
   gap: clamp(10px, 1.4vw, 16px);
 }
 
-.balanceLine {
+.balanceLine,
+.balanceRow {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: clamp(10px, 1.4vw, 18px);
+}
+
+.balanceInfo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(6px, 0.8vw, 10px);
 }
 
 .mutedGold {
@@ -363,6 +428,10 @@
 .btnOutlineGold:hover {
   border-color: #05B4C7; 
   box-shadow: 0 0 0 1px rgba(5, 180, 199, 0.25) inset;
+}
+
+.historyBtnTextMobile {
+  display: none;
 }
 
 /* Кнопка "Змінити фото профілю" — овальная рамка + иконка */
@@ -481,6 +550,11 @@
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 1.4vw, 14px);
+}
+
+.lowerSections {
+  display: flex;
+  flex-direction: column;
 }
 
 /* ----------------------------------------
@@ -648,7 +722,6 @@
    Responsive
    ---------------------------------------- */
 
-/* Tablet: stack to single column */
 @media (max-width: 1024px) {
   .upperBlock {
     grid-template-columns: 1fr;
@@ -674,6 +747,7 @@
 
   .avatarCard {
     margin-inline: auto;
+    width: min(320px, 100%);
   }
 
   .profileTypeRow {
@@ -684,7 +758,8 @@
     align-items: stretch;
   }
 
-  .balanceLine {
+  .balanceLine,
+  .balanceRow {
     justify-content: flex-start;
   }
 
@@ -698,33 +773,660 @@
 
   .crystal {
     justify-self: center;
+    justify-content: center;
   }
 }
 
-/* Mobile: compact */
 @media (max-width: 768px) {
-  .balanceLine {
-    flex-direction: column;
-    align-items: stretch;
+  .page {
+    padding-block: clamp(10px, 3vw, 18px);
   }
 
-  .balanceLine .btnGreen,
-  .balanceLine .btnRed {
-    flex: 1 1 auto;
+  .wrap {
+    padding-inline: clamp(18px, 5vw, 24px);
+  }
+
+  .row1Header {
+    margin-top: 0;
+    margin-bottom: clamp(12px, 3vw, 18px);
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .loginBlock {
+    gap: 6px;
+    align-items: flex-end;
+  }
+
+  .crown {
+    width: clamp(36px, 10vw, 52px);
+    height: auto;
+  }
+
+  .loginRow {
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    text-align: right;
+  }
+
+  .loginLabel {
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .headerLine {
+    display: none;
+  }
+
+  .upperBlock {
+    display: grid;
+    grid-template-columns: minmax(160px, 48vw) minmax(0, 1fr);
+    grid-template-areas:
+      "photo about"
+      "profileType profileType"
+      "stats stats"
+      "balance balance"
+      "emailCurrent emailCurrent"
+      "emailNew emailNew";
+    gap: 0;
+    margin-bottom: clamp(20px, 5vw, 28px);
+    border-top: none;
+  }
+
+  .upperBlock > * {
+    border: 0 !important;
+    padding: clamp(14px, 4vw, 18px) 0;
+  }
+
+  .colPhoto {
+    grid-area: photo;
+    align-items: flex-end;
+    padding-right: clamp(12px, 3vw, 16px);
+    padding-left: clamp(12px, 3vw, 16px);
+    border-bottom: 1px solid #F58807 !important;
+  }
+
+  .avatarWithBtnWrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0;
+    margin-top: -50px;
+  }
+
+  .colPhoto .avatarWithBtnWrap .btnPhotoChange {
+    position: absolute;
+    left: 50%;
+    top: 101%;
+    transform: translate(-50%, -50%);
+    margin-top: 0;
+    z-index: 2;
+    min-width: 44px;
+    min-height: 30px;
+    padding: 4px 8px;
+    border-radius: 9999px;
+  }
+
+  .colPhoto .avatarWithBtnWrap .btnPhotoChange .iconPhotoChange {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Фон SVG за аватаркою — inline (як у меню хедера), без filter для чіткості на iOS */
+  .avatarBgSvg {
+    display: block;
+    position: absolute;
+    inset: -25%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .avatarBgSvg svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .avatarCard .avatarFrame {
+    z-index: 1;
+  }
+
+  .colAbout {
+    grid-area: about;
+    min-width: 0;
+    padding-left: clamp(8px, 2vw, 12px);
+    border-bottom: 1px solid #F58807 !important;
+    justify-content: flex-start;
+    position: relative;
+  }
+
+  .avatarCard {
+    width: clamp(138px, 40vw, 188px);
+    aspect-ratio: 1 / 1;
+    margin-inline: 0;
+    margin-left: auto;
+  }
+
+  .avatarOrbit {
+    inset: -10%;
+  }
+
+  .avatarFrame {
+    inset: 12%;
+  }
+
+  .btnTextDesktop {
+    display: none;
+  }
+
+  .colPhoto .btnPhotoChange {
+    width: auto;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
+    margin-top: clamp(8px, 2vw, 12px);
+  }
+
+  .colPhoto .btnPhotoChange .iconPhotoChange {
+    width: 22px;
+    height: 22px;
+    margin: 0;
+  }
+
+  /* Один стиль для всіх iconPhotoChange на мобільній */
+  .iconPhotoChange {
+    margin-left: -9px;
+  }
+
+  .aboutHeaderRow {
+    align-items: flex-start;
+  }
+
+  /* Кнопка «Змінити» (Про себе) — мобільна: абсолютна позиція, внизу блоку */
+  .btnEditAbout {
+    position: absolute;
+    bottom: 19px;
+    right: -25px;
+    flex-shrink: 0;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 6px;
+    width: auto;
+    z-index: 2;
+  }
+
+  .btnEditAbout .iconPhotoChange {
+    width: 18px;
+    height: 18px;
+  }
+
+  .aboutPlaceholder {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .aboutPlaceholderLine {
+    height: 4px;
+  }
+
+  .aboutPlaceholderLine svg {
+    opacity: 1;
+  }
+
+  .aboutPlaceholderPath {
+    stroke-width: 3;
+    stroke-dasharray: 0.2 10;
+  }
+
+  .aboutPlaceholderLine:nth-child(n+4) { display: block; }
+  .aboutPlaceholderLine:nth-child(1) { width: 92%; }
+  .aboutPlaceholderLine:nth-child(2) { width: 88%; }
+  .aboutPlaceholderLine:nth-child(3) { width: 82%; }
+  .aboutPlaceholderLine:nth-child(4) { width: 55%; }
+  .aboutPlaceholderLine:nth-child(5) { width: 38%; }
+  .aboutPlaceholderLine:nth-child(6) { width: 22%; }
+
+  .btnPhotoChange {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .aboutLabel {
+    font-size: clamp(18px, 5.2vw, 24px);
+    line-height: 1.1;
+  }
+
+  .aboutText {
+    font-size: 16px;
+    line-height: 1.45;
+    max-width: none;
+  }
+
+  .linkCyan {
+    align-self: flex-end;
+  }
+
+  .profileTypeLabel {
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .profileTypeActive {
+    color: #F58807;
+  }
+
+  .profileTypeSectionDesktop {
+    display: none;
+  }
+
+  .profileTypeSectionMobile {
+    display: block;
+    grid-area: profileType;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.32) !important;
+    padding-block: clamp(12px, 3vw, 16px);
+  }
+
+  .profileTypeSectionMobile .profileTypeRow {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .profileTypeSectionMobile .profileTypeRow .profileTypeRoleBtn {
+    margin-left: 0;
+    justify-self: end;
+  }
+
+  .profileTypeSectionMobile .profileTypeRoleBtn {
+    width: auto;
+    min-height: 40px;
+    padding: 8px 18px;
+    font-size: 14px;
+    background-size: contain;
+    background-position: center;
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .colStats {
+    grid-area: stats;
+    border-bottom: 1px solid #F58807 !important;
+    padding-block: clamp(10px, 3vw, 14px);
+  }
+
+  .colStats .statRow {
+    border-bottom: none !important;
+  }
+
+  .statRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 10px;
+    padding-block: 6px;
+  }
+
+  .statLabel {
+    font-size: clamp(18px, 5vw, 24px);
+    line-height: 1.3;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .statValue {
+    font-size: clamp(18px, 5vw, 24px);
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .colBalance {
+    grid-area: balance;
+    border-bottom: 1px solid #F58807 !important;
+    display: grid;
+    grid-template-areas: "history commission commission" "history balance balance" ". deposit withdraw";
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    gap: 0 8px;
+    row-gap: 8px;
+    padding-block: clamp(14px, 4vw, 18px);
+  }
+
+  .balanceRow {
+    display: contents;
+  }
+
+  .balanceHistoryBtn {
+    grid-area: history;
+    align-self: stretch;
+    justify-self: start;
+    width: auto;
+    min-width: 44px;
+    flex-direction: column;
+    padding: 10px 12px;
+    gap: 4px;
+    border-color: #FD9800 !important;
+    color: #FD9800;
+  }
+
+  .balanceHistoryBtn:hover {
+    border-color: #FD9800 !important;
+    box-shadow: 0 0 0 1px rgba(253, 152, 0, 0.25) inset;
+  }
+
+  .balanceHistoryBtn .btnBalanceIcon {
+    order: -1;
+  }
+
+  .historyBtnTextDesktop {
+    display: none;
+  }
+
+  .historyBtnTextMobile {
+    display: inline;
+  }
+
+  [data-mobile-area="commission"] {
+    grid-area: commission;
+    justify-self: stretch;
+    align-self: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding-block: 0 8px;
+    padding-inline: 0;
+    border-bottom: 1px solid #FD9800;
+  }
+
+  [data-mobile-area="commission"] .mutedGold,
+  [data-mobile-area="commission"] .balanceCommissionValue {
+    color: #FD9800;
+  }
+
+  [data-mobile-area="balance"] {
+    grid-area: balance;
+    justify-self: stretch;
+    align-self: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding-block: 8px 0;
+    padding-inline: 0;
+    border-bottom: none;
+  }
+
+  [data-mobile-area="balance"] .mutedGold,
+  [data-mobile-area="balance"] .balanceCommissionValue {
+    color: #05B4C7;
+  }
+
+  .balanceBtnDeposit,
+  .balanceBtnWithdraw {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .balanceBtnDeposit {
+    grid-area: deposit;
+  }
+
+  .balanceBtnWithdraw {
+    grid-area: withdraw;
+  }
+
+  .mutedGold,
+  .balanceCommissionValue,
+  .cyan,
+  .green {
+    font-size: clamp(16px, 4.5vw, 20px);
+  }
+
+  .btnGreen,
+  .btnRed {
+    width: 100%;
+    min-height: 48px;
+    border-radius: 20px;
+    padding: 10px 14px;
+  }
+
+  .btnOutlineGold {
+    width: 100%;
+    min-height: 42px;
+    justify-content: center;
+    border-radius: 20px;
+  }
+
+  .colEmailCurrent {
+    grid-area: emailCurrent;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #F58807 !important;
+  }
+
+  .colEmailNew {
+    grid-area: emailNew;
+    gap: 12px;
+    padding-top: 4px;
+  }
+
+  .sectionTitle {
+    font-size: clamp(17px, 4.5vw, 22px);
+    padding-bottom: 8px;
+    border-bottom-color: #F58807;
+  }
+
+  .field {
+    gap: 6px;
+  }
+
+  .fieldLabel {
+    font-size: 16px;
+  }
+
+  .fieldBox {
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: 16px;
+  }
+
+  .input {
+    font-size: 16px;
+  }
+
+  .saveButtonWrap {
+    justify-content: flex-start;
+  }
+
+  .row6Grid {
+    gap: clamp(22px, 6vw, 30px);
+    padding-block: clamp(18px, 5vw, 24px);
+    border-top-color: #F58807;
+  }
+
+  .colAccountSettings,
+  .colNotificationSettings {
+    gap: 14px;
+  }
+
+  .check,
+  .checkNote {
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 10px;
+    font-size: 14px;
+    line-height: 1.4;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+
+  .check span,
+  .checkNote span {
+    min-width: 0;
+    overflow-wrap: break-word;
+  }
+
+  .crystal {
+    display: none;
+  }
+
+  .row5Password {
+    gap: 14px;
+    padding-block: clamp(18px, 5vw, 24px);
+    border-top-color: #F58807;
+  }
+
+  .passwordFields {
+    gap: 14px;
+  }
+
+  .passwordConfirmWithSave {
+    gap: 14px;
+  }
+
+  .lowerSections {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .row6Grid {
+    order: 1;
+  }
+
+  .row5Password {
+    order: 2;
   }
 }
 
 @media (max-width: 480px) {
-  .colBalance .btnOutlineGold {
+  .wrap {
+    padding-inline: clamp(14px, 4vw, 18px);
+  }
+
+  .upperBlock {
+    grid-template-columns: minmax(160px, 46vw) minmax(0, 1fr);
+    grid-template-areas:
+      "photo about"
+      "profileType profileType"
+      "stats stats"
+      "balance balance"
+      "emailCurrent emailCurrent"
+      "emailNew emailNew";
+    column-gap: 0;
+  }
+
+  .colPhoto {
+    padding-right: 10px;
+    padding-left: 12px;
+  }
+
+  .colAbout {
+    padding-left: 8px;
+  }
+
+  .avatarCard {
+    width: clamp(124px, 38vw, 160px);
+  }
+
+  .aboutLabel {
+    font-size: 18px;
+  }
+
+  .aboutText {
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .colPhoto .btnPhotoChange {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 8px;
+  }
+
+  /* Ширина кнопки «Змінити» (Про себе) — екран ≤480px */
+  .btnEditAbout {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 8px;
+  }
+
+  .btnPhotoChange {
+    min-height: 38px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .profileTypeLabel,
+  .profileTypeActive {
+    font-size: 16px;
+  }
+
+  .profileTypeRoleBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .statRow {
+    gap: 8px;
+    padding-block: 4px;
+  }
+
+  .statLabel {
+    font-size: 19px;
+  }
+
+  .statValue {
+    font-size: 19px;
+  }
+
+  .btnGreen,
+  .btnRed,
+  .btnOutlineGold {
+    width: 29%;
+  }
+
+  /* Кнопки баланса — повна ширина в сітці */
+  .colBalance .balanceBtnDeposit,
+  .colBalance .balanceBtnWithdraw {
     width: 100%;
   }
 
-  .profileTypeRow {
-    flex-direction: column;
-    align-items: stretch;
+  .colBalance .balanceHistoryBtn {
+    width: auto;
   }
 
-  .profileTypeRow .profileTypeRoleBtn {
-    margin-left: 0;
+  .colBalance .mutedGold,
+  .colBalance .balanceCommissionValue {
+    font-size: 17px;
+  }
+
+  .sectionTitle {
+    font-size: 17px;
+  }
+
+  .fieldLabel,
+  .check,
+  .checkNote {
+    font-size: 16px;
+  }
+
+  .fieldBox {
+    min-height: 42px;
+    border-radius: 16px;
+  }
+
+  .input {
+    font-size: 16px;
+  }
+
+  .eyeIcon {
+    width: 18px;
+    height: 18px;
   }
 }

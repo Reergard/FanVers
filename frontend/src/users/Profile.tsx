@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import styles from "./Profile.module.css";
 import crownSvg from "./assets/icons/crown.svg";
@@ -31,6 +31,14 @@ import { Breadcrumb } from "../navigation/Breadcrumb";
 import { PageTitle } from "../navigation/PageTitle";
 import { resolveAvatarUrl } from "../shared/avatar/resolveAvatarUrl";
 import type { NotificationSettingsPatch, BalanceHistoryItem } from "./types";
+import backgroundsAvatarsSvgRaw from "./assets/backgrounds/backgrounds_avatars.svg?raw";
+
+/** Strips feGaussianBlur filter from SVG — iOS Safari renders it blurry (like AvatarOrbit in header menu). */
+function stripSvgFilter(svg: string): string {
+  return svg
+    .replace(/\s*filter="[^"]*"/g, "")
+    .replace(/<defs>[\s\S]*?<\/defs>/g, "");
+}
 
 const AVATAR_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -399,6 +407,41 @@ export default function Profile() {
       : (profile.profile_image_large ?? profile.image ?? profile.profile_image_small)
   );
   const balanceNum = parseBalance(profile.balance);
+  const avatarBgSvgClean = useMemo(() => stripSvgFilter(backgroundsAvatarsSvgRaw), []);
+
+  const renderProfileTypeRow = () => (
+    <div className={styles.profileTypeRow}>
+      <span className={styles.profileTypeLabel}>Тип профілю:</span>
+      <span className={styles.profileTypeActive}>{profile.role}</span>
+
+      {(profile.role === "Читач" || profile.role === "Перекладач") &&
+        (profile.role === "Читач" ? (
+          <button
+            type="button"
+            className={`${styles.linkCyanBtn} ${styles.profileTypeRoleBtn}`}
+            style={{ backgroundImage: `url(${vectorProfile})` }}
+            onClick={() => becomeTranslatorMutation.mutate()}
+            disabled={becomeTranslatorMutation.isPending}
+          >
+            {becomeTranslatorMutation.isPending
+              ? "Зміна ролі..."
+              : "Стати перекладачем"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={`${styles.linkCyanBtn} ${styles.profileTypeRoleBtn}`}
+            style={{ backgroundImage: `url(${vectorProfile})` }}
+            onClick={() => becomeAuthorMutation.mutate()}
+            disabled={becomeAuthorMutation.isPending}
+          >
+            {becomeAuthorMutation.isPending
+              ? "Зміна ролі..."
+              : "Стати літератором"}
+          </button>
+        ))}
+    </div>
+  );
 
   return (
     <section className={styles.page}>
@@ -421,86 +464,84 @@ export default function Profile() {
         {/* Row 2 & 3: Main upper block — единая сетка 2×3 с замкнутыми линиями */}
         <div className={styles.upperBlock}>
           <aside className={styles.colPhoto}>
-            <div className={styles.avatarCard}>
-              <div className={styles.avatarOrbit} aria-hidden="true" />
-              <div className={styles.avatarFrame}>
-                <img
-                  className={styles.avatarImg}
-                  src={avatarUrl}
-                  alt="Фото профілю"
-                  loading="lazy"
-                  decoding="async"
+            <div className={styles.avatarWithBtnWrap}>
+              <div className={styles.avatarCard}>
+                <div className={styles.avatarOrbit} aria-hidden="true" />
+                <span
+                  className={styles.avatarBgSvg}
+                  dangerouslySetInnerHTML={{ __html: avatarBgSvgClean }}
+                  aria-hidden
                 />
+                <div className={styles.avatarFrame}>
+                  <img
+                    className={styles.avatarImg}
+                    src={avatarUrl}
+                    alt="Фото профілю"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
               </div>
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={handleAvatarChange}
-              style={{ display: "none" }}
-              aria-hidden="true"
-            />
-            <button
-              type="button"
-              className={`${styles.btnOutlineGold} ${styles.btnPhotoChange}`}
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadAvatarMutation.isPending}
-            >
-              {uploadAvatarMutation.isPending ? "Завантаження..." : "Змінити фото профілю"}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleAvatarChange}
+                style={{ display: "none" }}
+                aria-hidden="true"
+              />
+              <button
+                type="button"
+                className={`${styles.btnOutlineGold} ${styles.btnPhotoChange}`}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadAvatarMutation.isPending}
+              >
+              <span className={styles.btnTextDesktop}>
+                {uploadAvatarMutation.isPending ? "Завантаження..." : "Змінити фото профілю"}
+              </span>
               <svg className={styles.iconPhotoChange} viewBox="0 0 21 21" aria-hidden="true">
                 <use href="#photo-change" />
               </svg>
             </button>
+            </div>
           </aside>
 
           <section className={styles.colAbout} id="edit-about">
-            <h3 className={styles.aboutLabel}>Про себе:</h3>
-            <p className={styles.aboutText}>
-              {profile.about ?? "Немає опису."}
-            </p>
-            <button
-              type="button"
-              className={`${styles.btnOutlineGold} ${styles.btnPhotoChange}`}
-              onClick={() => document.getElementById("edit-about")?.scrollIntoView?.({ behavior: "smooth" })}
-            >
-              Змінити
-              <svg className={styles.iconPhotoChange} viewBox="0 0 22 22" aria-hidden="true">
-                <use href="#pencil" />
-              </svg>
-            </button>
-            <div className={styles.profileTypeSection}>
-              <div className={styles.profileTypeRow}>
-                <span className={styles.profileTypeLabel}>Тип профілю:</span>
-                <span className={styles.profileTypeActive}>
-                  {profile.role}
-                </span>
-                {(profile.role === "Читач" || profile.role === "Перекладач") && (
-                  profile.role === "Читач" ? (
-                    <button
-                      type="button"
-                      className={`${styles.linkCyanBtn} ${styles.profileTypeRoleBtn}`}
-                      style={{ backgroundImage: `url(${vectorProfile})` }}
-                      onClick={() => becomeTranslatorMutation.mutate()}
-                      disabled={becomeTranslatorMutation.isPending}
-                    >
-                      {becomeTranslatorMutation.isPending ? "Зміна ролі..." : "Стати перекладачем"}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className={`${styles.linkCyanBtn} ${styles.profileTypeRoleBtn}`}
-                      style={{ backgroundImage: `url(${vectorProfile})` }}
-                      onClick={() => becomeAuthorMutation.mutate()}
-                      disabled={becomeAuthorMutation.isPending}
-                    >
-                      {becomeAuthorMutation.isPending ? "Зміна ролі..." : "Стати літератором"}
-                    </button>
-                  )
-                )}
+            <div className={styles.aboutHeaderRow}>
+              <h3 className={styles.aboutLabel}>Про себе:</h3>
+              <button
+                type="button"
+                className={`${styles.btnOutlineGold} ${styles.btnPhotoChange} ${styles.btnEditAbout}`}
+                onClick={() => document.getElementById("edit-about")?.scrollIntoView?.({ behavior: "smooth" })}
+              >
+                <span className={styles.btnTextDesktop}>Змінити</span>
+                <svg className={styles.iconPhotoChange} viewBox="0 0 22 22" aria-hidden="true">
+                  <use href="#pencil" />
+                </svg>
+              </button>
+            </div>
+            <div className={styles.aboutBlock}>
+              <div className={styles.aboutPlaceholder} aria-hidden="true">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <span key={i} className={styles.aboutPlaceholderLine}>
+                    <svg width="100%" height="2" viewBox="0 0 1013 2" fill="none" preserveAspectRatio="none" aria-hidden>
+                      <path className={styles.aboutPlaceholderPath} d="M1 1H1012" stroke="#F58807" strokeWidth="2" strokeLinecap="round" strokeDasharray="0.1 10" />
+                    </svg>
+                  </span>
+                ))}
               </div>
+              {(profile.about && profile.about !== "Немає опису.") && (
+                <p className={styles.aboutText}>{profile.about}</p>
+              )}
+            </div>
+            <div className={`${styles.profileTypeSection} ${styles.profileTypeSectionDesktop}`}>
+              {renderProfileTypeRow()}
             </div>
           </section>
+
+          <div className={`${styles.profileTypeSection} ${styles.profileTypeSectionMobile}`}>
+            {renderProfileTypeRow()}
+          </div>
 
           <section className={styles.colStats}>
               <div className={styles.statRow}>
@@ -572,12 +613,14 @@ export default function Profile() {
           </div>
 
           <div className={styles.colBalance}>
-              <div className={styles.balanceLine}>
-                <span className={styles.mutedGold}>Комісія:</span>
-                <span className={styles.balanceCommissionValue}>{profile.commission ?? 15}%</span>
+              <div className={styles.balanceRow}>
+                <div className={styles.balanceInfo} data-mobile-area="commission">
+                  <span className={styles.mutedGold}>Комісія з транзакцій:</span>
+                  <span className={styles.balanceCommissionValue}>{profile.commission ?? 15}%</span>
+                </div>
                 <button
                   type="button"
-                  className={styles.btnRed}
+                  className={`${styles.btnRed} ${styles.balanceBtnWithdraw}`}
                   onClick={() => setWithdrawModalOpen(true)}
                   disabled={withdrawMutation.isPending || balanceNum <= 0}
                 >
@@ -587,12 +630,14 @@ export default function Profile() {
                   </span>
                 </button>
               </div>
-              <div className={styles.balanceLine}>
-                <span className={styles.mutedGold}>Баланс:</span>
-                <span className={styles.balanceCommissionValue}>{profile.balance}</span>
+              <div className={styles.balanceRow}>
+                <div className={styles.balanceInfo} data-mobile-area="balance">
+                  <span className={styles.mutedGold}>Баланс:</span>
+                  <span className={styles.balanceCommissionValue}>{profile.balance}</span>
+                </div>
                 <button
                   type="button"
-                  className={styles.btnGreen}
+                  className={`${styles.btnGreen} ${styles.balanceBtnDeposit}`}
                   onClick={() => setDepositModalOpen(true)}
                   disabled={depositMutation.isPending}
                 >
@@ -604,103 +649,19 @@ export default function Profile() {
               </div>
               <button
                 type="button"
-                className={styles.btnOutlineGold}
+                className={`${styles.btnOutlineGold} ${styles.balanceHistoryBtn}`}
                 onClick={handleTransactionHistory}
               >
                 <img src={historyIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
-                Історія транзакцій
+                <span className={styles.historyBtnTextDesktop}>Історія транзакцій</span>
+                <span className={styles.historyBtnTextMobile}>Історія<br />транзакцій</span>
               </button>
           </div>
         </div>
 
-        {/* Row 4: Password change block */}
-        <section className={styles.row5Password}>
-          <h3 className={styles.sectionTitle}>Змінити пароль:</h3>
-          <div className={styles.passwordFields}>
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Старий пароль :</span>
-              <span className={styles.fieldBox}>
-                <input
-                  className={styles.input}
-                  type={showOldPass ? "text" : "password"}
-                  value={passwords.old}
-                  onChange={(e) => setPasswords((p) => ({ ...p, old: e.target.value }))}
-                  autoComplete="current-password"
-                  disabled={changePasswordMutation.isPending}
-                />
-                <button
-                  type="button"
-                  className={styles.eyeBtn}
-                  onClick={() => setShowOldPass(!showOldPass)}
-                  aria-label={showOldPass ? "Сховати пароль" : "Показати пароль"}
-                >
-                  <img src={showOldPass ? turnedOffView : includedView} alt="" className={styles.eyeIcon} aria-hidden="true" />
-                </button>
-              </span>
-            </label>
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Новий пароль :</span>
-              <span className={styles.fieldBox}>
-                <input
-                  className={styles.input}
-                  type={showNewPass ? "text" : "password"}
-                  value={passwords.new}
-                  onChange={(e) => setPasswords((p) => ({ ...p, new: e.target.value }))}
-                  autoComplete="new-password"
-                  disabled={changePasswordMutation.isPending}
-                />
-                <button
-                  type="button"
-                  className={styles.eyeBtn}
-                  onClick={() => setShowNewPass(!showNewPass)}
-                  aria-label={showNewPass ? "Сховати пароль" : "Показати пароль"}
-                >
-                  <img src={showNewPass ? turnedOffView : includedView} alt="" className={styles.eyeIcon} aria-hidden="true" />
-                </button>
-              </span>
-            </label>
-            <div className={styles.passwordConfirmWithSave}>
-              <label className={styles.field}>
-                <span className={styles.fieldLabel}>Підтвердити пароль :</span>
-                <span className={styles.fieldBox}>
-                  <input
-                    className={styles.input}
-                    type={showConfirmPass ? "text" : "password"}
-                    value={passwords.confirm}
-                    onChange={(e) => setPasswords((p) => ({ ...p, confirm: e.target.value }))}
-                    autoComplete="new-password"
-                    disabled={changePasswordMutation.isPending}
-                  />
-                  <button
-                    type="button"
-                    className={styles.eyeBtn}
-                    onClick={() => setShowConfirmPass(!showConfirmPass)}
-                    aria-label={showConfirmPass ? "Сховати пароль" : "Показати пароль"}
-                  >
-                    <img src={showConfirmPass ? turnedOffView : includedView} alt="" className={styles.eyeIcon} aria-hidden="true" />
-                  </button>
-                </span>
-              </label>
-              <div className={styles.saveButtonWrap}>
-                <SaveButton
-                  type="button"
-                  onClick={handlePasswordSubmit}
-                  disabled={
-                    changePasswordMutation.isPending ||
-                    !passwords.old ||
-                    !passwords.new ||
-                    !passwords.confirm
-                  }
-                  loading={changePasswordMutation.isPending}
-                  variant="default"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Row 6: Bottom zone — account settings | notification settings + crystal */}
-        <div className={styles.row6Grid}>
+        <div className={styles.lowerSections}>
+          {/* Row 6: Bottom zone — account settings | notification settings + crystal */}
+          <div className={styles.row6Grid}>
           <section className={styles.colAccountSettings}>
             <h3 className={styles.sectionTitle}>Налаштування акаунту:</h3>
             <label className={styles.check}>
@@ -787,6 +748,93 @@ export default function Profile() {
             </label>
             <div className={styles.crystal} aria-hidden="true">
               <img src={crystalProfile} alt="" className={styles.crystalImg} />
+            </div>
+          </section>
+        </div>
+
+          {/* Password block */}
+          <section className={styles.row5Password}>
+            <h3 className={styles.sectionTitle}>Змінити пароль:</h3>
+            <div className={styles.passwordFields}>
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>Старий пароль :</span>
+                <span className={styles.fieldBox}>
+                  <input
+                    className={styles.input}
+                    type={showOldPass ? "text" : "password"}
+                    value={passwords.old}
+                    onChange={(e) => setPasswords((p) => ({ ...p, old: e.target.value }))}
+                    autoComplete="current-password"
+                    disabled={changePasswordMutation.isPending}
+                  />
+                  <button
+                    type="button"
+                    className={styles.eyeBtn}
+                    onClick={() => setShowOldPass(!showOldPass)}
+                    aria-label={showOldPass ? "Сховати пароль" : "Показати пароль"}
+                  >
+                    <img src={showOldPass ? turnedOffView : includedView} alt="" className={styles.eyeIcon} aria-hidden="true" />
+                  </button>
+                </span>
+              </label>
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>Новий пароль :</span>
+                <span className={styles.fieldBox}>
+                  <input
+                    className={styles.input}
+                    type={showNewPass ? "text" : "password"}
+                    value={passwords.new}
+                    onChange={(e) => setPasswords((p) => ({ ...p, new: e.target.value }))}
+                    autoComplete="new-password"
+                    disabled={changePasswordMutation.isPending}
+                  />
+                  <button
+                    type="button"
+                    className={styles.eyeBtn}
+                    onClick={() => setShowNewPass(!showNewPass)}
+                    aria-label={showNewPass ? "Сховати пароль" : "Показати пароль"}
+                  >
+                    <img src={showNewPass ? turnedOffView : includedView} alt="" className={styles.eyeIcon} aria-hidden="true" />
+                  </button>
+                </span>
+              </label>
+              <div className={styles.passwordConfirmWithSave}>
+                <label className={styles.field}>
+                  <span className={styles.fieldLabel}>Підтвердити пароль :</span>
+                  <span className={styles.fieldBox}>
+                    <input
+                      className={styles.input}
+                      type={showConfirmPass ? "text" : "password"}
+                      value={passwords.confirm}
+                      onChange={(e) => setPasswords((p) => ({ ...p, confirm: e.target.value }))}
+                      autoComplete="new-password"
+                      disabled={changePasswordMutation.isPending}
+                    />
+                    <button
+                      type="button"
+                      className={styles.eyeBtn}
+                      onClick={() => setShowConfirmPass(!showConfirmPass)}
+                      aria-label={showConfirmPass ? "Сховати пароль" : "Показати пароль"}
+                    >
+                      <img src={showConfirmPass ? turnedOffView : includedView} alt="" className={styles.eyeIcon} aria-hidden="true" />
+                    </button>
+                  </span>
+                </label>
+                <div className={styles.saveButtonWrap}>
+                  <SaveButton
+                    type="button"
+                    onClick={handlePasswordSubmit}
+                    disabled={
+                      changePasswordMutation.isPending ||
+                      !passwords.old ||
+                      !passwords.new ||
+                      !passwords.confirm
+                    }
+                    loading={changePasswordMutation.isPending}
+                    variant="default"
+                  />
+                </div>
+              </div>
             </div>
           </section>
         </div>
