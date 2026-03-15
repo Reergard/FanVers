@@ -151,6 +151,16 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
         style={{ "--ellipse-bg": `url(${ellipseBg})` } as React.CSSProperties}
       >
         <div className="bookCard__cover bookCard__cover--ad">
+          <span className="bookCard__badge-new-wrap">
+            <img
+              className="bookCard__badge-new"
+              src={newBadge}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              decoding="async"
+            />
+          </span>
           <img
             className="bookCard__cover-img"
             src={imageUrl}
@@ -159,13 +169,15 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
             decoding="async"
           />
           {book.adult_content && (
-            <img
-              className="bookCard__badge-18 bookCard__badge-18--ad"
-              src={badge18Large}
-              alt="18+"
-              loading="lazy"
-              decoding="async"
-            />
+            <span className="bookCard__badge-18-wrap">
+              <img
+                className="bookCard__badge-18"
+                src={badge18Large}
+                alt="18+"
+                loading="lazy"
+                decoding="async"
+              />
+            </span>
           )}
           <div className="bookCard__corner-a" aria-hidden="true">
             A

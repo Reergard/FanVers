@@ -140,8 +140,9 @@ export function AdvertisingBooks() {
 
 
 
-        {/* Карусель книг (з БД) */}
-        <div className={styles.carousel} ref={scrollerRef}>
+        {/* Карусель книг (з БД). carouselWrap — на мобільному виходить за padding Container на 100% ширини екрана */}
+        <div className={styles.carouselWrap}>
+          <div className={styles.carousel} ref={scrollerRef}>
           {books.map((b, idx) => (
             <div key={b.id} data-card={idx === 0 ? "1" : undefined}>
               <BookCard
@@ -157,12 +158,10 @@ export function AdvertisingBooks() {
               />
             </div>
           ))}
+          </div>
         </div>
 
-
-
-
-          {/* Навигация карусели*/}
+        {/* Навигация карусели */}
         <div className={styles.nav}>
           <button 
             className={styles.navBtn} 

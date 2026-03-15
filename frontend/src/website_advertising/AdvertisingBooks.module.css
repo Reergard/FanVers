@@ -26,6 +26,7 @@
   background: linear-gradient(90deg, rgba(0,210,255,.55), rgba(0,210,255,0));
 }
 
+/* Обгортка: на мобільному/планшеті компенсує padding Container, карусель на 100% ширини екрана */
 .carousel{
   /* сколько карточек видно за раз */
   --per-view: 5;
@@ -37,7 +38,8 @@
   overflow-x: auto;
   overflow-y: visible;
 
-  padding: 0 2px clamp(10px, 1.2vw, 16px);
+  /* padding-top: місце для бейджа NEW, що виходить за межі картки вгору */
+  padding: clamp(24px, 2.5vw, 36px) 2px clamp(10px, 1.2vw, 16px);
   max-width: 100%;
 
   scroll-snap-type: x mandatory;
@@ -158,6 +160,14 @@
 }
 
 
+/* Планшет 768–1024: Container має padding 24px */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .carouselWrap {
+    margin-inline: -24px;
+    width: calc(100% + 48px);
+  }
+}
+
 /* ===== Tablet/Mobile (до 1024): крупнее, но без "гигантов" ===== */
 @media (max-width: 1024px){
   .carousel{
@@ -189,8 +199,44 @@
   }
 }
 
+/* ===== Мобільна: відступи між картками + менші зовнішні відступи ===== */
+@media (max-width: 768px) {
+  .section {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  .head {
+    margin-bottom: 6px;
+  }
+
+  /* Карусель на 100% ширини: компенсуємо padding Container (481–767: 16px) */
+  .carouselWrap {
+    margin-inline: -16px;
+    width: calc(100% + 32px);
+  }
+
+  .carousel {
+    --gap: 10px;
+    /* padding-top: місце для бейджів NEW, 18+ тощо, що виходять за межі картки вгору */
+    padding: 24px 2px 4px;
+    scroll-padding-left: 4px;
+    scroll-padding-right: 4px;
+  }
+
+  .nav {
+    margin-top: 4px;
+  }
+}
+
 /* ===== Узкие телефоны ===== */
 @media (max-width: 480px){
+  /* Карусель: Container має padding-inline: 12px */
+  .carouselWrap {
+    margin-inline: -12px;
+    width: calc(100% + 24px);
+  }
+
   /* стрелки для телефонов: 61x10 */
   .navBtn img{
     width: 61px;
@@ -208,6 +254,11 @@
   }
 }
 
-
-
-
+/* ===== Дуже вузькі екрани ===== */
+@media (max-width: 360px) {
+  /* Container має padding-inline: 8px */
+  .carouselWrap {
+    margin-inline: -8px;
+    width: calc(100% + 16px);
+  }
+}

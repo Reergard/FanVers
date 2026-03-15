@@ -696,7 +696,7 @@
   width: var(--cover-w);
   margin: 0 auto;
   border-radius: 0 clamp(16px, calc(1.8 * var(--vwu)), 22px) clamp(16px, calc(1.8 * var(--vwu)), 22px) 0;
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
 }
 
@@ -714,16 +714,6 @@
 
 .bookCard--ad .bookCard__cover-img {
   aspect-ratio: 152 / 224;
-}
-
-.bookCard__badge-18--ad {
-  position: absolute;
-  top: clamp(8px, calc(0.9 * var(--vwu)), 12px);
-  right: clamp(8px, calc(0.9 * var(--vwu)), 12px);
-  width: clamp(22px, calc(2.4 * var(--vwu)), 28px);
-  height: auto;
-  pointer-events: none;
-  z-index: 3;
 }
 
 .bookCard--ad .bookCard__title--ad {
@@ -773,6 +763,41 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 6;
   min-height: calc(6 * 1.45em);
+}
+
+/* Мобільна: опис адаптивний по висоті — не займає місце при короткому тексті */
+@media (max-width: 768px) {
+  .bookCard--ad {
+    grid-template-rows: auto auto auto auto;
+    min-height: 0;
+    gap: 6px;
+    padding: 6px 6px 8px;
+  }
+
+  .bookCard--ad .bookCard__desc {
+    min-height: 0;
+    -webkit-line-clamp: 4;
+    padding-inline: 6px;
+  }
+
+  .bookCard--ad .bookCard__title--ad {
+    padding-inline: 6px;
+  }
+
+  .bookCard--ad .bookCard__title--ad::after {
+    margin: 4px auto 0;
+  }
+
+  .bookCard--ad .bookCard__actions {
+    padding-top: 4px;
+  }
+}
+
+/* Екрани < 393px: трохи менша обкладинка для карток реклами */
+@media (max-width: 392px) {
+  .bookCard--ad .bookCard__cover--ad {
+    --cover-w: clamp(108px, 9.8vw, 120px);
+  }
 }
 
 .bookCard--ad .bookCard__actions {
