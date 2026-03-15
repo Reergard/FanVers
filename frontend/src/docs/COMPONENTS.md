@@ -286,7 +286,8 @@
 - `users/UserTranslations.tsx` — власні переклади (default)
 - `catalog/AbandonedTranslations.tsx` — покинуті переклади (withTags)
 - `search/search.tsx` — пошук (withTags)
-- `main/MagicalGuide2.tsx` — Чарівний Гід (default)
+- `main/HomePage2.tsx` — НОВИНКИ на головній (default)
+- `main/HomePage3.tsx` — ОСТАННІ ОНОВЛЕННЯ, Чарівний Гід (default)
 - `bookmarks/BookmarksPage.tsx` — закладки (bookmark)
 - `website_advertising/AdvertisingBooks.tsx` — реклама на головній (ad)
 

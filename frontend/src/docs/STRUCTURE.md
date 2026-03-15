@@ -21,6 +21,7 @@ frontend/src/
 │   ├── endpoints.ts
 │   ├── http.ts
 │   ├── httpRaw.ts
+│   ├── mainApi.ts         # getBooksNews — новинки для головної (НОВИНКИ)
 │   ├── ratingApi.ts
 │   ├── searchApi.ts
 │   └── reviewsApi.ts
@@ -308,8 +309,9 @@ export function Base({ children }: Props) {
 **Файли:**
 - `http.ts` — axios з Authorization, 401-interceptor (refreshSessionForce → retry → doLogout)
 - `httpRaw.ts` — axios без інтерцепторів для refresh/logout (withCredentials)
-- `endpoints.ts` — URL API (login, register, auth-status, profile, add-balance, коментарі, рейтинги тощо)
+- `endpoints.ts` — URL API (login, register, auth-status, profile, add-balance, коментарі, рейтинги, booksNews тощо)
 - `catalogApi.ts` — API для каталогу книг (book, volumes, chapters)
+- `mainApi.ts` — getBooksNews() для блоку НОВИНКИ на головній (`GET /api/main/books-news/`)
 - `searchApi.ts` — API пошуку книг (`searchBooks`) для сторінки `/search`
 - `ratingApi.ts` — API рейтингів книги: fetchBookRatings(slug), submitRating(slug, type, value); нормалізація відповіді. Див. docs/RATINGS_FRONTEND.md.
 - `reviewsApi.ts` — API коментарів (книга/глава): fetch, post, delete, reaction, owner_like. Див. docs/COMMENTS_FRONTEND.md.
@@ -609,7 +611,9 @@ export function HomePage() {
 Стилі лише для цієї сторінки. Вони НЕ повинні впливати на інші сторінки.
 
 ### `main/HomePage1.tsx`, `HomePage2.tsx`, `HomePage3.tsx`
-Окремі секції головної сторінки (можуть бути винесені в окремі компоненти для кращої організації).
+Окремі секції головної сторінки:
+- **HomePage2** — блок «НОВИНКИ»: карусель нових книг з API (`mainApi.getBooksNews()` → `GET /api/main/books-news/`), рейтинги через `ratingApi.fetchBookRatings`, автоперемикання 9 с.
+- **HomePage3** — блок «ОСТАННІ ОНОВЛЕННЯ»: книги з недавніми оновленнями глав.
 
 ---
 
@@ -703,7 +707,7 @@ export function HeaderLogo() {
 - Коли сторінок стане багато — винести в `routes/AppRoutes.tsx`.
 
 8) **API**
-- `api/` — http.ts, httpRaw.ts, endpoints.ts, catalogApi.ts, searchApi.ts, ratingApi.ts, reviewsApi.ts.
+- `api/` — http.ts, httpRaw.ts, endpoints.ts, catalogApi.ts, mainApi.ts, searchApi.ts, ratingApi.ts, reviewsApi.ts.
 
 ---
 

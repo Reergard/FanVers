@@ -10,7 +10,7 @@ Vite + React + TypeScript
 
 2) Структура проекта и ответственность папок
 src/
-  api/            # axios (http.ts, httpRaw.ts), endpoints, catalogApi, ratingApi (рейтинги), reviewsApi (коментарі)
+  api/            # axios (http.ts, httpRaw.ts), endpoints, catalogApi, mainApi (новинки), ratingApi (рейтинги), reviewsApi (коментарі)
   app/            # общий layout приложения: Base.tsx + Base.module.css
   auth/           # авторизация: store, service, useAuth, bootstrap, token, refresh
   catalog/        # страница книги (/books/:slug), добавление главы (/books/:slug/add-chapter), страница главы (/books/:bookSlug/chapters/:chapterSlug), покинуті переклади (/abandoned), створення книги (/create-book), налаштування книги (/books/:slug/settings)

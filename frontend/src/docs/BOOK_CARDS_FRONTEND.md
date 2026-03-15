@@ -149,7 +149,7 @@ type Props = {
 | Власні переклади | `/my-translations` | default | `users/UserTranslations.tsx` |
 | Покинуті переклади | `/abandoned` | withTags | `catalog/AbandonedTranslations.tsx` |
 | Пошук | `/search` | withTags | `search/search.tsx` |
-| Чарівний Гід (секції 1 і 2) | через MagicalGuide | default | `main/MagicalGuide1.tsx`, `main/MagicalGuide2.tsx` |
+| Чарівний Гід (НОВИНКИ, ОСТАННІ ОНОВЛЕННЯ) | через MagicalGuide | default | `main/HomePage2.tsx`, `main/HomePage3.tsx` |
 | Закладки | `/bookmarks` | bookmark | `bookmarks/BookmarksPage.tsx` |
 | Реклама на головній | `/` (секція HomePage1) | ad | `website_advertising/AdvertisingBooks.tsx` |
 
