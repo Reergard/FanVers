@@ -7,7 +7,6 @@ logger = logging.getLogger(__name__)
 class BooksNewsSerializer(serializers.ModelSerializer):
     background_image = serializers.SerializerMethodField()
     cover_image = serializers.SerializerMethodField()
-    last_chapter_update = serializers.DateTimeField(read_only=True)
     chapters_count = serializers.SerializerMethodField()
     latest_chapter_title = serializers.SerializerMethodField()
     genres = serializers.SerializerMethodField()
@@ -20,7 +19,7 @@ class BooksNewsSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'image',
             'slug', 'background_image', 'cover_image',
             'created_at', 'book_type', 'adult_content',
-            'last_chapter_update', 'chapters_count', 'latest_chapter_title',
+            'chapters_count', 'latest_chapter_title',
             'genres', 'tags', 'fandoms'
         ]
 

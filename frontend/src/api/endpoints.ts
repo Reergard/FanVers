@@ -57,6 +57,9 @@ export const API = {
   // Website advertising (книги для реклами на головній)
   mainPageAds: "/api/website_advertising/advertisements/main_page_ads/",
 
+  // Main: новинки (НОВИНКИ) для головної сторінки
+  booksNews: "/api/main/books-news/",
+
   // Chat
   chat: {
     list: "/api/chat/",
