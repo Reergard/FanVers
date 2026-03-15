@@ -72,7 +72,7 @@ frontend/src/
 │   ├── styles/
 │   │   └── AddChapter.module.css
 │   └── ...
-├── BookCard/
+├── BookCard/              # Єдиний компонент карток книг (variant: default, withTags, bookmark, ad). Детально: docs/BOOK_CARDS_FRONTEND.md
 │   ├── BookCard.tsx
 │   └── BookCard.css
 ├── main/
@@ -110,7 +110,7 @@ frontend/src/
 │   └── assets/
 ├── website_advertising/
 │   ├── AdvertisingBooks.tsx
-│   └── BookAdCard/
+│   └── (BookCard використовується з variant=ad)
 ├── shared/
 │   ├── Container.tsx
 │   ├── Container.module.css
@@ -149,6 +149,7 @@ frontend/src/
 ├── docs/
 │   ├── ABANDONED_TRANSLATIONS_FRONTEND.md
 │   ├── ADD_CHAPTER_FLOW.md
+│   ├── BOOK_CARDS_FRONTEND.md
 │   ├── BOOK_CREATE_SETTINGS_FLOW.md
 │   ├── AUTHENTICATION_FRONTEND.md
 │   ├── USER_DATA_FLOW.md
@@ -578,7 +579,7 @@ export function AppRoutes() {
 
 ## `website_advertising/` — реклама книг
 
-**Що це:** AdvertisingBooks, BookAdCard — блоки реклами.
+**Що це:** AdvertisingBooks — блоки реклами (використовує BookCard variant=ad).
 
 ---
 
@@ -708,6 +709,7 @@ export function HeaderLogo() {
 
 ## Швидка перевірка «куди це класти?»
 
+- «Це **картка книги**?» → **завжди** `BookCard/BookCard.tsx` з потрібним `variant` (default, withTags, bookmark, ad). Інших компонентів карток книг немає.
 - «Це **сторінка**?» → фіча-папка (`main/`, `users/`, `catalog/`)
 - «Це **макет сайту**?» → `app/`
 - «Це дрібний повторюваний компонент/хук/утиліта?» → `shared/`

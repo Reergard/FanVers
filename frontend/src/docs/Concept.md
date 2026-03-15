@@ -17,7 +17,7 @@ src/
   chat/           # страница чата (/chat): список диалогов, окно сообщений, ws realtime
   main/           # страницы/фичи главной (HomePage.tsx + стили + локальные картинки)
   users/          # страницы/фичи пользователей (Profile.tsx, profileService, types)
-  website_advertising/  # реклама книг (AdvertisingBooks, BookAdCard)
+  website_advertising/  # реклама книг (AdvertisingBooks, BookCard variant=ad)
   shared/         # переиспользуемые "примитивы": Container, Icon, Modal, hooks, utils
   widgets/        # крупные блоки: header, footer (и дальше: sidebar, drawer и т.д.)
   assets/         # глобальные ассеты: icons, logos, backgrounds, fonts

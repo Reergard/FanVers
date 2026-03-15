@@ -1,17 +1,16 @@
 import styles from "./AdvertisingBooks.module.css";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Container } from "../shared/Container";
-import { BookAdCard } from "./BookAdCard/BookAdCard";
+import { BookCard } from "../BookCard/BookCard";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 import { getMainPageAds } from "../api/advertisingApi";
 import rightArrow from "../assets/backgrounds/right_arrow.svg";
 import leftArrow from "../assets/backgrounds/left_arrow.svg";
 import starIcon from "../assets/backgrounds/star_navigation_books.svg";
-import badge18 from "../assets/backgrounds/18+.svg";
 
-type BookAd = {
+/** Дані для картки реклами (передаються в BookCard variant=ad) */
+type AdBookItem = {
   id: string;
   slug?: string;
   title: string;
@@ -21,7 +20,6 @@ type BookAd = {
 };
 
 export function AdvertisingBooks() {
-  const navigate = useNavigate();
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [page, setPage] = useState(0);
   const [pagesCount, setPagesCount] = useState(1);
@@ -31,7 +29,7 @@ export function AdvertisingBooks() {
     queryFn: getMainPageAds,
   });
 
-  const books: BookAd[] = useMemo(() => {
+  const books: AdBookItem[] = useMemo(() => {
     return ads.map((ad) => {
       const b = ad.book_details;
       return {
@@ -146,15 +144,16 @@ export function AdvertisingBooks() {
         <div className={styles.carousel} ref={scrollerRef}>
           {books.map((b, idx) => (
             <div key={b.id} data-card={idx === 0 ? "1" : undefined}>
-              <BookAdCard
-                coverSrc={b.coverSrc}
-                title={b.title}
-                description={b.description}
-                isAdult={b.isAdult}
-                adultBadgeSrc={badge18}
-                onRead={() => {
-                  if (b.slug) navigate(`/books/${b.slug}`);
+              <BookCard
+                book={{
+                  id: Number(b.id),
+                  slug: b.slug,
+                  title: b.title,
+                  image: b.coverSrc,
+                  adult_content: b.isAdult,
                 }}
+                variant="ad"
+                description={b.description}
               />
             </div>
           ))}

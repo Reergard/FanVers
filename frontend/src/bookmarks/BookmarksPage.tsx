@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/useAuth";
 import { useAuthModal } from "../auth/AuthModalContext";
@@ -7,13 +7,11 @@ import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
 import { SortByNavigation } from "../navigation/SortByNavigation.tsx";
 import { Container } from "../shared/Container";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
-import { BookAdCard } from "../website_advertising/BookAdCard/BookAdCard";
+import { BookCard } from "../BookCard/BookCard";
 import { getUserBookmarks } from "./api";
 import { bookmarkKeys } from "./keys";
-import type { Bookmark as BookmarkType, BookmarkBook } from "./types";
+import type { Bookmark as BookmarkType } from "./types";
 import styles from "./BookmarksPage.module.css";
-import badge18 from "../assets/backgrounds/18+.svg";
-import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 import { Breadcrumb } from "../navigation/Breadcrumb";
 import { PageTitle } from "../navigation/PageTitle";
 import { FiltersSidebar } from "../navigation/FiltersSidebar";
@@ -41,25 +39,9 @@ function toTimestamp(value: string | null | undefined): number {
 }
 
 function BookmarkCard({ bookmark }: { bookmark: BookmarkType }) {
-  const navigate = useNavigate();
   const book = bookmark.book;
   const slug = book.slug;
-  const imageUrl = resolveBookCoverUrl(book.image);
-
-  const handleRead = () => {
-    if (slug) navigate(`/books/${slug}`);
-  };
-
-  const card = (
-    <BookAdCard
-      variant="bookmark"
-      coverSrc={imageUrl}
-      title={book.title || "Без назви"}
-      isAdult={book.adult_content === true}
-      adultBadgeSrc={badge18}
-      onRead={handleRead}
-    />
-  );
+  const card = <BookCard book={book} variant="bookmark" />;
 
   if (slug) {
     return (

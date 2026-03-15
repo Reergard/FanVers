@@ -19,7 +19,7 @@
 - Єдині стилі для всіх кнопок дій у проекті.
 
 **Місця використання:**
-- `website_advertising/BookAdCard/BookAdCard.tsx` — кнопка "Читати" на картці книги
+- `BookCard/BookCard.tsx` — кнопка "Читати" на картках (variant bookmark, ad, withTags)
 - `catalog/sections/BookChapters.tsx` — кнопка "Додати розділ" як `<ActionButton to={addChapterTo}>` (Link на `/books/:slug/add-chapter`), кнопки "Створити том", "Змінити порядок розділів"
 - `catalog/AddChapter.tsx` — кнопка сабміту форми «Додати розділ» (type="submit", loading={isSubmitting})
 - `catalog/sections/BookHero.tsx` — кнопка «Стати новим перекладачем»
@@ -262,63 +262,43 @@
 
 ---
 
-### `BookAdCard`
+### `BookCard` — **ЄДИНЕ ДЖЕРЕЛО** карток книг
 
-**Призначення:** Картка реклами книги з обкладинкою, заголовком, описом та кнопкою "Читати". Підтримує варіант `bookmark` для сторінки закладок.
+> **Важливо:** У проєкті використовується **лише один** компонент для карток книг — `BookCard`. Інших компонентів карток книг немає. Усі сторінки імпортують `BookCard` з `../BookCard/BookCard` і передають потрібний `variant`.
 
-**Особливості:**
-- Адаптивна ширина (`width: 100%` від обгортки каруселі)
-- Підтримка вікового рейтингу (18+ badge)
-- Декоративний еліпс на фоні через CSS-змінну (тільки для `variant="ad"`)
-- Використовує `ActionButton` для кнопки дії
-- `variant="bookmark"` — компактний дизайн: без еліпса, з іконкою закладки на обкладинці, outline-кнопка
-
-**Місця використання:**
-- `website_advertising/AdvertisingBooks.tsx` — картки книг у каруселі реклами
-- `bookmarks/BookmarksPage.tsx` — картки закладок (`variant="bookmark"`)
-
-**Приклад використання:**
-```tsx
-<BookAdCard
-  coverSrc={coverPlaceholder}
-  title="ХАОТИЧНИЙ БОГ МЕЧА"
-  description="Опис книги..."
-  isAdult={true}
-  adultBadgeSrc={badge18}
-  onRead={() => console.log("READ")}
-/>
-
-<BookAdCard
-  variant="bookmark"
-  coverSrc={coverUrl}
-  title="Назва книги"
-  isAdult={false}
-  adultBadgeSrc={badge18}
-  onRead={() => navigate(`/books/${slug}`)}
-/>
-```
-
-**Майбутнє використання:** Може використовуватися в каталозі книг, на сторінках авторів, в рекомендаціях тощо.
-
----
-
-### `BookCard`
-
-**Призначення:** Переиспользовувана картка книги/перекладу з обкладинкою, назвою, 18+ бейджем, декоративною літерою та базовим блоком метаданих.
+**Призначення:** Єдиний компонент картки книги для всього сайту — каталог, закладки, реклама, пошук, покинуті переклади, власні переклади, Чарівний Гід.
 
 **Файли:**
 - `BookCard/BookCard.tsx`
 - `BookCard/BookCard.css`
 
 **Особливості:**
-- Працює з типом книги із `api/catalogApi.ts` (slug, title, image, adult_content, created_at, last_updated, daily views/income).
-- Якщо є `slug` — картка клікабельна (`Link` на `/books/:slug`), інакше рендериться неклікабельний варіант.
+- Працює з типом книги із `api/catalogApi.ts` або `bookmarks/types.ts` (slug, title, image, adult_content, created_at, last_updated, daily views/income).
+- `variant="default"` — дати, статистика (Catalog, UserTranslations).
+- `variant="withTags"` — фендоми, теги, жанри, статус, кнопка (Abandoned, Search).
+- `variant="bookmark"` — Закладки: компактний дизайн, іконка закладки на обкладинці, без еліпса.
+- `variant="ad"` — Реклама на головній: еліпс на фоні, опис, vertical line на обкладинці.
+- Якщо є `slug` — картка клікабельна (`Link` на `/books/:slug`), інакше рендериться неклікабельний варіант (для default/withTags).
 - Зображення обкладинки бере з `book.image`; якщо порожнє — використовує локальний placeholder.
-- На сторінці покинутих перекладів базовий блок метаданих цієї картки приховується локальними стилями сторінки, а поверх додається власний блок статусу/тегів.
 
 **Місця використання:**
-- `users/UserTranslations.tsx`
-- `catalog/AbandonedTranslations.tsx`
+- `catalog/Catalog.tsx` — каталог (default)
+- `users/UserTranslations.tsx` — власні переклади (default)
+- `catalog/AbandonedTranslations.tsx` — покинуті переклади (withTags)
+- `search/search.tsx` — пошук (withTags)
+- `main/MagicalGuide2.tsx` — Чарівний Гід (default)
+- `bookmarks/BookmarksPage.tsx` — закладки (bookmark)
+- `website_advertising/AdvertisingBooks.tsx` — реклама на головній (ad)
+
+**Приклад використання:**
+```tsx
+<BookCard book={book} />
+<BookCard book={book} variant="withTags" />
+<BookCard book={book} variant="bookmark" />
+<BookCard book={book} variant="ad" description="Опис книги..." />
+```
+
+**Повна документація:** `docs/BOOK_CARDS_FRONTEND.md`
 
 ---
 

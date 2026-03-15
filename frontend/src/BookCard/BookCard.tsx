@@ -1,10 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { Book, UserTranslationBook } from "../api/catalogApi";
+import type { BookmarkBook } from "../bookmarks/types";
 import badge18 from "../assets/backgrounds/18+small.svg";
+import badge18Large from "../assets/backgrounds/18+.svg";
+import ellipseBg from "../assets/backgrounds/Ellipse_for_book.svg";
 import newBadge from "../assets/icons/NEW.svg";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
+import { Icon } from "../shared/Icon";
 import { Modal } from "../shared/Modal/Modal";
 import "./BookCard.css";
 
@@ -33,18 +37,26 @@ function getTagNames(items: { name: string }[] | undefined): string[] {
   return items.map((item) => `#${item.name}`);
 }
 
+/** Мінімальний набір полів для картки (Book, UserTranslationBook, BookmarkBook) */
+export type BookCardBook = Book | UserTranslationBook | BookmarkBook;
+
 type Props = {
-  book: Book | UserTranslationBook;
-  /** default: дати (Catalog, UserTranslations). withTags: фендоми, теги, жанри, статус, кнопка (Abandoned, Search) */
-  variant?: "default" | "withTags";
+  book: BookCardBook;
+  /** default: дати (Catalog, UserTranslations). withTags: фендоми, теги, жанри, статус, кнопка (Abandoned, Search). bookmark: Закладки. ad: Реклама (еліпс, опис) */
+  variant?: "default" | "withTags" | "bookmark" | "ad";
+  /** Для variant=ad: опис книги */
+  description?: string;
 };
 
 type ExpandModal = "fandoms" | "tags" | "genres" | null;
 
-export function BookCard({ book, variant = "default" }: Props) {
+export function BookCard({ book, variant = "default", description = "" }: Props) {
+  const navigate = useNavigate();
   const slug = book.slug;
   const imageUrl = resolveBookCoverUrl(book.image);
   const withTags = variant === "withTags";
+  const isBookmark = variant === "bookmark";
+  const isAd = variant === "ad";
   const [expandModal, setExpandModal] = useState<ExpandModal>(null);
 
   const userBook = book as UserTranslationBook;
@@ -64,6 +76,119 @@ export function BookCard({ book, variant = "default" }: Props) {
     e.stopPropagation();
     setExpandModal(type);
   };
+
+  /* variant=bookmark: Закладки — компактний дизайн з іконкою закладки */
+  if (isBookmark) {
+    const handleRead = () => {
+      if (slug) navigate(`/books/${slug}`);
+    };
+    return (
+      <article
+        className="bookCard bookCard--bookmark"
+        data-variant="bookmark"
+      >
+        <div className="bookCard__cover bookCard__cover--bookmark">
+          <span className="bookCard__badge-new-wrap">
+            <img
+              className="bookCard__badge-new"
+              src={newBadge}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              decoding="async"
+            />
+          </span>
+          <img
+            className="bookCard__cover-img"
+            src={imageUrl}
+            alt={book.title || "Обкладинка"}
+            loading="lazy"
+            decoding="async"
+          />
+          {book.adult_content && (
+            <span className="bookCard__badge-18-wrap bookCard__badge-18-wrap--bookmark">
+              <img
+                className="bookCard__badge-18"
+                src={badge18Large}
+                alt="18+"
+                loading="lazy"
+                decoding="async"
+              />
+            </span>
+          )}
+          <span className="bookCard__bookmark-icon" aria-hidden>
+            <Icon name="zakladki" />
+          </span>
+          <div className="bookCard__corner-a" aria-hidden="true">
+            A
+          </div>
+        </div>
+        <h3 className="bookCard__title bookCard__title--bookmark">
+          {book.title || "Без назви"}
+        </h3>
+        <div className="bookCard__actions">
+          <ActionButton
+            variant="default"
+            onClick={handleRead}
+            ariaLabel={`Читати: ${book.title}`}
+          >
+            читати
+          </ActionButton>
+        </div>
+      </article>
+    );
+  }
+
+  /* variant=ad: реклама на головній — еліпс, опис, vertical line на обкладинці */
+  if (isAd) {
+    const handleRead = () => {
+      if (slug) navigate(`/books/${slug}`);
+    };
+    return (
+      <article
+        className="bookCard bookCard--ad"
+        data-variant="ad"
+        style={{ "--ellipse-bg": `url(${ellipseBg})` } as React.CSSProperties}
+      >
+        <div className="bookCard__cover bookCard__cover--ad">
+          <img
+            className="bookCard__cover-img"
+            src={imageUrl}
+            alt={book.title || "Обкладинка"}
+            loading="lazy"
+            decoding="async"
+          />
+          {book.adult_content && (
+            <img
+              className="bookCard__badge-18 bookCard__badge-18--ad"
+              src={badge18Large}
+              alt="18+"
+              loading="lazy"
+              decoding="async"
+            />
+          )}
+          <div className="bookCard__corner-a" aria-hidden="true">
+            A
+          </div>
+        </div>
+        <h3 className="bookCard__title bookCard__title--ad">
+          {book.title || "Без назви"}
+        </h3>
+        {description && (
+          <p className="bookCard__desc">{description}</p>
+        )}
+        <div className="bookCard__actions">
+          <ActionButton
+            variant="default"
+            onClick={handleRead}
+            ariaLabel={`Читати: ${book.title}`}
+          >
+            читати
+          </ActionButton>
+        </div>
+      </article>
+    );
+  }
 
   const cardContent = (
     <article
