@@ -149,7 +149,7 @@ export function MagicalGuide2() {
 
   return (
     <section className="mg2-section" aria-label="Магічний гід">
-      <SectionLineTitle text="Рекомендації" className="mg2-sectionLineTitle" />
+      <SectionLineTitle text="ОСТАННІ ОНОВЛЕННЯ" className="mg2-sectionLineTitle" />
 
       <div className="mg2-filters" role="tablist" aria-label="Фільтри рейтингу">
         {FILTER_LABELS.map((label) => (

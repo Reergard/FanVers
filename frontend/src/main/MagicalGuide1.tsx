@@ -142,7 +142,7 @@ export function MagicalGuide1() {
 
   return (
     <section className="mg2-section" aria-label="Магічний гід">
-      <SectionLineTitle text="РЕКЛАМА" className="mg2-sectionLineTitle" />
+      <SectionLineTitle text="НОВИНКИ" className="mg2-sectionLineTitle" />
 
       <div className="mg2-grid">
         {visibleCards.map((item) => (

@@ -2,6 +2,7 @@ import styles from "./AdvertisingBooks.module.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Container } from "../shared/Container";
+import { SectionLineTitle } from "../navigation/SectionLineTitle";
 import { BookCard } from "../BookCard/BookCard";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 import { getMainPageAds } from "../api/advertisingApi";
@@ -132,13 +133,7 @@ export function AdvertisingBooks() {
     <section className={styles.section} aria-label="Реклама">
       <Container>
 
-        {/* Заголовок с линией */}
-        <div className={styles.head}>
-          <div className={styles.label}>Реклама</div>
-          <div className={styles.line} />
-        </div>
-
-
+        <SectionLineTitle text="Реклама" className={styles.sectionTitle} />
 
         {/* Карусель книг (з БД). carouselWrap — на мобільному виходить за padding Container на 100% ширини екрана */}
         <div className={styles.carouselWrap}>

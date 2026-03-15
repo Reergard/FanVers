@@ -1,6 +1,7 @@
 import styles from "./HomePage.module.css";
 import { Container } from "../shared/Container";
 import { PageTitle } from "../navigation/PageTitle";
+import { AdvertisingBooks } from "../website_advertising/AdvertisingBooks";
 import MagicalGuide1 from "./MagicalGuide1";
 import MagicalGuide2 from "./MagicalGuide2";
 
@@ -10,6 +11,7 @@ export function MagicalGuide() {
       <Container>
         <PageTitle>Чарівний гід</PageTitle>
         <div className={styles.homepage}>
+          <AdvertisingBooks />
           <MagicalGuide1 />
           <MagicalGuide2 />
         </div>
