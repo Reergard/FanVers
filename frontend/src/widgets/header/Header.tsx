@@ -2,11 +2,13 @@ import styles from "./Header.module.css";
 import { Container } from "../../shared/Container";
 import { Icon } from "../../shared/Icon";
 import { StarSvg } from "../../shared/StarSvg/StarSvg";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { FrameLink } from "../../shared/FrameLink/FrameLink";
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import logo from "../../assets/logos/logo.png";
+import mobileHomeBg from "../../assets/backgrounds/mobile_home_bg.svg";
+import mobileHeaderBg from "../../assets/backgrounds/mobile_header_bg.svg";
 import { UserMenuOverlay } from "./UserMenuOverlay/UserMenuOverlay";
 import { USER_MENU } from "../../shared/menu/menuData";
 import { useMedia } from "../../shared/hooks/useMedia";
@@ -109,6 +111,8 @@ const SearchIcon = ({ className }: { className?: string }) => {
 };
 
 export function Header() {
+  const { pathname } = useLocation();
+  const isHome = pathname === "/";
   const { isAuthenticated, username, balance } = useAuth();
   const { state: chatState, actions: chatActions } = useChat();
   const [searchParams] = useSearchParams();
@@ -214,8 +218,26 @@ export function Header() {
 
   const menuId = "user-menu";
 
+  const headerClass = [
+    styles.header,
+    isHome && isMobile ? styles.headerHome : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <header className={styles.header}>
+    <header className={headerClass}>
+      {/* Слой 2 и 3: тучки и blur — вне .top, чтобы не зависеть от padding Container/topInner */}
+      {isMobile && (
+        <>
+          <div
+            className={styles.heroClouds}
+            style={{ backgroundImage: `url(${mobileHeaderBg})` }}
+            aria-hidden="true"
+          />
+          <div className={styles.heroBlurRect} aria-hidden="true" />
+        </>
+      )}
       {/* TOP */}
       <div className={styles.top}>
         <Container className={styles.topInner}>
@@ -299,11 +321,13 @@ export function Header() {
             </div>
           </div>
 
-          {/* CENTER: Logo */}
+          {/* CENTER: Logo (скрыт на главной mobile — лого в hero zone) */}
           <div className={styles.center}>
-            <Link to="/" className={styles.logo} aria-label="FanVers">
-              <img src={logo} alt="FanVers" className={styles.logoImg} />
-            </Link>
+            {!(isHome && isMobile) && (
+              <Link to="/" className={styles.logo} aria-label="FanVers">
+                <img src={logo} alt="FanVers" className={styles.logoImg} />
+              </Link>
+            )}
           </div>
 
           {/* ===== Desktop RIGHT: bell/mail + user dropdown ===== */}
@@ -385,6 +409,25 @@ export function Header() {
           </div>
         </Container>
       </div>
+
+      {/* Hero — только на главной в mobile/tablet. Слои: 1) книга, 2) тучки, 3) blur-прямоугольник, 4) top + лого + nav */}
+      {isHome && isMobile && (
+        <>
+          {/* Слой 1 (нижний): книга */}
+          <div className={styles.heroBookZone} aria-hidden="true">
+            <div
+              className={styles.heroBook}
+              style={{ backgroundImage: `url(${mobileHomeBg})` }}
+            />
+          </div>
+          {/* Слой 3: лого поверх тучок */}
+          <div className={styles.heroLogoZone} aria-hidden="true">
+            <Link to="/" className={styles.heroLogo} aria-label="FanVers">
+              <img src={logo} alt="FanVers" className={styles.heroLogoImg} />
+            </Link>
+          </div>
+        </>
+      )}
 
       {/* NAV */}
       <nav className={styles.nav} aria-label="Навігація">

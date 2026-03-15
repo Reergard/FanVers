@@ -24,6 +24,11 @@
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 
+  /* Вертикальный свайп — скролл страницы, горизонтальный — карусель (исправляет "подъём" при скролле на мобильном) */
+  touch-action: pan-x;
+  /* Ограничиваем overscroll только каруселью, не передаём родителю */
+  overscroll-behavior-x: contain;
+
   /* ПРОФИ: скрываем полосу скролла */
   scrollbar-width: none;          /* Firefox */
   -ms-overflow-style: none;       /* IE/Edge legacy */
