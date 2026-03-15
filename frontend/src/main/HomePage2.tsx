@@ -18,7 +18,7 @@ import leftArrow from "../assets/backgrounds/left_arrow.svg";
 import rightArrow from "../assets/backgrounds/right_arrow.svg";
 
 const BOOKS_NEWS_STALE_MS = 5 * 60 * 1000;
-const AUTOPLAY_INTERVAL_MS = 6000;
+const AUTOPLAY_INTERVAL_MS = 9000;
 
 /** Маппінг BookNewsItem → BookCardBook для BookCard. */
 function toBookCardBook(book: BookNewsItem): BookCardBook {

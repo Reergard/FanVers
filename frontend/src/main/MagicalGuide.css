@@ -79,6 +79,7 @@
 
 .mg2-description {
   width: clamp(126px, 9.5vw, 158px);
+  max-width: 100%;
   margin: 0 0 clamp(8px, 1vw, 12px);
   padding-top: clamp(6px, 0.7vw, 10px);
   border-top: 1px solid rgba(5, 180, 199, 0.33);
@@ -87,6 +88,13 @@
   font-size: clamp(11px, 0.82vw, 13px);
   line-height: 1.25;
   text-align: center;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
 }
 
 .mg2-readBtn {
@@ -209,11 +217,14 @@
 
   .mg2-description {
     width: 248px;
+    max-width: 100%;
     min-height: 113px;
     margin: 0 0 14px;
     padding-top: 8px;
     font-size: 14px;
     line-height: 1.25;
+    -webkit-line-clamp: 6;
+    line-clamp: 6;
   }
 
   .mg2-readBtn {
@@ -440,12 +451,22 @@
 
 .mg2-mobileDescription {
   width: min(100%, 350px);
+  max-width: 100%;
   margin: 0 auto;
+  padding: 0 4px;
+  box-sizing: border-box;
   text-align: left;
   line-height: 1.45;
   font-family: "BadScript", cursive;
   font-size: clamp(1.05rem, 3.2vw, 1.25rem);
   color: rgba(5, 180, 199, 0.9);
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
 }
 
 .mg2-placeholder {
