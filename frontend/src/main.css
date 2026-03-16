@@ -92,17 +92,25 @@
 }
 
 html {
-  overflow-x: hidden; /* предотвращаем горизонтальный скролл */
+  height: 100%;
+  overflow: hidden;
+  overflow-x: hidden;
 }
 
 body {
+  height: 100%;
   margin: 0;
   color: var(--text);
-  background: #020a0b; /* простой fallback */
-  overflow-x: hidden; /* предотвращаем автозум на мобильных */
+  background: #020a0b;
+  overflow: hidden;
   font-family: "RobotoCondensedLightItalic", "Inter", sans-serif;
   font-weight: 300;
   font-style: italic;
+}
+
+#root {
+  height: 100%;
+  overflow: hidden;
 }
 
 /* Скрываем нативную полосу прокрутки, но оставляем нативный скролл */

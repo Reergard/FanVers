@@ -1,36 +1,60 @@
 .app {
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    color: rgba(255,255,255,.92);
-    overflow-x: hidden; /* предотвращаем горизонтальный скролл */
-    width: 100%;
-  }
-  .bg {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background: #050D11;
-  }
+  height: 100dvh;
+  height: 100svh;
+  min-height: 100dvh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  color: rgba(255,255,255,.92);
+
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.app::-webkit-scrollbar {
+  display: none;
+}
+
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: #050D11;
+  pointer-events: none;
+}
+
+.main {
+  flex: 1 0 auto;
+  min-width: 0;
+  padding-block: 24px;
+}
+
+.mainHome {
+  padding-block: 11px;
+}
+
+@media (min-width: 2560px) and (min-height: 1400px) {
   .main {
-    flex: 1;
-    padding-block: 24px;
+    padding-block: 80px;
+    min-height: auto;
+    display: grid;
+    align-content: start;
+    gap: 40px;
+    line-height: 1.6;
   }
 
-  /* ТОЛЬКО очень большие экраны (4K) */
-  @media (min-width: 2560px) and (min-height: 1400px) {
-    .main {
-      padding-block: 80px;
-      min-height: auto;        
-      display: grid;
-      align-content: start;      /* не центрируем вертикально */
-      gap: 40px;
-      line-height: 1.6;
-    }
-  
-    .app {
-      min-height: auto;          /* убираем 100vh */
-    }
+  .mainHome {
+    padding-block: 11px;
   }
-  
+
+  .app {
+    min-height: auto;
+    height: auto;
+  }
+}

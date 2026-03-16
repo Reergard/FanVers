@@ -81,7 +81,7 @@ export default function App() {
   // Не рендерим Routes до завершения bootstrap — избегаем мигания "Увійдіть" при F5
   if (!bootstrapDone) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.8)" }}>
+      <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.8)" }}>
         Завантаження…
       </div>
     );

@@ -2,7 +2,13 @@
   width: 100%;
   min-height: 60vh;
   display: block;
+}
 
+/* Главная: убираем нижний отступ у заголовков секций (Реклама, Новиницы, Останні оновлення).
+   Причина: margin-bottom у SectionLineTitle и mg2-sectionLineTitle создавал лишний зазор. */
+.page :global([class*="sectionTitle"]),
+.page :global(.mg2-sectionLineTitle) {
+  margin-bottom: 0;
 }
 
 .homepage {

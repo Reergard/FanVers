@@ -1,3 +1,12 @@
+/* Обёртка для hero-слоёв: прибиты к краям, без padding/margin */
+.headerWrap {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+
 .header {
   position: relative;
   width: 100%;
@@ -14,11 +23,11 @@
   min-height: 0;
 }
 
+/* На главной: навигация заезжает на картинку книги (только главная, остальные страницы без изменений) */
 .headerHome .nav {
   position: relative;
   z-index: 2;
-  margin-top: 0;
-  padding-top: 21px;
+  margin-top: -21px;
 }
 
 /* ===== TOP ===== */
@@ -401,7 +410,6 @@
 /* ===== NAV ===== */
 .nav {
   margin-top: 0px;
-  padding-top: 21px;
 }
 
 .navInner {

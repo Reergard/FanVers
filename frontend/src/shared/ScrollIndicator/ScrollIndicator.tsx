@@ -4,6 +4,11 @@ function clamp01(v: number) {
   return Math.max(0, Math.min(1, v));
 }
 
+/** Скролл-контейнер: .app с data-scroll-container (скролл не на window, а внутри приложения) */
+function getScrollContainer(): HTMLElement | null {
+  return document.querySelector("[data-scroll-container]");
+}
+
 export function ScrollIndicator() {
   useEffect(() => {
     const root = document.documentElement;
@@ -27,21 +32,14 @@ export function ScrollIndicator() {
       }, ACTIVE_MS);
     };
 
-    const getViewportHeight = () => window.visualViewport?.height ?? window.innerHeight;
-
-    const getDocumentHeight = () => {
-      const body = document.body;
-      return Math.max(root.scrollHeight, body?.scrollHeight ?? 0);
-    };
-
-    const getScrollTop = () => window.scrollY ?? root.scrollTop ?? document.body?.scrollTop ?? 0;
-
     const update = () => {
       rafId = 0;
+      const el = getScrollContainer();
+      if (!el) return;
 
-      const vh = getViewportHeight();
-      const docH = getDocumentHeight();
-      const scrollTop = getScrollTop();
+      const vh = el.clientHeight;
+      const docH = el.scrollHeight;
+      const scrollTop = el.scrollTop;
       const gap = getGapPx();
 
       const visible = docH > vh + 1 ? 1 : 0;
@@ -71,43 +69,39 @@ export function ScrollIndicator() {
       schedule();
     };
 
-    const onResize = () => {
-      schedule();
-    };
-
+    const onResize = () => schedule();
     const onStart = () => {
       setActive();
       schedule();
     };
 
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const el = getScrollContainer();
+    if (!el) return;
+
+    el.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
-    window.addEventListener("wheel", onStart, { passive: true });
-    window.addEventListener("touchstart", onStart, { passive: true });
-    window.addEventListener("pointerdown", onStart, { passive: true });
+    el.addEventListener("wheel", onStart, { passive: true });
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("pointerdown", onStart, { passive: true });
 
     const vv = window.visualViewport;
     vv?.addEventListener("resize", onResize);
     vv?.addEventListener("scroll", onResize);
 
-    const ro =
-      "ResizeObserver" in window
-        ? new ResizeObserver(() => schedule())
-        : null;
-    ro?.observe(document.body);
+    const ro = "ResizeObserver" in window ? new ResizeObserver(() => schedule()) : null;
+    ro?.observe(el);
 
-    // Шрифты могут менять метрики и высоту документа после загрузки
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (document as any).fonts?.ready?.then?.(() => schedule());
 
     schedule();
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      el.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
-      window.removeEventListener("wheel", onStart);
-      window.removeEventListener("touchstart", onStart);
-      window.removeEventListener("pointerdown", onStart);
+      el.removeEventListener("wheel", onStart);
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("pointerdown", onStart);
       vv?.removeEventListener("resize", onResize);
       vv?.removeEventListener("scroll", onResize);
       ro?.disconnect();

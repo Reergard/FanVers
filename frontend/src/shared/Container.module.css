@@ -4,44 +4,27 @@
   padding-inline: clamp(8px, calc(2 * var(--vwu)), 28px);
 }
 
-
-/* 4K */
-@media (min-width: 2560px) and (min-height: 1400px) {
-  .content {
-    max-width: 1840px;
-  }
-}
-
-/* Large desktop */
-@media (min-width: 1920px) {
-  .content {
-    max-width: 1680px;
-  }
-}
-
-
-/* ===== TABLET & MOBILE (до 1024px) ===== */
+/* ===== TABLET & MOBILE ===== */
 @media (max-width: 1024px) {
   .container {
     padding-inline: 16px;
   }
 }
 
-/* ===== TABLET (768-1024): больше воздуха ===== */
+/* ===== TABLET ===== */
 @media (min-width: 768px) and (max-width: 1024px) {
   .container {
     padding-inline: 24px;
   }
 }
 
-/* ===== MOBILE (до 480px) ===== */
+/* ===== MOBILE ===== */
 @media (max-width: 480px) {
   .container {
     padding-inline: 12px;
   }
 }
 
-/* ===== MOBILE SMALL (до 360px) ===== */
 @media (max-width: 360px) {
   .container {
     padding-inline: 8px;
@@ -61,4 +44,3 @@
     max-width: 1680px;
   }
 }
-  
