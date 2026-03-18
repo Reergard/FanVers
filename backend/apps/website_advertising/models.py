@@ -1,6 +1,5 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.utils import timezone
 from apps.users.models import User
 from apps.catalog.models import Book
 import logging
@@ -29,6 +28,11 @@ class Advertisement(models.Model):
         ordering = ['-created_at']
         verbose_name = 'Реклама'
         verbose_name_plural = 'Реклами'
+        indexes = [
+            models.Index(fields=['book', 'location', 'start_date', 'end_date']),
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['location', 'start_date', 'end_date']),
+        ]
 
     def __str__(self):
         return f'Реклама для {self.book.title} від {self.user.username}'

@@ -6,6 +6,32 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+class AdvertisementOrderItemSerializer(serializers.Serializer):
+    """Один елемент замовлення реклами."""
+    book = serializers.IntegerField()
+    location = serializers.ChoiceField(choices=Advertisement.LOCATION_CHOICES)
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+
+
+class AdvertisementOrderSerializer(serializers.Serializer):
+    """Заказ реклами — масив позицій для атомарного створення."""
+    items = AdvertisementOrderItemSerializer(many=True)
+
+    def validate(self, data):
+        items = data["items"]
+        if not items:
+            raise serializers.ValidationError("Потрібно хоча б одне розміщення")
+
+        book_ids = {item["book"] for item in items}
+        if len(book_ids) != 1:
+            raise serializers.ValidationError(
+                "Усі позиції замовлення мають бути для однієї книги"
+            )
+        return data
+
+
 class AdvertisementSerializer(serializers.ModelSerializer):
     book_details = BookReaderSerializer(source='book', read_only=True)
     user_details = CreateUserSerializer(source='user', read_only=True)

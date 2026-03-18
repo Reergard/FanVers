@@ -54,8 +54,12 @@ export const API = {
   // Search
   bookSearch: "/api/search/book-search/",
 
-  // Website advertising (книги для реклами на головній)
+  // Website advertising
   mainPageAds: "/api/website_advertising/advertisements/main_page_ads/",
+  advertisingList: "/api/website_advertising/advertisements/",
+  advertisingUserAds: "/api/website_advertising/advertisements/user_advertisements/",
+  advertisingSubmitOrder: "/api/website_advertising/advertisements/submit_order/",
+  advertisingBookAds: "/api/website_advertising/advertisements/book_advertisements/",
 
   // Main: новинки (НОВИНКИ) для головної сторінки
   booksNews: "/api/main/books-news/",
