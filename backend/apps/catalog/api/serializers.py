@@ -83,7 +83,7 @@ class ChapterSerializer(serializers.ModelSerializer):
         representation['order'] = instance.order
         representation['price'] = float(instance.price) if instance.price else 1.00
         representation['slug'] = instance.slug
-        
+
         # Перевіряємо існування файлу
         if instance.file:
             try:
@@ -92,14 +92,9 @@ class ChapterSerializer(serializers.ModelSerializer):
             except Exception as e:
                 logger.error(f"Помилка перевірки існування файлу: {str(e)}")
                 representation['file'] = None
-                
-        # Додаємо контент
-        content = instance.get_html_content()
-        if content:
-            representation['content'] = content
-        else:
-            representation['content'] = None
-            
+
+        # Контент глави не включаємо в список — він видається тільки через chapter_detail()
+        # з перевіркою download_permission та покупки платної глави.
         return representation
 
     def validate(self, data):

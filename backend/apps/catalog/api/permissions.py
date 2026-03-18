@@ -22,38 +22,58 @@ class IsNotBookOwner(permissions.BasePermission):
 def check_book_access_permission(user, book, permission_type):
     """
     Перевіряє права доступу користувача до книги
-    
+
     Args:
         user: Користувач, який намагається виконати дію
         book: Книга, до якої намагається отримати доступ
         permission_type: Тип дозволу ('view', 'comment_book', 'comment_chapter', 'download', 'rate')
-    
+
     Returns:
         tuple: (is_allowed, error_message)
     """
-    if not user or not user.is_authenticated:
-        return False, "Необхідна авторизація"
-    
     # Власник/творець завжди має доступ
     if is_book_owner_or_creator(user, book):
         return True, None
-    
-    # Отримуємо налаштування доступу
+
     permission_field = f"{permission_type}_permission"
     permission_value = getattr(book, permission_field, 'all')
-    
+
+    if permission_value == 'all':
+        # view + all → доступ для всіх (включаючи неавторизованих)
+        if permission_type == 'view':
+            return True, None
+        # comment_book, comment_chapter, download, rate + all → тільки авторизовані
+        if not user or not user.is_authenticated:
+            return False, "Необхідна авторизація"
+        return True, None
+
     if permission_value == 'none':
         return False, "Доступ заборонено власником книги"
-    
-    if permission_value == 'bookmarked':
-        # Перевіряємо, чи є книга в закладках користувача
-        has_bookmark = Bookmark.objects.filter(
-            user=user, 
-            book=book
-        ).exists()
-        
-        if not has_bookmark:
-            return False, "Доступ тільки для користувачів, у яких книга в закладках"
-    
-    # permission_value == 'all'
+
+    # bookmarked — потрібна авторизація
+    if not user or not user.is_authenticated:
+        return False, "Необхідна авторизація"
+
+    has_bookmark = Bookmark.objects.filter(
+        user=user,
+        book=book
+    ).exists()
+
+    if not has_bookmark:
+        return False, "Доступ тільки для користувачів, у яких книга в закладках"
+
     return True, None
+
+
+def require_book_view_access(user, book):
+    """
+    Перевірка view_permission. Повертає Response(403) при забороні, інакше None.
+    Використовується в BookInfoView та BookReaderViewSet.retrieve.
+    """
+    from rest_framework.response import Response
+    from rest_framework import status
+
+    is_allowed, error_message = check_book_access_permission(user, book, 'view')
+    if not is_allowed:
+        return Response({'detail': error_message}, status=status.HTTP_403_FORBIDDEN)
+    return None

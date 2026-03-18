@@ -1,4 +1,5 @@
 import { http } from "./http";
+import type { BookAccessRights, PermissionLevel } from "../catalog/settings/accessRights.types";
 
 const CATALOG = "/api/catalog";
 
@@ -66,7 +67,15 @@ export interface Book {
   ratingValue?: number | null;
   ratingCount?: number | null;
   thankAuthorCoins?: number | null;
+  /** Права доступу (з books/info/) */
+  view_permission?: "all" | "bookmarked" | "none";
+  comment_book_permission?: "all" | "bookmarked" | "none";
+  comment_chapter_permission?: "all" | "bookmarked" | "none";
+  download_permission?: "all" | "bookmarked" | "none";
+  rate_permission?: PermissionLevel;
 }
+
+export type { BookAccessRights };
 
 /** Книга з user-translations API (з додатковою статистикою) */
 export interface UserTranslationBook extends Book {
@@ -259,7 +268,17 @@ function normalizeBook(raw: Record<string, unknown>): Book {
       raw.bookmark_id != null && Number.isFinite(Number(raw.bookmark_id))
         ? Number(raw.bookmark_id)
         : null,
+    view_permission: toPermissionLevel(raw.view_permission),
+    comment_book_permission: toPermissionLevel(raw.comment_book_permission),
+    comment_chapter_permission: toPermissionLevel(raw.comment_chapter_permission),
+    download_permission: toPermissionLevel(raw.download_permission),
+    rate_permission: toPermissionLevel(raw.rate_permission),
   };
+}
+
+function toPermissionLevel(raw: unknown): PermissionLevel | undefined {
+  if (raw === "all" || raw === "bookmarked" || raw === "none") return raw;
+  return undefined;
 }
 
 function normalizeUserTranslation(raw: Record<string, unknown>): UserTranslationBook {
@@ -417,6 +436,30 @@ export async function getBook(slug: string): Promise<Book> {
     `${CATALOG}/books/info/${encodeURIComponent(slug)}/`
   );
   return normalizeBook(data);
+}
+
+/** Права доступу — отримуються з books/info/ (ті ж дані, що й у getBook) */
+export async function getBookAccessRights(slug: string): Promise<BookAccessRights> {
+  const book = await getBook(slug);
+  return {
+    view_permission: book.view_permission ?? "all",
+    comment_book_permission: book.comment_book_permission ?? "all",
+    comment_chapter_permission: book.comment_chapter_permission ?? "all",
+    download_permission: book.download_permission ?? "all",
+    rate_permission: book.rate_permission ?? "all",
+  };
+}
+
+/** Оновлення прав доступу (PATCH). Backend повертає { message, updated_fields }, не об'єкт прав. */
+export async function updateBookAccessRights(
+  slug: string,
+  payload: BookAccessRights
+): Promise<BookAccessRights> {
+  await http.patch(
+    `${CATALOG}/books/${encodeURIComponent(slug)}/access-rights/`,
+    payload
+  );
+  return payload;
 }
 
 export interface ChaptersResponse {
@@ -735,6 +778,8 @@ export async function updateBook(slug: string, payload: UpdateBookPayload): Prom
 
 export const catalogApi = {
   getBook,
+  getBookAccessRights,
+  updateBookAccessRights,
   getChapters,
   getVolumes,
   getChapterDetail,

@@ -6,7 +6,6 @@ from apps.catalog.api.serializers import (
     BookOwnerSerializer, BookReaderSerializer, BookCreateSerializer
 )
 from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
 from rest_framework.decorators import api_view, parser_classes, permission_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR
@@ -31,6 +30,7 @@ from apps.catalog.api.permissions import (
     IsNotBookOwner,
     check_book_access_permission,
     is_book_owner_or_creator,
+    require_book_view_access,
 )
 from rest_framework import generics
 from rest_framework import serializers
@@ -96,6 +96,10 @@ def Catalog(request):
 def chapter_list(request, book_slug):
     try:
         book = Book.objects.get(slug=book_slug)
+        err = require_book_view_access(request.user, book)
+        if err:
+            return err
+
         chapters = Chapter.objects.filter(book=book).select_related('volume').order_by(
             'volume__order', 'order'
         )
@@ -315,14 +319,6 @@ def add_chapter(request, slug):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-def get_chapter_content(request, chapter_id):
-    chapter = get_object_or_404(Chapter, id=chapter_id)
-    with open(chapter.file.path, "rb") as docx_file:
-        result = mammoth.convert_to_html(docx_file)
-        html_content = result.value
-    return JsonResponse({'content': html_content})
-
-
 class BookOwnerViewSet(viewsets.ModelViewSet):
     serializer_class = BookOwnerSerializer
     lookup_field = 'slug'
@@ -347,18 +343,10 @@ class BookReaderViewSet(viewsets.ReadOnlyModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        
-        # Перевіряємо права доступу до перегляду книги
-        is_allowed, error_message = check_book_access_permission(
-            request.user, instance, 'view'
-        )
-        
-        if not is_allowed:
-            return Response(
-                {"detail": error_message}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
+        err = require_book_view_access(request.user, instance)
+        if err:
+            return err
+
         if request.user.is_authenticated:
             bookmark = Bookmark.objects.filter(
                 book=instance,
@@ -382,13 +370,26 @@ class BookReaderViewSet(viewsets.ReadOnlyModelViewSet):
 @api_view(['GET', 'POST'])
 def volume_list(request, book_slug):
     book = get_object_or_404(Book, slug=book_slug)
-    
+
     if request.method == 'GET':
+        err = require_book_view_access(request.user, book)
+        if err:
+            return err
         volumes = Volume.objects.filter(book=book).order_by('order', 'created_at')
         serializer = VolumeSerializer(volumes, many=True)
         return Response(serializer.data)
     
     elif request.method == 'POST':
+        if not request.user.is_authenticated:
+            return Response(
+                {'error': 'Необхідна авторизація'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        if request.user != book.owner:
+            return Response(
+                {'error': 'У вас немає прав для створення томів у цій книзі'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         serializer = VolumeSerializer(data={**request.data, 'book': book.id})
         if serializer.is_valid():
             serializer.save()
@@ -758,23 +759,21 @@ class BookInfoView(generics.RetrieveAPIView):
     
     def get(self, request, *args, **kwargs):
         """
-        Перевизначаємо get метод для додаткової перевірки прав доступу до налаштувань
+        Перевірка view_permission перед поверненням даних книги.
+        Власник/творець завжди має доступ; для інших — згідно з налаштуваннями книги.
         """
-        response = super().get(request, *args, **kwargs)
-        
-        # Якщо запит йде з фронтенду для отримання налаштувань доступу
-        # (перевіряємо по заголовку або параметру)
-        if request.headers.get('X-Requested-With') == 'AccessRights' and request.user.is_authenticated:
-            book = self.get_object()
-            if book.owner != request.user:
-                return Response(
-                    {'error': 'У вас немає прав для перегляду налаштувань доступу цієї книги'}, 
-                    status=status.HTTP_403_FORBIDDEN
-                )
-        
-        return response
+        book = self.get_object()
+        err = require_book_view_access(request.user, book)
+        if err:
+            return err
+        return super().get(request, *args, **kwargs)
     
     def get_serializer_class(self):
+        access_fields = [
+            'view_permission', 'comment_book_permission', 'comment_chapter_permission',
+            'download_permission', 'rate_permission'
+        ]
+
         class BookInfoSerializer(serializers.ModelSerializer):
             image = serializers.SerializerMethodField()
             owner_username = serializers.SerializerMethodField()
@@ -789,15 +788,13 @@ class BookInfoView(generics.RetrieveAPIView):
             class Meta:
                 model = Book
                 fields = [
-                    'id', 'title', 'title_en', 'author', 'description', 
-                    'image', 'translation_status_display', 
-                    'original_status_display', 'country', 'slug', 
+                    'id', 'title', 'title_en', 'author', 'description',
+                    'image', 'translation_status_display',
+                    'original_status_display', 'country', 'slug',
                     'last_updated', 'owner', 'creator', 'adult_content',
                     'owner_username', 'creator_username', 'book_type',
-                    'genres', 'tags', 'fandoms', 'view_permission', 
-                    'comment_book_permission', 'comment_chapter_permission',
-                    'download_permission', 'rate_permission'
-                ]
+                    'genres', 'tags', 'fandoms',
+                ] + access_fields
                 read_only_fields = fields
 
             def get_image(self, obj):
@@ -813,6 +810,14 @@ class BookInfoView(generics.RetrieveAPIView):
 
             def get_creator_username(self, obj):
                 return obj.creator.username if obj.creator else None
+
+            def to_representation(self, instance):
+                data = super().to_representation(instance)
+                request = self.context.get('request')
+                if request and not is_book_owner_or_creator(request.user, instance):
+                    for key in access_fields:
+                        data.pop(key, None)
+                return data
 
         return BookInfoSerializer
 

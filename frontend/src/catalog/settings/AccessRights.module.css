@@ -1,0 +1,338 @@
+/* ===== SECTION ===== */
+.section {
+  width: 100%;
+  color: var(--text, rgba(255, 255, 255, 0.92));
+}
+
+.panel {
+  width: 100%;
+  background: transparent;
+}
+
+.loading {
+  margin: 0;
+  padding: clamp(24px, 3vw, 40px) 0;
+  text-align: center;
+  color: var(--muted, rgba(255, 255, 255, 0.65));
+  font-size: clamp(15px, 1.2vw, 17px);
+}
+
+.errorText {
+  margin: 0;
+  padding: clamp(24px, 3vw, 40px) 0;
+  text-align: center;
+  color: rgba(255, 120, 100, 0.95);
+  font-size: clamp(15px, 1.2vw, 17px);
+}
+
+/* ===== TITLE ===== */
+.title {
+  margin: 0 0 clamp(18px, 2vw, 28px);
+  font-size: clamp(22px, 2vw, 30px);
+  line-height: 1.15;
+  font-weight: 400;
+  color: #f58807;
+  font-family: var(--font-decor);
+}
+
+/* ===== TABLE WRAP ===== */
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ===== TABLE ===== */
+.table {
+  width: 100%;
+  min-width: 480px;
+}
+
+.body {
+  /* rows stack vertically */
+}
+
+.cell {
+  padding-block: clamp(14px, 1.6vw, 22px);
+  display: flex;
+  align-items: center;
+}
+
+.headCell {
+  padding-top: 0;
+  padding-bottom: clamp(12px, 1.2vw, 16px);
+  font-size: clamp(15px, 1vw, 18px);
+  line-height: 1.2;
+  font-weight: 500;
+  color: var(--text, #ffffff);
+}
+
+.actionCell {
+  text-align: left;
+  font-size: clamp(18px, 1.35vw, 28px);
+  line-height: 1.2;
+  color: #f58807;
+}
+
+.headRowWrap .actionCell {
+  font-size: clamp(15px, 1vw, 18px);
+  color: var(--text, #ffffff);
+}
+
+.optionCell {
+  justify-content: center;
+  text-align: center;
+}
+
+/* Header row */
+.headRowWrap {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.8fr) repeat(3, minmax(72px, 0.7fr));
+  column-gap: clamp(10px, 1.2vw, 18px);
+  align-items: center;
+  min-height: clamp(52px, 4vw, 64px);
+}
+
+/* Data rows — border-bottom, grid aligns with header */
+.dataRow {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.8fr) repeat(3, minmax(72px, 0.7fr));
+  column-gap: clamp(10px, 1.2vw, 18px);
+  align-items: center;
+  min-height: clamp(72px, 6vw, 92px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+/* ===== CHECKBOX (radio) ===== */
+.checkboxLabel {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  inline-size: clamp(26px, 2vw, 32px);
+  block-size: clamp(26px, 2vw, 32px);
+  cursor: pointer;
+}
+
+.checkboxInput {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.checkboxUi {
+  position: relative;
+  inline-size: clamp(17px, 1.35vw, 20px);
+  block-size: clamp(17px, 1.35vw, 20px);
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.checkboxInput:checked + .checkboxUi {
+  border-color: #f58807;
+  background: #f58807;
+  box-shadow: 0 0 0 1px rgba(245, 136, 7, 0.16);
+}
+
+.checkboxInput:checked + .checkboxUi::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 34%;
+  height: 18%;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.checkboxLabel:hover .checkboxUi {
+  border-color: rgba(245, 136, 7, 0.85);
+}
+
+.checkboxInput:focus-visible + .checkboxUi {
+  outline: 2px solid rgba(245, 136, 7, 0.9);
+  outline-offset: 3px;
+}
+
+/* ===== MOBILE CARDS ===== */
+.mobileList {
+  display: none;
+}
+
+.mobileCard {
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  padding-block: 16px;
+}
+
+.mobileCardTitle {
+  margin: 0 0 14px;
+  font-size: clamp(17px, 4.5vw, 22px);
+  line-height: 1.25;
+  font-weight: 500;
+  color: #f58807;
+}
+
+.mobileOptions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mobileOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.mobileOption:hover {
+  border-color: rgba(245, 136, 7, 0.5);
+  background: rgba(245, 136, 7, 0.06);
+}
+
+/* Обране: fallback через data-selected для кроссбраузерності (поряд з :has) */
+.mobileOption[data-selected="true"],
+.mobileOption:has(.checkboxInput:checked) {
+  border-color: #f58807;
+  background: rgba(245, 136, 7, 0.1);
+}
+
+.mobileOptionInputWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: clamp(20px, 4vw, 24px);
+  block-size: clamp(20px, 4vw, 24px);
+}
+
+.mobileOption .checkboxUi {
+  inline-size: clamp(14px, 3vw, 18px);
+  block-size: clamp(14px, 3vw, 18px);
+}
+
+.mobileOptionText {
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--text, #ffffff);
+}
+
+/* ===== ACTIONS ===== */
+.actions {
+  display: flex;
+  justify-content: center;
+  padding-top: clamp(24px, 3vw, 40px);
+}
+
+.saveButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: transparent;
+  color: var(--text, #ffffff);
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.saveButton:hover {
+  border-color: rgba(245, 136, 7, 0.9);
+  box-shadow: 0 0 0 1px rgba(245, 136, 7, 0.15);
+}
+
+.saveButton:active {
+  transform: translateY(1px);
+}
+
+.saveButton:focus-visible {
+  outline: 2px solid rgba(245, 136, 7, 0.9);
+  outline-offset: 3px;
+}
+
+.saveButtonIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 18px;
+  block-size: 18px;
+  flex-shrink: 0;
+}
+
+/* ===== TABLET (< 1024px) ===== */
+@media (max-width: 1023px) {
+  .dataRow,
+  .headRowWrap {
+    grid-template-columns: minmax(180px, 1.6fr) repeat(3, minmax(64px, 0.65fr));
+    column-gap: 10px;
+  }
+
+  .actionCell {
+    font-size: clamp(16px, 1.9vw, 22px);
+  }
+
+  .headRowWrap .actionCell,
+  .headCell {
+    font-size: 15px;
+  }
+}
+
+/* ===== SWITCH TO CARDS (< 768px) ===== */
+@media (max-width: 767px) {
+  .tableWrap {
+    display: none;
+  }
+
+  .mobileList {
+    display: grid;
+    gap: 14px;
+  }
+
+  .mobileCard {
+    padding-block: 0;
+    border: 0;
+  }
+
+  .mobileCard + .mobileCard {
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    padding-top: 16px;
+  }
+}
+
+/* ===== NARROW PHONES (< 480px) ===== */
+@media (max-width: 479px) {
+  .mobileOptions {
+    grid-template-columns: 1fr;
+  }
+
+  .mobileOption {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+    padding-inline: 14px;
+  }
+
+  .mobileOptionText {
+    font-size: 15px;
+  }
+}
