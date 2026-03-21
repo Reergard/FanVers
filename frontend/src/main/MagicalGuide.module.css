@@ -1,0 +1,322 @@
+/* Сторінка «Чарівний гід» + глобальні mg2-* для секцій ТРЕНДИ / Рекомендації / ТОП */
+
+.page {
+  width: 100%;
+  min-height: 60vh;
+  display: block;
+}
+
+.page :global([class*="sectionTitle"]),
+.page :global(.mg2-sectionLineTitle) {
+  margin-bottom: 0;
+}
+
+.homepage {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- mg2: карусель карток (як блок новинок на головній, десктоп-сітка) --- */
+
+:global(.mg2-section) {
+  width: 100%;
+  margin: 0;
+  padding: clamp(16px, 2.4vw, 36px) 0 clamp(20px, 2.8vw, 44px);
+}
+
+:global(.mg2-sectionLineTitle) {
+  margin-bottom: clamp(10px, 1.4vw, 18px);
+}
+
+:global(.mg2-grid) {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(10px, 1.5vw, 24px);
+}
+
+:global(.mg2-cardShell) {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(10px, 1.2vw, 16px) clamp(8px, 0.9vw, 12px) clamp(12px, 1.4vw, 18px);
+  border-radius: clamp(12px, 1.1vw, 18px);
+  background: linear-gradient(180deg, rgba(5, 180, 199, 0.2) 0%, rgba(5, 13, 17, 0.2) 100%), #050d11;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 8px 28px rgba(0, 0, 0, 0.45),
+    0 0 18px rgba(0, 0, 0, 0.35);
+}
+
+:global(.mg2-section .book-card) {
+  --cover-w: clamp(126px, 9.5vw, 158px);
+  width: 100%;
+}
+
+:global(.mg2-section .book-card-meta-block) {
+  display: none;
+}
+
+:global(.mg2-section .book-card-title) {
+  margin-bottom: clamp(6px, 0.8vw, 10px);
+}
+
+:global(.mg2-description) {
+  width: clamp(126px, 9.5vw, 158px);
+  max-width: 100%;
+  margin: 0 0 clamp(8px, 1vw, 12px);
+  padding-top: clamp(6px, 0.7vw, 10px);
+  border-top: 1px solid rgba(5, 180, 199, 0.33);
+  color: rgba(255, 255, 255, 0.88);
+  font-family: "SofiaSansSemiCondensed", sans-serif;
+  font-size: clamp(11px, 0.82vw, 13px);
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+}
+
+:global(.mg2-readBtn) {
+  min-height: clamp(24px, 2vw, 30px);
+  min-width: clamp(78px, 6.6vw, 96px);
+  font-family: "Seminaria", serif;
+  font-size: clamp(13px, 0.95vw, 15px);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-color: rgba(255, 255, 255, 0.78);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+:global(.mg2-nav) {
+  margin-top: clamp(14px, 2vw, 24px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 1.4vw, 20px);
+}
+
+:global(.mg2-arrowBtn) {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+:global(.mg2-arrowIcon) {
+  grid-area: 1 / 1;
+  width: clamp(44px, 4.8vw, 70px);
+  height: auto;
+  transition: opacity 0.2s ease;
+}
+
+:global(.mg2-arrowIconDefault) {
+  opacity: 1;
+}
+
+:global(.mg2-arrowIconAccent) {
+  opacity: 0;
+}
+
+:global(.mg2-arrowBtn:hover .mg2-arrowIconDefault),
+:global(.mg2-arrowBtn:active .mg2-arrowIconDefault),
+:global(.mg2-arrowBtn:focus-visible .mg2-arrowIconDefault) {
+  opacity: 0;
+}
+
+:global(.mg2-arrowBtn:hover .mg2-arrowIconAccent),
+:global(.mg2-arrowBtn:active .mg2-arrowIconAccent),
+:global(.mg2-arrowBtn:focus-visible .mg2-arrowIconAccent) {
+  opacity: 1;
+}
+
+@media (min-width: 1280px) {
+  :global(.mg2-grid) {
+    grid-template-columns: repeat(4, 273px);
+    justify-content: center;
+    gap: 20px;
+  }
+
+  :global(.mg2-cardShell) {
+    width: 273px;
+    height: 476px;
+    box-sizing: border-box;
+    padding: 12px 10px 18px;
+    border-radius: 18px;
+  }
+
+  :global(.mg2-section .book-card) {
+    --cover-w: 152px;
+  }
+
+  :global(.mg2-section .book-card-badge-18) {
+    width: 30px;
+    top: 8px;
+    right: 8px;
+  }
+
+  :global(.mg2-section .book-card-badge-new) {
+    width: 76px;
+    top: -8px;
+    left: -16px;
+  }
+
+  :global(.mg2-section .book-card-corner-a) {
+    width: 52px;
+    height: 38px;
+    right: 8px;
+    bottom: 8px;
+    font-size: 38px;
+  }
+
+  :global(.mg2-section .book-card-title) {
+    width: 248px;
+    margin-bottom: 8px;
+    padding: 0;
+    font-size: 18px;
+    line-height: 1.05;
+  }
+
+  :global(.mg2-description) {
+    width: 248px;
+    max-width: 100%;
+    min-height: 113px;
+    margin: 0 0 14px;
+    padding-top: 8px;
+    font-size: 14px;
+    line-height: 1.25;
+    -webkit-line-clamp: 6;
+    line-clamp: 6;
+  }
+
+  :global(.mg2-readBtn) {
+    min-width: 112px;
+    min-height: 34px;
+    font-size: 16px;
+  }
+
+  :global(.mg2-arrowIcon) {
+    width: 70px;
+  }
+}
+
+@media (max-width: 1024px) {
+  :global(.mg2-grid) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  :global(.mg2-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :global(.mg2-arrowBtn) {
+    width: 54px;
+    min-width: 54px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+
+  :global(.mg2-arrowIcon) {
+    width: 54px;
+    height: 16px;
+    display: block;
+    color: rgba(5, 180, 199, 0.9);
+    fill: currentColor;
+  }
+}
+
+@media (max-width: 480px) {
+  :global(.mg2-grid) {
+    grid-template-columns: 1fr;
+  }
+}
+
+:global(.mg2-nav .mg2-arrowBtn img) {
+  width: clamp(44px, 4.8vw, 70px);
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+:global(.mg2-nav .mg2-mobileStars.mg2-navStars) {
+  min-height: 27px;
+}
+
+:global(.mg2-mobileStars) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 0.8vw, 10px);
+  min-height: 27px;
+}
+
+:global(.mg2-mobileStarDot) {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform 140ms ease, opacity 140ms ease;
+}
+
+:global(.mg2-mobileStarDot:hover) {
+  opacity: 0.85;
+}
+
+:global(.mg2-mobileStarDot:active) {
+  transform: scale(0.95);
+}
+
+:global(.mg2-mobileStarDot img) {
+  width: 27px;
+  height: 27px;
+  display: block;
+  object-fit: contain;
+  opacity: 0.5;
+  transition: opacity 140ms ease, filter 140ms ease;
+}
+
+:global(.mg2-mobileStarDotActive img) {
+  opacity: 1;
+  filter:
+    drop-shadow(0 0 10px rgba(245, 136, 7, 0.35))
+    brightness(0)
+    saturate(100%)
+    invert(60%)
+    sepia(98%)
+    saturate(2476%)
+    hue-rotate(360deg)
+    brightness(105%)
+    contrast(101%);
+}
+
+@media (max-width: 420px) {
+  :global(.mg2-mobileStars) {
+    min-height: 10px;
+  }
+
+  :global(.mg2-mobileStarDot img) {
+    width: 10px;
+    height: 10px;
+  }
+}
