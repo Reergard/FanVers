@@ -165,12 +165,14 @@ class AdvertisingLogAdmin(admin.ModelAdmin):
         'user',
         'book',
         'location',
+        'target_kind',
+        'target_id',
         'start_date',
         'end_date',
         'total_cost',
         'created_at'
     )
-    list_filter = ('location', 'created_at', 'start_date', 'end_date')
+    list_filter = ('location', 'target_kind', 'created_at', 'start_date', 'end_date')
     search_fields = ('user__username', 'book__title')
     readonly_fields = ('created_at',)
     ordering = ('-created_at',)

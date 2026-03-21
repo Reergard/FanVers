@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import type { PlacementType } from "./advertising.types";
+import type { AdvertisingSlotKey } from "./advertising.types";
 import type { PlacementOrderState } from "./advertising.types";
 import { advertisingPlacements } from "./advertising.data";
 import {
@@ -7,13 +7,14 @@ import {
   calcCost,
   validatePlacement,
   getMinStartDate,
+  isEndBeforeStartIso,
 } from "./advertising.utils";
 
-function createInitialState(): Record<PlacementType, PlacementOrderState> {
-  const state = {} as Record<PlacementType, PlacementOrderState>;
+function createInitialState(): Record<AdvertisingSlotKey, PlacementOrderState> {
+  const state = {} as Record<AdvertisingSlotKey, PlacementOrderState>;
   for (const config of advertisingPlacements) {
-    state[config.placementType] = {
-      placementType: config.placementType,
+    state[config.slotKey] = {
+      slotKey: config.slotKey,
       startDate: "",
       endDate: "",
       targetId: null,
@@ -27,35 +28,35 @@ function createInitialState(): Record<PlacementType, PlacementOrderState> {
 }
 
 export function useAdvertisingOrder() {
-  const [placements, setPlacements] = useState<Record<PlacementType, PlacementOrderState>>(
-    createInitialState
-  );
+  const [placements, setPlacements] = useState<
+    Record<AdvertisingSlotKey, PlacementOrderState>
+  >(createInitialState);
 
   const updatePlacement = useCallback(
-    (type: PlacementType, patch: Partial<PlacementOrderState>) => {
+    (slotKey: AdvertisingSlotKey, patch: Partial<PlacementOrderState>) => {
       setPlacements((prev) => {
-        const next = { ...prev[type], ...patch };
+        const next = { ...prev[slotKey], ...patch };
         if ("startDate" in patch || "endDate" in patch) {
           const start = next.startDate;
           let end = next.endDate;
-          if (start && end && new Date(end) < new Date(start)) {
+          if (start && end && isEndBeforeStartIso(start, end)) {
             end = start;
             next.endDate = start;
           }
           next.days = calcDays(start, end);
-          next.totalCost = calcCost(start, end, type);
+          next.totalCost = calcCost(start, end, slotKey);
           next.includedInOrder = false;
         }
-        return { ...prev, [type]: next };
+        return { ...prev, [slotKey]: next };
       });
     },
     []
   );
 
   const addToOrder = useCallback(
-    (type: PlacementType): { success: boolean; message?: string } => {
-      const p = placements[type];
-      const config = advertisingPlacements.find((c) => c.placementType === type);
+    (slotKey: AdvertisingSlotKey): { success: boolean; message?: string } => {
+      const p = placements[slotKey];
+      const config = advertisingPlacements.find((c) => c.slotKey === slotKey);
       const hasTarget = Boolean(config?.filterType);
 
       const result = validatePlacement(
@@ -71,17 +72,17 @@ export function useAdvertisingOrder() {
 
       setPlacements((prev) => ({
         ...prev,
-        [type]: { ...prev[type], includedInOrder: true },
+        [slotKey]: { ...prev[slotKey], includedInOrder: true },
       }));
       return { success: true };
     },
     [placements]
   );
 
-  const removeFromOrder = useCallback((type: PlacementType) => {
+  const removeFromOrder = useCallback((slotKey: AdvertisingSlotKey) => {
     setPlacements((prev) => ({
       ...prev,
-      [type]: { ...prev[type], includedInOrder: false },
+      [slotKey]: { ...prev[slotKey], includedInOrder: false },
     }));
   }, []);
 

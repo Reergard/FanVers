@@ -56,6 +56,9 @@ export const API = {
 
   // Website advertising
   mainPageAds: "/api/website_advertising/advertisements/main_page_ads/",
+  catalogPageAds: "/api/website_advertising/advertisements/catalog_page_ads/",
+  searchAds: "/api/website_advertising/advertisements/search_ads/",
+  advertisingPublic: "/api/website_advertising/advertisements/public/",
   advertisingList: "/api/website_advertising/advertisements/",
   advertisingUserAds: "/api/website_advertising/advertisements/user_advertisements/",
   advertisingSubmitOrder: "/api/website_advertising/advertisements/submit_order/",

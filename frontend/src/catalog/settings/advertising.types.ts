@@ -1,40 +1,41 @@
 /**
- * Типи розміщень реклами.
- * Узгоджені з Advertisement.LOCATION_CHOICES (backend models.py):
- * main, catalog, genres, tags, fandoms
+ * Ключ рядка замовлення в UI (узгоджено з advertising.data).
  */
-export type PlacementType = "main" | "catalog" | "genres" | "tags" | "fandoms";
+export type AdvertisingSlotKey =
+  | "main"
+  | "catalog"
+  | "search_general"
+  | "search_genre"
+  | "search_tag"
+  | "search_fandom";
 
-/** Тип таргету для genre/tag/fandom */
+/** Місце показу в API */
+export type ApiLocation = "main" | "catalog" | "search";
+
+/** Таргетинг для API */
+export type ApiTargetKind = "none" | "genre" | "tag" | "fandom";
+
+/** Тип таргету для селекта в UI */
 export type FilterType = "genre" | "tag" | "fandom";
 
 /** Стан однієї позиції в чернетці замовлення */
 export type PlacementOrderState = {
-  placementType: PlacementType;
+  slotKey: AdvertisingSlotKey;
   startDate: string;
   endDate: string;
   targetId: number | null;
   pricePerDay: number;
   days: number;
   totalCost: number;
-  /** Чи додано в заказ (натиснуто «Додати в заказ») */
   includedInOrder: boolean;
 };
 
-/** Помилка валідації позиції */
-export type PlacementValidationError = {
-  placementType: PlacementType;
-  message: string;
-};
-
-/**
- * Payload для створення одного розміщення.
- * target_id для genre/tag/fandom поки не підтримується бекендом —
- * модель Advertisement не має цього поля.
- */
+/** Payload одного слота для submit_order */
 export type CreateAdvertisementPayload = {
   book: number;
-  location: PlacementType;
+  location: ApiLocation;
+  target_kind: ApiTargetKind;
+  target_id: number | null;
   start_date: string;
   end_date: string;
 };

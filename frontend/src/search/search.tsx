@@ -21,6 +21,11 @@ import { searchBooks, type SearchFilters } from "../api/searchApi";
 import { useDebouncedValue } from "../shared/hooks/useDebouncedValue";
 import { useAdultContent } from "../settings/useAdultContent";
 import { useAuth } from "../auth/useAuth";
+import {
+  getSearchAds,
+  advertisingKeys,
+} from "../api/advertisingApi";
+import { AdvertisingCarousel } from "../website_advertising/AdvertisingBooks";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { getMyProfile, updateNotificationSettings } from "../users/profileService";
 import "./search.css";
@@ -119,6 +124,15 @@ export default function SearchPage() {
 
   const debouncedQ = useDebouncedValue(searchQuery, 500);
   const debouncedFilters = useDebouncedValue(filters, 500);
+
+  const searchAdsFilterKey = useMemo(
+    () => ({
+      genre_ids: filters.genres ?? [],
+      tag_ids: filters.tags ?? [],
+      fandom_ids: filters.fandoms ?? [],
+    }),
+    [filters.genres, filters.tags, filters.fandoms]
+  );
 
   const effectiveFilters = useMemo<SearchFilters>(
     () => ({
@@ -322,6 +336,18 @@ export default function SearchPage() {
             <PageTitle>Пошук</PageTitle>
 
             <p className="abandoned-note">*Результати пошуку за заданими параметрами</p>
+
+            <AdvertisingCarousel
+              queryKey={advertisingKeys.searchAds(searchAdsFilterKey)}
+              queryFn={() =>
+                getSearchAds({
+                  genre_ids: searchAdsFilterKey.genre_ids,
+                  tag_ids: searchAdsFilterKey.tag_ids,
+                  fandom_ids: searchAdsFilterKey.fandom_ids,
+                })
+              }
+              withContainer={false}
+            />
 
             <div className="abandoned-search-row">
               <label className="abandoned-search" aria-label="Пошук">

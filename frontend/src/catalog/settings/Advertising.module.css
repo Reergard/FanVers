@@ -149,7 +149,7 @@
 }
 
 .row[data-unavailable] .dateField input,
-.row[data-unavailable] .selectField select,
+.row[data-unavailable] .selectField :global(.filters-item),
 .row[data-unavailable] .orderButton {
   opacity: 0.6;
   cursor: not-allowed;
@@ -228,35 +228,26 @@
   display: block;
 }
 
-.selectField select {
+.targetFilterButton:global(.filters-item) {
   width: 100%;
-  min-height: 2.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-sizing: border-box;
   border-radius: 0.75rem;
-  background: transparent;
-  color: #fff;
-  appearance: none;
-  padding-inline: 0.875rem 2.25rem;
-  font: inherit;
-  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  padding-inline: 0.875rem;
+  min-height: 2.5rem;
 }
 
-.selectField select:focus {
+.targetFilterButton:global(.filters-item):focus {
   outline: none;
   border-color: rgba(245, 136, 7, 0.8);
 }
 
-/* Іконка стрілки — placeholder, замінити на SVG */
-.selectArrow {
-  position: absolute;
-  right: 0.875rem;
-  top: 50%;
-  transform: translateY(-50%) rotate(-45deg);
-  width: 0.75rem;
-  height: 0.75rem;
-  border-left: 2px solid rgba(255, 255, 255, 0.7);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.7);
-  pointer-events: none;
+.targetFilterLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ===== AMOUNT COLUMN ===== */

@@ -6,6 +6,11 @@ import {
   getAllCatalogBooks,
   type UserTranslationBook,
 } from "../api/catalogApi";
+import {
+  getCatalogPageAds,
+  advertisingKeys,
+} from "../api/advertisingApi";
+import { AdvertisingCarousel } from "../website_advertising/AdvertisingBooks";
 import { Container } from "../shared/Container";
 import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
 import { SortByNavigation } from "../navigation/SortByNavigation.tsx";
@@ -78,6 +83,11 @@ export default function Catalog() {
     <section className="catalog-page">
       <Container>
         <PageTitle>Каталог</PageTitle>
+        <AdvertisingCarousel
+          queryKey={advertisingKeys.catalogPage()}
+          queryFn={getCatalogPageAds}
+          withContainer={false}
+        />
         <div className="catalog-page__topbar">
           <SortByNavigation
             className="catalog-page__sort"

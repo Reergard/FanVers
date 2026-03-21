@@ -167,11 +167,20 @@ class AdvertisingLog(models.Model):
         choices=[
             ('main', 'Реклама на Головній'),
             ('catalog', 'Реклама на Каталозі'),
-            ('genres', 'Реклама у Пошуку за жанрами'),
-            ('tags', 'Реклама у Пошуку за тегами'),
-            ('fandoms', 'Реклама у Пошуку за фендомами'),
+            ('search', 'Реклама в пошуку'),
         ]
     )
+    target_kind = models.CharField(
+        max_length=10,
+        choices=[
+            ('none', 'Без таргету'),
+            ('genre', 'Жанр'),
+            ('tag', 'Тег'),
+            ('fandom', 'Фендом'),
+        ],
+        default='none',
+    )
+    target_id = models.PositiveIntegerField(null=True, blank=True)
     start_date = models.DateField()
     end_date = models.DateField()
     total_cost = models.DecimalField(max_digits=10, decimal_places=2)

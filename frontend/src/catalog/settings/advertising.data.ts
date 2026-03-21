@@ -1,11 +1,12 @@
-import type { PlacementType } from "./advertising.types";
+import type { AdvertisingSlotKey } from "./advertising.types";
 import type { FilterType } from "./advertising.types";
-import { PRICE_PER_DAY, PLACEMENT_AVAILABLE } from "./advertising.constants";
+import type { ApiLocation, ApiTargetKind } from "./advertising.types";
+import { SLOT_PRICE_PER_DAY, SLOT_AVAILABLE } from "./advertising.constants";
 
 export type { FilterType } from "./advertising.types";
 
 export type AdvertisingPlacementConfig = {
-  placementType: PlacementType;
+  slotKey: AdvertisingSlotKey;
   title: string;
   description: string;
   pricePerDay: number;
@@ -15,54 +16,82 @@ export type AdvertisingPlacementConfig = {
   filterPlaceholder?: string;
 };
 
+/** Поля для API з ключа слота */
+export function slotKeyToApiFields(
+  slotKey: AdvertisingSlotKey
+): { location: ApiLocation; target_kind: ApiTargetKind } {
+  switch (slotKey) {
+    case "main":
+      return { location: "main", target_kind: "none" };
+    case "catalog":
+      return { location: "catalog", target_kind: "none" };
+    case "search_general":
+      return { location: "search", target_kind: "none" };
+    case "search_genre":
+      return { location: "search", target_kind: "genre" };
+    case "search_tag":
+      return { location: "search", target_kind: "tag" };
+    case "search_fandom":
+      return { location: "search", target_kind: "fandom" };
+  }
+}
+
 export const advertisingPlacements: AdvertisingPlacementConfig[] = [
   {
-    placementType: "main",
+    slotKey: "main",
     title: "Реклама на головній",
-    pricePerDay: PRICE_PER_DAY.main,
-    available: PLACEMENT_AVAILABLE.main,
+    pricePerDay: SLOT_PRICE_PER_DAY.main,
+    available: SLOT_AVAILABLE.main,
     description:
-      "В каруселі «Реклама» на головній сторінці, максимум 1 книга на день",
+      "Показ у рекламній каруселі на головній сторінці серед інших рекламних книг",
   },
   {
-    placementType: "catalog",
-    title: "Реклама на сторінці Каталог",
-    pricePerDay: PRICE_PER_DAY.catalog,
-    available: PLACEMENT_AVAILABLE.catalog,
+    slotKey: "catalog",
+    title: "Реклама в каталозі",
+    pricePerDay: SLOT_PRICE_PER_DAY.catalog,
+    available: SLOT_AVAILABLE.catalog,
     description:
-      "В каруселі «Реклама» на сторінці каталогу, максимум 1 книга на день",
+      "Показ у рекламній каруселі на сторінці каталогу серед інших рекламних книг",
   },
   {
-    placementType: "genres",
-    title: "Реклама у пошуку за жанрами",
-    pricePerDay: PRICE_PER_DAY.genres,
-    available: PLACEMENT_AVAILABLE.genres,
+    slotKey: "search_general",
+    title: "Пошук — загальна реклама",
+    pricePerDay: SLOT_PRICE_PER_DAY.search_general,
+    available: SLOT_AVAILABLE.search_general,
     description:
-      "В блоці реклами при пошуку за обраним жанром, максимум 1 книга на день",
+      "Показ у рекламній каруселі на сторінці пошуку для всіх відвідувачів пошуку",
+  },
+  {
+    slotKey: "search_genre",
+    title: "Пошук — реклама в обраному жанрі",
+    pricePerDay: SLOT_PRICE_PER_DAY.search_genre,
+    available: SLOT_AVAILABLE.search_genre,
+    description:
+      "Показ у каруселі пошуку, коли користувач обрав цей жанр у фільтрах",
     filterType: "genre",
     filterLabel: "Жанр",
     filterPlaceholder: "Оберіть жанр",
   },
   {
-    placementType: "tags",
-    title: "Реклама у пошуку за тегами",
-    pricePerDay: PRICE_PER_DAY.tags,
-    available: PLACEMENT_AVAILABLE.tags,
+    slotKey: "search_tag",
+    title: "Пошук — реклама за тегом",
+    pricePerDay: SLOT_PRICE_PER_DAY.search_tag,
+    available: SLOT_AVAILABLE.search_tag,
     description:
-      "В блоці реклами при пошуку за обраними тегами, максимум 1 книга на день",
+      "Показ у каруселі пошуку, коли користувач обрав цей тег у фільтрах",
     filterType: "tag",
-    filterLabel: "Теги",
-    filterPlaceholder: "Оберіть теги",
+    filterLabel: "Тег",
+    filterPlaceholder: "Оберіть тег",
   },
   {
-    placementType: "fandoms",
-    title: "Реклама у пошуку за фендом",
-    pricePerDay: PRICE_PER_DAY.fandoms,
-    available: PLACEMENT_AVAILABLE.fandoms,
+    slotKey: "search_fandom",
+    title: "Пошук — реклама за фендомом",
+    pricePerDay: SLOT_PRICE_PER_DAY.search_fandom,
+    available: SLOT_AVAILABLE.search_fandom,
     description:
-      "В блоці реклами при пошуку за обраним фендомом, максимум 1 книга на день",
+      "Показ у каруселі пошуку, коли користувач обрав цей фендом у фільтрах",
     filterType: "fandom",
-    filterLabel: "Фендоми",
+    filterLabel: "Фендом",
     filterPlaceholder: "Оберіть фендом",
   },
 ];

@@ -1,19 +1,26 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../auth/useAuth";
 import { useNotification } from "../../shared/NotificationModal/NotificationProvider";
 import { refreshAuthStatus } from "../../auth/service";
+import { FilterDropdown } from "../../navigation/FilterDropdown";
 import { useBookBySlug } from "../hooks/useBookBySlug";
 import { useBookFormMeta } from "../hooks/useBookFormMeta";
+import "../../search/search.css";
 import {
   submitAdvertisingOrder,
   advertisingKeys,
   type CreateAdvertisementPayload,
 } from "../../api/advertisingApi";
 import { extractUserMessage } from "../../shared/utils/errorUtils";
-import type { PlacementType } from "./advertising.types";
-import { advertisingPlacements } from "./advertising.data";
-import { PLACEMENT_AVAILABLE } from "./advertising.constants";
+import type { AdvertisingSlotKey } from "./advertising.types";
+import {
+  advertisingPlacements,
+  slotKeyToApiFields,
+  type AdvertisingPlacementConfig,
+} from "./advertising.data";
+import { SLOT_AVAILABLE } from "./advertising.constants";
 import { useAdvertisingOrder } from "./useAdvertisingOrder";
 import styles from "./Advertising.module.css";
 
@@ -47,6 +54,38 @@ function ButtonEmblem() {
   return <span className={styles.orderButtonIcon} aria-hidden />;
 }
 
+function getTargetDisplayLabel(
+  config: AdvertisingPlacementConfig,
+  targetId: number | null,
+  meta: ReturnType<typeof useBookFormMeta>
+): string {
+  if (!config.filterType || targetId == null) {
+    return config.filterPlaceholder ?? "";
+  }
+  if (config.filterType === "genre") {
+    return (
+      meta.genres.find((g) => g.id === targetId)?.name ??
+      config.filterPlaceholder ??
+      ""
+    );
+  }
+  if (config.filterType === "tag") {
+    return (
+      meta.tags.find((t) => t.id === targetId)?.name ??
+      config.filterPlaceholder ??
+      ""
+    );
+  }
+  if (config.filterType === "fandom") {
+    return (
+      meta.fandoms.find((f) => f.id === targetId)?.name ??
+      config.filterPlaceholder ??
+      ""
+    );
+  }
+  return config.filterPlaceholder ?? "";
+}
+
 export default function Advertising() {
   const { slug = "" } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -66,6 +105,15 @@ export default function Advertising() {
     minStartDate,
   } = useAdvertisingOrder();
 
+  const [targetPicker, setTargetPicker] = useState<{
+    slotKey: AdvertisingSlotKey;
+    anchor: HTMLElement;
+  } | null>(null);
+
+  const pickerConfig = targetPicker
+    ? advertisingPlacements.find((c) => c.slotKey === targetPicker.slotKey)
+    : null;
+
   const balanceNum = parseBalance(balance ?? undefined);
 
   const submitMutation = useMutation({
@@ -79,6 +127,7 @@ export default function Advertising() {
           queryKey: advertisingKeys.bookAds(book.id),
         });
       }
+      queryClient.invalidateQueries({ queryKey: advertisingKeys.all });
       showSuccess("Реклама успішно створена");
       navigate(`/books/${slug}`);
     },
@@ -86,6 +135,7 @@ export default function Advertising() {
       showError(extractUserMessage(err, "Помилка при створенні реклами"));
       await refreshAuthStatus();
       queryClient.invalidateQueries({ queryKey: advertisingKeys.userAds() });
+      queryClient.invalidateQueries({ queryKey: advertisingKeys.all });
       if (book?.id) {
         queryClient.invalidateQueries({
           queryKey: advertisingKeys.bookAds(book.id),
@@ -117,13 +167,20 @@ export default function Advertising() {
     }
 
     const payloads: CreateAdvertisementPayload[] = orderedPlacements
-      .filter((p) => PLACEMENT_AVAILABLE[p.placementType])
-      .map((p): CreateAdvertisementPayload => ({
-        book: book.id,
-        location: p.placementType,
-        start_date: p.startDate,
-        end_date: p.endDate,
-      }));
+      .filter((p) => SLOT_AVAILABLE[p.slotKey])
+      .map((p): CreateAdvertisementPayload => {
+        const { location, target_kind } = slotKeyToApiFields(p.slotKey);
+        const target_id =
+          target_kind === "none" ? null : p.targetId;
+        return {
+          book: book.id,
+          location,
+          target_kind,
+          target_id,
+          start_date: p.startDate,
+          end_date: p.endDate,
+        };
+      });
 
     if (payloads.length === 0) {
       showError("Немає доступних позицій для публікації");
@@ -133,8 +190,8 @@ export default function Advertising() {
     submitMutation.mutate({ items: payloads });
   };
 
-  const handleAddToOrder = (placementType: PlacementType) => {
-    const result = addToOrder(placementType);
+  const handleAddToOrder = (slotKey: AdvertisingSlotKey) => {
+    const result = addToOrder(slotKey);
     if (!result.success) {
       showError(result.message ?? "Неможливо додати в заказ");
     }
@@ -160,13 +217,13 @@ export default function Advertising() {
 
       <div className={styles.list}>
         {advertisingPlacements.map((config) => {
-          const state = placements[config.placementType];
+          const state = placements[config.slotKey];
           const isAvailable = config.available;
           const minEndDate = state.startDate || minStartDate;
 
           return (
             <article
-              key={config.placementType}
+              key={config.slotKey}
               className={styles.row}
               data-unavailable={!isAvailable || undefined}
             >
@@ -179,9 +236,9 @@ export default function Advertising() {
                     checked={state.includedInOrder}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        handleAddToOrder(config.placementType);
+                        handleAddToOrder(config.slotKey);
                       } else {
-                        removeFromOrder(config.placementType);
+                        removeFromOrder(config.slotKey);
                       }
                     }}
                     disabled={!isAvailable}
@@ -209,7 +266,7 @@ export default function Advertising() {
                       value={state.startDate}
                       min={minStartDate}
                       onChange={(e) =>
-                        updatePlacement(config.placementType, {
+                        updatePlacement(config.slotKey, {
                           startDate: e.target.value,
                         })
                       }
@@ -219,11 +276,12 @@ export default function Advertising() {
                   </label>
                   <label className={styles.dateField}>
                     <input
+                      key={`${config.slotKey}-end-${state.startDate}`}
                       type="date"
                       value={state.endDate}
                       min={minEndDate}
                       onChange={(e) =>
-                        updatePlacement(config.placementType, {
+                        updatePlacement(config.slotKey, {
                           endDate: e.target.value,
                         })
                       }
@@ -243,41 +301,33 @@ export default function Advertising() {
                         {config.filterLabel}
                       </span>
                       <div className={styles.selectInputWrap}>
-                        <select
-                          value={state.targetId ?? ""}
-                          onChange={(e) =>
-                            updatePlacement(config.placementType, {
-                              targetId: e.target.value
-                                ? Number(e.target.value)
-                                : null,
+                        <button
+                          type="button"
+                          className={`filters-item ${styles.targetFilterButton}`}
+                          disabled={!isAvailable}
+                          aria-expanded={
+                            targetPicker?.slotKey === config.slotKey
+                          }
+                          aria-haspopup="dialog"
+                          aria-label={config.filterPlaceholder}
+                          onClick={(e) =>
+                            setTargetPicker({
+                              slotKey: config.slotKey,
+                              anchor: e.currentTarget,
                             })
                           }
-                          disabled={!isAvailable}
-                          aria-label={config.filterPlaceholder}
                         >
-                          <option value="" disabled hidden>
-                            {config.filterPlaceholder}
-                          </option>
-                          {config.filterType === "genre" &&
-                            meta.genres.map((g) => (
-                              <option key={g.id} value={g.id}>
-                                {g.name}
-                              </option>
-                            ))}
-                          {config.filterType === "tag" &&
-                            meta.tags.map((t) => (
-                              <option key={t.id} value={t.id}>
-                                {t.name}
-                              </option>
-                            ))}
-                          {config.filterType === "fandom" &&
-                            meta.fandoms.map((f) => (
-                              <option key={f.id} value={f.id}>
-                                {f.name}
-                              </option>
-                            ))}
-                        </select>
-                        <span className={styles.selectArrow} aria-hidden />
+                          <span className={styles.targetFilterLabel}>
+                            {getTargetDisplayLabel(
+                              config,
+                              state.targetId,
+                              meta
+                            )}
+                          </span>
+                          <span className="filters-chevron" aria-hidden>
+                            ›
+                          </span>
+                        </button>
                       </div>
                     </label>
                   </div>
@@ -304,7 +354,7 @@ export default function Advertising() {
                 <button
                   type="button"
                   className={styles.orderButton}
-                  onClick={() => handleAddToOrder(config.placementType)}
+                  onClick={() => handleAddToOrder(config.slotKey)}
                   disabled={
                     !isAvailable ||
                     state.includedInOrder ||
@@ -320,6 +370,149 @@ export default function Advertising() {
           );
         })}
       </div>
+
+      <FilterDropdown
+        open={targetPicker != null && !!pickerConfig?.filterType}
+        anchorEl={targetPicker?.anchor ?? null}
+        onClose={() => setTargetPicker(null)}
+        align="end"
+        className="search-filter-dropdown"
+      >
+        {pickerConfig?.filterType && targetPicker && (
+          <div className="search-filter-dropdown-inner">
+            <div className="search-filter-dropdown-header">
+              <span className="search-filter-dropdown-title">
+                {pickerConfig.filterLabel ?? ""}
+              </span>
+              <button
+                type="button"
+                className="search-filter-close"
+                onClick={() => setTargetPicker(null)}
+              >
+                Закрити
+              </button>
+            </div>
+            <div className="search-filter-options-wrap">
+              {meta.isLoading ? (
+                <div className="search-filter-empty">Завантаження…</div>
+              ) : pickerConfig.filterType === "tag" &&
+                meta.tagGroups.length > 0 ? (
+                <div className="search-tag-groups">
+                  {meta.tagGroups.map((group) => (
+                    <div key={group.name} className="search-tag-group">
+                      <div className="search-tag-group-header">
+                        <span className="search-tag-group-title">
+                          {group.name}
+                        </span>
+                        <span
+                          className="search-tag-group-line"
+                          aria-hidden
+                        />
+                      </div>
+                      <div className="search-filter-options-grid">
+                        {group.tags.map((item) => {
+                          const selected =
+                            placements[targetPicker.slotKey].targetId ===
+                            item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className={
+                                selected
+                                  ? "search-filter-chip search-filter-chip-selected"
+                                  : "search-filter-chip"
+                              }
+                              onClick={() => {
+                                updatePlacement(targetPicker.slotKey, {
+                                  targetId: item.id,
+                                });
+                                setTargetPicker(null);
+                              }}
+                            >
+                              {item.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : pickerConfig.filterType === "genre" &&
+                meta.genres.length === 0 ? (
+                <div className="search-filter-empty">
+                  Немає даних для цього фільтра.
+                </div>
+              ) : pickerConfig.filterType === "tag" &&
+                meta.tags.length === 0 ? (
+                <div className="search-filter-empty">
+                  Немає даних для цього фільтра.
+                </div>
+              ) : pickerConfig.filterType === "fandom" &&
+                meta.fandoms.length === 0 ? (
+                <div className="search-filter-empty">
+                  Немає даних для цього фільтра.
+                </div>
+              ) : pickerConfig.filterType === "tag" ? (
+                <div className="search-filter-options-grid">
+                  {meta.tags.map((item) => {
+                    const selected =
+                      placements[targetPicker.slotKey].targetId === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={
+                          selected
+                            ? "search-filter-chip search-filter-chip-selected"
+                            : "search-filter-chip"
+                        }
+                        onClick={() => {
+                          updatePlacement(targetPicker.slotKey, {
+                            targetId: item.id,
+                          });
+                          setTargetPicker(null);
+                        }}
+                      >
+                        {item.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="search-filter-options-grid">
+                  {(pickerConfig.filterType === "genre"
+                    ? meta.genres
+                    : meta.fandoms
+                  ).map((item) => {
+                    const selected =
+                      placements[targetPicker.slotKey].targetId === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={
+                          selected
+                            ? "search-filter-chip search-filter-chip-selected"
+                            : "search-filter-chip"
+                        }
+                        onClick={() => {
+                          updatePlacement(targetPicker.slotKey, {
+                            targetId: item.id,
+                          });
+                          setTargetPicker(null);
+                        }}
+                      >
+                        {item.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </FilterDropdown>
 
       <footer className={styles.footer}>
         <div className={styles.summary}>
