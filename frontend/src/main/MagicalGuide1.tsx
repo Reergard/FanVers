@@ -1,7 +1,7 @@
-import { MagicalGuide1Content } from "./HomePage2";
+import HomePage2 from "./HomePage2";
 
 export function MagicalGuide1() {
-  return <MagicalGuide1Content />;
+  return <HomePage2 />;
 }
 
 export default MagicalGuide1;

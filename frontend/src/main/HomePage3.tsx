@@ -1,19 +1,10 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { http } from "../api/http";
 import { BookCard } from "../BookCard/BookCard";
 import { SectionLineTitle } from "../navigation/SectionLineTitle";
 import type { UserTranslationBook } from "../api/catalogApi";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { useMedia } from "../shared/hooks/useMedia";
-import styles from "./HomePage.module.css";
-import "./MagicalGuide.css";
-
-interface BookFromApi {
-  id: number;
-  title: string;
-  slug: string;
-}
+import "./HomePage.module.css";
 
 type GuideCard = {
   id: number;
@@ -134,12 +125,7 @@ const GUIDE_CARDS: GuideCard[] = [
   },
 ];
 
-async function fetchBooksNews(): Promise<BookFromApi[]> {
-  const { data } = await http.get<BookFromApi[]>("/api/main/books-news/");
-  return Array.isArray(data) ? data : [];
-}
-
-export function MagicalGuide2Content() {
+export function HomePage3() {
   const isTablet = useMedia("(max-width: 1024px)");
   const isMobile = useMedia("(max-width: 768px)");
   const isNarrowMobile = useMedia("(max-width: 480px)");
@@ -208,20 +194,6 @@ export function MagicalGuide2Content() {
         </button>
       </div>
     </section>
-  );
-}
-
-export function HomePage3() {
-  const { data: books = [] } = useQuery({
-    queryKey: ["books-news"],
-    queryFn: fetchBooksNews,
-  });
-  const book = books[0];
-
-  return (
-    <div className={styles.section3}>
-      <MagicalGuide2Content />
-    </div>
   );
 }
 

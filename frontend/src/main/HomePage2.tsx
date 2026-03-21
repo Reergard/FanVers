@@ -8,8 +8,7 @@ import { useMedia } from "../shared/hooks/useMedia";
 import { fetchBookRatings } from "../api/ratingApi";
 import { getBooksNews, getBookNewsCoverUrl, type BookNewsItem } from "../api/mainApi";
 import bookDetailStyles from "../catalog/styles/BookDetail.module.css";
-import styles from "./HomePage.module.css";
-import "./MagicalGuide.css";
+import "./HomePage.module.css";
 
 import newsFrame from "./assets/backgrounds/news_section.svg";
 import bookDecorRaw from "./assets/backgrounds/book.svg?raw";
@@ -210,7 +209,8 @@ function MobileNewsCard({
   );
 }
 
-export function MagicalGuide1Content() {
+
+export function HomePage2() {
   const isTablet = useMedia("(max-width: 1024px)");
   const isMobile = useMedia("(max-width: 768px)");
   const isNarrowMobile = useMedia("(max-width: 480px)");
@@ -379,14 +379,6 @@ export function MagicalGuide1Content() {
         )}
       </div>
     </section>
-  );
-}
-
-export function HomePage2() {
-  return (
-    <div className={styles.section2}>
-      <MagicalGuide1Content />
-    </div>
   );
 }
 
