@@ -1,198 +1,247 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { BookCard } from "../BookCard/BookCard";
+import type { BookCardBook } from "../BookCard/BookCard";
 import { SectionLineTitle } from "../navigation/SectionLineTitle";
-import type { UserTranslationBook } from "../api/catalogApi";
+import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { useMedia } from "../shared/hooks/useMedia";
+import {
+  getBooksRecentUpdates,
+  getBookNewsCoverUrl,
+  getRecentUpdateCardCaption,
+  type BookRecentUpdateItem,
+} from "../api/mainApi";
 import "./HomePage.module.css";
 
-type GuideCard = {
-  id: number;
-  book: UserTranslationBook;
-  description: string;
-};
+import starIcon from "../assets/backgrounds/star_navigation_books.svg";
+import leftArrow from "../assets/backgrounds/left_arrow.svg";
 
-const FILTER_LABELS = [
-  "Топ дня",
-  "Топ тижня",
-  "Топ місяця",
-  "Залишилось топ 15",
-];
+const BOOKS_RECENT_STALE_MS = 5 * 60 * 1000;
+const INITIAL_VISIBLE_DESKTOP = 20;
+const INITIAL_VISIBLE_MOBILE = 10;
 
-const GUIDE_CARDS: GuideCard[] = [
-  {
-    id: 1,
-    book: {
-      id: 1,
-      slug: "",
-      title: "ХАОТИЧНИЙ БОГ МЕЧА",
-      owner: 0,
-      adult_content: true,
-      image: null,
-      created_at: null,
-      last_updated: null,
-      daily_income: 0,
-      monthly_income: 0,
-      daily_views: 0,
-    },
-    description:
-      "Цзян Чен - здавновизначний експерт, номер один у бойових мистецтвах Цзянху.",
-  },
-  {
-    id: 2,
-    book: {
-      id: 2,
-      slug: "",
-      title: "ХАОТИЧНИЙ БОГ МЕЧА",
-      owner: 0,
-      adult_content: true,
-      image: null,
-      created_at: null,
-      last_updated: null,
-      daily_income: 0,
-      monthly_income: 0,
-      daily_views: 0,
-    },
-    description: "Його майстерність володіння мечем не мала рівних серед однолітків.",
-  },
-  {
-    id: 3,
-    book: {
-      id: 3,
-      slug: "",
-      title: "ХАОТИЧНИЙ БОГ МЕЧА",
-      owner: 0,
-      adult_content: true,
-      image: null,
-      created_at: null,
-      last_updated: null,
-      daily_income: 0,
-      monthly_income: 0,
-      daily_views: 0,
-    },
-    description: "Виходячи за межі досконалості, він знову стає непереможним у бою.",
-  },
-  {
-    id: 4,
-    book: {
-      id: 4,
-      slug: "",
-      title: "ХАОТИЧНИЙ БОГ МЕЧА",
-      owner: 0,
-      adult_content: true,
-      image: null,
-      created_at: null,
-      last_updated: null,
-      daily_income: 0,
-      monthly_income: 0,
-      daily_views: 0,
-    },
-    description: "Кожен рух меча випереджає час, руйнуючи усталені межі сили.",
-  },
-  {
-    id: 5,
-    book: {
-      id: 5,
-      slug: "",
-      title: "ХАОТИЧНИЙ БОГ МЕЧА",
-      owner: 0,
-      adult_content: true,
-      image: null,
-      created_at: null,
-      last_updated: null,
-      daily_income: 0,
-      monthly_income: 0,
-      daily_views: 0,
-    },
-    description: "Його вороги зникають ще до того, як розуміють, що бій почався.",
-  },
-  {
-    id: 6,
-    book: {
-      id: 6,
-      slug: "",
-      title: "ХАОТИЧНИЙ БОГ МЕЧА",
-      owner: 0,
-      adult_content: true,
-      image: null,
-      created_at: null,
-      last_updated: null,
-      daily_income: 0,
-      monthly_income: 0,
-      daily_views: 0,
-    },
-    description: "Новий шлях сили починається там, де інші втрачають надію.",
-  },
-];
+/** Індекси початку «вікна» каруселі (узгоджено з кроком prev/next). */
+function getRecentUpdatePageStarts(bookCount: number, cardsPerView: number): number[] {
+  if (bookCount <= 0) return [];
+  const maxStart = Math.max(0, bookCount - cardsPerView);
+  if (maxStart === 0) return [0];
+  const starts: number[] = [0];
+  let s = 0;
+  for (;;) {
+    const next = Math.min(maxStart, s + cardsPerView);
+    if (next <= s) break;
+    starts.push(next);
+    s = next;
+    if (s >= maxStart) break;
+  }
+  return starts;
+}
+
+function toBookCardBook(book: BookRecentUpdateItem): BookCardBook {
+  return {
+    id: book.id,
+    slug: book.slug,
+    title: book.title,
+    image: book.image,
+    adult_content: book.adult_content,
+    owner: 0,
+  };
+}
 
 export function HomePage3() {
   const isTablet = useMedia("(max-width: 1024px)");
   const isMobile = useMedia("(max-width: 768px)");
   const isNarrowMobile = useMedia("(max-width: 480px)");
 
-  const cardsPerView = isNarrowMobile ? 1 : isMobile ? 2 : isTablet ? 3 : 4;
-  const maxStart = Math.max(0, GUIDE_CARDS.length - cardsPerView);
-  const [start, setStart] = useState(0);
+  const batchSize = isMobile ? INITIAL_VISIBLE_MOBILE : INITIAL_VISIBLE_DESKTOP;
 
-  const visibleCards = useMemo(
-    () => GUIDE_CARDS.slice(start, start + cardsPerView),
-    [start, cardsPerView]
+  const { data: books = [], isLoading, isError } = useQuery({
+    queryKey: ["books-recent-updates-homepage-3"],
+    queryFn: getBooksRecentUpdates,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    staleTime: BOOKS_RECENT_STALE_MS,
+  });
+
+  const booksLength = books.length;
+  const [visibleCap, setVisibleCap] = useState(batchSize);
+
+  useEffect(() => {
+    setVisibleCap(batchSize);
+  }, [booksLength, batchSize]);
+
+  const displayedBooks = useMemo(
+    () => books.slice(0, Math.min(visibleCap, booksLength)),
+    [books, visibleCap, booksLength]
   );
 
+  const cardsPerView = isNarrowMobile ? 1 : isMobile ? 2 : isTablet ? 3 : 4;
+  const displayedLength = displayedBooks.length;
+  const maxStart = Math.max(0, displayedLength - cardsPerView);
+
+  const [start, setStart] = useState(0);
+
+  const pageStarts = useMemo(
+    () => getRecentUpdatePageStarts(displayedLength, cardsPerView),
+    [displayedLength, cardsPerView]
+  );
+
+  useEffect(() => {
+    setStart(0);
+  }, [displayedLength, cardsPerView]);
+
+  useEffect(() => {
+    if (displayedLength > 0 && start > maxStart) {
+      setStart(0);
+    }
+  }, [displayedLength, maxStart, start]);
+
+  const visibleBooks = useMemo(
+    () => displayedBooks.slice(start, start + cardsPerView),
+    [displayedBooks, start, cardsPerView]
+  );
+
+  const currentPageIndex = Math.max(0, pageStarts.indexOf(start));
+
   const onPrev = () => {
-    setStart((prev) => (prev <= 0 ? maxStart : Math.max(0, prev - cardsPerView)));
+    if (pageStarts.length <= 1) return;
+    const i = pageStarts.indexOf(start);
+    const idx = i === -1 ? 0 : i;
+    const prevIdx = (idx - 1 + pageStarts.length) % pageStarts.length;
+    setStart(pageStarts[prevIdx]!);
   };
 
   const onNext = () => {
-    setStart((prev) => (prev >= maxStart ? 0 : Math.min(maxStart, prev + cardsPerView)));
+    if (pageStarts.length <= 1) return;
+    const i = pageStarts.indexOf(start);
+    const idx = i === -1 ? 0 : i;
+    const nextIdx = (idx + 1) % pageStarts.length;
+    setStart(pageStarts[nextIdx]!);
   };
 
+  const onGoToPage = (pageIndex: number) => {
+    if (pageIndex >= 0 && pageIndex < pageStarts.length) {
+      setStart(pageStarts[pageIndex]!);
+    }
+  };
+
+  const shownCount = Math.min(visibleCap, booksLength);
+
+  if (isLoading) {
+    return (
+      <section className="mg2-section" aria-label="Останні оновлення">
+        <SectionLineTitle text="ОСТАННІ ОНОВЛЕННЯ" className="mg2-sectionLineTitle" />
+        <p className="mg2-placeholder">Завантаження оновлень…</p>
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <section className="mg2-section" aria-label="Останні оновлення">
+        <SectionLineTitle text="ОСТАННІ ОНОВЛЕННЯ" className="mg2-sectionLineTitle" />
+        <p className="mg2-placeholder">
+          Не вдалося завантажити оновлення. Спробуйте пізніше.
+        </p>
+      </section>
+    );
+  }
+
+  if (booksLength === 0) {
+    return (
+      <section className="mg2-section" aria-label="Останні оновлення">
+        <SectionLineTitle text="ОСТАННІ ОНОВЛЕННЯ" className="mg2-sectionLineTitle" />
+        <p className="mg2-placeholder">Нещодавніх оновлень глав поки немає</p>
+      </section>
+    );
+  }
+
   return (
-    <section className="mg2-section" aria-label="Магічний гід">
+    <section className="mg2-section" aria-label="Останні оновлення">
       <SectionLineTitle text="ОСТАННІ ОНОВЛЕННЯ" className="mg2-sectionLineTitle" />
 
-      <div className="mg2-filters" role="tablist" aria-label="Фільтри рейтингу">
-        {FILTER_LABELS.map((label) => (
-          <button key={label} className="mg2-filterBtn" type="button" role="tab" aria-selected="false">
-            {label}
-          </button>
-        ))}
-      </div>
-
       <div className="mg2-grid">
-        {visibleCards.map((item) => (
-          <article key={item.id} className="mg2-cardShell">
-            <BookCard book={item.book} />
-            <p className="mg2-description">{item.description}</p>
-            <ActionButton to="#" variant="default" size="sm" className="mg2-readBtn" ariaLabel={`Читати: ${item.book.title}`}>
-              Читати
-            </ActionButton>
-          </article>
-        ))}
+        {visibleBooks.map((book) => {
+          const coverUrl = getBookNewsCoverUrl(book);
+          const bookCardBook = toBookCardBook(book);
+          const caption = getRecentUpdateCardCaption(book);
+
+          return (
+            <article key={book.id} className="mg2-cardShell">
+              <BookCard
+                book={{
+                  ...bookCardBook,
+                  image: coverUrl,
+                }}
+              />
+              <p className="mg2-description">{caption}</p>
+              <ActionButton
+                to={book.slug ? `/books/${book.slug}` : "#"}
+                variant="default"
+                size="sm"
+                className="mg2-readBtn"
+                ariaLabel={`Читати: ${book.title}`}
+              >
+                Читати
+              </ActionButton>
+            </article>
+          );
+        })}
       </div>
 
       <div className="mg2-nav">
-        <button type="button" className="mg2-arrowBtn" aria-label="Попередня сторінка" onClick={onPrev}>
-          <svg className="mg2-arrowIcon" viewBox="0 0 70 19" aria-hidden="true">
-            <use href="/sprite-book.svg#book-carousel-arrow-left" />
-          </svg>
-        </button>
+        {pageStarts.length > 1 && (
+          <>
+            <button
+              type="button"
+              className="mg2-arrowBtn"
+              aria-label="Попередня сторінка"
+              onClick={onPrev}
+            >
+              <img src={leftArrow} alt="" className="mg2-arrowIcon" />
+            </button>
 
-        <div className="mg2-indicator" aria-live="polite">
-          <svg className="mg2-star" viewBox="0 0 18 18" aria-hidden="true">
-            <use href="/sprite-book.svg#book-carousel-star" />
-          </svg>
-          <svg className="mg2-star" viewBox="0 0 18 18" aria-hidden="true">
-            <use href="/sprite-book.svg#book-carousel-star" />
-          </svg>
-        </div>
+            <div className="mg2-mobileStars mg2-navStars" aria-label="Сторінки каруселі">
+              {pageStarts.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={`mg2-mobileStarDot ${i === currentPageIndex ? "mg2-mobileStarDotActive" : ""}`}
+                  onClick={() => onGoToPage(i)}
+                  aria-label={`Сторінка ${i + 1} з ${pageStarts.length}`}
+                >
+                  <img src={starIcon} alt="" />
+                </button>
+              ))}
+            </div>
 
-        <button type="button" className="mg2-arrowBtn" aria-label="Наступна сторінка" onClick={onNext}>
-          <svg className="mg2-arrowIcon" viewBox="0 0 70 19" aria-hidden="true" style={{ transform: "scaleX(-1)" }}>
-            <use href="/sprite-book.svg#book-carousel-arrow-left" />
-          </svg>
-        </button>
+            <button
+              type="button"
+              className="mg2-arrowBtn"
+              aria-label="Наступна сторінка"
+              onClick={onNext}
+            >
+              <img
+                src={leftArrow}
+                alt=""
+                className="mg2-arrowIcon"
+                style={{ transform: "scaleX(-1)" }}
+              />
+            </button>
+          </>
+        )}
       </div>
+
+      <ShowMoreNavigation
+        className="mg2-showMoreNav"
+        visibleCount={shownCount}
+        totalCount={booksLength}
+        onShowMore={() =>
+          setVisibleCap((prev) => Math.min(prev + batchSize, booksLength))
+        }
+        ariaLabel="Показати ще оновлення"
+      />
     </section>
   );
 }

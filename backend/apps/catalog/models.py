@@ -419,7 +419,7 @@ class Chapter(models.Model):
     )
     slug = models.SlugField(unique=True, blank=True)
     file = models.FileField(upload_to=chapter_directory_path, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
     is_paid = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=1, db_index=True)

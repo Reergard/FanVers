@@ -157,6 +157,10 @@
   gap: clamp(10px, 1.4vw, 20px);
 }
 
+:global(.mg2-showMoreNav) {
+  margin-top: clamp(14px, 2vw, 22px);
+}
+
 :global(.mg2-arrowBtn) {
   position: relative;
   display: inline-grid;
@@ -626,11 +630,6 @@
 }
 
 @media (max-width: 768px) {
-  :global(.mg2-grid),
-  :global(.mg2-nav) {
-    display: none;
-  }
-
   :global(.mg2-arrowBtn) {
     width: 54px;
     min-width: 54px;

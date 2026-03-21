@@ -4,11 +4,19 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class BooksNewsSerializer(serializers.ModelSerializer):
+
+class HomeBookCardSerializer(serializers.ModelSerializer):
+    """
+    Картка книги для головної (новинки / останні оновлення).
+    chapters_count та latest_chapter_title мають бути передані з queryset через .annotate() —
+    без N+1 на кожну книгу.
+    """
+
     background_image = serializers.SerializerMethodField()
     cover_image = serializers.SerializerMethodField()
-    chapters_count = serializers.SerializerMethodField()
-    latest_chapter_title = serializers.SerializerMethodField()
+    # Не називати annotate як chapters_count — на Book є @property chapters_count без setter.
+    chapters_count = serializers.IntegerField(read_only=True, source="home_chapters_total")
+    latest_chapter_title = serializers.CharField(read_only=True, allow_null=True)
     genres = serializers.SerializerMethodField()
     tags = serializers.SerializerMethodField()
     fandoms = serializers.SerializerMethodField()
@@ -16,72 +24,57 @@ class BooksNewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = [
-            'id', 'title', 'description', 'image',
-            'slug', 'background_image', 'cover_image',
-            'created_at', 'book_type', 'adult_content',
-            'chapters_count', 'latest_chapter_title',
-            'genres', 'tags', 'fandoms'
+            "id",
+            "title",
+            "description",
+            "image",
+            "slug",
+            "background_image",
+            "cover_image",
+            "created_at",
+            "book_type",
+            "adult_content",
+            "chapters_count",
+            "latest_chapter_title",
+            "genres",
+            "tags",
+            "fandoms",
         ]
 
     def get_background_image(self, obj):
         if obj.image:
-            request = self.context.get('request')
+            request = self.context.get("request")
             if request:
-                logger.debug(f"Формування URL для background_image: {obj.image.url}")
                 return request.build_absolute_uri(obj.image.url)
-        logger.warning(f"Відсутнє зображення для книги {obj.id}")
         return None
 
     def get_cover_image(self, obj):
         if obj.image:
-            request = self.context.get('request')
+            request = self.context.get("request")
             if request:
-                logger.debug(f"Формування URL для cover_image: {obj.image.url}")
                 return request.build_absolute_uri(obj.image.url)
-        logger.warning(f"Відсутнє зображення для книги {obj.id}")
         return None
 
-    def get_chapters_count(self, obj):
-        """Возвращает общее количество глав в книге"""
-        return obj.chapters.count()
-
-    def get_latest_chapter_title(self, obj):
-        """Возвращает название последней добавленной главы"""
-        latest_chapter = obj.chapters.order_by('-created_at').first()
-        return latest_chapter.title if latest_chapter else None
-
     def get_genres(self, obj):
-        """Возвращает жанры книги"""
-        genres = [{'id': genre.id, 'name': genre.name} for genre in obj.genres.all()]
-        logger.debug(f"Жанры для книги {obj.id} ({obj.title}): {genres}")
-        return genres
+        return [{"id": g.id, "name": g.name} for g in obj.genres.all()]
 
     def get_tags(self, obj):
-        """Возвращает теги книги"""
-        tags = [{'id': tag.id, 'name': tag.name} for tag in obj.tags.all()]
-        logger.debug(f"Теги для книги {obj.id} ({obj.title}): {tags}")
-        return tags
+        return [{"id": t.id, "name": t.name} for t in obj.tags.all()]
 
     def get_fandoms(self, obj):
-        """Возвращает фандомы книги"""
-        fandoms = [{'id': fandom.id, 'name': fandom.name} for fandom in obj.fandoms.all()]
-        logger.debug(f"Фандомы для книги {obj.id} ({obj.title}): {fandoms}")
-        return fandoms
+        return [{"id": f.id, "name": f.name} for f in obj.fandoms.all()]
 
     def to_representation(self, instance):
-        logger.debug(f"Серіалізація книги: id={instance.id}, title={instance.title}")
         representation = super().to_representation(instance)
-        request = self.context.get('request')
-        
+        request = self.context.get("request")
         if request:
             if instance.image:
-                representation['cover_image'] = request.build_absolute_uri(instance.image.url)
-                logger.debug(f"Cover image URL: {representation['cover_image']}")
+                representation["cover_image"] = request.build_absolute_uri(instance.image.url)
             else:
-                logger.warning(f"У книги id={instance.id} відсутнє зображення")
-            
-            representation['background_image'] = representation['cover_image']
-        else:
-            logger.warning("Відсутній об'єкт request в контексті серіалізатора")
-        
+                representation["cover_image"] = representation.get("cover_image")
+            representation["background_image"] = representation.get("cover_image")
         return representation
+
+
+# Зворотна сумісність для імпортів
+BooksNewsSerializer = HomeBookCardSerializer

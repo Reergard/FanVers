@@ -64,8 +64,9 @@ export const API = {
   advertisingSubmitOrder: "/api/website_advertising/advertisements/submit_order/",
   advertisingBookAds: "/api/website_advertising/advertisements/book_advertisements/",
 
-  // Main: новинки (НОВИНКИ) для головної сторінки
+  // Main: новинки (НОВИНКИ) та останні оновлення глав для головної
   booksNews: "/api/main/books-news/",
+  booksRecentUpdates: "/api/main/books-recent-updates/",
 
   // Subscription
   subscriptionSettings: (bookSlug: string) =>
