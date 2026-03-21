@@ -68,12 +68,16 @@ class ChapterSerializer(serializers.ModelSerializer):
 
     def get_is_purchased(self, obj):
         request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            try:
-                return request.user.profile.purchased_chapters.filter(id=obj.id).exists()
-            except Exception:
-                return False
-        return False
+        if not request or not request.user.is_authenticated:
+            return False
+        from apps.catalog.api.permissions import is_book_owner_or_creator
+        if is_book_owner_or_creator(request.user, obj.book):
+            return True
+        purchased_ids = self.context.get('purchased_chapter_ids')
+        if purchased_ids is not None:
+            return obj.id in purchased_ids
+        from apps.subscription.services import user_has_chapter_access
+        return user_has_chapter_access(request.user, obj.id)
 
     def get_volume_title(self, obj):
         return obj.volume.title if obj.volume else None

@@ -16,6 +16,11 @@
 - Файл: `backend/apps/navigation/api/views.py`
 - Класс: `ChapterNavigationView.get`
 
+### Покупка главы
+- `POST /api/users/purchase-chapter/<chapter_id>/`
+- Файл: `backend/apps/users/api/balance_views.py`
+- См. `SUBSCRIPTION_BACKEND.md` — логіка: prepaid → баланс
+
 ---
 
 ## 2) Логика доступа в chapter detail
@@ -29,7 +34,7 @@
    - если глава платная и пользователь не авторизован -> `401` (`Необхідна авторизація для перегляду платної глави`);
    - проверяется доступ к книге: `check_book_access_permission(user, book, "download")`;
    - если книга закрыта по правам -> `403` с текстом причины;
-   - если глава платная -> проверка покупки: `request.user.profile.purchased_chapters.filter(id=chapter.id).exists()`;
+   - если глава платная -> проверка покупки: `user_has_chapter_access(request.user, chapter.id)` (UserChapterAccess);
    - если не куплена -> `403` (`Необхідно придбати главу для перегляду`).
 
 После проверок доступа:
@@ -66,7 +71,7 @@
    - `title`, `slug`, `is_paid`, `id`, `volume`.
    - `is_purchased`:
      - если пользователь владелец/создатель книги -> всегда `true`;
-     - иначе для авторизованного пользователя -> проверка в `profile.purchased_chapters`;
+     - иначе для авторизованного пользователя -> проверка через `get_user_chapter_access_ids` (UserChapterAccess);
      - для неавторизованного -> `false`.
 
 Это изменение синхронизирует поведение навигации с доступом owner в `chapter_detail`.

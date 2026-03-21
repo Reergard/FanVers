@@ -16,6 +16,7 @@ urlpatterns = [
     path('search/', include('apps.search.api.urls')),
     path('analytics_books/', include('apps.analytics_books.api.urls')),
     path('website_advertising/', include('apps.website_advertising.api.urls')),
+    path('subscription/', include('apps.subscription.api.urls')),
 ]
 
 

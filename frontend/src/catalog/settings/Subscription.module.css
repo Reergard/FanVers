@@ -1,0 +1,352 @@
+/**
+ * Subscription Settings — форма налаштувань підписки
+ * Сітка: [Label | Inputs | Suffix]
+ * Вертикальні лінії (колонки) змінюють довжину залежно від кількості рядків
+ */
+
+/* ===== SECTION ===== */
+.section {
+  width: 100%;
+  color: var(--text, rgba(255, 255, 255, 0.92));
+}
+
+/* ===== BLOCKS ===== */
+.block {
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.blockTitle {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f58807;
+}
+
+.blockDesc {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+}
+
+/* ===== TABLE (форма як таблиця) ===== */
+.table {
+  display: grid;
+  /* Desktop: 3 колонки — Label | Inputs | Suffix */
+  grid-template-columns: minmax(0, 1fr) minmax(min(18rem, 100%), 1.5fr) auto;
+  column-gap: clamp(1rem, 2vw, 2rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ===== ROW ===== */
+.row {
+  display: contents; /* елементи рядка стають direct children grid-контейнера */
+}
+
+.rowLabel {
+  display: flex;
+  align-items: center;
+  padding-block: clamp(1.25rem, 1.8vw, 1.75rem);
+  padding-inline: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  font-size: clamp(0.9375rem, 1.05vw, 1rem);
+  line-height: 1.4;
+}
+
+.rowInputs {
+  display: flex;
+  align-items: center;
+  padding-block: clamp(1.25rem, 1.8vw, 1.75rem);
+  padding-inline: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rowSuffix {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-block: clamp(1.25rem, 1.8vw, 1.75rem);
+  padding-inline: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  font-size: clamp(0.9375rem, 1.05vw, 1rem);
+  white-space: nowrap;
+  opacity: 0.9;
+}
+
+/* ===== INPUT WRAP (label з :focus-within) ===== */
+.inputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: clamp(4px, 0.4vw, 6px);
+  background: transparent;
+  transition: border-color 180ms ease;
+}
+
+.inputWrap:focus-within {
+  border-color: #F58807;
+}
+
+.inputWrap input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem clamp(0.75rem, 1vw, 1rem);
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: clamp(0.9375rem, 1.05vw, 1rem);
+}
+
+.inputWrap input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Широкий input для рядків 1–2 */
+.inputWrap_wide {
+  max-width: clamp(12rem, 20vw, 18rem);
+}
+
+/* ===== SUBSCRIPTION CLUSTER (Абонемент: [input][Розділів][input]) ===== */
+.subscriptionCluster {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: clamp(0.5rem, 0.8vw, 0.75rem);
+}
+
+.subscriptionInput {
+  width: clamp(3.5rem, 5vw, 4.5rem);
+  min-width: 3rem;
+  text-align: center;
+}
+
+.subscriptionLabel {
+  color: var(--text);
+  font-size: clamp(0.875rem, 1vw, 0.9375rem);
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+.modeRadio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.radioLabel {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: clamp(0.875rem, 1vw, 0.9375rem);
+}
+
+.radioLabel input {
+  margin-right: 0.4rem;
+}
+
+.checkboxWrap {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.checkboxWrap input {
+  margin-right: 0.5rem;
+}
+
+.activePack {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(245, 136, 7, 0.1);
+  border-radius: 6px;
+  font-size: 0.9375rem;
+}
+
+/* ===== FOOTER ===== */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding-top: clamp(2rem, 3vw, 3rem);
+  margin-top: 0.5rem;
+}
+
+.footer button:first-of-type {
+  padding: 0.5rem 1rem;
+  border: 1px dashed rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.footer button:first-of-type:hover {
+  border-color: #F58807;
+  color: #F58807;
+}
+
+.saveButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.5rem, 0.8vw, 0.75rem);
+  padding: clamp(0.5rem, 0.8vw, 0.625rem) clamp(1.25rem, 1.8vw, 1.5rem);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: clamp(4px, 0.5vw, 6px);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: clamp(0.9375rem, 1.1vw, 1.0625rem);
+  cursor: pointer;
+  transition: border-color 180ms ease, background 180ms ease, color 180ms ease;
+}
+
+.saveButton:hover:not(:disabled) {
+  border-color: #F58807;
+  background: rgba(245, 136, 7, 0.08);
+  color: #F58807;
+}
+
+.saveButton:focus-visible {
+  outline: 2px solid #F58807;
+  outline-offset: 2px;
+}
+
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Іконка: check-in-circle. Замінити на <use href="#icon-check-circle"/> коли буде в sprite */
+.saveIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* ===== TABLET (< 1024px) ===== */
+@media (max-width: 1023.98px) {
+  .table {
+    grid-template-columns: 1fr;
+    row-gap: 0;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 0  clamp(0.75rem, 1.5vw, 1rem);
+  }
+
+  .rowLabel {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    padding-block: clamp(1rem, 2vw, 1.25rem) 0.35rem;
+    border-bottom: none;
+  }
+
+  .rowInputs {
+    grid-column: 1;
+    grid-row: 2;
+    padding-block: 0.35rem clamp(1rem, 2vw, 1.25rem);
+    padding-inline-end: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .rowSuffix {
+    grid-column: 2;
+    grid-row: 2;
+    justify-content: flex-end;
+    padding-block: 0.35rem clamp(1rem, 2vw, 1.25rem);
+    padding-inline-start: clamp(0.5rem, 1vw, 0.75rem);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    align-self: center;
+  }
+}
+
+/* ===== MOBILE (< 768px) ===== */
+@media (max-width: 767.98px) {
+  .row {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .rowLabel {
+    grid-column: 1;
+    padding-block: clamp(0.875rem, 2.5vw, 1rem) 0.25rem;
+  }
+
+  .rowInputs {
+    grid-column: 1;
+    grid-row: 2;
+    padding-block: 0.5rem;
+    padding-inline-end: 0;
+  }
+
+  .rowSuffix {
+    grid-column: 1;
+    grid-row: 3;
+    justify-content: flex-start;
+    padding-block: 0.25rem clamp(0.875rem, 2.5vw, 1rem);
+    padding-inline-start: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .inputWrap_wide {
+    max-width: 100%;
+  }
+
+  .subscriptionCluster {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .subscriptionInput {
+    flex: 1;
+    min-width: 3rem;
+  }
+
+  .footer {
+    padding-top: clamp(1.5rem, 4vw, 2rem);
+  }
+
+  .saveButton {
+    width: 100%;
+    max-width: 18rem;
+  }
+}
+
+/* ===== NARROW PHONES (< 480px) ===== */
+@media (max-width: 479.98px) {
+  .rowLabel {
+    font-size: clamp(0.875rem, 4vw, 0.9375rem);
+  }
+
+  .subscriptionCluster {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .subscriptionCluster .inputWrap {
+    max-width: 100%;
+  }
+
+  .subscriptionLabel {
+    text-align: center;
+  }
+}

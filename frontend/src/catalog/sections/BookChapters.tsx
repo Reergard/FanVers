@@ -1,7 +1,20 @@
 import { useMemo, useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { useLocation } from "react-router-dom";
 import { ActionButton } from "../../shared/ActionButton/ActionButton";
+import { useNotification } from "../../shared/NotificationModal/NotificationProvider";
+import { useAuth } from "../../auth/useAuth";
+import { useAuthModal } from "../../auth/AuthModalContext";
+import {
+  getSubscriptionSettings,
+  applyPlan,
+  purchaseChapter,
+  subscriptionKeys,
+  type SubscriptionSettingsResponse,
+} from "../../api/subscriptionApi";
 import styles from "../styles/BookDetail.module.css";
-import type { Chapter, Volume } from "../../api/catalogApi";
+import { catalogKeys, type Chapter, type Volume } from "../../api/catalogApi";
 import checkIcon from "../assets/icons/check.svg";
 import deleteIcon from "../assets/icons/Delete.svg";
 import editIcon from "../assets/icons/Edit.svg";
@@ -112,6 +125,12 @@ export type BookChaptersProps = {
   isMovingToVolume?: boolean;
   /** Чи створюється том (блокує кнопку) */
   isCreatingVolume?: boolean;
+  /** Slug книги (для читачів — застосування плану до обраних розділів) */
+  bookSlug?: string;
+  /** Після успішної покупки/застосування плану */
+  onPurchaseSuccess?: () => void;
+  /** Чи потрібно перевіряти auth перед покупкою (для reader mode) */
+  requireAuthForPurchase?: boolean;
 };
 
 export function BookChapters({
@@ -139,8 +158,136 @@ export function BookChapters({
   isSavingOrder = false,
   isMovingToVolume = false,
   isCreatingVolume = false,
+  bookSlug,
+  onPurchaseSuccess,
+  requireAuthForPurchase = false,
 }: BookChaptersProps) {
+  const queryClient = useQueryClient();
+  const { showSuccess, showError } = useNotification();
+  const { isAuthenticated } = useAuth();
+  const { openLoginModal } = useAuthModal();
+  const location = useLocation();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [subscriptionSelectedIds, setSubscriptionSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
+  const [purchasingChapterId, setPurchasingChapterId] = useState<number | null>(null);
+
+  const { data: subSettings } = useQuery({
+    queryKey: bookSlug ? subscriptionKeys.settings(bookSlug) : ["subscription", "none"],
+    queryFn: () => getSubscriptionSettings(bookSlug!),
+    enabled: !isOwner && !!bookSlug,
+  });
+
+  const subResp = subSettings as SubscriptionSettingsResponse | undefined;
+  const activeSub = subResp?.active_subscription;
+  const plans = (subResp?.plans ?? []).filter(
+    (p) => p.is_active && p.purchase_mode === "instant"
+  );
+  const paidChaptersForApply = chapters.filter(
+    (c) => c.is_paid && !c.is_purchased && c.price != null && c.price > 0
+  );
+  const canApplyPlan =
+    !isOwner &&
+    !!bookSlug &&
+    !activeSub &&
+    plans.length > 0 &&
+    paidChaptersForApply.length > 0 &&
+    (isAuthenticated || !requireAuthForPurchase);
+
+  const hasPrepaidForChapter =
+    !isOwner &&
+    !!activeSub &&
+    (activeSub.remaining_chapters_count ?? 0) > 0;
+
+  const purchaseChapterMutation = useMutation({
+    mutationFn: (chapterId: number) => purchaseChapter(chapterId),
+    onSuccess: () => {
+      if (bookSlug) {
+        queryClient.invalidateQueries({ queryKey: subscriptionKeys.settings(bookSlug) });
+        queryClient.invalidateQueries({ queryKey: catalogKeys.chapters(bookSlug) });
+      }
+      showSuccess("Главу придбано");
+      onPurchaseSuccess?.();
+    },
+    onError: (err: unknown) => {
+      const msg =
+        err instanceof AxiosError && err.response?.data && typeof err.response.data === "object" && "error" in (err.response.data as object)
+          ? String((err.response.data as { error?: string }).error)
+          : err instanceof Error
+            ? err.message
+            : "Помилка покупки";
+      showError(msg);
+    },
+  });
+
+  const applyMutation = useMutation({
+    mutationFn: ({ planId, chapterIds }: { planId: number; chapterIds: number[] }) =>
+      applyPlan(bookSlug!, planId, chapterIds),
+    onSuccess: () => {
+      if (bookSlug) {
+        queryClient.invalidateQueries({ queryKey: subscriptionKeys.settings(bookSlug) });
+        queryClient.invalidateQueries({ queryKey: subscriptionKeys.userSubscriptions() });
+      }
+      showSuccess("Розділи успішно придбано");
+      setSubscriptionSelectedIds(new Set());
+      setSelectedPlanId(null);
+      onPurchaseSuccess?.();
+    },
+    onError: (err: unknown) => {
+      let msg = "Помилка застосування плану";
+      if (err instanceof AxiosError && err.response?.data && typeof err.response.data === "object") {
+        const d = err.response.data as Record<string, unknown>;
+        if (typeof d.error === "string") msg = d.error;
+        else if (typeof d === "object" && d !== null && !Array.isArray(d)) {
+          const parts = Object.entries(d).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join("; ") : v}`);
+          if (parts.length) msg = parts.join(". ");
+        }
+      } else if (err instanceof Error) msg = err.message;
+      showError(msg);
+    },
+  });
+
+  const toggleSubscriptionChapter = (id: number) => {
+    if (!canApplyPlan) return;
+    setSubscriptionSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectedPlan = plans.find((p) => p.id === selectedPlanId);
+  const minChapters = selectedPlan?.discount_threshold ?? 0;
+
+  const handleChapterClick = (chapter: Chapter) => {
+    if (!onRead) return;
+    const needsPurchase =
+      chapter.is_paid && !chapter.is_purchased && hasPrepaidForChapter;
+    if (needsPurchase) {
+      if (requireAuthForPurchase && !isAuthenticated) {
+        openLoginModal(location.pathname);
+        return;
+      }
+      setPurchasingChapterId(chapter.id);
+      purchaseChapterMutation.mutate(chapter.id, {
+        onSuccess: () => onRead(chapter),
+        onSettled: () => setPurchasingChapterId(null),
+      });
+    } else {
+      onRead(chapter);
+    }
+  };
+
+  const handleApplyPlan = () => {
+    if (!selectedPlanId || !bookSlug) return;
+    const min = selectedPlan?.discount_threshold ?? 0;
+    if (subscriptionSelectedIds.size < min) {
+      showError(`Оберіть щонайменше ${min} розділів`);
+      return;
+    }
+    applyMutation.mutate({ planId: selectedPlanId, chapterIds: Array.from(subscriptionSelectedIds) });
+  };
   const [editingChapterId, setEditingChapterId] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState("");
 
@@ -207,6 +354,41 @@ export function BookChapters({
   return (
     <section className={styles.chapters} aria-label="Розділи">
       <header className={styles.chaptersHeader}>
+        {canApplyPlan && (
+          <div className={styles.chapterActions}>
+            <div className={styles.planSelect}>
+              {plans.map((p) => (
+                <label key={p.id} className={styles.planSelectLabel}>
+                  <input
+                    type="radio"
+                    name="applyPlan"
+                    checked={selectedPlanId === p.id}
+                    onChange={() => setSelectedPlanId(p.id)}
+                  />
+                  {p.discount_percent}% від {p.discount_threshold} розд.
+                </label>
+              ))}
+            </div>
+            <span className={styles.subscriptionApplyHint}>
+              {selectedPlanId
+                ? `Обрано ${subscriptionSelectedIds.size} (мін. ${minChapters})`
+                : "Оберіть план"}
+            </span>
+            <ActionButton
+              variant="primary"
+              size="sm"
+              onClick={handleApplyPlan}
+              loading={applyMutation.isPending}
+              disabled={
+                applyMutation.isPending ||
+                !selectedPlanId ||
+                subscriptionSelectedIds.size < minChapters
+              }
+            >
+              Придбати обрані
+            </ActionButton>
+          </div>
+        )}
         {isOwner && (
           <>
             <div className={styles.chapterActions}>
@@ -320,13 +502,31 @@ export function BookChapters({
                         <input
                           type="checkbox"
                           className={styles.chapterCheckboxInput}
-                          checked={selectedIds.has(chapter.id)}
-                          onChange={() => toggleSelected(chapter.id)}
-                          disabled={!isOwner}
+                          checked={
+                            isOwner
+                              ? selectedIds.has(chapter.id)
+                              : subscriptionSelectedIds.has(chapter.id)
+                          }
+                          onChange={() =>
+                            isOwner
+                              ? toggleSelected(chapter.id)
+                              : toggleSubscriptionChapter(chapter.id)
+                          }
+                          disabled={
+                            isOwner
+                              ? false
+                              : !(
+                                  canApplyPlan &&
+                                  chapter.is_paid &&
+                                  !chapter.is_purchased &&
+                                  chapter.price != null &&
+                                  chapter.price > 0
+                                )
+                          }
                           aria-label={`Обрати розділ ${displayOrder}`}
                         />
                         <span className={styles.chapterCheckboxBox}>
-                          {selectedIds.has(chapter.id) && (
+                          {(isOwner ? selectedIds.has(chapter.id) : subscriptionSelectedIds.has(chapter.id)) && (
                             <img src={checkIcon} alt="" className={styles.chapterCheckIcon} aria-hidden />
                           )}
                         </span>
@@ -393,7 +593,7 @@ export function BookChapters({
                           <button
                             type="button"
                             className={styles.chapterTitleBtn}
-                            onClick={() => onRead(chapter)}
+                            onClick={() => handleChapterClick(chapter)}
                             aria-label={`${getReadLabel(chapter)}: ${chapter.title}`}
                           >
                             <span className={styles.chapterTitleText}>{chapter.title}</span>
@@ -441,9 +641,14 @@ export function BookChapters({
                     </div>
                     <div className={styles.chapterRowActions} role="cell">
                       {onRead && (
-                        <button type="button" className={styles.chapterReadBtn} onClick={() => onRead(chapter)}>
+                        <button
+                          type="button"
+                          className={styles.chapterReadBtn}
+                          onClick={() => handleChapterClick(chapter)}
+                          disabled={purchasingChapterId === chapter.id}
+                        >
                           <img src={readIcon} alt="" className={styles.chapterActionIcon} aria-hidden />
-                          {getReadLabel(chapter)}
+                          {purchasingChapterId === chapter.id ? "Покупка…" : getReadLabel(chapter)}
                         </button>
                       )}
                       {isOwner && onDelete && (

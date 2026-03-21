@@ -81,8 +81,9 @@ class UserReadingStatsView(APIView):
         user = request.user
         profile = user.profile
 
-        # Підрахунок придбаних глав
-        purchased_chapters = profile.purchased_chapters.count()
+        # Підрахунок придбаних глав (UserChapterAccess — джерело правди)
+        from apps.subscription.models import UserChapterAccess
+        purchased_chapters = UserChapterAccess.objects.filter(user=user).count()
         
         # Підрахунок прочитаних глав
         read_chapters = UserChapterProgress.objects.filter(

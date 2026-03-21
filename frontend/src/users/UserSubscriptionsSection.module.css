@@ -1,0 +1,81 @@
+.section {
+  margin-block: clamp(24px, 4vw, 40px);
+}
+
+.title {
+  margin: 0 0 clamp(12px, 2vw, 16px);
+  font-size: clamp(1rem, 1.5vw, 1.125rem);
+  font-weight: 600;
+  color: #f58807;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-block-end: 1rem;
+}
+
+.tabs button {
+  padding: 0.4rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text, #fff);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tabs button:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.tabs button.tabActive {
+  border-color: #f58807;
+  color: #f58807;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.9375rem;
+}
+
+.list li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.list li:last-child {
+  border-bottom: none;
+}
+
+.empty {
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.bookLink {
+  color: #05b4c7;
+  text-decoration: none;
+}
+
+.bookLink:hover {
+  text-decoration: underline;
+}
+
+.itemMeta {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.loading {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.6);
+}

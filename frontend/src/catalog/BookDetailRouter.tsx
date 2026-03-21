@@ -24,7 +24,7 @@ export default function BookDetailRouter() {
 
   useEffect(() => {
     if (location.state?.chapterCreated === true) {
-      showSuccessAutoClose("Глава успішно завантажена");
+      showSuccessAutoClose("Розділ успішно створено");
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state?.chapterCreated, location.pathname, navigate, showSuccessAutoClose]);

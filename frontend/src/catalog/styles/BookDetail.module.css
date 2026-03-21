@@ -640,6 +640,28 @@
   font-family: "Seminaria", serif;
 }
 
+.planSelect {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.planSelectLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: clamp(13px, 1.2vw, 14px);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.subscriptionApplyHint {
+  font-size: clamp(13px, 1.2vw, 14px);
+  color: rgba(255, 255, 255, 0.8);
+  align-self: center;
+}
+
 .chapterActionsRight {
   margin-left: auto;
   font-family: "Seminaria", serif;

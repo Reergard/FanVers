@@ -19,7 +19,10 @@ class TransactionLog(models.Model):
     )
     chapter = models.ForeignKey(
         Chapter,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text='Null для покупки пакета підписки (prepaid/bulk)'
     )
     book = models.ForeignKey(
         Book,
@@ -42,6 +45,8 @@ class TransactionLog(models.Model):
         decimal_places=2
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    # Audit: request_id, plan_id, balance_before, balance_after, subscription_before, subscription_after
+    audit_metadata = models.JSONField(null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']

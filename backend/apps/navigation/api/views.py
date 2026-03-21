@@ -25,7 +25,19 @@ class ChapterNavigationView(APIView):
             
             # Отримуємо всі розділи книги, відсортовані за позицією
             all_chapters = list(book.chapters.select_related('volume').order_by('volume__order', 'order'))
-            
+
+            purchased_chapter_ids = set()
+            if request.user.is_authenticated:
+                is_owner_or_creator = is_book_owner_or_creator(request.user, book)
+                if not is_owner_or_creator:
+                    from apps.subscription.services import get_user_chapter_access_ids
+                    purchased_chapter_ids = get_user_chapter_access_ids(
+                        request.user,
+                        [ch.id for ch in all_chapters],
+                    )
+            else:
+                is_owner_or_creator = False
+
             if not all_chapters:
                 return Response({
                     'current_chapter': None,
@@ -46,21 +58,11 @@ class ChapterNavigationView(APIView):
             # Визначаємо попередній та наступний розділ
             prev_chapter = all_chapters[current_index - 1] if current_index > 0 else None
             next_chapter = all_chapters[current_index + 1] if current_index < len(all_chapters) - 1 else None
-            is_owner_or_creator = is_book_owner_or_creator(request.user, book)
 
             def get_chapter_data(chapter):
                 if not chapter:
                     return None
-                    
-                is_purchased = False
-                if request.user.is_authenticated:
-                    if is_owner_or_creator:
-                        is_purchased = True
-                    else:
-                        try:
-                            is_purchased = request.user.profile.purchased_chapters.filter(id=chapter.id).exists()
-                        except ObjectDoesNotExist:
-                            is_purchased = False
+                is_purchased = is_owner_or_creator or (chapter.id in purchased_chapter_ids)
                 
                 return {
                     'title': chapter.title,
@@ -197,8 +199,23 @@ class ChapterViewSet(viewsets.ModelViewSet):
             chapters = Chapter.objects.filter(
                 book_id=book_id
             ).select_related('volume').order_by('volume__order', 'order')[start_chapter-1:end_chapter]
-            
-            serializer = self.get_serializer(chapters, many=True)
+
+            purchased_chapter_ids = set()
+            if request.user.is_authenticated and not is_book_owner_or_creator(request.user, book):
+                from apps.subscription.services import get_user_chapter_access_ids
+                purchased_chapter_ids = get_user_chapter_access_ids(
+                    request.user,
+                    [ch.id for ch in chapters],
+                )
+
+            serializer = self.get_serializer(
+                chapters,
+                many=True,
+                context={
+                    'request': request,
+                    'purchased_chapter_ids': purchased_chapter_ids,
+                }
+            )
             
             return Response({
                 'chapters': serializer.data,

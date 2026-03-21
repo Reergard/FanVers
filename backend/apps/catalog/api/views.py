@@ -103,10 +103,20 @@ def chapter_list(request, book_slug):
         chapters = Chapter.objects.filter(book=book).select_related('volume').order_by(
             'volume__order', 'order'
         )
+        purchased_chapter_ids = set()
+        if request.user.is_authenticated and not is_book_owner_or_creator(request.user, book):
+            from apps.subscription.services import get_user_chapter_access_ids
+            purchased_chapter_ids = get_user_chapter_access_ids(
+                request.user,
+                chapters.values_list('id', flat=True),
+            )
         serializer = ChapterSerializer(
             chapters,
             many=True,
-            context={'request': request}
+            context={
+                'request': request,
+                'purchased_chapter_ids': purchased_chapter_ids,
+            }
         )
         containers = ChapterOrderContainer.objects.filter(
             book=book
@@ -172,13 +182,15 @@ def chapter_detail(request, book_slug, chapter_slug):
 
             # Платну главу може читати тільки той, хто купив.
             if chapter.is_paid:
-                try:
-                    is_purchased = request.user.profile.purchased_chapters.filter(id=chapter.id).exists()
-                except ObjectDoesNotExist:
-                    is_purchased = False
+                from apps.subscription.services import user_has_chapter_access
+                is_purchased = user_has_chapter_access(request.user, chapter.id)
                 if not is_purchased:
                     return Response(
-                        {"error": "Необхідно придбати главу для перегляду"}, 
+                        {
+                            "error": "Необхідно придбати главу для перегляду",
+                            "chapter_id": chapter.id,
+                            "requires_purchase": True,
+                        },
                         status=status.HTTP_403_FORBIDDEN
                     )
         

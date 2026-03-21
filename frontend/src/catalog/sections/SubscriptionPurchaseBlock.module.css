@@ -1,0 +1,79 @@
+.purchaseBlock {
+  margin-block: clamp(24px, 4vw, 48px);
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  font-weight: 700;
+  color: #f58807;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-family: "RobotoCondensedLightItalic", "Inter", sans-serif !important;
+}
+
+.card {
+  margin-top: clamp(12px, 2vw, 20px);
+  padding: clamp(16px, 2.5vw, 24px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.activeInfo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.activeHint {
+  width: 100%;
+  margin-top: 0.25rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: clamp(12px, 1vw, 13px);
+}
+
+.activeLabel {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: clamp(14px, 1.2vw, 15px);
+}
+
+.activeValue {
+  color: #f58807;
+  font-weight: 600;
+  font-size: clamp(14px, 1.2vw, 15px);
+}
+
+.planList {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2vw, 16px);
+}
+
+.planItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(12px, 2vw, 20px);
+  padding: clamp(10px, 1.5vw, 14px) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.planItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.planItem:first-child {
+  padding-top: 0;
+}
+
+.planDetails {
+  color: #05b4c7;
+  font-size: clamp(14px, 1.2vw, 15px);
+  font-family: "RobotoCondensedLightItalic", "Inter", sans-serif !important;
+}

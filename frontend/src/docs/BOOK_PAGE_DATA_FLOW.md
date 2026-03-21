@@ -1,7 +1,8 @@
 # Данные страницы книги (Frontend)
 
 Документ описывает загрузку данных для маршрута `/books/:slug`.  
-Отдельная страница главы (`/books/:bookSlug/chapters/:chapterSlug`) описана в `CHAPTER_PAGE_DATA_FLOW.md`.
+Отдельная страница главы (`/books/:bookSlug/chapters/:chapterSlug`) описана в `CHAPTER_PAGE_DATA_FLOW.md`.  
+Система підписки — `SUBSCRIPTION_FRONTEND.md`.
 
 ---
 
@@ -34,21 +35,23 @@ URL /books/:slug
 |---|---|
 | `catalog/BookDetailRouter.tsx` | Грузит `book/volumes/chapters`, ждет `authReady`, выбирает owner/reader, обрабатывает 404/403/other. |
 | `catalog/BookDetailOwner.tsx` | Режим владельца: передает `isOwner`, owner-кнопки и `onRead` в `BookChapters`; управление порядком глав и томами. |
-| `catalog/BookDetailReader.tsx` | Режим читателя: передает `onRead` и `getReadLabel` в `BookChapters`. |
-| `catalog/sections/BookChapters.tsx` | Таблица глав. И клик по названию, и кнопка действия используют один `onRead(chapter)`. |
+| `catalog/BookDetailReader.tsx` | Режим читателя: передает `onRead`, `getReadLabel`, `SubscriptionPurchaseBlock` в layout. |
+| `catalog/sections/BookChapters.tsx` | Таблица глав. `handleChapterClick`: при prepaid — purchaseChapter → navigate; иначе navigate. |
+| `catalog/sections/SubscriptionPurchaseBlock.tsx` | Блок абонименту: prepaid-плани, активний пакет, підказка. |
 | `api/catalogApi.ts` | Типы и методы `getBook/getChapters/getVolumes`, нормализация ответов. |
 
 ---
 
 ## Переход из книги в главу
 
-На странице книги переход в главу выполняется через `onRead`:
+На странице книги переход в главу выполняется через `onRead` (фактически через `handleChapterClick` в `BookChapters`):
 
-- в owner-режиме (`BookDetailOwner`) `onRead` всегда ведет в `/books/{slug}/chapters/{chapterSlug}`;
-- в reader-режиме (`BookDetailReader`) `onRead` тоже всегда ведет в этот маршрут;
-- текст кнопки для reader может быть `Купити`, но текущий handler остается переходом.
+- в owner-режиме (`BookDetailOwner`) — всегда переход в `/books/{slug}/chapters/{chapterSlug}`;
+- в reader-режиме (`BookDetailReader`):
+  - если у пользователя есть активный prepaid-пакет (remaining > 0) и глава платная/не куплена — при клике «Купити» сначала вызывается `purchaseChapter`, после успеха — переход на страницу главы;
+  - иначе — переход на страницу главы (доступ проверяет backend; при 403 показывается кнопка «Купити» на странице главы).
 
-То есть доступ к платной главе окончательно проверяет backend endpoint chapter detail.
+Текст кнопки: `Купити` для `is_paid && !is_purchased`, иначе `Читати`.
 
 ---
 
@@ -61,6 +64,8 @@ URL /books/:slug
 - `POST /api/catalog/books/<slug>/add_chapter/` -> добавление главы
 - `POST /api/catalog/books/<slug>/chapters/reorder/` -> изменение порядка глав (см. CHAPTER_REORDER_FRONTEND.md)
 - `POST /api/catalog/books/<slug>/chapters/<id>/move/` -> перемещение главы между томами
+- `GET /api/subscription/books/<slug>/` -> налаштування підписки, плани, активний пакет
+- `POST /api/users/purchase-chapter/<id>/` -> покупка глави (баланс або prepaid)
 
 ---
 
@@ -75,4 +80,4 @@ URL /books/:slug
 ## Примечание по обновлениям после создания главы
 
 Если переход на `/books/:slug` пришел со state `chapterCreated === true`,  
-`BookDetailRouter` вызывает `showSuccessAutoClose("Глава успішно завантажена")` и очищает state через `navigate(..., { replace: true })`.
+`BookDetailRouter` вызывает `showSuccessAutoClose("Розділ успішно створено")` и очищает state через `navigate(..., { replace: true })`.

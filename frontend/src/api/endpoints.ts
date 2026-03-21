@@ -64,6 +64,15 @@ export const API = {
   // Main: новинки (НОВИНКИ) для головної сторінки
   booksNews: "/api/main/books-news/",
 
+  // Subscription
+  subscriptionSettings: (bookSlug: string) =>
+    `/api/subscription/books/${encodeURIComponent(bookSlug)}/`,
+  subscriptionPurchasePlan: (bookSlug: string) =>
+    `/api/subscription/books/${encodeURIComponent(bookSlug)}/purchase-plan/`,
+  subscriptionApplyPlan: (bookSlug: string) =>
+    `/api/subscription/books/${encodeURIComponent(bookSlug)}/apply-plan/`,
+  subscriptionUserSubscriptions: "/api/subscription/user/subscriptions/",
+
   // Chat
   chat: {
     list: "/api/chat/",

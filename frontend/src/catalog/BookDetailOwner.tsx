@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
-import { catalogApi, catalogKeys, type Book, type Chapter, type Volume } from "../api/catalogApi";
+import { catalogApi, catalogKeys } from "../api/catalogApi";
+import type { Book, Chapter, Volume } from "../api/catalogApi";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 import { BookDetailLayout } from "./BookDetailLayout";
 import { BookHero } from "./sections/BookHero";
@@ -262,7 +263,7 @@ export default function BookDetailOwner({
             }}
             getChapterPrice={(ch) =>
               ch.is_paid && ch.price != null && ch.price > 0
-                ? `${Number(ch.price).toFixed(2)} ₴`
+                ? `${Number(ch.price).toFixed(2)} FanCoins`
                 : "Безкоштовно"
             }
             getChapterDate={(ch) =>

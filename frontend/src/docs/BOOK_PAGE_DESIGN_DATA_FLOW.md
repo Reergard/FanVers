@@ -14,6 +14,7 @@ BookDetailRouter
           -> hero         (BookHero)
           -> description  (BookDescription)
           -> authorWorks  (AuthorWorks)
+          -> subscription (SubscriptionPurchaseBlock, тільки reader)
           -> chapters     (BookChapters)
           -> comments     (BookCommentsContainer -> BookComments)
 ```
@@ -42,7 +43,7 @@ BookDetailRouter
 
 Нюанс reader-режима:
 - в `BookDetailReader` `getReadLabel` показывает `Купити` для `is_paid && !is_purchased`;
-- но `onRead` все равно делает `navigate` на страницу главы.
+- `handleChapterClick` в `BookChapters`: при наличии активного prepaid-пакета — сначала `purchaseChapter`, затем `navigate`; иначе — сразу `navigate`.
 
 ---
 

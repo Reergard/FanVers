@@ -281,7 +281,7 @@ frontend/src/
 - Провайдер зберігає state: `open`, `message`, `type`, **variant** (`"default"` | `"autoClose"`).
 - **variant "default"**: рендериться `NotificationModal` — заголовок за типом, текст, кнопка «Зрозуміло», у Modal показується кнопка ×. Закриття: клік по overlay, ×, «Зрозуміло», Escape.
 - **variant "autoClose"**: рендериться `AutoCloseNotificationModal` — заголовок «Успіх», тільки текст повідомлення, **без кнопок** (Modal з `showCloseButton={false}`). Закриття **автоматично** через `AUTO_CLOSE_MS` (3000 мс) по таймеру в useEffect; overlay-клік і Escape також викликають `onClose`.
-- Метод **showSuccessAutoClose(message)** встановлює variant `"autoClose"` і відкриває модалку. Використовується в `catalog/BookDetailRouter.tsx`: після редиректу з сторінки додавання глави перевіряється `location.state?.chapterCreated`; якщо true — викликається `showSuccessAutoClose("Глава успішно завантажена")`, потім state очищається (navigate replace), щоб при оновленні сторінки модалка не показувалась знову.
+- Метод **showSuccessAutoClose(message)** встановлює variant `"autoClose"` і відкриває модалку. Використовується в `catalog/BookDetailRouter.tsx`: після редиректу з сторінки додавання глави перевіряється `location.state?.chapterCreated`; якщо true — викликається `showSuccessAutoClose("Розділ успішно створено")`, потім state очищається (navigate replace), щоб при оновленні сторінки модалка не показувалась знову.
 
 ### 10.5. Дедуплікація
 

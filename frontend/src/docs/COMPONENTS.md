@@ -465,7 +465,7 @@
 **Місця використання `useNotification`:**
 - `users/Profile.tsx` — `showSuccess`, `showError` (результати мутацій)
 - `auth/LoginForm.tsx`, `auth/RegisterForm.tsx` — показ помилок
-- `catalog/BookDetailRouter.tsx` — `showSuccessAutoClose("Глава успішно завантажена")` при `location.state?.chapterCreated`
+- `catalog/BookDetailRouter.tsx` — `showSuccessAutoClose("Розділ успішно створено")` при `location.state?.chapterCreated`
 - `catalog/AddChapter.tsx` — `showError` (помилки доступу та валідації)
 
 **Стилі:** `NotificationModal.module.css` — `.content`, `.message`, `.actions`, `.error` / `.success` / `.info` / `.warning` (border-left для кольорового акценту). AutoCloseNotificationModal використовує ті самі класи для контенту.

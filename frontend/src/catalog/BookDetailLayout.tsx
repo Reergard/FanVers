@@ -9,6 +9,7 @@ export type BookDetailLayoutProps = {
   authorWorks: ReactNode;
   chapters: ReactNode;
   comments: ReactNode;
+  subscription?: ReactNode;
   breadcrumbItems?: BreadcrumbItem[];
 };
 
@@ -18,6 +19,7 @@ export function BookDetailLayout({
   authorWorks,
   chapters,
   comments,
+  subscription,
   breadcrumbItems,
 }: BookDetailLayoutProps) {
   return (
@@ -32,6 +34,7 @@ export function BookDetailLayout({
       <section className={styles.content} aria-label="Контент сторінки книги">
         {description}
         {authorWorks}
+        {subscription}
         {chapters}
         {comments}
       </section>

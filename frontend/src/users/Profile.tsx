@@ -30,6 +30,7 @@ import { useAdultContent } from "../settings/useAdultContent";
 import { Breadcrumb } from "../navigation/Breadcrumb";
 import { PageTitle } from "../navigation/PageTitle";
 import { resolveAvatarUrl } from "../shared/avatar/resolveAvatarUrl";
+import { UserSubscriptionsSection } from "./UserSubscriptionsSection";
 import type { NotificationSettingsPatch, BalanceHistoryItem } from "./types";
 import backgroundsAvatarsSvgRaw from "./assets/backgrounds/backgrounds_avatars.svg?raw";
 
@@ -710,6 +711,10 @@ export default function Profile() {
                 контент, призначений для дорослих.
               </span>
             </label>
+          </section>
+
+          <section className={styles.colUserSubscriptions}>
+            <UserSubscriptionsSection />
           </section>
 
           <section className={styles.colNotificationSettings}>

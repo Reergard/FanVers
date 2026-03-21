@@ -562,7 +562,7 @@
    ---------------------------------------- */
 .row6Grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: clamp(24px, 3.5vw, 48px);
   padding-block: clamp(20px, 3vw, 32px);
   border-top: 1px solid rgba(128, 128, 128, 0.4);
@@ -570,6 +570,7 @@
 }
 
 .colAccountSettings,
+.colUserSubscriptions,
 .colNotificationSettings {
   display: flex;
   flex-direction: column;

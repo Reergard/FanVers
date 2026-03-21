@@ -57,8 +57,8 @@ INSTALLED_APPS = [
     'apps.notification.apps.NotificationConfig',
     'apps.monitoring.apps.MonitoringConfig',
     'apps.analytics_books.apps.AnalyticsBooksConfig',
+    'apps.subscription.apps.SubscriptionConfig',
 
-    
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_simplejwt',

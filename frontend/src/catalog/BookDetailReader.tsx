@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/useAuth";
+import { catalogKeys } from "../api/catalogApi";
 import type { Book, Chapter, Volume } from "../api/catalogApi";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 import { BookDetailLayout } from "./BookDetailLayout";
@@ -9,6 +11,7 @@ import { BookDescription } from "./sections/BookDescription";
 import { AuthorWorks } from "./sections/AuthorWorks";
 import { BookChapters } from "./sections/BookChapters";
 import { BookCommentsContainer } from "./sections/BookCommentsContainer";
+import { SubscriptionPurchaseBlock } from "./sections/SubscriptionPurchaseBlock";
 
 interface BookDetailReaderProps {
   book: Book;
@@ -27,6 +30,7 @@ export default function BookDetailReader({
 }: BookDetailReaderProps) {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const metaRows = useMemo(
     () => [
@@ -100,17 +104,32 @@ export default function BookDetailReader({
       }
       description={<BookDescription description={description} />}
       authorWorks={<AuthorWorks />}
+      subscription={
+        <SubscriptionPurchaseBlock
+          bookSlug={book.slug}
+          onPurchaseSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: catalogKeys.chapters(book.slug) });
+            queryClient.invalidateQueries({ queryKey: catalogKeys.book(book.slug) });
+          }}
+        />
+      }
       chapters={
         <BookChapters
           chapters={chapters}
           volumes={volumes}
           isOwner={false}
+          bookSlug={book.slug}
+          requireAuthForPurchase
+          onPurchaseSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: catalogKeys.chapters(book.slug) });
+            queryClient.invalidateQueries({ queryKey: catalogKeys.book(book.slug) });
+          }}
           loading={chaptersLoading}
           onRead={(ch) => navigate(`/books/${book.slug}/chapters/${ch.slug ?? ch.id}`)}
           getReadLabel={(ch) => (ch.is_paid && !ch.is_purchased ? "Купити" : "Читати")}
           getChapterPrice={(ch) =>
             ch.is_paid && ch.price != null && ch.price > 0
-              ? `${Number(ch.price).toFixed(2)} ₴`
+              ? `${Number(ch.price).toFixed(2)} FanCoins`
               : "Безкоштовно"
           }
           getChapterDate={(ch) =>
