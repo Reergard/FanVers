@@ -10,7 +10,7 @@ Vite + React + TypeScript
 
 2) Структура проекта и ответственность папок
 src/
-  api/            # axios (http.ts, httpRaw.ts), endpoints, catalogApi, mainApi (новинки), ratingApi (рейтинги), reviewsApi (коментарі)
+  api/            # axios (http.ts, httpRaw.ts), endpoints, catalogApi, mainApi (новинки), ratingApi, reviewsApi, api/top/* (ТОП за періодом) — docs/LISTS_AND_CAROUSELS_FRONTEND.md, ANALYTICS_FRONTEND.md
   app/            # общий layout приложения: Base.tsx + Base.module.css
   auth/           # авторизация: store, service, useAuth, bootstrap, token, refresh
   catalog/        # страница книги (/books/:slug), добавление главы (/books/:slug/add-chapter), страница главы (/books/:bookSlug/chapters/:chapterSlug), покинуті переклади (/abandoned), створення книги (/create-book), налаштування книги (/books/:slug/settings)
@@ -21,7 +21,7 @@ src/
   shared/         # переиспользуемые "примитивы": Container, Icon, Modal, hooks, utils
   widgets/        # крупные блоки: header, footer (и дальше: sidebar, drawer и т.д.)
   assets/         # глобальные ассеты: icons, logos, backgrounds, fonts
-  docs/           # документация (Concept.md, STRUCTURE.md, AUTHENTICATION_FRONTEND.md, CHAT_FRONTEND.md и др.)
+  docs/           # документация (Concept.md, STRUCTURE.md, ANALYTICS_FRONTEND.md, LISTS_AND_CAROUSELS_FRONTEND.md, AUTHENTICATION_FRONTEND.md, CHAT_FRONTEND.md и др.)
 
 Правило: всё "глобальное" → assets/, всё "только для страницы" → feature/assets/.
 
@@ -232,7 +232,7 @@ Base оборачивает Routes, Routes содержит Route для каж�
 - "/login" (LoginPage)
 - "/messages" (NotificationsPage)
 - "/catalog" (Catalog)
-- "/MagicalGuide" (MagicalGuide)
+- "/MagicalGuide" (ТОП за періодом у MagicalGuide3; тренди/рекомендації — окремо / заглушки)
 - "/abandoned" (AbandonedTranslations)
 - "/search" (SearchPage)
 - "/chat" (ChatPage)

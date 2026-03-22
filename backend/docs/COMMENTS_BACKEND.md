@@ -27,7 +27,7 @@
 |------|-------------|
 | **apps/reviews/models.py** | Моделі `BaseComment` (abstract), `BookComment`, `ChapterComment`: user, text, parent, created_at, likes, dislikes, owner_like. Методи `get_likes_count`, `get_dislikes_count`, `has_owner_like`. |
 | **apps/reviews/api/serializers.py** | `UserSerializer` (id, username, profile_image), `BaseCommentSerializer` (валідація text 3–1000 символів, likes_count, dislikes_count, user_reaction, has_owner_like, owner_like_type), `BookCommentSerializer` / `ChapterCommentSerializer` (replies рекурсивно). |
-| **apps/reviews/api/views.py** | `BookCommentViewSet`, `ChapterCommentViewSet` (list/create/destroy), `LikeDislikeViewSet` (update_reaction, owner_like). |
+| **apps/reviews/api/views.py** | `BookCommentViewSet`, `ChapterCommentViewSet` (list/create/destroy), `LikeDislikeViewSet` (update_reaction, owner_like); після create/destroy/reaction — виклики **`analytics_counters`** для **BookAnalytics** / **DailyAnalytics** (див. **ANALYTICS_BOOKS_BACKEND.md**). |
 | **apps/reviews/api/urls.py** | Роутер: book/<slug>/comments, chapter/<slug>/comments, book-comment, chapter-comment. |
 | **apps/api/urls.py** | Підключення: `path('reviews/', include('apps.reviews.api.urls'))`. |
 | **apps/catalog/api/permissions.py** | `check_book_access_permission(user, book, 'comment_book' | 'comment_chapter')` — використовується при створенні коментаря. |
@@ -79,7 +79,8 @@ return BookComment.objects.filter(book=book)
 3. Перевірка авторизації: якщо не `request.user.is_authenticated` — 401.
 4. Валідація даних сериалізатором: `text` (trim, довжина 3–1000), опційно `parent` (id батьківського коментаря). При помилках — 400.
 5. `perform_create`: у `validated_data` підставляються `user` і `book`/`chapter`; збереження в БД.
-6. Відповідь — 201 і тіло створеного коментаря (сериалізатор).
+6. Після успішного створення (зокрема відповіді) викликається **`record_comment_created`** для відповідної книги — оновлення **BookAnalytics** / **DailyAnalytics** для зважених метрик (ТОП тощо).
+7. Відповідь — 201 і тіло створеного коментаря (сериалізатор).
 
 Тіло запиту: `{ "text": "...", "parent": null | id }`. Для відповіді передається `parent` з id коментаря, на який відповідають.
 
@@ -90,7 +91,7 @@ return BookComment.objects.filter(book=book)
 1. `get_object()` — коментар береться з queryset (усі коментарі книги/глави), тому знаходиться і кореневий, і відповідь.
 2. `perform_destroy(instance)`:
    - перевірка: `request.user != instance.user` → `PermissionDenied("Можна видаляти лише свої коментарі.")` (403);
-   - інакше — `instance.delete()`.
+   - інакше — `instance.delete()`; для книги викликається **`record_comment_deleted`** (аналітика).
 
 Тобто видаляти може лише автор коментаря.
 
@@ -107,6 +108,7 @@ return BookComment.objects.filter(book=book)
   - Якщо `action == 'dislike'`: аналогічно для `dislikes` і `likes`.
   - Інші значення `action` — 400.
 - Відповідь — 200 і повний об’єкт коментаря (сериалізатор), щоб клієнт міг оновити лічильники та `user_reaction`.
+- **Аналітика (ТОП / метрики):** після зміни M2M викликаються `record_comment_like_added` / `record_comment_like_removed` для книги (book або `chapter.book`); додатково пишеться рядок **`CommentLikeAnalyticsEvent`** (денний журнал для нічного перерахунку). Див. **ANALYTICS_BOOKS_BACKEND.md**.
 
 ---
 
@@ -116,6 +118,7 @@ return BookComment.objects.filter(book=book)
 - Перевірка: `request.user` має бути **власником книги** (`book.owner`). Інакше — 403: «Тільки власник книги може ставити цей лайк».
 - Логіка: якщо в коментаря вже стоїть `owner_like == request.user`, то `owner_like` скидається в `None`, інакше встановлюється `request.user`. Потім `comment.save()`.
 - Відповідь — 200 і об’єкт коментаря.
+- **Аналітика:** цей лайк **не** змінює лічильники зважених метрик (лише UI коментаря).
 
 ---
 
@@ -150,4 +153,4 @@ Cascade: при видаленні книги/глави/користувача 
 
 ---
 
-**Останнє оновлення:** відповідно до поточного коду в apps/reviews/.
+**Останнє оновлення:** 2026-03-21 — узгоджено з `apps/reviews/` та аналітикою (**ANALYTICS_BOOKS_BACKEND.md**).

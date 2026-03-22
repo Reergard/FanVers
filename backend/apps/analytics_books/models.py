@@ -33,43 +33,58 @@ class DailyAnalytics(models.Model):
             models.Index(fields=['book', 'date'])
         ]
 
-    @property
-    def total_score(self):
-        return (
-            self.views +
-            self.comments +
-            self.book_ratings +
-            self.translation_ratings +
-            self.comment_likes +
-            self.bookmarks
-        )
-
     def __str__(self):
         return f"Daily analytics for {self.book.title} on {self.date}"
 
     @classmethod
     def get_analytics_for_period(cls, book, days):
+        """
+        Суми сирих полів за останні `days` календарних днів включно з сьогодні.
+        Зважені очки як у ТОПу за періодом: `weighted_totals_for_period_dict(result)`
+        у `apps.analytics_books.services.scoring`.
+        """
+        if days < 1:
+            days = 1
         end_date = timezone.now().date()
-        start_date = end_date - timedelta(days=days)
-        
+        start_date = end_date - timedelta(days=days - 1)
+
         analytics = cls.objects.filter(
             book=book,
             date__gte=start_date,
-            date__lte=end_date
+            date__lte=end_date,
         ).aggregate(
-            total_views=models.Sum('views'),
-            total_comments=models.Sum('comments'),
-            total_book_ratings=models.Sum('book_ratings'),
-            total_translation_ratings=models.Sum('translation_ratings'),
-            total_comment_likes=models.Sum('comment_likes'),
-            total_bookmarks=models.Sum('bookmarks')
+            total_views=models.Sum("views"),
+            total_comments=models.Sum("comments"),
+            total_book_ratings=models.Sum("book_ratings"),
+            total_translation_ratings=models.Sum("translation_ratings"),
+            total_comment_likes=models.Sum("comment_likes"),
+            total_bookmarks=models.Sum("bookmarks"),
         )
-        
+
         return {
-            'views': analytics['total_views'] or 0,
-            'comments': analytics['total_comments'] or 0,
-            'book_ratings': analytics['total_book_ratings'] or 0,
-            'translation_ratings': analytics['total_translation_ratings'] or 0,
-            'comment_likes': analytics['total_comment_likes'] or 0,
-            'bookmarks': analytics['total_bookmarks'] or 0
-        } 
+            "views": analytics["total_views"] or 0,
+            "comments": analytics["total_comments"] or 0,
+            "book_ratings": analytics["total_book_ratings"] or 0,
+            "translation_ratings": analytics["total_translation_ratings"] or 0,
+            "comment_likes": analytics["total_comment_likes"] or 0,
+            "bookmarks": analytics["total_bookmarks"] or 0,
+        }
+
+
+class CommentLikeAnalyticsEvent(models.Model):
+    """
+    Подія зміни лайка коментаря (+1 / -1) за календарний день.
+    Джерело для нічного перерахунку DailyAnalytics.comment_likes (M2M без timestamp).
+    """
+
+    book = models.ForeignKey(
+        Book, on_delete=models.CASCADE, related_name="+", db_index=True
+    )
+    day = models.DateField(db_index=True)
+    delta = models.SmallIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["book", "day"]),
+        ]

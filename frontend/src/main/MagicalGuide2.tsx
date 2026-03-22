@@ -18,7 +18,6 @@ function getRecommendationStubBooks(): BookCardBook[] {
     id: 12_000 + i,
     slug: "",
     title: `Рекомендація · ${i + 1}`,
-    owner: 0,
     adult_content: false,
     image: null,
   }));

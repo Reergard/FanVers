@@ -26,7 +26,8 @@ export interface Book {
   id: number;
   slug: string;
   title: string;
-  owner: number;
+  /** Відсутній у скорочених DTO (напр. список ТОПу), доки не завантажена повна книга */
+  owner?: number;
   ownerId?: number;
   isPublic?: boolean;
   chapters_count?: number;

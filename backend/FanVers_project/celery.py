@@ -28,6 +28,12 @@ app.conf.beat_schedule = {
         'task': 'apps.analytics_books.tasks.cleanup_old_analytics',
         'schedule': crontab(hour=3, minute=0),
     },
+
+    # Перерахунок аналітики з джерел правди (дубль для DatabaseScheduler — див. міграцію analytics_books)
+    'repair-analytics-from-sources': {
+        'task': 'apps.analytics_books.tasks.repair_analytics_from_sources',
+        'schedule': crontab(hour=2, minute=30),
+    },
 }
 
 app.conf.update(

@@ -68,6 +68,9 @@ export const API = {
   booksNews: "/api/main/books-news/",
   booksRecentUpdates: "/api/main/books-recent-updates/",
 
+  // Analytics: ТОП книг за періодом (карусель «ТОП» на /MagicalGuide)
+  topBooks: "/api/analytics_books/top/",
+
   // Subscription
   subscriptionSettings: (bookSlug: string) =>
     `/api/subscription/books/${encodeURIComponent(bookSlug)}/`,

@@ -287,7 +287,8 @@
 - `catalog/AbandonedTranslations.tsx` — покинуті переклади (withTags)
 - `search/search.tsx` — пошук (withTags)
 - `main/HomePage2.tsx` — НОВИНКИ на головній (default)
-- `main/HomePage3.tsx` — ОСТАННІ ОНОВЛЕННЯ, Чарівний Гід (default)
+- `main/HomePage3.tsx` — ОСТАННІ ОНОВЛЕННЯ (default)
+- `main/MagicalGuide1.tsx`, `MagicalGuide2.tsx`, `MagicalGuide3.tsx` — `/MagicalGuide`: **ТОП** (`MagicalGuide3`) з `useTopBooks` → `GET /api/analytics_books/top/`; **Тренди** (`MagicalGuide1`) та **рекомендації** (`MagicalGuide2`) — заглушки / майбутній API. Див. **docs/LISTS_AND_CAROUSELS_FRONTEND.md**.
 - `bookmarks/BookmarksPage.tsx` — закладки (bookmark)
 - `website_advertising/AdvertisingBooks.tsx` — реклама на головній (ad)
 

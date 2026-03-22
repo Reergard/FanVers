@@ -60,6 +60,20 @@ class BookRatingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+    def perform_destroy(self, instance):
+        from apps.analytics_books.services.analytics_counters import (
+            record_book_rating_removed,
+            record_translation_rating_removed,
+        )
+
+        book = instance.book
+        rt = instance.rating_type
+        super().perform_destroy(instance)
+        if rt == "BOOK":
+            record_book_rating_removed(book)
+        else:
+            record_translation_rating_removed(book)
+
     @action(
         detail=False, 
         methods=['GET'],

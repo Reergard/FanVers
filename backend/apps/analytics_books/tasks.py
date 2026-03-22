@@ -1,7 +1,30 @@
+import logging
+
 from celery import shared_task
 from django.utils import timezone
 from datetime import timedelta
-from .models import DailyAnalytics
+
+from .models import CommentLikeAnalyticsEvent, DailyAnalytics
+from .services.rebuild import run_full_analytics_repair
+
+logger = logging.getLogger(__name__)
+
+
+@shared_task(ignore_result=False)
+def repair_analytics_from_sources(days: int = 90):
+    """
+    Нічний/фоновий перерахунок: BookAnalytics з джерел правди + денні метрики
+    (comment_likes по днях — з CommentLikeAnalyticsEvent).
+    """
+    try:
+        stats = run_full_analytics_repair(days=days)
+        msg = f"repair_analytics_from_sources: {stats}"
+        logger.info(msg)
+        return msg
+    except Exception:
+        logger.exception("repair_analytics_from_sources failed")
+        raise
+
 
 @shared_task
 def cleanup_old_analytics():
@@ -11,9 +34,13 @@ def cleanup_old_analytics():
     """
     days = 90
     cutoff_date = timezone.now().date() - timedelta(days=days)
-    
-    deleted_count = DailyAnalytics.objects.filter(
-        date__lt=cutoff_date
+
+    deleted_daily = DailyAnalytics.objects.filter(date__lt=cutoff_date).delete()[0]
+    deleted_events = CommentLikeAnalyticsEvent.objects.filter(
+        day__lt=cutoff_date
     ).delete()[0]
-    
-    return f'Удалено {deleted_count} записей старше {days} дней' 
+
+    return (
+        f"Удалено daily={deleted_daily}, comment_like_events={deleted_events} "
+        f"старше {days} дней"
+    )

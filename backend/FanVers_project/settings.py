@@ -308,6 +308,9 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+# Розклад періодичних задач береться з БД (django_celery_beat), див. міграції додатків
+# (наприклад analytics_books.0003) та адмінку Periodic tasks. У celery.py залишено
+# beat_schedule як дубль/документація для тих, хто перемкне scheduler на файл.
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 
 

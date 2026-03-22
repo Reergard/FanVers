@@ -133,12 +133,23 @@ class BookmarkViewSet(viewsets.ModelViewSet):
             existing_bookmark.save()
             serializer.instance = existing_bookmark
         else:
-            # Якщо закладки немає, створюємо нову
             serializer.save(user=self.request.user)
-        
+            from apps.analytics_books.services.analytics_counters import record_bookmark_added
+            from apps.catalog.models import Book
+
+            book = Book.objects.get(pk=serializer.instance.book_id)
+            record_bookmark_added(book)
+
         # Інвалідуємо кеш статистики читання
         cache_key = f'user_reading_stats_{self.request.user.id}'
         cache.delete(cache_key)
+
+    def perform_destroy(self, instance):
+        from apps.analytics_books.services.analytics_counters import record_bookmark_removed
+
+        book = instance.book
+        super().perform_destroy(instance)
+        record_bookmark_removed(book)
 
     @action(detail=False, methods=['get'], url_path='status/(?P<status>.+)')
     def filter_by_status(self, request, status=None):

@@ -950,32 +950,22 @@ def abandoned_translations(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def register_book_view(request, book_id):
-    """API для регистрации просмотра книги"""
+    """Унікальний перегляд на користувача на день + інкремент аналітики."""
     try:
         from apps.catalog.models import Book
-        from apps.monitoring.models import BookView
-        from django.utils import timezone
-        
+        from apps.analytics_books.services.analytics_counters import (
+            record_unique_book_view_from_request,
+        )
+
         book = get_object_or_404(Book, id=book_id)
-        today = timezone.now().date()
-        
-        # Проверяем, не просматривал ли пользователь книгу сегодня
-        existing_view = BookView.objects.filter(
-            user=request.user,
-            book=book,
-            viewed_at__date=today
-        ).first()
-        
-        if not existing_view:
-            # Регистрируем новый просмотр
-            BookView.objects.create(
-                user=request.user,
-                book=book,
-                ip_address=request.META.get('REMOTE_ADDR')
-            )
-        
-        return Response({'message': 'Просмотр зарегистрирован'})
-        
+        counted = record_unique_book_view_from_request(request, book)
+        return Response(
+            {
+                "message": "Перегляд зареєстровано" if counted else "Перегляд сьогодні вже враховано",
+                "counted": counted,
+            }
+        )
+
     except Exception as e:
         logger.error(f"Помилка в register_book_view: {str(e)}", exc_info=True)
         return Response(

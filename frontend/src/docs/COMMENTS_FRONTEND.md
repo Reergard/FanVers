@@ -126,4 +126,8 @@
 
 ---
 
-**Останнє оновлення:** відповідно до поточного коду в frontend (reviewsApi, BookCommentsContainer, BookComments, endpoints, http, сторінки книги).
+**Зв’язок з аналітикою (бекенд):** після успішного POST коментаря, DELETE, POST `update_reaction` (лайк/дизлайк на коментарі) сервер сам оновлює лічильники для зважених метрик (ТОП тощо); **лайк автора** (`owner_like`) у ці лічильники не входить. Не потрібно окремо викликати analytics API з фронту для цих дій. Деталі: `backend/docs/ANALYTICS_BOOKS_BACKEND.md`; каруселі: **LISTS_AND_CAROUSELS_FRONTEND.md**.
+
+---
+
+**Останнє оновлення:** 2026-03-21 — узгоджено з кодом frontend та аналітикою на бекенді.

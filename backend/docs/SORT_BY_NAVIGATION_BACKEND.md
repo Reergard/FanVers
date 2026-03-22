@@ -39,6 +39,7 @@ Frontend застосовує локальне сортування (`created/up
 - `list()`:
   - підтримує фільтр `?status=...`;
   - застосовує `.order_by('-updated_at')`.
+- **Аналітика (ТОП / метрики):** при створенні закладки викликається `record_bookmark_added`, при видаленні — `record_bookmark_removed` (див. **ANALYTICS_BOOKS_BACKEND.md**).
 
 Frontend додатково може пересортувати локально за `updated/created/title`.
 

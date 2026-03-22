@@ -56,3 +56,5 @@ WebSocket використовує cookie-based auth (сесія). Переко�
 ### 4. Celery
 
 Celery використовує налаштування з `settings.py` (`CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND`). Переконайтеся, що Redis доступний і змінні `REDIS_HOST`, `REDIS_PORT`, `REDIS_DB_CELERY` встановлені коректно.
+
+**Celery Beat:** у проєкті `CELERY_BEAT_SCHEDULER = django_celery_beat.schedulers.DatabaseScheduler` — розклад у БД (адмінка Periodic tasks + міграції додатків). Мають бути запущені окремо **worker** і **beat**. Для аналітики книг: задачі `apps.analytics_books.tasks.repair_analytics_from_sources` (нічний перерахунок) та `cleanup_old_analytics` (очищення старих денних рядків і подій лайків). Деталі: **docs/ANALYTICS_BOOKS_BACKEND.md**.

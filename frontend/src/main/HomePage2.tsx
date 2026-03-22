@@ -27,7 +27,6 @@ function toBookCardBook(book: BookNewsItem): BookCardBook {
     title: book.title,
     image: book.image,
     adult_content: book.adult_content,
-    owner: 0,
   };
 }
 

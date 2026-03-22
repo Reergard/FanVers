@@ -70,6 +70,9 @@ class BookCommentViewSet(viewsets.ModelViewSet):
         book_slug = self.kwargs.get('slug')
         book = get_object_or_404(Book, slug=book_slug)
         serializer.save(user=self.request.user, book=book)
+        from apps.analytics_books.services.analytics_counters import record_comment_created
+
+        record_comment_created(serializer.instance.book)
 
     def list(self, request, *args, **kwargs):
         try:
@@ -94,7 +97,11 @@ class BookCommentViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         if self.request.user != instance.user:
             raise PermissionDenied("Можна видаляти лише свої коментарі.")
+        from apps.analytics_books.services.analytics_counters import record_comment_deleted
+
+        book = instance.book
         instance.delete()
+        record_comment_deleted(book)
 
 
 class ChapterCommentViewSet(viewsets.ModelViewSet):
@@ -153,6 +160,9 @@ class ChapterCommentViewSet(viewsets.ModelViewSet):
         chapter_slug = self.kwargs.get('slug')
         chapter = get_object_or_404(Chapter, slug=chapter_slug)
         serializer.save(user=self.request.user, chapter=chapter)
+        from apps.analytics_books.services.analytics_counters import record_comment_created
+
+        record_comment_created(chapter.book)
 
     def list(self, request, *args, **kwargs):
         try:
@@ -177,7 +187,11 @@ class ChapterCommentViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         if self.request.user != instance.user:
             raise PermissionDenied("Можна видаляти лише свої коментарі.")
+        from apps.analytics_books.services.analytics_counters import record_comment_deleted
+
+        book = instance.chapter.book
         instance.delete()
+        record_comment_deleted(book)
 
     @action(detail=True, methods=['post'])
     def reply(self, request, pk=None, slug=None):
@@ -185,6 +199,9 @@ class ChapterCommentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user, chapter=parent_comment.chapter, parent=parent_comment)
+            from apps.analytics_books.services.analytics_counters import record_comment_created
+
+            record_comment_created(parent_comment.chapter.book)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -217,18 +234,29 @@ class LikeDislikeViewSet(viewsets.ViewSet):
                 return Response({'error': 'Користувач не авторизований'}, 
                               status=status.HTTP_401_UNAUTHORIZED)
 
+            from apps.analytics_books.services import analytics_counters as _ac
+
+            book = comment.book if comment_type == "book-comment" else comment.chapter.book
+
             if action == 'like':
-                if user in comment.likes.all():
+                liked = user in comment.likes.all()
+                if liked:
                     comment.likes.remove(user)
+                    _ac.record_comment_like_removed(book)
                 else:
                     comment.likes.add(user)
                     comment.dislikes.remove(user)
+                    _ac.record_comment_like_added(book)
             elif action == 'dislike':
-                if user in comment.dislikes.all():
+                disliked = user in comment.dislikes.all()
+                if disliked:
                     comment.dislikes.remove(user)
                 else:
+                    had_like = user in comment.likes.all()
+                    if had_like:
+                        comment.likes.remove(user)
+                        _ac.record_comment_like_removed(book)
                     comment.dislikes.add(user)
-                    comment.likes.remove(user)
             else:
                 logger.error(f"Невірна дія: {action}")
                 return Response({'error': 'Невірна дія'}, status=status.HTTP_400_BAD_REQUEST)

@@ -166,6 +166,9 @@ frontend/src/
 │   ├── SORT_BY_NAVIGATION_FRONTEND.md
 │   ├── RATINGS_FRONTEND.md
 │   ├── SEARCH_FRONTEND.md
+│   ├── ANALYTICS_FRONTEND.md
+│   ├── LISTS_AND_CAROUSELS_FRONTEND.md
+│   ├── TRENDS_AND_ANALYTICS_FRONTEND.md   # старе ім’я; вміст перенесено в ANALYTICS + LISTS_AND_CAROUSELS
 │   └── STRUCTURE.md
 ├── App.tsx
 ├── main.tsx
@@ -315,6 +318,7 @@ export function Base({ children }: Props) {
 - `searchApi.ts` — API пошуку книг (`searchBooks`) для сторінки `/search`
 - `ratingApi.ts` — API рейтингів книги: fetchBookRatings(slug), submitRating(slug, type, value); нормалізація відповіді. Див. docs/RATINGS_FRONTEND.md.
 - `reviewsApi.ts` — API коментарів (книга/глава): fetch, post, delete, reaction, owner_like. Див. docs/COMMENTS_FRONTEND.md.
+- ТОП за періодом: `api/top/*` (`topApi`, типи, `normalizeTopReaderRow`, `mapTopBook`), `endpoints.topBooks`, хук **`shared/hooks/useTopBooks.ts`**, карусель **`main/MagicalGuide3.tsx`** (`GET /api/analytics_books/top/?type=...`). **Тренди** (майбутнє) — `MagicalGuide1` без цього API. Див. **docs/LISTS_AND_CAROUSELS_FRONTEND.md**, **docs/ANALYTICS_FRONTEND.md**, `backend/docs/ANALYTICS_BOOKS_BACKEND.md`.
 
 ---
 
@@ -614,6 +618,9 @@ export function HomePage() {
 Окремі секції головної сторінки:
 - **HomePage2** — блок «НОВИНКИ»: карусель нових книг з API (`mainApi.getBooksNews()` → `GET /api/main/books-news/`), рейтинги через `ratingApi.fetchBookRatings`, автоперемикання 9 с.
 - **HomePage3** — блок «ОСТАННІ ОНОВЛЕННЯ»: книги з недавніми оновленнями глав.
+
+### `main/MagicalGuide.tsx`, `MagicalGuide1.tsx`, `MagicalGuide2.tsx`, `MagicalGuide3.tsx`
+**Маршрут:** `/MagicalGuide`. **Тренди** (`MagicalGuide1`) — заглушка під майбутній окремий API. **Рекомендації** (`MagicalGuide2`) — заглушки. **ТОП** (`MagicalGuide3`) — `useTopBooks` → `GET /api/analytics_books/top/`. Деталі: **docs/LISTS_AND_CAROUSELS_FRONTEND.md**; бекенд: `backend/docs/LISTS_AND_CAROUSELS_BACKEND.md`, `ANALYTICS_BOOKS_BACKEND.md`.
 
 ---
 

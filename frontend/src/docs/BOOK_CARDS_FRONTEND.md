@@ -68,7 +68,7 @@ type Props = {
 
 ### 4.1. default
 
-**Де використовується:** Каталог, Власні переклади, Чарівний Гід (MagicalGuide1, MagicalGuide2).
+**Де використовується:** Каталог, Власні переклади, Чарівний Гід (`MagicalGuide3` — ТОП з API, `MagicalGuide1`/`MagicalGuide2` — тренди/рекомендації поки заглушки; див. **LISTS_AND_CAROUSELS_FRONTEND.md**).
 
 **Що показує:**
 - Обкладинка (з vertical line зліва, NEW, 18+, декоративна «A»)
@@ -149,7 +149,8 @@ type Props = {
 | Власні переклади | `/my-translations` | default | `users/UserTranslations.tsx` |
 | Покинуті переклади | `/abandoned` | withTags | `catalog/AbandonedTranslations.tsx` |
 | Пошук | `/search` | withTags | `search/search.tsx` |
-| Чарівний Гід (НОВИНКИ, ОСТАННІ ОНОВЛЕННЯ) | через MagicalGuide | default | `main/HomePage2.tsx`, `main/HomePage3.tsx` |
+| Головна (НОВИНКИ, ОСТАННІ ОНОВЛЕННЯ) | `/` | default | `main/HomePage2.tsx`, `main/HomePage3.tsx` |
+| Чарівний Гід (Тренди / Рекомендації / Топ) | `/MagicalGuide` | default | `main/MagicalGuide1.tsx`, `MagicalGuide2.tsx`, `MagicalGuide3.tsx` |
 | Закладки | `/bookmarks` | bookmark | `bookmarks/BookmarksPage.tsx` |
 | Реклама на головній | `/` (секція HomePage1) | ad | `website_advertising/AdvertisingBooks.tsx` |
 

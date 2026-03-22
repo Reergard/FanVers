@@ -28,8 +28,18 @@ class BookRatingSerializer(serializers.ModelSerializer):
                 existing_rating.rating = validated_data['rating']
                 existing_rating.save()
                 return existing_rating
-                
-            return super().create(validated_data)
+
+            ret = super().create(validated_data)
+            from apps.analytics_books.services.analytics_counters import (
+                record_book_rating_created,
+                record_translation_rating_created,
+            )
+
+            if ret.rating_type == "BOOK":
+                record_book_rating_created(book)
+            else:
+                record_translation_rating_created(book)
+            return ret
         except Book.DoesNotExist:
             raise serializers.ValidationError({"book_slug": "Книгу не знайдено"})
 
