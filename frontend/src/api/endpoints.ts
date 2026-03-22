@@ -70,6 +70,8 @@ export const API = {
 
   // Analytics: ТОП книг за періодом (карусель «ТОП» на /MagicalGuide)
   topBooks: "/api/analytics_books/top/",
+  // Analytics: «Тренди» (окремий рейтинг за 7 днів, не ТОП)
+  trendBooks: "/api/analytics_books/trends/",
 
   // Subscription
   subscriptionSettings: (bookSlug: string) =>

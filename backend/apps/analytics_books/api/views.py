@@ -26,6 +26,8 @@ from ..services.top import (
     get_top_books,
     top_limit_for_period,
 )
+from ..services.trends import get_trend_books
+from .serializers import TrendCarouselBookSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +87,34 @@ class TopBooksView(APIView):
         )
 
         serializer = BookReaderSerializer(
+            list(books_qs),
+            many=True,
+            context={"request": request},
+        )
+        return Response(serializer.data)
+
+
+class TrendsBooksView(APIView):
+    """GET: карусель «Тренди» (7 днів, окремий trend_score; не ТОП за періодом)."""
+
+    def get(self, request):
+        ordered = get_trend_books()
+        if not ordered:
+            return Response([])
+
+        ids = [b.pk for b in ordered]
+        preserved = Case(
+            *[When(pk=uid, then=pos) for pos, uid in enumerate(ids)],
+            output_field=IntegerField(),
+        )
+        books_qs = (
+            Book.objects.filter(pk__in=ids)
+            .select_related("owner", "creator", "country")
+            .prefetch_related("genres", "tags", "fandoms")
+            .order_by(preserved)
+        )
+
+        serializer = TrendCarouselBookSerializer(
             list(books_qs),
             many=True,
             context={"request": request},

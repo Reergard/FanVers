@@ -29,3 +29,23 @@ def books_eligible_for_top():
         .annotate(_chapters_count=Count("chapters", distinct=True))
         .filter(_chapters_count__gte=1)
     )
+
+
+def books_eligible_for_trending():
+    """
+    Книги, які можна враховувати в каруселі «Тренди».
+
+    Зараз умови збігаються з `books_eligible_for_top()`, але це окреме місце:
+    сюди можна додати інші правила (статуси, типи, чернетки) без зміни ТОПу.
+    """
+    return (
+        Book.objects.filter(
+            view_permission="all",
+            owner__isnull=False,
+        )
+        .exclude(Q(slug__isnull=True) | Q(slug=""))
+        .exclude(Q(image__isnull=True) | Q(image=""))
+        .exclude(book_type="TRANSLATION", translation_status="ABANDONED")
+        .annotate(_chapters_count=Count("chapters", distinct=True))
+        .filter(_chapters_count__gte=1)
+    )
