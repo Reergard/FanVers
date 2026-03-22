@@ -78,7 +78,8 @@ def update_chapter(request, chapter_id):
             chapter.file = request.FILES['file']
 
         chapter.save()
-        
+        Book.mark_translation_owner_activity(chapter.book)
+
         serializer = ChapterSerializer(chapter, context={'request': request})
         return Response(serializer.data)
         

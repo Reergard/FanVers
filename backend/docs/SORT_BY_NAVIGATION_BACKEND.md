@@ -32,6 +32,8 @@ Frontend після отримання масиву додатково пере�
 
 Frontend застосовує локальне сортування (`created/updated/...`) до отриманого масиву.
 
+Як книги потрапляють у `ABANDONED` і які пороги часу — див. **ABANDONED_TRANSLATIONS_BACKEND.md**.
+
 ### Закладки (`/api/navigation/bookmarks/`)
 
 - Файл: `backend/apps/navigation/api/views.py`

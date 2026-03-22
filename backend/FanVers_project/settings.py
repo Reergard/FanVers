@@ -308,10 +308,12 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
-# Розклад періодичних задач береться з БД (django_celery_beat), див. міграції додатків
-# (наприклад analytics_books.0003) та адмінку Periodic tasks. У celery.py залишено
-# beat_schedule як дубль/документація для тих, хто перемкне scheduler на файл.
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
+# Покинуті переклади: dev — щохвилини; прод — раз на добу (див. FanVers_project/celery.py).
+# env.bool() коректно читає .env на Windows (без «1\\r» у os.environ).
+ABANDONED_BEAT_EVERY_MINUTE = env.bool('ABANDONED_BEAT_EVERY_MINUTE', default=False)
+ABANDONED_THRESHOLDS_USE_MINUTES = env.bool('ABANDONED_THRESHOLDS_USE_MINUTES', default=False)
+# Періодичні задачі Celery Beat — у FanVers_project/celery.py (beat_schedule).
+# django_celery_beat залишено в INSTALLED_APPS для існуючих міграцій / адмінки.
 
 
 

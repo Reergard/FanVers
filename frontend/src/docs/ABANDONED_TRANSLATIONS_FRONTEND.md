@@ -23,6 +23,8 @@
 
 - `GET /api/catalog/abandoned-translations/`
 
+Як на бекенді формується статус `ABANDONED`, пороги часу та Celery — див. `backend/docs/ABANDONED_TRANSLATIONS_BACKEND.md`.
+
 ---
 
 ## 3) Що відбувається при відкритті сторінки
@@ -122,7 +124,7 @@
 
 ## 8) Навігація користувача
 
-- Breadcrumb `Головна` веде на `/`.
+- Заголовок сторінки — `PageTitle` («Покинуті переклади»); окремого breadcrumb у поточному `AbandonedTranslations.tsx` немає (класи breadcrumb у CSS залишені для можливого повторного використання).
 - Кнопка `Читати` на картці веде на `/books/:slug` (через `ActionButton` + `to`).
 - Якщо slug відсутній, кнопка `Читати` disabled.
 

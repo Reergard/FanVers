@@ -13,15 +13,22 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 app.autodiscover_tasks()
 
-app.conf.beat_schedule = {
-    'send_abandoned_notification': {
-        'task': 'apps.notification.tasks.send_abandoned_notification',
-        'schedule': crontab(minute='*/1'),
-    },
+# Покинуті переклади: у проді — раз на день (UTC 03:00). У dev: ABANDONED_BEAT_EVERY_MINUTE=True у .env — щохвилини.
+# Розклад береться з django.conf.settings (env.bool), а не з сирого os.environ — інакше на Windows CRLF у .env
+# ламає перевірку '1' і beat лишається на щоденному crontab → воркер не бачить задач хвилинами.
+# Логіка попередження + переносу — у check_abandoned_books. Після зміни режиму видаліть celerybeat-schedule* у backend.
+from django.conf import settings as django_settings
 
+_abandoned_beat = (
+    crontab(minute='*/1')
+    if django_settings.ABANDONED_BEAT_EVERY_MINUTE
+    else crontab(hour=3, minute=0)
+)
+
+app.conf.beat_schedule = {
     'check_abandoned_books': {
         'task': 'apps.notification.tasks.check_abandoned_books',
-        'schedule': crontab(minute='*/1'),
+        'schedule': _abandoned_beat,
     },
 
     'cleanup-old-analytics': {
@@ -29,14 +36,11 @@ app.conf.beat_schedule = {
         'schedule': crontab(hour=3, minute=0),
     },
 
-    # Перерахунок аналітики з джерел правди (дубль для DatabaseScheduler — див. міграцію analytics_books)
     'repair-analytics-from-sources': {
         'task': 'apps.analytics_books.tasks.repair_analytics_from_sources',
         'schedule': crontab(hour=2, minute=30),
     },
 }
 
-app.conf.update(
-    worker_pool_restarts=True,
-    worker_pool='solo',
-)
+# Пул воркера задається лише CLI: `celery worker -P solo` (Windows).
+# Не додавати worker_pool у app.conf — інакше beat на Windows може одразу завершуватись.

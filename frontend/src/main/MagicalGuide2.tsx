@@ -1,3 +1,9 @@
+/**
+ * Секція «Рекомендації» (MagicalGuide2).
+ *
+ * Зараз тут немає підключення до бекенду: книги — штучні заглушки, кнопка «Читати» веде на `#`.
+ * Логіка рекомендацій і видача реальних книг — **у розробці**.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { BookCard } from "../BookCard/BookCard";
 import type { BookCardBook } from "../BookCard/BookCard";
@@ -23,6 +29,7 @@ function getRecommendationStubBooks(): BookCardBook[] {
   }));
 }
 
+/** Карусель-превʼю; дані поки що тільки з `getRecommendationStubBooks()` (див. коментар на початку файлу). */
 export function MagicalGuide2() {
   const isTablet = useMedia("(max-width: 1024px)");
   const isMobile = useMedia("(max-width: 768px)");

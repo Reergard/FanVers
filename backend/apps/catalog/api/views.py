@@ -311,7 +311,8 @@ def add_chapter(request, slug):
         # Обновляем last_updated книги при создании главы
         book.last_updated = timezone.now()
         book.save(update_fields=['last_updated'])
-        
+        Book.mark_translation_owner_activity(book)
+
         # Генерируем HTML контент сразу при создании главы
         try:
             with open(chapter.file.path, "rb") as docx_file:
@@ -741,6 +742,7 @@ def delete_chapter(request, book_slug, chapter_id):
         vol_id = chapter.volume_id
         chapter.delete()
         _normalize_container_order(book.id, vol_id)
+        Book.mark_translation_owner_activity(book)
         return Response(status=status.HTTP_204_NO_CONTENT)
         
     except Chapter.DoesNotExist:

@@ -68,7 +68,7 @@
 - **`repair_analytics_from_sources`** — синхронізація `BookAnalytics` і `DailyAnalytics` з таблиць-моделей і журналу подій (див. `rebuild.py`).
 - **`cleanup_old_analytics`** — видаляє `DailyAnalytics` та `CommentLikeAnalyticsEvent` старші за 90 днів.
 
-Розклад: **django-celery-beat** (БД), міграції `analytics_books`, `CELERY_BEAT_SCHEDULER` у `settings.py`, дубль у `FanVers_project/celery.py`. Час — **UTC**.
+Розклад у **`FanVers_project/celery.py`** (`beat_schedule`): `repair_analytics_from_sources` (02:30 UTC), `cleanup_old_analytics` (03:00 UTC). У поточному **`settings.py` немає** `CELERY_BEAT_SCHEDULER = DatabaseScheduler` — beat читає розклад з коду. Міграції `analytics_books` і `django_celery_beat` можуть історично додавати записи в БД; орієнтуйтеся на **`celery.py`**. Час у crontab — **UTC**.
 
 ---
 

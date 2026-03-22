@@ -181,6 +181,18 @@ class Book(models.Model):
         auto_now=True,
         verbose_name='Останнє оновлення'
     )
+    # Остання «людська» активність власника перекладу (глава, зміна статусу перекладу).
+    # Не оновлювати з довільних save() / аналітики / читачів — див. Book.mark_translation_owner_activity.
+    owner_last_activity_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Активність власника (переклад)',
+    )
+    abandoned_warning_sent_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Попередження про Покинуті надіслано',
+    )
     translation_status = models.CharField(
         max_length=20,
         choices=TRANSLATION_STATUSES,
@@ -333,7 +345,11 @@ class Book(models.Model):
         elif not self.slug:
             # Если нет title, создаем временный slug
             self.slug = f"book-{timezone.now().timestamp()}"
-            
+
+        # Переклад з власником: завжди мати відлік активності (адмінка, shell, не лише API).
+        if self.book_type == 'TRANSLATION' and self.owner_id and self.owner_last_activity_at is None:
+            self.owner_last_activity_at = timezone.now()
+
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -345,13 +361,34 @@ class Book(models.Model):
         return chapters
 
     def has_recent_activity(self):
-        """Перевіряє, чи була активність за останній місяць"""
+        """
+        Чи була «свіжа» активність за останній місяць.
+        Для перекладів з owner_last_activity_at — тільки вона (узгоджено з логікою Покинутих).
+        Інакше — загальний евристичний критерій (глави / last_updated).
+        """
         month_ago = timezone.now() - timedelta(days=30)
+        if self.book_type == 'TRANSLATION' and self.owner_last_activity_at is not None:
+            return self.owner_last_activity_at >= month_ago
         return (
-            self.chapters.filter(created_at__gte=month_ago).exists() or
-            self.last_updated >= month_ago
+            self.chapters.filter(created_at__gte=month_ago).exists()
+            or self.last_updated >= month_ago
         )
 
+    @classmethod
+    def mark_translation_owner_activity(cls, book):
+        """
+        Фіксує дію власника перекладу: оновлює owner_last_activity_at і скидає цикл попередження.
+        Викликати лише з явних користувацьких дій власника (глава, зміна translation_status).
+        """
+        if book.book_type != 'TRANSLATION' or not book.owner_id:
+            return
+        now = timezone.now()
+        cls.objects.filter(pk=book.pk).update(
+            owner_last_activity_at=now,
+            abandoned_warning_sent_at=None,
+        )
+        book.owner_last_activity_at = now
+        book.abandoned_warning_sent_at = None
 
 
 def process_table(table):

@@ -46,6 +46,7 @@
   - файл: `backend/apps/catalog/api/views.py`
   - функція: `abandoned_translations`
   - повертає всі книги з `translation_status='ABANDONED'`.
+  - як формується статус і фонові перевірки — **ABANDONED_TRANSLATIONS_BACKEND.md**.
 
 - `GET /api/catalog/user-translations/`
   - файл: `backend/apps/catalog/api/views.py`

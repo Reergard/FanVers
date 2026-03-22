@@ -167,12 +167,22 @@ class BookOwnerSerializer(serializers.ModelSerializer):
     def get_creator_username(self, obj):
         return obj.creator.username if obj.creator else None
 
+    def update(self, instance, validated_data):
+        old_ts = instance.translation_status
+        instance = super().update(instance, validated_data)
+        if instance.book_type == 'TRANSLATION' and instance.owner_id and old_ts != instance.translation_status:
+            Book.mark_translation_owner_activity(instance)
+        return instance
+
     def create(self, validated_data):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             validated_data['owner'] = request.user
             validated_data['creator'] = request.user
-        return super().create(validated_data)
+        book = super().create(validated_data)
+        if book.book_type == 'TRANSLATION' and book.owner_id:
+            Book.mark_translation_owner_activity(book)
+        return book
 
 
 class BookReaderSerializer(serializers.ModelSerializer):
@@ -357,9 +367,13 @@ class BookCreateSerializer(serializers.ModelSerializer):
         if fandoms:
             book.fandoms.set(fandoms)
 
+        if book.book_type == 'TRANSLATION' and book.owner_id:
+            Book.mark_translation_owner_activity(book)
+
         return book
 
     def update(self, instance, validated_data):
+        old_ts = instance.translation_status
         genres = validated_data.pop('genres', None)
         tags = validated_data.pop('tags', None)
         fandoms = validated_data.pop('fandoms', None)
@@ -374,6 +388,9 @@ class BookCreateSerializer(serializers.ModelSerializer):
             instance.tags.set(tags)
         if fandoms is not None:
             instance.fandoms.set(fandoms)
+
+        if instance.book_type == 'TRANSLATION' and instance.owner_id and old_ts != instance.translation_status:
+            Book.mark_translation_owner_activity(instance)
 
         return instance
 
