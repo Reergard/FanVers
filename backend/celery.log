@@ -29555,3 +29555,863 @@ INFO 2026-03-22 21:52:00,002 strategy 52628 36656 Task apps.notification.tasks.c
 INFO 2026-03-22 21:52:00,148 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[118a91d8-31ca-41ff-81cf-94df7a1887e9] succeeded in 0.15599999949336052s: None
 INFO 2026-03-22 21:53:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[c84cb5e3-2ef5-4fdc-a49b-d3fa91af70ce] received
 INFO 2026-03-22 21:53:00,045 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[c84cb5e3-2ef5-4fdc-a49b-d3fa91af70ce] succeeded in 0.03099999949336052s: None
+INFO 2026-03-22 21:54:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[128e163d-f11e-4a5d-b09a-74f049741eb1] received
+INFO 2026-03-22 21:54:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[128e163d-f11e-4a5d-b09a-74f049741eb1] succeeded in 0.04699999839067459s: None
+INFO 2026-03-23 07:01:03,834 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[768bd369-a9d0-4ca4-b65b-5b09f597c870] received
+INFO 2026-03-23 07:01:03,900 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[768bd369-a9d0-4ca4-b65b-5b09f597c870] succeeded in 0.06200000084936619s: None
+INFO 2026-03-23 07:01:03,908 strategy 52628 36656 Task apps.analytics_books.tasks.repair_analytics_from_sources[e355bc3d-8d69-4732-926f-4f4109ca961c] received
+INFO 2026-03-23 07:01:04,569 trace 52628 36656 Task apps.analytics_books.tasks.repair_analytics_from_sources[e355bc3d-8d69-4732-926f-4f4109ca961c] succeeded in 0.6720000002533197s: 'repair_analytics_from_sources: {\'book_analytics_books\': 7, \'days\': 90, \'update_or_create_calls\': 12}'
+INFO 2026-03-23 07:01:04,569 strategy 52628 36656 Task apps.analytics_books.tasks.cleanup_old_analytics[55cdeae2-1617-4537-bd71-7069f29a5560] received
+INFO 2026-03-23 07:01:04,625 trace 52628 36656 Task apps.analytics_books.tasks.cleanup_old_analytics[55cdeae2-1617-4537-bd71-7069f29a5560] succeeded in 0.04700000025331974s: 'Удалено daily=0, comment_like_events=0 старше 90 дней'
+INFO 2026-03-23 07:02:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2fc2d50a-40c8-40c6-9383-8e2e5760823a] received
+INFO 2026-03-23 07:02:00,162 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2fc2d50a-40c8-40c6-9383-8e2e5760823a] succeeded in 0.1719999983906746s: None
+INFO 2026-03-23 07:03:00,083 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[487098c2-8600-47fe-8819-d2773750339e] received
+INFO 2026-03-23 07:03:00,209 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[487098c2-8600-47fe-8819-d2773750339e] succeeded in 0.125s: None
+INFO 2026-03-23 07:04:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ca0a62b5-2a3e-494f-b224-dffd86c471cb] received
+INFO 2026-03-23 07:04:00,062 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ca0a62b5-2a3e-494f-b224-dffd86c471cb] succeeded in 0.06299999915063381s: None
+INFO 2026-03-23 07:05:00,017 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7856d1c1-1319-4fee-98b8-385c6cb9ddb2] received
+INFO 2026-03-23 07:05:00,073 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7856d1c1-1319-4fee-98b8-385c6cb9ddb2] succeeded in 0.06200000084936619s: None
+INFO 2026-03-23 07:06:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[00ec0889-dae9-4c8e-a554-cd18cf9e2d10] received
+INFO 2026-03-23 07:06:00,154 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[00ec0889-dae9-4c8e-a554-cd18cf9e2d10] succeeded in 0.15599999949336052s: None
+INFO 2026-03-23 07:07:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[0e428300-d1b0-4b56-8c16-7664a275b47b] received
+INFO 2026-03-23 07:07:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[0e428300-d1b0-4b56-8c16-7664a275b47b] succeeded in 0.06299999915063381s: None
+INFO 2026-03-23 17:48:12,936 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[91d524ac-5a14-4443-8212-dd3d4c659391] received
+INFO 2026-03-23 17:48:12,992 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[91d524ac-5a14-4443-8212-dd3d4c659391] succeeded in 0.06200000084936619s: None
+INFO 2026-03-23 17:49:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[bab46dda-b388-4044-ad26-20d0ef4e0bd9] received
+INFO 2026-03-23 17:49:00,168 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[bab46dda-b388-4044-ad26-20d0ef4e0bd9] succeeded in 0.1719999983906746s: None
+INFO 2026-03-23 17:50:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[04544c31-4680-48d8-b9ac-28f73fb915cf] received
+INFO 2026-03-23 17:50:00,059 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[04544c31-4680-48d8-b9ac-28f73fb915cf] succeeded in 0.06299999915063381s: None
+INFO 2026-03-23 17:51:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7e9ff694-d388-46da-9adf-4140f879c1e9] received
+INFO 2026-03-23 17:51:00,059 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7e9ff694-d388-46da-9adf-4140f879c1e9] succeeded in 0.06299999915063381s: None
+INFO 2026-03-23 17:52:00,009 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[a5f8b9a1-e99f-42ce-91b4-f973de426728] received
+INFO 2026-03-23 17:52:00,065 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[a5f8b9a1-e99f-42ce-91b4-f973de426728] succeeded in 0.04700000025331974s: None
+INFO 2026-03-23 17:53:00,005 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[174523a0-d95d-4dbf-b9ba-bd763c413968] received
+INFO 2026-03-23 17:53:00,066 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[174523a0-d95d-4dbf-b9ba-bd763c413968] succeeded in 0.04700000025331974s: None
+INFO 2026-03-23 17:54:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9d0a16f1-035d-40ad-86cb-824388095c2f] received
+INFO 2026-03-23 17:54:00,062 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9d0a16f1-035d-40ad-86cb-824388095c2f] succeeded in 0.04700000025331974s: None
+INFO 2026-03-23 17:55:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f67eaa02-67ed-4987-80a2-11be3be5a3c6] received
+INFO 2026-03-23 17:55:00,067 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f67eaa02-67ed-4987-80a2-11be3be5a3c6] succeeded in 0.06200000084936619s: None
+INFO 2026-03-23 17:56:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ce60d745-3e53-4d4a-9f98-48ca6144664d] received
+INFO 2026-03-23 17:56:00,055 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ce60d745-3e53-4d4a-9f98-48ca6144664d] succeeded in 0.06299999915063381s: None
+INFO 2026-03-23 17:57:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f1b1f50c-cb63-42c9-a394-74825dd17f98] received
+INFO 2026-03-23 17:57:00,059 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f1b1f50c-cb63-42c9-a394-74825dd17f98] succeeded in 0.06299999915063381s: None
+INFO 2026-03-23 17:58:00,005 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[633c9e03-3893-40ae-9a85-3b180da1e25a] received
+INFO 2026-03-23 17:58:00,059 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[633c9e03-3893-40ae-9a85-3b180da1e25a] succeeded in 0.04700000025331974s: None
+INFO 2026-03-23 17:59:03,617 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[c85154de-97fb-4670-8bd7-0c973cf60d1e] received
+INFO 2026-03-23 17:59:03,777 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[c85154de-97fb-4670-8bd7-0c973cf60d1e] succeeded in 0.15599999949336052s: None
+INFO 2026-03-23 18:00:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[0f0f957b-fd83-4ad7-aecf-f3abb56f2b0d] received
+INFO 2026-03-23 18:00:00,062 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[0f0f957b-fd83-4ad7-aecf-f3abb56f2b0d] succeeded in 0.06299999915063381s: None
+INFO 2026-03-23 18:01:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b452fa1b-ddfc-45fb-a30f-30c9e1983540] received
+INFO 2026-03-23 18:01:00,173 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b452fa1b-ddfc-45fb-a30f-30c9e1983540] succeeded in 0.1719999983906746s: None
+INFO 2026-03-23 18:02:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2777c359-4cff-48d5-8ab8-e239d37cae10] received
+INFO 2026-03-23 18:02:00,061 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2777c359-4cff-48d5-8ab8-e239d37cae10] succeeded in 0.06299999915063381s: None
+INFO 2026-03-23 18:03:00,022 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[44d13314-a218-49d7-ac64-3bc7cf348075] received
+INFO 2026-03-23 18:03:00,086 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[44d13314-a218-49d7-ac64-3bc7cf348075] succeeded in 0.06299999915063381s: None
+INFO 2026-03-23 18:04:00,073 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[1974344d-642f-4e28-a3eb-a87ca8a95368] received
+INFO 2026-03-23 18:04:00,193 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[1974344d-642f-4e28-a3eb-a87ca8a95368] succeeded in 0.125s: None
+INFO 2026-03-24 04:41:10,255 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[27217913-69ba-4592-9492-1ae874af5554] received
+INFO 2026-03-24 04:41:10,389 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[27217913-69ba-4592-9492-1ae874af5554] succeeded in 0.125s: None
+INFO 2026-03-24 04:41:10,495 strategy 52628 36656 Task apps.analytics_books.tasks.repair_analytics_from_sources[a43eee03-b16c-4fa9-8739-6c139860c099] received
+INFO 2026-03-24 04:41:11,732 trace 52628 36656 Task apps.analytics_books.tasks.repair_analytics_from_sources[a43eee03-b16c-4fa9-8739-6c139860c099] succeeded in 1.2339999992400408s: 'repair_analytics_from_sources: {\'book_analytics_books\': 7, \'days\': 90, \'update_or_create_calls\': 12}'
+INFO 2026-03-24 04:41:11,869 strategy 52628 36656 Task apps.analytics_books.tasks.cleanup_old_analytics[39fa54d7-85fd-44d2-9cdd-1f6347d058a2] received
+INFO 2026-03-24 04:41:12,003 trace 52628 36656 Task apps.analytics_books.tasks.cleanup_old_analytics[39fa54d7-85fd-44d2-9cdd-1f6347d058a2] succeeded in 0.125s: 'Удалено daily=0, comment_like_events=0 старше 90 дней'
+INFO 2026-03-24 04:42:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[a1fe6eee-ea41-4533-9490-63177feab873] received
+INFO 2026-03-24 04:42:00,074 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[a1fe6eee-ea41-4533-9490-63177feab873] succeeded in 0.06200000084936619s: None
+INFO 2026-03-24 04:43:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7ae9d114-1dc8-4c9f-8d8b-72878e720939] received
+INFO 2026-03-24 04:43:00,068 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7ae9d114-1dc8-4c9f-8d8b-72878e720939] succeeded in 0.06200000084936619s: None
+INFO 2026-03-24 04:44:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[a00d7ae3-f6d7-4cdb-a570-ef89506b3c56] received
+INFO 2026-03-24 04:44:00,180 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[a00d7ae3-f6d7-4cdb-a570-ef89506b3c56] succeeded in 0.17200000025331974s: None
+INFO 2026-03-24 04:45:00,016 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[06053c9b-214e-47c7-9e75-0e48710eac7f] received
+INFO 2026-03-24 04:45:00,072 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[06053c9b-214e-47c7-9e75-0e48710eac7f] succeeded in 0.06200000084936619s: None
+INFO 2026-03-24 17:18:31,938 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[044f9dfc-c96b-4df0-80ca-5d750492afb8] received
+INFO 2026-03-24 17:18:31,993 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[044f9dfc-c96b-4df0-80ca-5d750492afb8] succeeded in 0.06200000084936619s: None
+INFO 2026-03-24 17:19:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7ef25db3-e427-4231-9ecf-d8ca91a71184] received
+INFO 2026-03-24 17:19:00,047 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7ef25db3-e427-4231-9ecf-d8ca91a71184] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 17:20:00,089 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[46f62470-2213-4c57-8dc8-338557ae30db] received
+INFO 2026-03-24 17:20:00,214 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[46f62470-2213-4c57-8dc8-338557ae30db] succeeded in 0.125s: None
+INFO 2026-03-24 17:21:00,079 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[6195f07c-86f8-418a-a492-58b60381529e] received
+INFO 2026-03-24 17:21:00,201 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[6195f07c-86f8-418a-a492-58b60381529e] succeeded in 0.125s: None
+INFO 2026-03-24 17:22:00,054 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e1318a41-a1b1-4941-9577-435c2d65f1d0] received
+INFO 2026-03-24 17:22:00,179 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e1318a41-a1b1-4941-9577-435c2d65f1d0] succeeded in 0.125s: None
+INFO 2026-03-24 17:23:00,093 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b58cb344-c389-4493-b9d9-799b722686a3] received
+INFO 2026-03-24 17:23:00,216 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b58cb344-c389-4493-b9d9-799b722686a3] succeeded in 0.125s: None
+INFO 2026-03-24 17:24:00,073 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[d056cf67-d27b-4829-bd75-8dd4ef8e2d0c] received
+INFO 2026-03-24 17:24:00,198 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[d056cf67-d27b-4829-bd75-8dd4ef8e2d0c] succeeded in 0.125s: None
+INFO 2026-03-24 17:25:00,082 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[a20a96bb-8af3-4938-ab8a-0f9fe5334337] received
+INFO 2026-03-24 17:25:00,207 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[a20a96bb-8af3-4938-ab8a-0f9fe5334337] succeeded in 0.125s: None
+INFO 2026-03-24 17:26:00,094 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[4ee3554b-6038-4383-9aef-bfa60a9d2828] received
+INFO 2026-03-24 17:26:00,219 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[4ee3554b-6038-4383-9aef-bfa60a9d2828] succeeded in 0.125s: None
+INFO 2026-03-24 17:27:00,063 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7f0fcd48-bb94-43ee-8ad1-3631319ae027] received
+INFO 2026-03-24 17:27:00,174 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7f0fcd48-bb94-43ee-8ad1-3631319ae027] succeeded in 0.10899999924004078s: None
+INFO 2026-03-24 17:28:00,085 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9dd58bc5-18ae-4627-b48c-b1cc117f9398] received
+INFO 2026-03-24 17:28:00,209 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9dd58bc5-18ae-4627-b48c-b1cc117f9398] succeeded in 0.125s: None
+INFO 2026-03-24 17:29:00,080 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[64162ff6-ce71-4be5-b015-b76317611873] received
+INFO 2026-03-24 17:29:00,221 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[64162ff6-ce71-4be5-b015-b76317611873] succeeded in 0.14099999889731407s: None
+INFO 2026-03-24 17:30:00,090 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[29ad2172-41e7-4553-af46-218d31fbf1b1] received
+INFO 2026-03-24 17:30:00,216 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[29ad2172-41e7-4553-af46-218d31fbf1b1] succeeded in 0.125s: None
+INFO 2026-03-24 17:31:00,089 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[cb7a3031-b57a-4f9b-8e93-35097f820ec6] received
+INFO 2026-03-24 17:31:00,214 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[cb7a3031-b57a-4f9b-8e93-35097f820ec6] succeeded in 0.125s: None
+INFO 2026-03-24 17:32:00,085 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[6e7171ae-fe71-42ee-8425-6c1fd9ea56af] received
+INFO 2026-03-24 17:32:00,212 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[6e7171ae-fe71-42ee-8425-6c1fd9ea56af] succeeded in 0.125s: None
+INFO 2026-03-24 17:33:00,089 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ef0b7f19-8c4d-4d78-b60e-e0e13b713456] received
+INFO 2026-03-24 17:33:00,322 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ef0b7f19-8c4d-4d78-b60e-e0e13b713456] succeeded in 0.23400000110268593s: None
+INFO 2026-03-24 17:34:00,074 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e081f4c9-fec1-4edc-a741-572130646550] received
+INFO 2026-03-24 17:34:00,199 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e081f4c9-fec1-4edc-a741-572130646550] succeeded in 0.125s: None
+INFO 2026-03-24 17:35:00,044 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[8bf91f41-f704-4f42-bd4a-5312d9a3f247] received
+INFO 2026-03-24 17:35:00,176 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[8bf91f41-f704-4f42-bd4a-5312d9a3f247] succeeded in 0.14100000075995922s: None
+INFO 2026-03-24 17:36:00,074 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[eab67ed5-3747-4909-a600-b3288b7ec1e0] received
+INFO 2026-03-24 17:36:00,200 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[eab67ed5-3747-4909-a600-b3288b7ec1e0] succeeded in 0.125s: None
+INFO 2026-03-24 17:37:00,022 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[eaed037d-ebe9-43d4-96c1-91551b30ef95] received
+INFO 2026-03-24 17:37:00,149 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[eaed037d-ebe9-43d4-96c1-91551b30ef95] succeeded in 0.125s: None
+INFO 2026-03-24 17:38:00,036 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[0b3b4809-9e5d-4622-9380-f4ae0e60f758] received
+INFO 2026-03-24 17:38:00,255 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[0b3b4809-9e5d-4622-9380-f4ae0e60f758] succeeded in 0.21900000050663948s: None
+INFO 2026-03-24 17:39:00,045 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[45813652-76d9-43a6-a3f9-70059bca66c3] received
+INFO 2026-03-24 17:39:00,170 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[45813652-76d9-43a6-a3f9-70059bca66c3] succeeded in 0.125s: None
+INFO 2026-03-24 17:40:00,035 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[6f7de2f4-dcaa-4507-9c8e-a7773799e052] received
+INFO 2026-03-24 17:40:00,159 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[6f7de2f4-dcaa-4507-9c8e-a7773799e052] succeeded in 0.10900000110268593s: None
+INFO 2026-03-24 17:41:00,046 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[d2d613e3-18ec-40db-8e62-1b4f5cb828da] received
+INFO 2026-03-24 17:41:00,154 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[d2d613e3-18ec-40db-8e62-1b4f5cb828da] succeeded in 0.10900000110268593s: None
+INFO 2026-03-24 17:42:00,034 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[dbd6afc8-c214-462b-8f32-35c7488f6fae] received
+INFO 2026-03-24 17:42:00,222 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[dbd6afc8-c214-462b-8f32-35c7488f6fae] succeeded in 0.1879999991506338s: None
+INFO 2026-03-24 17:43:00,035 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b183fc04-662d-42fe-9388-3c131bf8e4f9] received
+INFO 2026-03-24 17:43:00,160 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b183fc04-662d-42fe-9388-3c131bf8e4f9] succeeded in 0.10900000110268593s: None
+INFO 2026-03-24 17:44:00,046 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ae35389c-265a-4154-9686-6a996dd4be3c] received
+INFO 2026-03-24 17:44:00,172 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ae35389c-265a-4154-9686-6a996dd4be3c] succeeded in 0.125s: None
+INFO 2026-03-24 17:45:00,048 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[411c1ec8-2b5b-49ba-b683-e3861a74bfcb] received
+INFO 2026-03-24 17:45:00,172 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[411c1ec8-2b5b-49ba-b683-e3861a74bfcb] succeeded in 0.125s: None
+INFO 2026-03-24 17:46:00,048 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b095efb9-0901-4149-9e9e-4271c0fb5807] received
+INFO 2026-03-24 17:46:00,172 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b095efb9-0901-4149-9e9e-4271c0fb5807] succeeded in 0.125s: None
+INFO 2026-03-24 17:47:00,024 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[81dd7849-c524-424e-93e3-1e5ec2346128] received
+INFO 2026-03-24 17:47:00,149 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[81dd7849-c524-424e-93e3-1e5ec2346128] succeeded in 0.125s: None
+INFO 2026-03-24 17:48:00,039 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ac0e6350-2e1f-47eb-886e-2e48ad9ae6f2] received
+INFO 2026-03-24 17:48:00,165 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ac0e6350-2e1f-47eb-886e-2e48ad9ae6f2] succeeded in 0.125s: None
+INFO 2026-03-24 17:49:00,042 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[79c3e053-6bc2-480d-95a1-dd9afe224df0] received
+INFO 2026-03-24 17:49:00,167 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[79c3e053-6bc2-480d-95a1-dd9afe224df0] succeeded in 0.125s: None
+INFO 2026-03-24 17:50:00,037 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f5525a1f-e17f-4665-8bf8-5c60f104c4db] received
+INFO 2026-03-24 17:50:00,163 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f5525a1f-e17f-4665-8bf8-5c60f104c4db] succeeded in 0.125s: None
+INFO 2026-03-24 17:51:00,046 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5d26b528-88b2-46f4-b6ab-b58ebcc3f059] received
+INFO 2026-03-24 17:51:00,172 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5d26b528-88b2-46f4-b6ab-b58ebcc3f059] succeeded in 0.125s: None
+INFO 2026-03-24 17:52:00,046 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[bda825d3-e763-412f-a7bf-e40e6e4ec5c6] received
+INFO 2026-03-24 17:52:00,172 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[bda825d3-e763-412f-a7bf-e40e6e4ec5c6] succeeded in 0.125s: None
+INFO 2026-03-24 17:53:00,044 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ec7e904a-5c0a-49e6-816f-6a006248b93b] received
+INFO 2026-03-24 17:53:00,170 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ec7e904a-5c0a-49e6-816f-6a006248b93b] succeeded in 0.125s: None
+INFO 2026-03-24 17:54:00,016 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[4c9443f0-9147-47ea-9206-ec76082b1f76] received
+INFO 2026-03-24 17:54:00,141 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[4c9443f0-9147-47ea-9206-ec76082b1f76] succeeded in 0.125s: None
+INFO 2026-03-24 17:55:00,032 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9208f936-9f46-4a4f-afb3-01c8d00afd81] received
+INFO 2026-03-24 17:55:00,157 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9208f936-9f46-4a4f-afb3-01c8d00afd81] succeeded in 0.125s: None
+INFO 2026-03-24 17:56:00,048 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[cc13f607-1b89-4cc9-92fb-1ac764f3123f] received
+INFO 2026-03-24 17:56:00,172 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[cc13f607-1b89-4cc9-92fb-1ac764f3123f] succeeded in 0.125s: None
+INFO 2026-03-24 17:57:00,046 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[35e5775a-209b-45a3-9fbf-61cf3fd84867] received
+INFO 2026-03-24 17:57:00,171 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[35e5775a-209b-45a3-9fbf-61cf3fd84867] succeeded in 0.125s: None
+INFO 2026-03-24 17:58:00,039 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[01a82003-636c-4db5-b34a-bdda707e6ed9] received
+INFO 2026-03-24 17:58:00,148 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[01a82003-636c-4db5-b34a-bdda707e6ed9] succeeded in 0.10900000110268593s: None
+INFO 2026-03-24 17:59:00,095 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[507a3837-99c1-4bcb-9a5c-4cbabf5c2ee4] received
+INFO 2026-03-24 17:59:00,285 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[507a3837-99c1-4bcb-9a5c-4cbabf5c2ee4] succeeded in 0.20299999974668026s: None
+INFO 2026-03-24 18:00:00,091 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[62272e33-d54d-4775-a14a-72101d4cda56] received
+INFO 2026-03-24 18:00:00,217 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[62272e33-d54d-4775-a14a-72101d4cda56] succeeded in 0.125s: None
+INFO 2026-03-24 18:01:00,094 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e2dc0f1c-4ecf-49c2-8261-a5b0b8e32693] received
+INFO 2026-03-24 18:01:00,220 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e2dc0f1c-4ecf-49c2-8261-a5b0b8e32693] succeeded in 0.125s: None
+INFO 2026-03-24 18:02:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[910d1854-44e4-4d7e-bdca-40e605d584a0] received
+INFO 2026-03-24 18:02:00,045 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[910d1854-44e4-4d7e-bdca-40e605d584a0] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:03:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[55901edc-32f9-4e01-8b94-d75c825b0204] received
+INFO 2026-03-24 18:03:00,045 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[55901edc-32f9-4e01-8b94-d75c825b0204] succeeded in 0.03099999949336052s: None
+INFO 2026-03-24 18:04:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e4f471ca-a8e0-4dd5-bdb8-1395a66237ba] received
+INFO 2026-03-24 18:04:00,040 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e4f471ca-a8e0-4dd5-bdb8-1395a66237ba] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:05:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5bb61626-ee3c-4437-bee5-737bc5f5ebd0] received
+INFO 2026-03-24 18:05:00,048 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5bb61626-ee3c-4437-bee5-737bc5f5ebd0] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:06:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b4092607-0151-4dd7-98fa-fb0438eebb23] received
+INFO 2026-03-24 18:06:00,044 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b4092607-0151-4dd7-98fa-fb0438eebb23] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:07:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[fbb60e04-7a74-4d6e-95b0-66d9c9ccf1ea] received
+INFO 2026-03-24 18:07:00,151 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[fbb60e04-7a74-4d6e-95b0-66d9c9ccf1ea] succeeded in 0.14000000059604645s: None
+INFO 2026-03-24 18:08:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9988dc41-7fcc-4977-8f16-17b625f89f80] received
+INFO 2026-03-24 18:08:00,044 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9988dc41-7fcc-4977-8f16-17b625f89f80] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:09:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e2fb041a-f511-4700-9e7f-a23eb5a574d4] received
+INFO 2026-03-24 18:09:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e2fb041a-f511-4700-9e7f-a23eb5a574d4] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:10:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[17d98fc6-47b5-4465-b06c-f69489e3b55e] received
+INFO 2026-03-24 18:10:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[17d98fc6-47b5-4465-b06c-f69489e3b55e] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:11:00,009 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[66376722-48d6-4e4c-8194-7d3cc2fdbe22] received
+INFO 2026-03-24 18:11:00,046 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[66376722-48d6-4e4c-8194-7d3cc2fdbe22] succeeded in 0.03099999949336052s: None
+INFO 2026-03-24 18:12:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[45646150-ea4a-4107-b2f2-c56b2016fb7a] received
+INFO 2026-03-24 18:12:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[45646150-ea4a-4107-b2f2-c56b2016fb7a] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:13:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f5538ef6-a8ec-4aea-9d9a-56b1387e1636] received
+INFO 2026-03-24 18:13:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f5538ef6-a8ec-4aea-9d9a-56b1387e1636] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:14:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e6a4a45e-3ca4-4e3b-9b55-9849b1414cdf] received
+INFO 2026-03-24 18:14:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e6a4a45e-3ca4-4e3b-9b55-9849b1414cdf] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:15:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[1c204e4e-572f-4d94-917b-1ae8ed0274fd] received
+INFO 2026-03-24 18:15:00,047 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[1c204e4e-572f-4d94-917b-1ae8ed0274fd] succeeded in 0.03099999949336052s: None
+INFO 2026-03-24 18:16:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[19fbb899-2570-476f-bda8-9be262bc40b6] received
+INFO 2026-03-24 18:16:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[19fbb899-2570-476f-bda8-9be262bc40b6] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:17:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[3a4fa4e1-65b9-4a8c-a04a-e4442a6421b8] received
+INFO 2026-03-24 18:17:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[3a4fa4e1-65b9-4a8c-a04a-e4442a6421b8] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:18:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[a7dd484e-751a-4f5f-9a1c-7828079bc21b] received
+INFO 2026-03-24 18:18:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[a7dd484e-751a-4f5f-9a1c-7828079bc21b] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:19:00,009 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[16437985-cf96-45a4-b6ec-b1bda4445aa4] received
+INFO 2026-03-24 18:19:00,050 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[16437985-cf96-45a4-b6ec-b1bda4445aa4] succeeded in 0.03099999949336052s: None
+INFO 2026-03-24 18:20:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[370938d1-e3ab-4b1c-94a1-1335cfb41fb3] received
+INFO 2026-03-24 18:20:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[370938d1-e3ab-4b1c-94a1-1335cfb41fb3] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:21:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[fd40d375-be41-481b-9fe6-4375c5df2d4d] received
+INFO 2026-03-24 18:21:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[fd40d375-be41-481b-9fe6-4375c5df2d4d] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:22:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[c81f79ec-e713-47a7-b9f2-c125832470be] received
+INFO 2026-03-24 18:22:00,049 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[c81f79ec-e713-47a7-b9f2-c125832470be] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:23:00,009 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f6e9e338-a985-45a4-8bcc-de81bdf7def0] received
+INFO 2026-03-24 18:23:00,047 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f6e9e338-a985-45a4-8bcc-de81bdf7def0] succeeded in 0.03099999949336052s: None
+INFO 2026-03-24 18:24:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[3503ec92-d587-4123-bdf8-0750d79dab89] received
+INFO 2026-03-24 18:24:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[3503ec92-d587-4123-bdf8-0750d79dab89] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:25:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ee0b5b37-e672-4642-84b6-03bfbd0c06da] received
+INFO 2026-03-24 18:25:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ee0b5b37-e672-4642-84b6-03bfbd0c06da] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:26:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f657ff5e-c59d-48b2-bb26-02742f4211e0] received
+INFO 2026-03-24 18:26:00,142 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f657ff5e-c59d-48b2-bb26-02742f4211e0] succeeded in 0.14099999889731407s: None
+INFO 2026-03-24 18:27:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[6b719bc9-1d66-42d8-86b0-271c7ff7885e] received
+INFO 2026-03-24 18:27:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[6b719bc9-1d66-42d8-86b0-271c7ff7885e] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:28:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[288bf0ee-5b9e-48a7-859a-0ef815bd349d] received
+INFO 2026-03-24 18:28:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[288bf0ee-5b9e-48a7-859a-0ef815bd349d] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:29:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[6af77645-10aa-49c8-9b2c-a18d9142e334] received
+INFO 2026-03-24 18:29:00,045 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[6af77645-10aa-49c8-9b2c-a18d9142e334] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:30:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b5f55ff2-7776-46ab-b008-f423ca70740c] received
+INFO 2026-03-24 18:30:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b5f55ff2-7776-46ab-b008-f423ca70740c] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:31:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[3f01d18d-3a75-4cd2-a9ad-2cb79cb03cfe] received
+INFO 2026-03-24 18:31:00,046 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[3f01d18d-3a75-4cd2-a9ad-2cb79cb03cfe] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:32:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[43512753-1f84-42c2-976d-c5d3255307fe] received
+INFO 2026-03-24 18:32:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[43512753-1f84-42c2-976d-c5d3255307fe] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:33:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[6f8fcbcf-2f67-46a8-85de-23b9bccc8133] received
+INFO 2026-03-24 18:33:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[6f8fcbcf-2f67-46a8-85de-23b9bccc8133] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:34:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b550bb9c-ece5-40db-a6fe-3ab080bc197d] received
+INFO 2026-03-24 18:34:00,040 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b550bb9c-ece5-40db-a6fe-3ab080bc197d] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:35:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[005eb0c9-49ac-41ba-8fff-dd2325fa0d37] received
+INFO 2026-03-24 18:35:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[005eb0c9-49ac-41ba-8fff-dd2325fa0d37] succeeded in 0.03099999949336052s: None
+INFO 2026-03-24 18:36:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[1c33dbf3-9c7a-4461-97d4-64bafbc87d4a] received
+INFO 2026-03-24 18:36:00,040 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[1c33dbf3-9c7a-4461-97d4-64bafbc87d4a] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:37:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[8d89b489-4185-403d-99d8-fefc75efa5f6] received
+INFO 2026-03-24 18:37:00,047 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[8d89b489-4185-403d-99d8-fefc75efa5f6] succeeded in 0.03099999949336052s: None
+INFO 2026-03-24 18:38:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f308ef53-4932-42b6-a5e5-b4ff1a3a9d1d] received
+INFO 2026-03-24 18:38:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f308ef53-4932-42b6-a5e5-b4ff1a3a9d1d] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:39:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[1faa73cb-853a-4752-85bb-6b1fc2d2e95f] received
+INFO 2026-03-24 18:39:00,045 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[1faa73cb-853a-4752-85bb-6b1fc2d2e95f] succeeded in 0.03099999949336052s: None
+INFO 2026-03-24 18:40:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ece2279a-8245-4077-b1e0-f0290b01c84a] received
+INFO 2026-03-24 18:40:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ece2279a-8245-4077-b1e0-f0290b01c84a] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:41:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[31cd13a4-7eea-48ed-8102-de61864bd10f] received
+INFO 2026-03-24 18:41:00,154 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[31cd13a4-7eea-48ed-8102-de61864bd10f] succeeded in 0.15599999949336052s: None
+INFO 2026-03-24 18:42:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[19dfd969-bf7a-4290-8ce5-5d610b444d54] received
+INFO 2026-03-24 18:42:00,045 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[19dfd969-bf7a-4290-8ce5-5d610b444d54] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:43:00,008 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7ecafc9f-18dd-430a-9039-9eff461e6477] received
+INFO 2026-03-24 18:43:00,048 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7ecafc9f-18dd-430a-9039-9eff461e6477] succeeded in 0.03099999949336052s: None
+INFO 2026-03-24 18:44:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[90e401a9-5715-4950-9ba6-7849a385d884] received
+INFO 2026-03-24 18:44:00,148 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[90e401a9-5715-4950-9ba6-7849a385d884] succeeded in 0.15599999949336052s: None
+INFO 2026-03-24 18:45:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b4a63e55-bf8b-4cfc-be4d-d82c32879474] received
+INFO 2026-03-24 18:45:00,143 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b4a63e55-bf8b-4cfc-be4d-d82c32879474] succeeded in 0.14099999889731407s: None
+INFO 2026-03-24 18:46:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[79245964-cbd9-4d9b-9d23-6c2850afd8c4] received
+INFO 2026-03-24 18:46:00,040 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[79245964-cbd9-4d9b-9d23-6c2850afd8c4] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:47:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7b2762b8-86f0-4583-a168-d3d01df6b4dd] received
+INFO 2026-03-24 18:47:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7b2762b8-86f0-4583-a168-d3d01df6b4dd] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:48:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e1679472-5b08-4812-97ba-8a988d8533a2] received
+INFO 2026-03-24 18:48:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e1679472-5b08-4812-97ba-8a988d8533a2] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:49:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[8ff62a67-54f5-413f-ae7c-c605e8d1238e] received
+INFO 2026-03-24 18:49:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[8ff62a67-54f5-413f-ae7c-c605e8d1238e] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:50:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[11534367-120d-44bd-9a91-b3dd0d947da2] received
+INFO 2026-03-24 18:50:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[11534367-120d-44bd-9a91-b3dd0d947da2] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:51:00,008 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ed82f84d-bf1f-44d1-95e0-5e711d2d01a1] received
+INFO 2026-03-24 18:51:00,159 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ed82f84d-bf1f-44d1-95e0-5e711d2d01a1] succeeded in 0.14000000059604645s: None
+INFO 2026-03-24 18:52:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[30a41fd3-7b64-46e9-b2d5-0dc1f1b92b9d] received
+INFO 2026-03-24 18:52:00,044 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[30a41fd3-7b64-46e9-b2d5-0dc1f1b92b9d] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:53:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[098b0fc1-e429-44c0-9bf6-c919eb2117fe] received
+INFO 2026-03-24 18:53:00,045 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[098b0fc1-e429-44c0-9bf6-c919eb2117fe] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:54:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[183a9151-9427-4d93-b698-3a8ddf43920d] received
+INFO 2026-03-24 18:54:00,046 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[183a9151-9427-4d93-b698-3a8ddf43920d] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:55:00,008 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9e0731f1-386c-4886-95b0-7b94e46759c9] received
+INFO 2026-03-24 18:55:00,048 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9e0731f1-386c-4886-95b0-7b94e46759c9] succeeded in 0.03099999949336052s: None
+INFO 2026-03-24 18:56:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[3bc3d672-6543-41a4-b388-5005774a0f45] received
+INFO 2026-03-24 18:56:00,148 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[3bc3d672-6543-41a4-b388-5005774a0f45] succeeded in 0.15599999949336052s: None
+INFO 2026-03-24 18:57:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9030dde2-e8ba-4d24-ac44-c00d8d29d128] received
+INFO 2026-03-24 18:57:00,044 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9030dde2-e8ba-4d24-ac44-c00d8d29d128] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 18:58:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[3f158681-2832-43f8-8e3e-2663b60df47c] received
+INFO 2026-03-24 18:58:00,143 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[3f158681-2832-43f8-8e3e-2663b60df47c] succeeded in 0.14099999889731407s: None
+INFO 2026-03-24 18:59:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ca919a65-d9e6-49d1-af76-0390bd5a12ee] received
+INFO 2026-03-24 18:59:00,044 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ca919a65-d9e6-49d1-af76-0390bd5a12ee] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:00:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[a019f1b8-7d86-419d-8894-2b60d0a2c9f1] received
+INFO 2026-03-24 19:00:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[a019f1b8-7d86-419d-8894-2b60d0a2c9f1] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:01:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f994c40a-9b19-4c9a-b20d-9233ec136476] received
+INFO 2026-03-24 19:01:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f994c40a-9b19-4c9a-b20d-9233ec136476] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:02:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b49789fd-e2e5-48c8-9c76-34387209551c] received
+INFO 2026-03-24 19:02:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b49789fd-e2e5-48c8-9c76-34387209551c] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:03:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[d4a26949-66e7-472a-bcc3-6d4c00f9cb20] received
+INFO 2026-03-24 19:03:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[d4a26949-66e7-472a-bcc3-6d4c00f9cb20] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:04:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[4118fb72-ed55-437d-9cd2-9dd57063705d] received
+INFO 2026-03-24 19:04:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[4118fb72-ed55-437d-9cd2-9dd57063705d] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:05:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[1682cc86-7998-4f6a-9036-db6eec4335bb] received
+INFO 2026-03-24 19:05:00,146 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[1682cc86-7998-4f6a-9036-db6eec4335bb] succeeded in 0.15599999949336052s: None
+INFO 2026-03-24 19:06:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f4616661-cb62-40c2-8180-82325934eb6c] received
+INFO 2026-03-24 19:06:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f4616661-cb62-40c2-8180-82325934eb6c] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:07:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b696c750-1585-4c80-9818-5c52a7731880] received
+INFO 2026-03-24 19:07:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b696c750-1585-4c80-9818-5c52a7731880] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:08:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[41016ed1-aa22-4fbd-a311-00911af55f8b] received
+INFO 2026-03-24 19:08:00,045 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[41016ed1-aa22-4fbd-a311-00911af55f8b] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:09:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[fcbcb9ce-749f-47a0-bdb6-325f2be9b8af] received
+INFO 2026-03-24 19:09:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[fcbcb9ce-749f-47a0-bdb6-325f2be9b8af] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:10:00,012 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[043be63c-fe3d-4052-b643-eb9b8321492e] received
+INFO 2026-03-24 19:10:00,051 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[043be63c-fe3d-4052-b643-eb9b8321492e] succeeded in 0.04700000025331974s: None
+INFO 2026-03-24 19:11:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[95596c97-838c-4dce-8dcc-975d4a90abe8] received
+INFO 2026-03-24 19:11:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[95596c97-838c-4dce-8dcc-975d4a90abe8] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:12:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[18dd0171-b92e-424f-b97b-7876bbc96471] received
+INFO 2026-03-24 19:12:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[18dd0171-b92e-424f-b97b-7876bbc96471] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:13:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[852de119-5433-48e6-85c1-53620cc01761] received
+INFO 2026-03-24 19:13:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[852de119-5433-48e6-85c1-53620cc01761] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:14:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f6838f38-9942-4295-bcc1-f69b956a352f] received
+INFO 2026-03-24 19:14:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f6838f38-9942-4295-bcc1-f69b956a352f] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:15:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[75800952-7d7d-4f8e-a9b2-84173b48c169] received
+INFO 2026-03-24 19:15:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[75800952-7d7d-4f8e-a9b2-84173b48c169] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:16:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5fc52de8-ccb7-4e69-b975-390ec9a587e2] received
+INFO 2026-03-24 19:16:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5fc52de8-ccb7-4e69-b975-390ec9a587e2] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:17:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5a26a926-4f23-4bc1-9ffc-d49aa55891fe] received
+INFO 2026-03-24 19:17:00,157 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5a26a926-4f23-4bc1-9ffc-d49aa55891fe] succeeded in 0.15599999949336052s: None
+INFO 2026-03-24 19:18:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[39485cd4-7ce4-4c22-a1eb-96c43568419f] received
+INFO 2026-03-24 19:18:00,048 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[39485cd4-7ce4-4c22-a1eb-96c43568419f] succeeded in 0.03099999949336052s: None
+INFO 2026-03-24 19:19:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[0caa0270-5725-409a-85e3-119e405b2b79] received
+INFO 2026-03-24 19:19:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[0caa0270-5725-409a-85e3-119e405b2b79] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:20:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9b99f06c-ea7c-45fe-9180-3ade0807b632] received
+INFO 2026-03-24 19:20:00,051 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9b99f06c-ea7c-45fe-9180-3ade0807b632] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:21:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[92fd4d3d-38d6-42b3-b8f2-085158b077d7] received
+INFO 2026-03-24 19:21:00,045 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[92fd4d3d-38d6-42b3-b8f2-085158b077d7] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:22:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[cd46a49b-7e9d-4a84-a53e-1437da53236a] received
+INFO 2026-03-24 19:22:00,053 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[cd46a49b-7e9d-4a84-a53e-1437da53236a] succeeded in 0.04700000025331974s: None
+INFO 2026-03-24 19:23:00,008 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[daa516ca-8e93-4ada-b4a7-45add26ec1ed] received
+INFO 2026-03-24 19:23:00,054 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[daa516ca-8e93-4ada-b4a7-45add26ec1ed] succeeded in 0.04700000025331974s: None
+INFO 2026-03-24 19:24:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[333f8a59-5947-4526-a402-6605582cbb71] received
+INFO 2026-03-24 19:24:00,144 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[333f8a59-5947-4526-a402-6605582cbb71] succeeded in 0.14099999889731407s: None
+INFO 2026-03-24 19:25:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[6db9dda2-1001-45d8-aa0e-da274a4f1876] received
+INFO 2026-03-24 19:25:00,040 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[6db9dda2-1001-45d8-aa0e-da274a4f1876] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:26:00,009 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f3828c4b-58e1-4c0d-9cec-107f7aafe6e4] received
+INFO 2026-03-24 19:26:00,047 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f3828c4b-58e1-4c0d-9cec-107f7aafe6e4] succeeded in 0.03099999949336052s: None
+INFO 2026-03-24 19:27:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[30807029-f3c0-4222-8c1a-b2c942f18edc] received
+INFO 2026-03-24 19:27:00,040 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[30807029-f3c0-4222-8c1a-b2c942f18edc] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:28:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7a00debc-651a-41dd-a5a7-41e22dfd4b05] received
+INFO 2026-03-24 19:28:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7a00debc-651a-41dd-a5a7-41e22dfd4b05] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:29:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ebfb3e61-9c2d-46a9-b873-a60ff10f0942] received
+INFO 2026-03-24 19:29:00,156 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ebfb3e61-9c2d-46a9-b873-a60ff10f0942] succeeded in 0.15599999949336052s: None
+INFO 2026-03-24 19:30:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[6b7f16fd-24aa-4b34-8974-348887751981] received
+INFO 2026-03-24 19:30:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[6b7f16fd-24aa-4b34-8974-348887751981] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:31:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[1cbdf3c0-acd4-495d-b94f-028d5a6997b4] received
+INFO 2026-03-24 19:31:00,040 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[1cbdf3c0-acd4-495d-b94f-028d5a6997b4] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:32:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[c99abf8a-1f03-4879-9282-891764e8d79b] received
+INFO 2026-03-24 19:32:00,040 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[c99abf8a-1f03-4879-9282-891764e8d79b] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:33:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[d2e84f53-6ba9-4aa7-9409-d386d09a7021] received
+INFO 2026-03-24 19:33:00,039 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[d2e84f53-6ba9-4aa7-9409-d386d09a7021] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:34:00,009 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7257dce6-6275-4d6c-8435-64c12b5d722a] received
+INFO 2026-03-24 19:34:00,048 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7257dce6-6275-4d6c-8435-64c12b5d722a] succeeded in 0.03099999949336052s: None
+INFO 2026-03-24 19:35:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[fc29ecc3-e77d-4d25-aad7-4a5931815bfd] received
+INFO 2026-03-24 19:35:00,044 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[fc29ecc3-e77d-4d25-aad7-4a5931815bfd] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:36:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ffb5b0c3-4cb9-47a6-a3df-de0f682e30f2] received
+INFO 2026-03-24 19:36:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ffb5b0c3-4cb9-47a6-a3df-de0f682e30f2] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:37:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[1fc7abb4-e794-4b2d-963a-7f657b9ee75f] received
+INFO 2026-03-24 19:37:00,040 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[1fc7abb4-e794-4b2d-963a-7f657b9ee75f] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:38:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[a1496fe9-72f1-419f-b20e-6050356ba9d5] received
+INFO 2026-03-24 19:38:00,161 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[a1496fe9-72f1-419f-b20e-6050356ba9d5] succeeded in 0.15599999949336052s: None
+INFO 2026-03-24 19:39:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[0dbf6673-7843-4be6-83e3-bf5d7da24c2c] received
+INFO 2026-03-24 19:39:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[0dbf6673-7843-4be6-83e3-bf5d7da24c2c] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:40:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[751d4d50-093b-4e33-8e06-fe4cfe41c99e] received
+INFO 2026-03-24 19:40:00,050 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[751d4d50-093b-4e33-8e06-fe4cfe41c99e] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:41:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[3f76f89a-ea17-4f89-bc9a-e91b34516d27] received
+INFO 2026-03-24 19:41:00,044 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[3f76f89a-ea17-4f89-bc9a-e91b34516d27] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:42:00,008 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[31a77970-258b-4389-81cc-f0573384a4f2] received
+INFO 2026-03-24 19:42:00,046 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[31a77970-258b-4389-81cc-f0573384a4f2] succeeded in 0.03099999949336052s: None
+INFO 2026-03-24 19:43:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[52de9e35-98d0-4559-86b6-a2a1452d11bd] received
+INFO 2026-03-24 19:43:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[52de9e35-98d0-4559-86b6-a2a1452d11bd] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 19:44:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[1f844d2b-29ea-477d-acf3-8c5ec0cfa6df] received
+INFO 2026-03-24 19:44:00,045 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[1f844d2b-29ea-477d-acf3-8c5ec0cfa6df] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 20:12:09,913 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[bf416cb5-3b8b-4583-8d4d-7d3b737ef725] received
+INFO 2026-03-24 20:12:09,985 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[bf416cb5-3b8b-4583-8d4d-7d3b737ef725] succeeded in 0.06200000084936619s: None
+INFO 2026-03-24 20:13:00,011 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7e156225-d21a-4498-832d-7ee6c8325c22] received
+INFO 2026-03-24 20:13:00,075 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7e156225-d21a-4498-832d-7ee6c8325c22] succeeded in 0.06200000084936619s: None
+INFO 2026-03-24 20:14:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9492e4d4-2b7f-41f1-b632-bf370684c21f] received
+INFO 2026-03-24 20:14:00,050 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9492e4d4-2b7f-41f1-b632-bf370684c21f] succeeded in 0.04699999839067459s: None
+INFO 2026-03-24 20:15:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b1b63ef1-74e3-48d1-874b-51e30602fbf8] received
+INFO 2026-03-24 20:15:00,057 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b1b63ef1-74e3-48d1-874b-51e30602fbf8] succeeded in 0.06299999915063381s: None
+INFO 2026-03-24 20:16:00,011 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[3a044b46-e0c6-4c68-81ee-1632601ceea9] received
+INFO 2026-03-24 20:16:00,067 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[3a044b46-e0c6-4c68-81ee-1632601ceea9] succeeded in 0.04700000025331974s: None
+INFO 2026-03-24 20:17:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e2571b5e-89df-4bc3-b15d-1d6b8bde1f62] received
+INFO 2026-03-24 20:17:00,055 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e2571b5e-89df-4bc3-b15d-1d6b8bde1f62] succeeded in 0.06299999915063381s: None
+INFO 2026-03-24 20:18:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[dcb73d1e-feab-4ebb-a85b-ba2fda917a80] received
+INFO 2026-03-24 20:18:00,059 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[dcb73d1e-feab-4ebb-a85b-ba2fda917a80] succeeded in 0.06299999915063381s: None
+INFO 2026-03-24 20:19:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[8e0c0a1b-61c7-4755-a758-40f9e4fdc5ae] received
+INFO 2026-03-24 20:19:00,059 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[8e0c0a1b-61c7-4755-a758-40f9e4fdc5ae] succeeded in 0.06299999915063381s: None
+INFO 2026-03-24 20:20:00,010 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9daeea74-0699-4f97-953f-4dcf4006d69f] received
+INFO 2026-03-24 20:20:00,068 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9daeea74-0699-4f97-953f-4dcf4006d69f] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 16:57:53,848 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[70860d28-a403-4ebf-a4f2-6c6880706f86] received
+INFO 2026-03-25 16:57:53,923 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[70860d28-a403-4ebf-a4f2-6c6880706f86] succeeded in 0.07799999974668026s: None
+INFO 2026-03-25 16:57:53,931 strategy 52628 36656 Task apps.analytics_books.tasks.repair_analytics_from_sources[8db5dc6c-ee4e-4bee-9bfd-20fc16fb1dfb] received
+INFO 2026-03-25 16:57:54,684 trace 52628 36656 Task apps.analytics_books.tasks.repair_analytics_from_sources[8db5dc6c-ee4e-4bee-9bfd-20fc16fb1dfb] succeeded in 0.75s: 'repair_analytics_from_sources: {\'book_analytics_books\': 7, \'days\': 90, \'update_or_create_calls\': 12}'
+INFO 2026-03-25 16:57:54,684 strategy 52628 36656 Task apps.analytics_books.tasks.cleanup_old_analytics[a2677602-6242-427e-8270-7a1a5fcd9c2f] received
+INFO 2026-03-25 16:57:54,736 trace 52628 36656 Task apps.analytics_books.tasks.cleanup_old_analytics[a2677602-6242-427e-8270-7a1a5fcd9c2f] succeeded in 0.03099999949336052s: 'Удалено daily=0, comment_like_events=0 старше 90 дней'
+INFO 2026-03-25 16:58:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[cf2e3e0d-33d2-446e-bee7-cccd89316002] received
+INFO 2026-03-25 16:58:00,160 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[cf2e3e0d-33d2-446e-bee7-cccd89316002] succeeded in 0.15599999949336052s: None
+INFO 2026-03-25 16:59:00,005 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[d94c8621-1aa9-492d-b5e1-1f1026c42afa] received
+INFO 2026-03-25 16:59:00,069 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[d94c8621-1aa9-492d-b5e1-1f1026c42afa] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 17:00:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ee13148a-9041-4c7f-9a21-04b00b1f36b1] received
+INFO 2026-03-25 17:00:00,064 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ee13148a-9041-4c7f-9a21-04b00b1f36b1] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:01:00,010 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[32ec019e-8e29-4caa-8e8a-b2fbac50b6d6] received
+INFO 2026-03-25 17:01:00,066 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[32ec019e-8e29-4caa-8e8a-b2fbac50b6d6] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 17:02:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[da7df407-35d0-40ae-bd78-278d653a21a6] received
+INFO 2026-03-25 17:02:00,168 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[da7df407-35d0-40ae-bd78-278d653a21a6] succeeded in 0.15599999949336052s: None
+INFO 2026-03-25 17:03:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[fc60c8eb-1803-473d-9658-70388f626dea] received
+INFO 2026-03-25 17:03:00,068 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[fc60c8eb-1803-473d-9658-70388f626dea] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 17:04:00,008 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[543bd99d-dbff-4f8a-bdfa-80229e06a9ea] received
+INFO 2026-03-25 17:04:00,178 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[543bd99d-dbff-4f8a-bdfa-80229e06a9ea] succeeded in 0.17200000025331974s: None
+INFO 2026-03-25 17:05:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5e3da75f-d419-4a9a-98a8-bb25f5c27e9f] received
+INFO 2026-03-25 17:05:00,067 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5e3da75f-d419-4a9a-98a8-bb25f5c27e9f] succeeded in 0.07799999974668026s: None
+INFO 2026-03-25 17:06:00,005 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[8d77de1b-948d-4c03-b432-8b5ff8fe4633] received
+INFO 2026-03-25 17:06:00,061 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[8d77de1b-948d-4c03-b432-8b5ff8fe4633] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 17:07:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[6746dda6-5998-4520-bcc9-7a5eff9aadd8] received
+INFO 2026-03-25 17:07:00,067 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[6746dda6-5998-4520-bcc9-7a5eff9aadd8] succeeded in 0.07799999974668026s: None
+INFO 2026-03-25 17:08:00,011 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[eb46b55a-8b6c-4afb-950c-678355b22bd5] received
+INFO 2026-03-25 17:08:00,072 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[eb46b55a-8b6c-4afb-950c-678355b22bd5] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 17:09:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2359fc39-e935-4e40-b752-290fcc54763f] received
+INFO 2026-03-25 17:09:00,079 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2359fc39-e935-4e40-b752-290fcc54763f] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 17:10:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[4ae7e98c-60db-41f0-8547-15dcbbb51e97] received
+INFO 2026-03-25 17:10:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[4ae7e98c-60db-41f0-8547-15dcbbb51e97] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 17:11:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[213b332b-2784-40a4-a66d-f20e10fe6959] received
+INFO 2026-03-25 17:11:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[213b332b-2784-40a4-a66d-f20e10fe6959] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 17:12:00,009 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[254048b7-9e83-4bd4-9da9-49f81a7ff132] received
+INFO 2026-03-25 17:12:00,081 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[254048b7-9e83-4bd4-9da9-49f81a7ff132] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 17:13:00,005 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[1420bf30-5bd5-4821-992a-4344cc8afdb9] received
+INFO 2026-03-25 17:13:00,069 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[1420bf30-5bd5-4821-992a-4344cc8afdb9] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 17:14:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5c10aae7-bb6f-4e55-b7d5-778889ee75cf] received
+INFO 2026-03-25 17:14:00,066 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5c10aae7-bb6f-4e55-b7d5-778889ee75cf] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:15:00,029 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[a7f02fbe-9f7a-46d0-b1f8-e609339b9f59] received
+INFO 2026-03-25 17:15:00,093 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[a7f02fbe-9f7a-46d0-b1f8-e609339b9f59] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:16:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[fc7aec24-cda7-42d8-ab19-b83014ed42d0] received
+INFO 2026-03-25 17:16:00,060 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[fc7aec24-cda7-42d8-ab19-b83014ed42d0] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:17:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2fb88384-6ad6-410d-9423-0edc060a85c4] received
+INFO 2026-03-25 17:17:00,064 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2fb88384-6ad6-410d-9423-0edc060a85c4] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 17:18:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[a72fbe0d-d4a1-45e6-91c9-1f6d7daba351] received
+INFO 2026-03-25 17:18:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[a72fbe0d-d4a1-45e6-91c9-1f6d7daba351] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:19:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5b54598e-2eb6-45cb-8128-b69cdb25036e] received
+INFO 2026-03-25 17:19:00,066 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5b54598e-2eb6-45cb-8128-b69cdb25036e] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:20:00,027 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[47d44ace-70fe-4f36-8de9-374c55294790] received
+INFO 2026-03-25 17:20:00,084 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[47d44ace-70fe-4f36-8de9-374c55294790] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:21:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9c4a83c6-3984-488a-98d4-a4004a110f54] received
+INFO 2026-03-25 17:21:00,064 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9c4a83c6-3984-488a-98d4-a4004a110f54] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:22:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e88d30b4-53ce-4d22-9bb0-bc8caf3709a4] received
+INFO 2026-03-25 17:22:00,066 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e88d30b4-53ce-4d22-9bb0-bc8caf3709a4] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 17:23:00,031 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[a7b5917f-3bf8-4923-95da-e00ae2953088] received
+INFO 2026-03-25 17:23:00,087 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[a7b5917f-3bf8-4923-95da-e00ae2953088] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:24:00,029 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[77ab64c7-afda-4f43-84e5-24f254b89c8f] received
+INFO 2026-03-25 17:24:00,084 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[77ab64c7-afda-4f43-84e5-24f254b89c8f] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:25:00,005 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f81a0629-01ca-4b49-a7b8-ae954c39b7f3] received
+INFO 2026-03-25 17:25:00,167 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f81a0629-01ca-4b49-a7b8-ae954c39b7f3] succeeded in 0.15599999949336052s: None
+INFO 2026-03-25 17:26:00,012 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5cfdf725-ee36-4ae2-9b33-5a0a7c64a91e] received
+INFO 2026-03-25 17:26:00,076 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5cfdf725-ee36-4ae2-9b33-5a0a7c64a91e] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 17:27:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[bae2db34-3397-449b-aa11-ef9e6f835dc1] received
+INFO 2026-03-25 17:27:00,071 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[bae2db34-3397-449b-aa11-ef9e6f835dc1] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 17:28:00,005 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[573160c0-b2bc-4ca5-8d8f-ecf06f57302a] received
+INFO 2026-03-25 17:28:00,067 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[573160c0-b2bc-4ca5-8d8f-ecf06f57302a] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 17:29:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[082c2b03-fa5f-4fa1-852e-bc93b95a4d61] received
+INFO 2026-03-25 17:29:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[082c2b03-fa5f-4fa1-852e-bc93b95a4d61] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:30:00,016 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[679777aa-672d-4ab1-9def-bba607f44338] received
+INFO 2026-03-25 17:30:00,172 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[679777aa-672d-4ab1-9def-bba607f44338] succeeded in 0.15599999949336052s: None
+INFO 2026-03-25 17:31:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[cf252179-7a9f-4c82-8f55-e0b5f4ec2963] received
+INFO 2026-03-25 17:31:00,065 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[cf252179-7a9f-4c82-8f55-e0b5f4ec2963] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:32:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ce2faa9a-f1bd-4644-9a73-ac481f29263e] received
+INFO 2026-03-25 17:32:00,067 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ce2faa9a-f1bd-4644-9a73-ac481f29263e] succeeded in 0.07799999974668026s: None
+INFO 2026-03-25 17:33:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[15142dcf-eee8-44ee-a825-8c4295aeeacd] received
+INFO 2026-03-25 17:33:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[15142dcf-eee8-44ee-a825-8c4295aeeacd] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:34:00,030 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ae833560-bd6d-4800-92ef-a101342091cc] received
+INFO 2026-03-25 17:34:00,086 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ae833560-bd6d-4800-92ef-a101342091cc] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:35:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ea503e77-e41b-475c-87c0-64191f737918] received
+INFO 2026-03-25 17:35:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ea503e77-e41b-475c-87c0-64191f737918] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 17:36:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[8904b14a-7b29-4b2b-a1dc-ef98030d12f4] received
+INFO 2026-03-25 17:36:00,066 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[8904b14a-7b29-4b2b-a1dc-ef98030d12f4] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:37:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[fa44e070-ad5a-488e-a788-9db4a35bb83b] received
+INFO 2026-03-25 17:37:00,056 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[fa44e070-ad5a-488e-a788-9db4a35bb83b] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:38:00,011 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[95f47fe1-a550-4b89-8377-b8a28b9935f0] received
+INFO 2026-03-25 17:38:00,071 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[95f47fe1-a550-4b89-8377-b8a28b9935f0] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 17:39:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[d18c00c7-e857-4ed5-8d28-32310a6ec024] received
+INFO 2026-03-25 17:39:00,071 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[d18c00c7-e857-4ed5-8d28-32310a6ec024] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 17:40:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7da9ab89-4ad9-4ee0-a5ad-1e1651234ab2] received
+INFO 2026-03-25 17:40:00,068 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7da9ab89-4ad9-4ee0-a5ad-1e1651234ab2] succeeded in 0.07799999974668026s: None
+INFO 2026-03-25 17:41:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[eea148df-3ae0-4482-880e-389aad4585b0] received
+INFO 2026-03-25 17:41:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[eea148df-3ae0-4482-880e-389aad4585b0] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:42:00,012 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[3ebd573e-6842-41eb-9035-333383924f28] received
+INFO 2026-03-25 17:42:00,081 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[3ebd573e-6842-41eb-9035-333383924f28] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 17:43:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[210a979f-23bf-46f2-833f-5936c6880a41] received
+INFO 2026-03-25 17:43:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[210a979f-23bf-46f2-833f-5936c6880a41] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:44:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7165fad1-78df-48d4-9d28-d8d9e71ca2e3] received
+INFO 2026-03-25 17:44:00,158 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7165fad1-78df-48d4-9d28-d8d9e71ca2e3] succeeded in 0.15599999949336052s: None
+INFO 2026-03-25 17:45:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f903074f-9196-48a1-8655-038492d99fdd] received
+INFO 2026-03-25 17:45:00,175 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f903074f-9196-48a1-8655-038492d99fdd] succeeded in 0.1719999983906746s: None
+INFO 2026-03-25 17:46:00,012 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[1a544a24-2f6f-43fa-b8ae-d4e0f5b370e5] received
+INFO 2026-03-25 17:46:00,096 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[1a544a24-2f6f-43fa-b8ae-d4e0f5b370e5] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 17:47:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5ebf6383-8fd4-4a3b-b7a1-800d9ce66776] received
+INFO 2026-03-25 17:47:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5ebf6383-8fd4-4a3b-b7a1-800d9ce66776] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 17:48:00,008 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e6d5dab4-cc69-415b-bd7d-8b45b8d98ba7] received
+INFO 2026-03-25 17:48:00,197 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e6d5dab4-cc69-415b-bd7d-8b45b8d98ba7] succeeded in 0.1870000008493662s: None
+INFO 2026-03-25 17:49:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[c2ef397a-f4eb-4c75-8ccb-7869a1915984] received
+INFO 2026-03-25 17:49:00,081 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[c2ef397a-f4eb-4c75-8ccb-7869a1915984] succeeded in 0.07799999974668026s: None
+INFO 2026-03-25 17:50:00,017 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[1e5b628b-50b8-496b-8f48-262a08d243a0] received
+INFO 2026-03-25 17:50:00,075 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[1e5b628b-50b8-496b-8f48-262a08d243a0] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 17:51:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[c24bde32-a575-4fd5-b015-8ec0aeec4551] received
+INFO 2026-03-25 17:51:00,068 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[c24bde32-a575-4fd5-b015-8ec0aeec4551] succeeded in 0.07799999974668026s: None
+INFO 2026-03-25 17:52:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[4a072664-05a6-4d8d-89b3-b154fe2e96db] received
+INFO 2026-03-25 17:52:00,062 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[4a072664-05a6-4d8d-89b3-b154fe2e96db] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 17:53:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[37818ab5-f5e4-4bfb-bec8-800527dd5dce] received
+INFO 2026-03-25 17:53:00,070 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[37818ab5-f5e4-4bfb-bec8-800527dd5dce] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 17:54:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f6f8e085-bc70-4465-9f9e-19c0694b328d] received
+INFO 2026-03-25 17:54:00,065 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f6f8e085-bc70-4465-9f9e-19c0694b328d] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 17:55:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[70d029e2-5d79-4462-85f3-37933a3f7549] received
+INFO 2026-03-25 17:55:00,060 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[70d029e2-5d79-4462-85f3-37933a3f7549] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:56:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[d749d62c-252f-4b53-8a7d-eaf28b393ea2] received
+INFO 2026-03-25 17:56:00,057 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[d749d62c-252f-4b53-8a7d-eaf28b393ea2] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:57:00,032 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[beca5479-69d0-4cd9-ad6a-baf678d8e008] received
+INFO 2026-03-25 17:57:00,088 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[beca5479-69d0-4cd9-ad6a-baf678d8e008] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 17:58:00,005 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[a9025800-9da4-4c63-a20c-d074b68bde3d] received
+INFO 2026-03-25 17:58:00,061 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[a9025800-9da4-4c63-a20c-d074b68bde3d] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 17:59:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[a78a5fbe-60a3-4a81-9763-9a71e0c2b310] received
+INFO 2026-03-25 17:59:00,096 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[a78a5fbe-60a3-4a81-9763-9a71e0c2b310] succeeded in 0.07799999974668026s: None
+INFO 2026-03-25 18:00:00,024 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f66cdb7c-fa97-4f5b-9eda-fa504c38ed34] received
+INFO 2026-03-25 18:00:00,080 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f66cdb7c-fa97-4f5b-9eda-fa504c38ed34] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 18:01:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[52667ebe-e1f9-40ba-a6e6-a7b3e5d5dd00] received
+INFO 2026-03-25 18:01:00,056 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[52667ebe-e1f9-40ba-a6e6-a7b3e5d5dd00] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:02:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[cfcd41e4-380f-488a-80bd-f4b19fd5df5e] received
+INFO 2026-03-25 18:02:00,158 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[cfcd41e4-380f-488a-80bd-f4b19fd5df5e] succeeded in 0.15599999949336052s: None
+INFO 2026-03-25 18:03:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b8795e90-b14f-4f8a-adfa-678643b5b09c] received
+INFO 2026-03-25 18:03:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b8795e90-b14f-4f8a-adfa-678643b5b09c] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:04:00,015 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[6ea174be-1fc5-4432-aa24-d7da1f5873fe] received
+INFO 2026-03-25 18:04:00,076 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[6ea174be-1fc5-4432-aa24-d7da1f5873fe] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 18:05:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ca4e8139-4717-41dd-a8e1-e96329bed777] received
+INFO 2026-03-25 18:05:00,070 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ca4e8139-4717-41dd-a8e1-e96329bed777] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 18:06:00,033 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9468e18f-2df8-422c-b1b3-2b90b95bcfc3] received
+INFO 2026-03-25 18:06:00,089 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9468e18f-2df8-422c-b1b3-2b90b95bcfc3] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:07:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[418c81e8-85de-4eef-aa6e-b7ce5ff73967] received
+INFO 2026-03-25 18:07:00,062 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[418c81e8-85de-4eef-aa6e-b7ce5ff73967] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:08:00,035 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5cfa4900-7e51-447b-99b0-4cf315c64361] received
+INFO 2026-03-25 18:08:00,091 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5cfa4900-7e51-447b-99b0-4cf315c64361] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:09:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f3d3151a-5094-41c6-82e2-58756c0fc1d9] received
+INFO 2026-03-25 18:09:00,062 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f3d3151a-5094-41c6-82e2-58756c0fc1d9] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 18:10:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[fb515019-1c9e-4ad9-ac4b-95c8272a7d00] received
+INFO 2026-03-25 18:10:00,065 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[fb515019-1c9e-4ad9-ac4b-95c8272a7d00] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 18:11:00,005 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f63e4842-0f84-45c8-9d8e-9b5b673519e2] received
+INFO 2026-03-25 18:11:00,172 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f63e4842-0f84-45c8-9d8e-9b5b673519e2] succeeded in 0.15599999949336052s: None
+INFO 2026-03-25 18:12:00,031 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2c088de8-cd9d-47ed-8b2f-fa4cb0a489e8] received
+INFO 2026-03-25 18:12:00,087 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2c088de8-cd9d-47ed-8b2f-fa4cb0a489e8] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:13:00,011 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[fec9b54c-3f95-42d3-87ef-953ecd4535e0] received
+INFO 2026-03-25 18:13:00,067 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[fec9b54c-3f95-42d3-87ef-953ecd4535e0] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 18:14:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b219ae4c-f1b1-434f-9e1b-d41e80c7a393] received
+INFO 2026-03-25 18:14:00,060 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b219ae4c-f1b1-434f-9e1b-d41e80c7a393] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:15:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[653b173b-1ecc-49b0-bd19-f28c0e9ed7be] received
+INFO 2026-03-25 18:15:00,162 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[653b173b-1ecc-49b0-bd19-f28c0e9ed7be] succeeded in 0.1719999983906746s: None
+INFO 2026-03-25 18:16:00,037 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[63c086c4-ec86-4673-b416-dee0f70ff0fc] received
+INFO 2026-03-25 18:16:00,093 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[63c086c4-ec86-4673-b416-dee0f70ff0fc] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 18:17:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[edad7392-a111-4131-a25b-54f68bf784df] received
+INFO 2026-03-25 18:17:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[edad7392-a111-4131-a25b-54f68bf784df] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 18:18:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[48f9b49c-b9de-440e-ab76-bb716175e225] received
+INFO 2026-03-25 18:18:00,174 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[48f9b49c-b9de-440e-ab76-bb716175e225] succeeded in 0.15599999949336052s: None
+INFO 2026-03-25 18:19:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b018fa41-94bd-4620-8a57-00c3b06d4fa4] received
+INFO 2026-03-25 18:19:00,058 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b018fa41-94bd-4620-8a57-00c3b06d4fa4] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:20:00,014 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b192986b-1450-4d7a-95ff-d81c0d9ba0bf] received
+INFO 2026-03-25 18:20:00,070 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b192986b-1450-4d7a-95ff-d81c0d9ba0bf] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 18:21:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9738b7d9-fc08-4e1d-8d59-2f5c0f739ce0] received
+INFO 2026-03-25 18:21:00,074 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9738b7d9-fc08-4e1d-8d59-2f5c0f739ce0] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 18:22:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[07dc1cea-0ee6-4509-97c8-7995ae377397] received
+INFO 2026-03-25 18:22:00,053 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[07dc1cea-0ee6-4509-97c8-7995ae377397] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:23:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[75f7cae2-3fd9-44ff-aa8b-7950441b6ff3] received
+INFO 2026-03-25 18:23:00,057 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[75f7cae2-3fd9-44ff-aa8b-7950441b6ff3] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:24:00,010 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[8558e671-d8f9-43e9-94d2-30651b05370e] received
+INFO 2026-03-25 18:24:00,074 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[8558e671-d8f9-43e9-94d2-30651b05370e] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 18:25:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5c701326-fa4a-4593-9a6a-c48175676db7] received
+INFO 2026-03-25 18:25:00,058 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5c701326-fa4a-4593-9a6a-c48175676db7] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:26:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2705fc91-df7a-4ad4-9fa7-eb2c5517356a] received
+INFO 2026-03-25 18:26:00,059 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2705fc91-df7a-4ad4-9fa7-eb2c5517356a] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:27:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[45cb44aa-4f97-4451-bbdd-04f277ca88ef] received
+INFO 2026-03-25 18:27:00,061 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[45cb44aa-4f97-4451-bbdd-04f277ca88ef] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 18:28:00,014 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7e6b07e2-7bc1-48a8-8276-ab60aa6c751a] received
+INFO 2026-03-25 18:28:00,074 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7e6b07e2-7bc1-48a8-8276-ab60aa6c751a] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 18:29:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5cdc34d8-a0ab-4cba-89f1-8ba558583135] received
+INFO 2026-03-25 18:29:00,059 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5cdc34d8-a0ab-4cba-89f1-8ba558583135] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:30:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[c75b1299-d4d4-4168-a96c-74e8e6a6a6a4] received
+INFO 2026-03-25 18:30:00,062 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[c75b1299-d4d4-4168-a96c-74e8e6a6a6a4] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:31:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[05f71915-697e-47b4-9d3a-d43c45a66a19] received
+INFO 2026-03-25 18:31:00,056 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[05f71915-697e-47b4-9d3a-d43c45a66a19] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:32:00,014 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7adba9e5-136e-4dc1-87d9-ac400d1a8e9a] received
+INFO 2026-03-25 18:32:00,076 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7adba9e5-136e-4dc1-87d9-ac400d1a8e9a] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 18:33:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[d30a9e62-f2fa-48a4-b0ba-94ed87ab803f] received
+INFO 2026-03-25 18:33:00,058 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[d30a9e62-f2fa-48a4-b0ba-94ed87ab803f] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:34:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2e0939d7-a84b-4da4-95b6-9451ce39d813] received
+INFO 2026-03-25 18:34:00,067 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2e0939d7-a84b-4da4-95b6-9451ce39d813] succeeded in 0.07799999974668026s: None
+INFO 2026-03-25 18:35:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b3007c1a-5b8e-4533-af4d-5acd93818d55] received
+INFO 2026-03-25 18:35:00,069 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b3007c1a-5b8e-4533-af4d-5acd93818d55] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 18:36:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7d930d9c-7320-4637-8745-9df109bd9a09] received
+INFO 2026-03-25 18:36:00,169 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7d930d9c-7320-4637-8745-9df109bd9a09] succeeded in 0.1719999983906746s: None
+INFO 2026-03-25 18:37:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[bb9aa889-0a5d-4fd9-8195-9b958c8f8bfd] received
+INFO 2026-03-25 18:37:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[bb9aa889-0a5d-4fd9-8195-9b958c8f8bfd] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 18:38:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e64705b2-87d2-43ff-8587-36c6b1ec7d4c] received
+INFO 2026-03-25 18:38:00,065 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e64705b2-87d2-43ff-8587-36c6b1ec7d4c] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 18:39:00,012 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[6be0eda1-594b-4865-9a91-89e9fc374a08] received
+INFO 2026-03-25 18:39:00,071 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[6be0eda1-594b-4865-9a91-89e9fc374a08] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 18:40:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[fd15bbb2-bc20-4904-b8a8-025a1e86c78e] received
+INFO 2026-03-25 18:40:00,169 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[fd15bbb2-bc20-4904-b8a8-025a1e86c78e] succeeded in 0.1719999983906746s: None
+INFO 2026-03-25 18:41:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5c47c274-69fc-4144-9f87-9b3f8f0a7d4b] received
+INFO 2026-03-25 18:41:00,064 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5c47c274-69fc-4144-9f87-9b3f8f0a7d4b] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 18:42:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[157a70d8-3469-4597-8a57-8b73c3d6b825] received
+INFO 2026-03-25 18:42:00,065 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[157a70d8-3469-4597-8a57-8b73c3d6b825] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:43:00,013 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[4896ed68-059c-44bb-ab52-6f745b9e2bb1] received
+INFO 2026-03-25 18:43:00,175 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[4896ed68-059c-44bb-ab52-6f745b9e2bb1] succeeded in 0.15599999949336052s: None
+INFO 2026-03-25 18:44:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[8ae07cd0-60ec-4530-b2b6-7dee2979e528] received
+INFO 2026-03-25 18:44:00,071 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[8ae07cd0-60ec-4530-b2b6-7dee2979e528] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 18:45:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[40e71d6c-309a-4a01-8c41-68e470675583] received
+INFO 2026-03-25 18:45:00,171 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[40e71d6c-309a-4a01-8c41-68e470675583] succeeded in 0.15599999949336052s: None
+INFO 2026-03-25 18:46:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b9939bd7-80d4-4ddc-8e5e-3ca0ec9064e3] received
+INFO 2026-03-25 18:46:00,065 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b9939bd7-80d4-4ddc-8e5e-3ca0ec9064e3] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 18:47:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[c225da6b-1307-4a8e-8c22-302d95d94185] received
+INFO 2026-03-25 18:47:00,058 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[c225da6b-1307-4a8e-8c22-302d95d94185] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:48:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[dfae6f1d-96f6-47b1-a7ce-cde69142cf7f] received
+INFO 2026-03-25 18:48:00,065 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[dfae6f1d-96f6-47b1-a7ce-cde69142cf7f] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:49:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5a67d187-8cd8-4876-ac97-d1b8116516e3] received
+INFO 2026-03-25 18:49:00,067 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5a67d187-8cd8-4876-ac97-d1b8116516e3] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 18:50:00,036 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9aba7de6-e981-4a2c-82de-91275c5cbb2f] received
+INFO 2026-03-25 18:50:00,100 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9aba7de6-e981-4a2c-82de-91275c5cbb2f] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 18:51:00,007 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[6560473b-bae8-48ba-8985-2198b1681149] received
+INFO 2026-03-25 18:51:00,058 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[6560473b-bae8-48ba-8985-2198b1681149] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 18:52:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5fce62c6-bcb2-4aa2-b6ed-da662a1deee9] received
+INFO 2026-03-25 18:52:00,065 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5fce62c6-bcb2-4aa2-b6ed-da662a1deee9] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:53:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b46452fb-cef2-4db3-8e64-c07f2d6f8fb8] received
+INFO 2026-03-25 18:53:00,067 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b46452fb-cef2-4db3-8e64-c07f2d6f8fb8] succeeded in 0.07799999974668026s: None
+INFO 2026-03-25 18:54:00,010 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7b716a48-7c0a-43af-8884-de1560bf4c1a] received
+INFO 2026-03-25 18:54:00,068 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7b716a48-7c0a-43af-8884-de1560bf4c1a] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 18:55:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9c7592fd-714c-4cd7-8a29-70865699db0f] received
+INFO 2026-03-25 18:55:00,061 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9c7592fd-714c-4cd7-8a29-70865699db0f] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:56:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[4d48fdb2-05d5-4a65-ab4d-867e7a2558e4] received
+INFO 2026-03-25 18:56:00,061 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[4d48fdb2-05d5-4a65-ab4d-867e7a2558e4] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:57:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[d3874939-c638-4615-8f7e-e21e1559e341] received
+INFO 2026-03-25 18:57:00,060 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[d3874939-c638-4615-8f7e-e21e1559e341] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:58:00,033 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[174f4086-c800-4de1-8ee9-800ea6a2b053] received
+INFO 2026-03-25 18:58:00,096 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[174f4086-c800-4de1-8ee9-800ea6a2b053] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 18:59:00,023 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b748591a-525c-4410-a4ad-c1a4509cedb7] received
+INFO 2026-03-25 18:59:00,084 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b748591a-525c-4410-a4ad-c1a4509cedb7] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:00:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[cb3e8b7a-1bc0-47dc-ba9f-1885817c2cb3] received
+INFO 2026-03-25 19:00:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[cb3e8b7a-1bc0-47dc-ba9f-1885817c2cb3] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:01:00,022 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[8fef8a73-e03a-46f2-b5c4-020ca67ef9c3] received
+INFO 2026-03-25 19:01:00,079 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[8fef8a73-e03a-46f2-b5c4-020ca67ef9c3] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 19:02:00,030 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[cfee192e-a42f-4819-a05c-514b80b1b58b] received
+INFO 2026-03-25 19:02:00,086 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[cfee192e-a42f-4819-a05c-514b80b1b58b] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:03:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[c980d41d-4363-4e0b-9856-0081d0686674] received
+INFO 2026-03-25 19:03:00,062 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[c980d41d-4363-4e0b-9856-0081d0686674] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 19:04:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[63537302-1279-423e-89d5-2d932713af50] received
+INFO 2026-03-25 19:04:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[63537302-1279-423e-89d5-2d932713af50] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:05:00,011 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[525af20e-e130-49e6-9f73-d969390a49bd] received
+INFO 2026-03-25 19:05:00,069 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[525af20e-e130-49e6-9f73-d969390a49bd] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 19:06:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[18c61983-2a49-4603-8824-3146a099ceda] received
+INFO 2026-03-25 19:06:00,061 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[18c61983-2a49-4603-8824-3146a099ceda] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:07:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[0cd95a0c-11d5-40bf-ad42-2b71667b7607] received
+INFO 2026-03-25 19:07:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[0cd95a0c-11d5-40bf-ad42-2b71667b7607] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:08:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[0eee61ab-7840-4a76-885e-2fb8bdcde4ca] received
+INFO 2026-03-25 19:08:00,060 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[0eee61ab-7840-4a76-885e-2fb8bdcde4ca] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:09:00,036 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[86284f1f-0251-463f-8479-f725e88c93e9] received
+INFO 2026-03-25 19:09:00,091 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[86284f1f-0251-463f-8479-f725e88c93e9] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 19:10:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[239912ce-4097-41e3-b545-52d80123a00b] received
+INFO 2026-03-25 19:10:00,159 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[239912ce-4097-41e3-b545-52d80123a00b] succeeded in 0.15599999949336052s: None
+INFO 2026-03-25 19:11:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[0b908ff5-da5b-4aac-b2d4-7299a1487d7f] received
+INFO 2026-03-25 19:11:00,061 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[0b908ff5-da5b-4aac-b2d4-7299a1487d7f] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:12:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[08aa281b-3d8f-448b-a7ef-1cb59b680951] received
+INFO 2026-03-25 19:12:00,060 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[08aa281b-3d8f-448b-a7ef-1cb59b680951] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:13:00,032 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[82b1942a-84a8-4c3c-9ff6-b8e050aac2fd] received
+INFO 2026-03-25 19:13:00,089 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[82b1942a-84a8-4c3c-9ff6-b8e050aac2fd] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:14:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[793d3cda-fcca-4831-beb2-472a43b7019f] received
+INFO 2026-03-25 19:14:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[793d3cda-fcca-4831-beb2-472a43b7019f] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 19:15:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[3e811ac5-4593-42ef-b5f7-1973a14f2198] received
+INFO 2026-03-25 19:15:00,061 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[3e811ac5-4593-42ef-b5f7-1973a14f2198] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:16:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2bc0419c-d0d2-4c20-bfec-b7ab3d1a81e0] received
+INFO 2026-03-25 19:16:00,060 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2bc0419c-d0d2-4c20-bfec-b7ab3d1a81e0] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:17:00,038 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b6e7d4c1-543f-4cea-844a-27bebb74b4f5] received
+INFO 2026-03-25 19:17:00,098 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b6e7d4c1-543f-4cea-844a-27bebb74b4f5] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 19:18:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[20a7fc78-a81a-45e4-bbb6-6548966d69a8] received
+INFO 2026-03-25 19:18:00,058 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[20a7fc78-a81a-45e4-bbb6-6548966d69a8] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:19:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e76778ae-37e6-430e-9e17-94972a194939] received
+INFO 2026-03-25 19:19:00,065 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e76778ae-37e6-430e-9e17-94972a194939] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:20:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[037bb940-5150-4abb-b638-415152ca1d17] received
+INFO 2026-03-25 19:20:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[037bb940-5150-4abb-b638-415152ca1d17] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:21:00,013 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[d8376bbe-b5a4-4296-ba18-55a7dc49d1d0] received
+INFO 2026-03-25 19:21:00,072 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[d8376bbe-b5a4-4296-ba18-55a7dc49d1d0] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 19:22:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[82164778-2a13-4d4d-8602-b0fcf638845e] received
+INFO 2026-03-25 19:22:00,061 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[82164778-2a13-4d4d-8602-b0fcf638845e] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:23:00,023 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[24cf6cdd-ebe6-4881-adf4-8b7897b2c993] received
+INFO 2026-03-25 19:23:00,083 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[24cf6cdd-ebe6-4881-adf4-8b7897b2c993] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:24:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[0a56eee4-4164-49d3-8d8c-fac7cf3085ff] received
+INFO 2026-03-25 19:24:00,062 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[0a56eee4-4164-49d3-8d8c-fac7cf3085ff] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:25:00,013 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b26c8b90-f646-4505-9034-6557e5ee0658] received
+INFO 2026-03-25 19:25:00,070 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b26c8b90-f646-4505-9034-6557e5ee0658] succeeded in 0.06200000084936619s: None
+INFO 2026-03-25 19:26:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[81e1e9ff-5d32-41e2-a185-fc19a2101a5c] received
+INFO 2026-03-25 19:26:00,160 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[81e1e9ff-5d32-41e2-a185-fc19a2101a5c] succeeded in 0.15599999949336052s: None
+INFO 2026-03-25 19:27:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[76237866-1225-4083-a9e8-3b9fe9e3a11b] received
+INFO 2026-03-25 19:27:00,062 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[76237866-1225-4083-a9e8-3b9fe9e3a11b] succeeded in 0.06299999915063381s: None
+INFO 2026-03-25 19:28:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[1aa0665a-ee02-4deb-ab4f-cc23f538b1b4] received
+INFO 2026-03-25 19:28:00,062 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[1aa0665a-ee02-4deb-ab4f-cc23f538b1b4] succeeded in 0.04700000025331974s: None
+INFO 2026-03-25 19:29:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[572446ab-9838-4781-94cc-613ddb7fe221] received
+INFO 2026-03-25 19:29:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[572446ab-9838-4781-94cc-613ddb7fe221] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:30:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[09a37251-8a23-459a-88db-a1982094436e] received
+INFO 2026-03-25 19:30:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[09a37251-8a23-459a-88db-a1982094436e] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:31:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[fd18c015-5baa-49d5-911f-ebcad1d73c55] received
+INFO 2026-03-25 19:31:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[fd18c015-5baa-49d5-911f-ebcad1d73c55] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:32:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[49e50707-68f5-4cdd-b5ba-7ca38a621c89] received
+INFO 2026-03-25 19:32:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[49e50707-68f5-4cdd-b5ba-7ca38a621c89] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:33:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[4a298091-dbb5-4f0e-b108-737d34df8106] received
+INFO 2026-03-25 19:33:00,044 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[4a298091-dbb5-4f0e-b108-737d34df8106] succeeded in 0.03099999949336052s: None
+INFO 2026-03-25 19:34:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2168e27c-b687-4a9f-825d-8ada2391c7f0] received
+INFO 2026-03-25 19:34:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2168e27c-b687-4a9f-825d-8ada2391c7f0] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:35:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b4dae3d9-9de0-49d0-b9f4-99a830e70cc3] received
+INFO 2026-03-25 19:35:00,044 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b4dae3d9-9de0-49d0-b9f4-99a830e70cc3] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:36:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e6e233a8-f177-4ca5-915d-80f28036985d] received
+INFO 2026-03-25 19:36:00,040 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e6e233a8-f177-4ca5-915d-80f28036985d] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:37:00,005 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[15b0f234-99aa-41fb-b2a2-15c38a00e234] received
+INFO 2026-03-25 19:37:00,045 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[15b0f234-99aa-41fb-b2a2-15c38a00e234] succeeded in 0.03099999949336052s: None
+INFO 2026-03-25 19:38:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[d0f1f320-d7f3-44ca-b6fd-1e0aae431dba] received
+INFO 2026-03-25 19:38:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[d0f1f320-d7f3-44ca-b6fd-1e0aae431dba] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:39:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[645d5a2a-f420-43fb-a1e8-4eb068d5f702] received
+INFO 2026-03-25 19:39:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[645d5a2a-f420-43fb-a1e8-4eb068d5f702] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:40:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b74064fb-58b1-4fe5-885c-bac6f81133a1] received
+INFO 2026-03-25 19:40:00,040 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b74064fb-58b1-4fe5-885c-bac6f81133a1] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:41:00,009 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[70b1a7b8-1063-40c3-a8f5-06f537a7c11e] received
+INFO 2026-03-25 19:41:00,047 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[70b1a7b8-1063-40c3-a8f5-06f537a7c11e] succeeded in 0.03099999949336052s: None
+INFO 2026-03-25 19:42:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[1304d1d5-91a6-4e4e-84d3-fb374254ecf1] received
+INFO 2026-03-25 19:42:00,044 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[1304d1d5-91a6-4e4e-84d3-fb374254ecf1] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:43:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[cba168b4-7115-431d-9951-663f7e8df2d9] received
+INFO 2026-03-25 19:43:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[cba168b4-7115-431d-9951-663f7e8df2d9] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:44:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2e5290da-9119-4674-8245-cce4c7a8317a] received
+INFO 2026-03-25 19:44:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2e5290da-9119-4674-8245-cce4c7a8317a] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:45:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7ec33042-0f62-4c0d-938c-6876bc370427] received
+INFO 2026-03-25 19:45:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7ec33042-0f62-4c0d-938c-6876bc370427] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:46:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[554760fd-78dd-4142-8471-3898f063dbae] received
+INFO 2026-03-25 19:46:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[554760fd-78dd-4142-8471-3898f063dbae] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:47:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f7d73f36-f54e-4d4a-80d4-d59443ebd5a5] received
+INFO 2026-03-25 19:47:00,040 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f7d73f36-f54e-4d4a-80d4-d59443ebd5a5] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:48:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ee4297dd-0597-4c9d-b4ac-93ac53cd5f06] received
+INFO 2026-03-25 19:48:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ee4297dd-0597-4c9d-b4ac-93ac53cd5f06] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:49:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[57c14491-b1f7-4e30-8797-da0715ee18ab] received
+INFO 2026-03-25 19:49:00,040 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[57c14491-b1f7-4e30-8797-da0715ee18ab] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:50:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5536accf-eb88-4287-a787-9cf412774db2] received
+INFO 2026-03-25 19:50:00,046 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5536accf-eb88-4287-a787-9cf412774db2] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:51:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[3bfe35ba-5d0e-4dad-9c8b-73a8aeb353fd] received
+INFO 2026-03-25 19:51:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[3bfe35ba-5d0e-4dad-9c8b-73a8aeb353fd] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:52:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b271c5ee-6568-49a5-8fc5-15c3c846a9b6] received
+INFO 2026-03-25 19:52:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b271c5ee-6568-49a5-8fc5-15c3c846a9b6] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:53:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e3f67de2-7696-4c53-8eff-a0b74b6dd560] received
+INFO 2026-03-25 19:53:00,042 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e3f67de2-7696-4c53-8eff-a0b74b6dd560] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:54:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[80b6036e-fbc3-4d01-a56a-f3a09ded9f84] received
+INFO 2026-03-25 19:54:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[80b6036e-fbc3-4d01-a56a-f3a09ded9f84] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:55:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[70d9459a-bf13-4b5c-a816-7f4d183d52a9] received
+INFO 2026-03-25 19:55:00,043 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[70d9459a-bf13-4b5c-a816-7f4d183d52a9] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:56:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[13b57ddc-02a2-418b-bffd-a3414c410e34] received
+INFO 2026-03-25 19:56:00,141 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[13b57ddc-02a2-418b-bffd-a3414c410e34] succeeded in 0.14099999889731407s: None
+INFO 2026-03-25 19:57:00,009 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[3ac0028b-28fd-4e8f-a768-b905863421c6] received
+INFO 2026-03-25 19:57:00,157 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[3ac0028b-28fd-4e8f-a768-b905863421c6] succeeded in 0.14000000059604645s: None
+INFO 2026-03-25 19:58:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[d42814f9-3e51-46ec-b487-fa0a878e47bb] received
+INFO 2026-03-25 19:58:00,044 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[d42814f9-3e51-46ec-b487-fa0a878e47bb] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 19:59:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[e8bc9992-0ba9-4670-b44a-ba93b1807669] received
+INFO 2026-03-25 19:59:00,041 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[e8bc9992-0ba9-4670-b44a-ba93b1807669] succeeded in 0.04699999839067459s: None
+INFO 2026-03-25 20:00:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[4fa4ccb7-e661-4c74-95c2-bf9bfe7c02ce] received
+INFO 2026-03-25 20:00:00,044 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[4fa4ccb7-e661-4c74-95c2-bf9bfe7c02ce] succeeded in 0.04699999839067459s: None
+INFO 2026-03-28 12:31:20,073 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5fc8f8e0-2b31-44be-951d-7448ae61dab3] received
+INFO 2026-03-28 12:31:20,204 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5fc8f8e0-2b31-44be-951d-7448ae61dab3] succeeded in 0.125s: None
+INFO 2026-03-28 12:31:20,208 strategy 52628 36656 Task apps.analytics_books.tasks.repair_analytics_from_sources[f8db673c-9f3c-4202-a91e-e56a2d951edb] received
+INFO 2026-03-28 12:31:20,931 trace 52628 36656 Task apps.analytics_books.tasks.repair_analytics_from_sources[f8db673c-9f3c-4202-a91e-e56a2d951edb] succeeded in 0.7190000005066395s: 'repair_analytics_from_sources: {\'book_analytics_books\': 7, \'days\': 90, \'update_or_create_calls\': 12}'
+INFO 2026-03-28 12:31:20,934 strategy 52628 36656 Task apps.analytics_books.tasks.cleanup_old_analytics[8ec0fde0-98df-433e-80f9-c4a2ea21d602] received
+INFO 2026-03-28 12:31:21,100 trace 52628 36656 Task apps.analytics_books.tasks.cleanup_old_analytics[8ec0fde0-98df-433e-80f9-c4a2ea21d602] succeeded in 0.1569999996572733s: 'Удалено daily=0, comment_like_events=0 старше 90 дней'
+INFO 2026-03-28 12:32:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9ae4bd56-9fd6-44ba-b05a-5afed9423b99] received
+INFO 2026-03-28 12:32:00,059 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9ae4bd56-9fd6-44ba-b05a-5afed9423b99] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 12:33:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[ff578eff-e37d-4bac-b3d8-9b57f4813024] received
+INFO 2026-03-28 12:33:00,065 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[ff578eff-e37d-4bac-b3d8-9b57f4813024] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 12:34:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[145c442b-99af-4448-a112-5e2661e1e859] received
+INFO 2026-03-28 12:34:00,069 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[145c442b-99af-4448-a112-5e2661e1e859] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 12:35:00,008 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[6182aaf6-be93-402c-8614-c6c498d7eda4] received
+INFO 2026-03-28 12:35:00,071 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[6182aaf6-be93-402c-8614-c6c498d7eda4] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 12:36:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[aa25bfd2-7415-4efc-9048-e1bcda392f1b] received
+INFO 2026-03-28 12:36:00,172 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[aa25bfd2-7415-4efc-9048-e1bcda392f1b] succeeded in 0.17200000025331974s: None
+INFO 2026-03-28 12:37:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[c5648279-620e-4d37-9fd2-f4e3ea6b5916] received
+INFO 2026-03-28 12:37:00,194 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[c5648279-620e-4d37-9fd2-f4e3ea6b5916] succeeded in 0.1870000008493662s: None
+INFO 2026-03-28 12:38:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[26aff485-f63e-4b95-9afa-cb60f3a5f3bf] received
+INFO 2026-03-28 12:38:00,179 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[26aff485-f63e-4b95-9afa-cb60f3a5f3bf] succeeded in 0.17200000025331974s: None
+INFO 2026-03-28 12:39:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2078232b-8c27-4abd-a2b9-76aacb4f1860] received
+INFO 2026-03-28 12:39:00,073 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2078232b-8c27-4abd-a2b9-76aacb4f1860] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 12:40:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[281fbdd4-0c54-4169-b746-40dc326f6dc5] received
+INFO 2026-03-28 12:40:00,060 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[281fbdd4-0c54-4169-b746-40dc326f6dc5] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 12:41:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2795918b-a1e1-4e5f-845a-981b62cac7f2] received
+INFO 2026-03-28 12:41:00,052 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2795918b-a1e1-4e5f-845a-981b62cac7f2] succeeded in 0.04700000025331974s: None
+INFO 2026-03-28 12:42:00,034 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[0d52f9e7-d69b-4e55-b316-e59b43c478b0] received
+INFO 2026-03-28 12:42:00,131 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[0d52f9e7-d69b-4e55-b316-e59b43c478b0] succeeded in 0.09399999864399433s: None
+INFO 2026-03-28 12:43:00,005 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f08b9e09-d460-404a-9206-d87eaa99f4ab] received
+INFO 2026-03-28 12:43:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f08b9e09-d460-404a-9206-d87eaa99f4ab] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 12:44:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[01e96664-d033-4a1b-a278-dfee7f3f3268] received
+INFO 2026-03-28 12:44:00,164 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[01e96664-d033-4a1b-a278-dfee7f3f3268] succeeded in 0.15600000135600567s: None
+INFO 2026-03-28 12:45:00,005 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[a93d5939-3edb-412d-9b1c-d9c6f8628ffc] received
+INFO 2026-03-28 12:45:00,162 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[a93d5939-3edb-412d-9b1c-d9c6f8628ffc] succeeded in 0.15600000135600567s: None
+INFO 2026-03-28 12:46:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[fa381997-9b55-45b0-9890-9e7e07e7a988] received
+INFO 2026-03-28 12:46:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[fa381997-9b55-45b0-9890-9e7e07e7a988] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 12:47:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[89af5495-174a-4d85-9905-9d47ce58a482] received
+INFO 2026-03-28 12:47:00,059 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[89af5495-174a-4d85-9905-9d47ce58a482] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 12:48:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2c320f73-a3b6-467c-a4ce-6f4f3a308b91] received
+INFO 2026-03-28 12:48:00,064 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2c320f73-a3b6-467c-a4ce-6f4f3a308b91] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 12:49:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[bf5599e1-31c6-4f70-9c7a-efb48a47fecc] received
+INFO 2026-03-28 12:49:00,057 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[bf5599e1-31c6-4f70-9c7a-efb48a47fecc] succeeded in 0.04700000025331974s: None
+INFO 2026-03-28 12:50:00,017 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[c062e049-3cbc-4260-bbc9-3a7f674a2bc9] received
+INFO 2026-03-28 12:50:00,179 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[c062e049-3cbc-4260-bbc9-3a7f674a2bc9] succeeded in 0.1569999996572733s: None
+INFO 2026-03-28 12:51:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[cc0cae69-8569-47b3-bbac-d51bcd98c5c3] received
+INFO 2026-03-28 12:51:00,164 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[cc0cae69-8569-47b3-bbac-d51bcd98c5c3] succeeded in 0.15600000135600567s: None
+INFO 2026-03-28 12:52:00,022 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[0730ad56-9afd-4824-9015-457a063d89dd] received
+INFO 2026-03-28 12:52:00,078 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[0730ad56-9afd-4824-9015-457a063d89dd] succeeded in 0.06299999915063381s: None
+INFO 2026-03-28 12:53:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[081fac07-c862-4e27-a424-604693f1c2ae] received
+INFO 2026-03-28 12:53:00,078 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[081fac07-c862-4e27-a424-604693f1c2ae] succeeded in 0.07799999974668026s: None
+INFO 2026-03-28 12:54:00,037 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[45c5760f-0285-4dd9-a91f-e02b4d61c8bc] received
+INFO 2026-03-28 12:54:00,093 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[45c5760f-0285-4dd9-a91f-e02b4d61c8bc] succeeded in 0.06299999915063381s: None
+INFO 2026-03-28 12:55:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[9d431d05-d399-47a0-9a75-237e9f64c1ad] received
+INFO 2026-03-28 12:55:00,064 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[9d431d05-d399-47a0-9a75-237e9f64c1ad] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 12:56:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[de6ad488-3177-4e47-8496-94edfc4af43d] received
+INFO 2026-03-28 12:56:00,075 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[de6ad488-3177-4e47-8496-94edfc4af43d] succeeded in 0.07799999974668026s: None
+INFO 2026-03-28 12:57:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[d95cfe68-b506-4b93-afc5-df5c35f2dd8b] received
+INFO 2026-03-28 12:57:00,064 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[d95cfe68-b506-4b93-afc5-df5c35f2dd8b] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 12:58:00,012 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7c012f0a-de07-42bc-9c28-24d805408433] received
+INFO 2026-03-28 12:58:00,065 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7c012f0a-de07-42bc-9c28-24d805408433] succeeded in 0.04700000025331974s: None
+INFO 2026-03-28 12:59:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[38d22883-e2cc-4ec4-bbf2-fef987073c35] received
+INFO 2026-03-28 12:59:00,055 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[38d22883-e2cc-4ec4-bbf2-fef987073c35] succeeded in 0.04700000025331974s: None
+INFO 2026-03-28 13:00:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5f67d179-79b7-4463-9149-a19b5c610f1e] received
+INFO 2026-03-28 13:00:00,064 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5f67d179-79b7-4463-9149-a19b5c610f1e] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 13:01:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2f2ffead-95f0-4445-a8eb-a1989623fa9e] received
+INFO 2026-03-28 13:01:00,058 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2f2ffead-95f0-4445-a8eb-a1989623fa9e] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 13:02:00,034 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[c3c85638-30bf-4afb-9b7f-5fa2f64fc5c5] received
+INFO 2026-03-28 13:02:00,098 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[c3c85638-30bf-4afb-9b7f-5fa2f64fc5c5] succeeded in 0.06299999915063381s: None
+INFO 2026-03-28 13:03:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[abdc76a7-e332-4f87-bf9c-27be5a748328] received
+INFO 2026-03-28 13:03:00,069 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[abdc76a7-e332-4f87-bf9c-27be5a748328] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 13:04:00,000 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5a289ff8-4070-43c9-9739-cd345e5f6510] received
+INFO 2026-03-28 13:04:00,063 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5a289ff8-4070-43c9-9739-cd345e5f6510] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 13:05:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[5f5d208a-c495-4347-b669-686c671246b5] received
+INFO 2026-03-28 13:05:00,058 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[5f5d208a-c495-4347-b669-686c671246b5] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 13:06:00,008 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[d257bc15-fe74-46c7-85bb-2d66a297b968] received
+INFO 2026-03-28 13:06:00,064 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[d257bc15-fe74-46c7-85bb-2d66a297b968] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 13:07:00,002 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[b3bdf669-6e63-47f3-ad65-6ce1217c53ec] received
+INFO 2026-03-28 13:07:00,045 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[b3bdf669-6e63-47f3-ad65-6ce1217c53ec] succeeded in 0.04700000025331974s: None
+INFO 2026-03-28 13:08:00,006 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[051119a0-1258-490f-9607-a880d0a909e4] received
+INFO 2026-03-28 13:08:00,065 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[051119a0-1258-490f-9607-a880d0a909e4] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 13:09:00,039 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[4cbe9700-1443-4d91-953f-cca94d6511b4] received
+INFO 2026-03-28 13:09:00,095 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[4cbe9700-1443-4d91-953f-cca94d6511b4] succeeded in 0.06299999915063381s: None
+INFO 2026-03-28 13:10:00,018 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7b7d5dec-a5a2-4182-866c-2d4aadddcafb] received
+INFO 2026-03-28 13:10:00,098 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7b7d5dec-a5a2-4182-866c-2d4aadddcafb] succeeded in 0.07899999991059303s: None
+INFO 2026-03-28 13:11:00,001 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[df79ade3-d8d8-40f5-83f3-0e0ea0e08ab6] received
+INFO 2026-03-28 13:11:00,078 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[df79ade3-d8d8-40f5-83f3-0e0ea0e08ab6] succeeded in 0.07799999974668026s: None
+INFO 2026-03-28 13:12:00,029 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[12bcb039-5997-4af8-9a71-3a559cb32ef9] received
+INFO 2026-03-28 13:12:00,085 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[12bcb039-5997-4af8-9a71-3a559cb32ef9] succeeded in 0.04699999839067459s: None
+INFO 2026-03-28 13:13:00,041 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[385fb911-c989-4c84-ba2d-e6afe318917e] received
+INFO 2026-03-28 13:13:00,097 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[385fb911-c989-4c84-ba2d-e6afe318917e] succeeded in 0.06299999915063381s: None
+INFO 2026-03-28 13:14:00,005 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[a2184244-be05-4261-aa8c-a55590ed23fe] received
+INFO 2026-03-28 13:14:00,086 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[a2184244-be05-4261-aa8c-a55590ed23fe] succeeded in 0.07799999974668026s: None
+INFO 2026-03-28 13:15:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[4180b251-d028-4bf5-b273-86e14ae0c256] received
+INFO 2026-03-28 13:15:00,061 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[4180b251-d028-4bf5-b273-86e14ae0c256] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 13:16:00,008 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[fdd60189-f5d9-4e32-84af-9accb66ff793] received
+INFO 2026-03-28 13:16:00,067 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[fdd60189-f5d9-4e32-84af-9accb66ff793] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 13:17:00,030 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[f9bc5a7b-5c36-409a-93c7-afc60bc946c8] received
+INFO 2026-03-28 13:17:00,085 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[f9bc5a7b-5c36-409a-93c7-afc60bc946c8] succeeded in 0.04699999839067459s: None
+INFO 2026-03-28 13:18:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7b2e0ed8-3716-4754-a82f-8fd9425a559a] received
+INFO 2026-03-28 13:18:00,054 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7b2e0ed8-3716-4754-a82f-8fd9425a559a] succeeded in 0.04700000025331974s: None
+INFO 2026-03-28 13:19:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[7866b880-a713-4cbd-a8fa-7e6bb2dc3e46] received
+INFO 2026-03-28 13:19:00,170 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[7866b880-a713-4cbd-a8fa-7e6bb2dc3e46] succeeded in 0.17200000025331974s: None
+INFO 2026-03-28 13:20:00,003 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[2e22451a-d3e3-41ef-8af3-5076425e4c13] received
+INFO 2026-03-28 13:20:00,064 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[2e22451a-d3e3-41ef-8af3-5076425e4c13] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 13:21:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[267ce8b5-81fe-4059-a545-1cd828b9a97f] received
+INFO 2026-03-28 13:21:00,067 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[267ce8b5-81fe-4059-a545-1cd828b9a97f] succeeded in 0.06200000084936619s: None
+INFO 2026-03-28 13:22:00,004 strategy 52628 36656 Task apps.notification.tasks.check_abandoned_books[773004ee-5946-42ca-900a-cacaa7ec3090] received
+INFO 2026-03-28 13:22:00,062 trace 52628 36656 Task apps.notification.tasks.check_abandoned_books[773004ee-5946-42ca-900a-cacaa7ec3090] succeeded in 0.06200000084936619s: None

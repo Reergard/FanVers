@@ -8,6 +8,7 @@ import ellipseBg from "../assets/backgrounds/Ellipse_for_book.svg";
 import newBadge from "../assets/icons/NEW.svg";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
+import actionBtnStyles from "../shared/ActionButton/ActionButton.module.css";
 import { Icon } from "../shared/Icon";
 import { Modal } from "../shared/Modal/Modal";
 import "./BookCard.css";
@@ -141,10 +142,7 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
 
   /* variant=ad: реклама на головній — еліпс, опис, vertical line на обкладинці */
   if (isAd) {
-    const handleRead = () => {
-      if (slug) navigate(`/books/${slug}`);
-    };
-    return (
+    const adArticle = (
       <article
         className="bookCard bookCard--ad"
         data-variant="ad"
@@ -190,15 +188,26 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
           <p className="bookCard__desc">{description}</p>
         )}
         <div className="bookCard__actions">
-          <ActionButton
-            variant="default"
-            onClick={handleRead}
-            ariaLabel={`Читати: ${book.title}`}
+          <span
+            className={`${actionBtnStyles.btn} ${actionBtnStyles.variant_default} bookCard__ad-read`}
+            aria-hidden="true"
           >
             читати
-          </ActionButton>
+          </span>
         </div>
       </article>
+    );
+
+    return slug ? (
+      <Link
+        to={`/books/${slug}`}
+        className="bookCard-link"
+        aria-label={`Читати: ${book.title || "книгу"}`}
+      >
+        {adArticle}
+      </Link>
+    ) : (
+      adArticle
     );
   }
 

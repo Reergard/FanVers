@@ -8,6 +8,8 @@
 }
 
 .label {
+  margin: 0;
+  font-weight: inherit;
   font-family: "SofiaSansSemiCondensed", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   font-size: clamp(14px, calc(1.4 * var(--vwu)), 16px);
   letter-spacing: 0.12em;

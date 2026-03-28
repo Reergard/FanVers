@@ -653,6 +653,7 @@
 }
 
 /* ========== Variant: ad (Реклама на головній) ========== */
+/* min-height: свідомо вирівнює ряд у каруселі; короткі описи дають «повітря» під кнопкою */
 .bookCard--ad {
   flex: 0 0 auto;
   width: 100%;
@@ -808,7 +809,8 @@
 }
 
 .bookCard--ad .bookCard__actions button,
-.bookCard--ad .bookCard__actions a {
+.bookCard--ad .bookCard__actions a,
+.bookCard--ad .bookCard__actions .bookCard__ad-read {
   width: 86px !important;
   height: 26px !important;
   padding: 0 !important;
