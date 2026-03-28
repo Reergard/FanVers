@@ -42,7 +42,7 @@
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 
-  overscroll-behavior-x: contain;
+  overscroll-behavior-x: auto;
   overscroll-behavior-y: auto;
   /* Нативний горизонтальний скрол: touch-action не задаємо — менше міжбраузерних відмінностей */
 
@@ -194,10 +194,15 @@
 
   .carousel {
     --gap: 10px;
-    --edge-left: 4px;
-    --edge-right: 4px;
+    --edge-left: 12px;
+    --edge-right: 12px;
     padding-top: 24px;
-    padding-bottom: 4px;
+    padding-bottom: 8px;
+    scroll-snap-type: x proximity;
+  }
+
+  .item {
+    scroll-snap-stop: normal;
   }
 
   .nav {
@@ -209,6 +214,11 @@
   .carouselWrap {
     margin-inline: -12px;
     width: calc(100% + 24px);
+  }
+
+  .carousel {
+    --edge-left: 12px;
+    --edge-right: 12px;
   }
 
   .navBtn img {

@@ -194,9 +194,6 @@ export function AdvertisingCarousel({
     });
 
     resizeObserver.observe(el);
-    el.querySelectorAll<HTMLElement>("[data-carousel-item]").forEach((node) => {
-      resizeObserver.observe(node);
-    });
 
     const onWindowResize = () => {
       scheduleSync();

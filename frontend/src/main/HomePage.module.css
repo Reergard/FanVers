@@ -1,6 +1,6 @@
 .page {
   width: 100%;
-  min-height: 60vh;
+  min-height: 0;
   display: block;
 }
 

@@ -4,9 +4,19 @@ function clamp01(v: number) {
   return Math.max(0, Math.min(1, v));
 }
 
-/** Скролл-контейнер: .app с data-scroll-container (скролл не на window, а внутри приложения) */
-function getScrollContainer(): HTMLElement | null {
-  return document.querySelector("[data-scroll-container]");
+/** Метрики вертикального скролла документа (window), не внутреннего контейнера */
+function getDocScrollMetrics(): {
+  scrollTop: number;
+  docH: number;
+  vh: number;
+} {
+  const docEl = document.documentElement;
+  const body = document.body;
+  const scrollTop =
+    window.scrollY ?? docEl.scrollTop ?? body?.scrollTop ?? 0;
+  const docH = Math.max(docEl.scrollHeight, body?.scrollHeight ?? 0);
+  const vh = window.innerHeight;
+  return { scrollTop, docH, vh };
 }
 
 export function ScrollIndicator() {
@@ -34,12 +44,7 @@ export function ScrollIndicator() {
 
     const update = () => {
       rafId = 0;
-      const el = getScrollContainer();
-      if (!el) return;
-
-      const vh = el.clientHeight;
-      const docH = el.scrollHeight;
-      const scrollTop = el.scrollTop;
+      const { scrollTop, docH, vh } = getDocScrollMetrics();
       const gap = getGapPx();
 
       const visible = docH > vh + 1 ? 1 : 0;
@@ -75,21 +80,21 @@ export function ScrollIndicator() {
       schedule();
     };
 
-    const el = getScrollContainer();
-    if (!el) return;
-
-    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
-    el.addEventListener("wheel", onStart, { passive: true });
-    el.addEventListener("touchstart", onStart, { passive: true });
-    el.addEventListener("pointerdown", onStart, { passive: true });
+    window.addEventListener("wheel", onStart, { passive: true });
+    window.addEventListener("touchstart", onStart, { passive: true });
+    window.addEventListener("pointerdown", onStart, { passive: true });
 
     const vv = window.visualViewport;
     vv?.addEventListener("resize", onResize);
     vv?.addEventListener("scroll", onResize);
 
-    const ro = "ResizeObserver" in window ? new ResizeObserver(() => schedule()) : null;
-    ro?.observe(el);
+    const ro =
+      "ResizeObserver" in window
+        ? new ResizeObserver(() => schedule())
+        : null;
+    ro?.observe(document.documentElement);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (document as any).fonts?.ready?.then?.(() => schedule());
@@ -97,11 +102,11 @@ export function ScrollIndicator() {
     schedule();
 
     return () => {
-      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
-      el.removeEventListener("wheel", onStart);
-      el.removeEventListener("touchstart", onStart);
-      el.removeEventListener("pointerdown", onStart);
+      window.removeEventListener("wheel", onStart);
+      window.removeEventListener("touchstart", onStart);
+      window.removeEventListener("pointerdown", onStart);
       vv?.removeEventListener("resize", onResize);
       vv?.removeEventListener("scroll", onResize);
       ro?.disconnect();
@@ -118,5 +123,3 @@ export function ScrollIndicator() {
     </div>
   );
 }
-
-

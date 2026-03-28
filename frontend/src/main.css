@@ -91,26 +91,26 @@
   }
 }
 
+/* Вертикальный скролл — у документа (window), не у внутреннего div: стабильнее на iOS/Android */
 html {
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
   overflow-x: hidden;
 }
 
 body {
-  height: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
   margin: 0;
   color: var(--text);
   background: #020a0b;
-  overflow: hidden;
+  overflow-x: hidden;
   font-family: "RobotoCondensedLightItalic", "Inter", sans-serif;
   font-weight: 300;
   font-style: italic;
 }
 
 #root {
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
 }
 
 /* Скрываем нативную полосу прокрутки, но оставляем нативный скролл */
@@ -194,19 +194,12 @@ img{ max-width:100%; display:block; }
   }
 }
 
-/* Улучшение читабельности на 4K без изменения макета */
+/* Улучшение читабельности на 4K: базовый rem, без zoom (надёжнее для Safari/fixed/hit-area) */
 @media (min-width: 2560px) and (min-height: 1400px) {
   html {
-    font-size: 18px; /* база для всего текста через rem */
+    font-size: 21px;
   }
   body {
     overflow-x: hidden;
-    zoom: 1.15; /* увеличит ВСЕ элементы: шрифты, кнопки, иконки, отступы */
-  }
-}
-
-@supports not (zoom: 1) {
-  @media (min-width: 2560px) and (min-height: 1400px) {
-    html { font-size: 20px; } /* fallback если zoom не поддерживается */
   }
 }

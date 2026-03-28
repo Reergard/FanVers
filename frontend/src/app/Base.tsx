@@ -11,7 +11,7 @@ export function Base({ children }: Props) {
   const isHome = pathname === "/";
 
   return (
-    <div className={styles.app} data-scroll-container>
+    <div className={styles.app}>
       <SvgSprite />
       <ScrollIndicator />
       <div className={styles.bg} aria-hidden="true" />
