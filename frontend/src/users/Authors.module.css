@@ -1,7 +1,7 @@
 .page {
   --accent: #f58807;
-  --line: rgba(245, 136, 7, 0.38);
-  --line-strong: rgba(245, 136, 7, 0.55);
+  --line: #f58807;
+  --line-strong: #f58807;
   --glass: rgba(0, 0, 0, 0.22);
   --header-text: rgba(255, 255, 255, 0.7);
 
@@ -145,7 +145,7 @@
   height: 16px;
   pointer-events: none;
   opacity: 0.85;
-  background: radial-gradient(circle, rgba(245, 136, 7, 0.95), rgba(245, 136, 7, 0) 62%);
+  background: radial-gradient(circle, #f58807, transparent 62%);
 }
 
 .rowHoverFrame {

@@ -17,7 +17,7 @@
 .panel {
   position: fixed;
   border-radius: 14px;
-  border: 1px solid rgba(245, 136, 7, 0.78);
+  border: 1px solid #f58807;
   background: linear-gradient(180deg, rgba(4, 12, 14, 0.95), rgba(4, 12, 14, 0.88));
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(5, 180, 199, 0.2);
   padding: 14px;

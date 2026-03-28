@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from apps.catalog.models import Book
+from apps.catalog.badge_utils import book_shows_new_badge
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,7 @@ class HomeBookCardSerializer(serializers.ModelSerializer):
     genres = serializers.SerializerMethodField()
     tags = serializers.SerializerMethodField()
     fandoms = serializers.SerializerMethodField()
+    is_new_badge = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -34,6 +36,7 @@ class HomeBookCardSerializer(serializers.ModelSerializer):
             "created_at",
             "book_type",
             "adult_content",
+            "is_new_badge",
             "chapters_count",
             "latest_chapter_title",
             "genres",
@@ -63,6 +66,9 @@ class HomeBookCardSerializer(serializers.ModelSerializer):
 
     def get_fandoms(self, obj):
         return [{"id": f.id, "name": f.name} for f in obj.fandoms.all()]
+
+    def get_is_new_badge(self, obj):
+        return book_shows_new_badge(obj)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

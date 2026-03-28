@@ -1,6 +1,7 @@
 import { API } from "./endpoints";
 import { http } from "./http";
 import type { BookMetaItem, BookCountry, UserTranslationBook } from "./catalogApi";
+import { resolveIsNewBadge } from "../shared/bookNewBadge";
 
 export type SearchFilters = {
   title?: string;
@@ -71,6 +72,10 @@ function normalizeBook(raw: unknown): UserTranslationBook | null {
     chapters_count: o.chapters_count != null ? Number(o.chapters_count) : undefined,
     description: o.description != null && o.description !== "" ? String(o.description) : null,
     adult_content: o.adult_content === true,
+    translation_status:
+      o.translation_status != null && o.translation_status !== ""
+        ? String(o.translation_status)
+        : null,
     translation_status_display:
       o.translation_status_display != null && o.translation_status_display !== ""
         ? String(o.translation_status_display)
@@ -91,6 +96,10 @@ function normalizeBook(raw: unknown): UserTranslationBook | null {
     tags: normalizeMetaList(o.tags),
     fandoms: normalizeMetaList(o.fandoms),
     book_type: o.book_type != null && o.book_type !== "" ? String(o.book_type) : null,
+    is_new_badge: resolveIsNewBadge(
+      o.is_new_badge,
+      o.created_at != null && o.created_at !== "" ? String(o.created_at) : null,
+    ),
   };
 }
 

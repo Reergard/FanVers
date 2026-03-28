@@ -17,6 +17,7 @@ import {
   advertisingKeys,
   type AdvertisementItem,
 } from "../api/advertisingApi";
+import { resolveIsNewBadge } from "../shared/bookNewBadge";
 import rightArrow from "../assets/backgrounds/right_arrow.svg";
 import leftArrow from "../assets/backgrounds/left_arrow.svg";
 import starIcon from "../assets/backgrounds/star_navigation_books.svg";
@@ -29,6 +30,9 @@ type AdBookItem = {
   description: string;
   coverSrc: string;
   isAdult: boolean;
+  book_type: string | null;
+  is_new_badge: boolean;
+  created_at: string | null;
 };
 
 type CarouselMetrics = {
@@ -50,6 +54,13 @@ function adsToBookItems(ads: AdvertisementItem[]): AdBookItem[] {
       description: b.description || "",
       coverSrc: resolveBookCoverUrl(b.image),
       isAdult: b.adult_content === true,
+      book_type: b.book_type ?? null,
+      is_new_badge: resolveIsNewBadge(
+        b.is_new_badge,
+        b.created_at != null && b.created_at !== "" ? String(b.created_at) : null,
+      ),
+      created_at:
+        b.created_at != null && b.created_at !== "" ? String(b.created_at) : null,
     };
   });
 }
@@ -288,6 +299,9 @@ export function AdvertisingCarousel({
                   title: b.title,
                   image: b.coverSrc,
                   adult_content: b.isAdult,
+                  book_type: b.book_type ?? undefined,
+                  is_new_badge: b.is_new_badge,
+                  created_at: b.created_at,
                 }}
                 variant="ad"
                 description={b.description}

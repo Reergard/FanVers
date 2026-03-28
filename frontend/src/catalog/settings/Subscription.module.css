@@ -169,7 +169,7 @@
 .activePack {
   margin-top: 1rem;
   padding: 0.75rem;
-  background: rgba(245, 136, 7, 0.1);
+  border: 1px solid #f58807;
   border-radius: 6px;
   font-size: 0.9375rem;
 }
@@ -217,9 +217,9 @@
 }
 
 .saveButton:hover:not(:disabled) {
-  border-color: #F58807;
-  background: rgba(245, 136, 7, 0.08);
-  color: #F58807;
+  border-color: #f58807;
+  background: #f58807;
+  color: #fff;
 }
 
 .saveButton:focus-visible {

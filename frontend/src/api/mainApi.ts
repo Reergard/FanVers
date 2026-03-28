@@ -1,6 +1,7 @@
 import { http } from "./http";
 import { API } from "./endpoints";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
+import { resolveIsNewBadge } from "../shared/bookNewBadge";
 
 /** Книга з API новинок (books-news). */
 export interface BookNewsItem {
@@ -10,6 +11,8 @@ export interface BookNewsItem {
   description: string | null;
   image: string | null;
   adult_content: boolean;
+  book_type: string | null;
+  is_new_badge: boolean;
   created_at: string | null;
 }
 
@@ -18,6 +21,7 @@ function normalizeBookNews(raw: unknown): BookNewsItem | null {
   const o = raw as Record<string, unknown>;
   const id = Number(o.id);
   if (!Number.isFinite(id)) return null;
+  const created_at = o.created_at != null ? String(o.created_at) : null;
   return {
     id,
     slug: String(o.slug ?? ""),
@@ -30,7 +34,12 @@ function normalizeBookNews(raw: unknown): BookNewsItem | null {
           ? String(o.image)
           : null,
     adult_content: o.adult_content === true,
-    created_at: o.created_at != null ? String(o.created_at) : null,
+    book_type:
+      o.book_type != null && String(o.book_type).trim() !== ""
+        ? String(o.book_type)
+        : null,
+    created_at,
+    is_new_badge: resolveIsNewBadge(o.is_new_badge, created_at),
   };
 }
 

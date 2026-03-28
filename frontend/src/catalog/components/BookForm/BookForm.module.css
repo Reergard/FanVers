@@ -2,8 +2,8 @@
 :root {
   --page-bg: #060f12;
   --frame-bg: rgba(6, 15, 18, 0.28);
-  --frame-stroke: rgba(245, 136, 7, 0.55);
-  --frame-stroke-soft: rgba(245, 136, 7, 0.35);
+  --frame-stroke: #f58807;
+  --frame-stroke-soft: #f58807;
   --frame-accent: #F58807;
 
   --r: 26px;
@@ -18,10 +18,10 @@
 /* Контейнер сторінки (обгортка) — використовується в CreateBookPage */
 .page {
   --gold: #F58807;
-  --goldSoft: rgba(245, 136, 7, 0.35);
+  --goldSoft: #f58807;
   --panelBg: rgba(6, 15, 18, 0.55);
   --panelBg2: rgba(6, 15, 18, 0.35);
-  --line: rgba(245, 136, 7, 0.55);
+  --line: #f58807;
   --doubleOffset: 10px;
   --doubleReveal: 12px;
 
@@ -33,10 +33,10 @@
 /* Контейнер форми (без page) — уникнути page всередині page. Змінні потрібні коли форма без .page (напр. GeneralSettings). */
 .form {
   --gold: #F58807;
-  --goldSoft: rgba(245, 136, 7, 0.35);
+  --goldSoft: #f58807;
   --panelBg: rgba(6, 15, 18, 0.55);
   --panelBg2: rgba(6, 15, 18, 0.35);
-  --line: rgba(245, 136, 7, 0.55);
+  --line: #f58807;
   --doubleOffset: 10px;
   --doubleReveal: 12px;
 
@@ -110,7 +110,7 @@
 }
 
 .fieldHintInline {
-  color: rgba(245, 136, 7, 0.7);
+  color: #f58807;
   font-size: 13px;
   margin-top: -15px;
   white-space: nowrap;
@@ -118,7 +118,7 @@
 }
 
 .hint {
-  color: rgba(245, 136, 7, 0.7);
+  color: #f58807;
   font-size: 12px;
   flex-shrink: 0;
 }
@@ -514,8 +514,8 @@
   padding: 6px 14px;
   border-radius: 999px;
   background: rgba(10, 18, 20, 0.35);
-  border: 1px solid rgba(245, 136, 7, 0.5);
-  color: rgba(245, 136, 7, 0.5);
+  border: 1px solid #f58807;
+  color: #f58807;
   font-size: 13px;
   line-height: 1.25;
   cursor: pointer;
@@ -580,7 +580,7 @@
   padding: 0 12px;
   border-radius: 999px;
   font-size: 12px;
-  border: 1px solid rgba(245, 136, 7, 0.25);
+  border: 1px solid #f58807;
   background: rgba(10, 18, 20, 0.25);
   white-space: nowrap;
 }
@@ -589,8 +589,8 @@
   color: rgba(5, 180, 199, 0.95);
 }
 .hashGold {
-  border-color: rgba(245, 136, 7, 0.35);
-  color: rgba(245, 136, 7, 0.95);
+  border-color: #f58807;
+  color: #f58807;
 }
 
 .tagRowChips {
@@ -608,7 +608,7 @@
   min-height: 28px;
   padding: 6px 14px;
   border-radius: 999px;
-  border: 1px solid rgba(245, 136, 7, 0.55);
+  border: 1px solid #f58807;
   background: transparent;
   color: #F58807;
   font-size: 13px;
@@ -667,7 +667,7 @@
   width: clamp(160px, calc(220 * 100vw / 1366), 220px);
   height: clamp(240px, calc(340 * 100vw / 1366), 340px);
   border-radius: 0 18px 18px 0;
-  border: 1px dashed rgba(245, 136, 7, 0.45);
+  border: 1px dashed #f58807;
   border-left: none;
   background: rgba(5, 180, 199, 0.15);
   cursor: pointer;
@@ -684,7 +684,7 @@
   width: clamp(70px, calc(101 * 100vw / 1366), 101px);
   height: clamp(70px, calc(101 * 100vw / 1366), 101px);
   border-radius: 50%;
-  border: 1px solid rgba(245, 136, 7, 0.55);
+  border: 1px solid #f58807;
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -709,7 +709,7 @@
   width: clamp(120px, calc(163 * 100vw / 1366), 163px);
   height: clamp(180px, calc(241 * 100vw / 1366), 241px);
   border-radius: 0 16px 16px 0;
-  border: 1px dashed rgba(245, 136, 7, 0.45);
+  border: 1px dashed #f58807;
   border-left: none;
   background: rgba(5, 180, 199, 0.15);
   cursor: pointer;
@@ -733,7 +733,7 @@
   height: 34px;
   padding: 0 18px;
   border-radius: 999px;
-  border: 1px solid rgba(245, 136, 7, 0.55);
+  border: 1px solid #f58807;
   background: rgba(0, 0, 0, 0.35);
   color: var(--gold);
   cursor: pointer;

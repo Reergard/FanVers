@@ -1,4 +1,5 @@
 import type { Book } from "../catalogApi";
+import { resolveIsNewBadge } from "../../shared/bookNewBadge";
 import type { BookReaderTopDto } from "./types";
 
 function truncateDescription(text: string | null, max = 200): string {
@@ -50,6 +51,7 @@ export function mapTopDtoToBook(dto: BookReaderTopDto): Book {
     chapters_count: dto.chapters_count,
     created_at: dto.created_at,
     last_updated: dto.last_updated,
+    is_new_badge: resolveIsNewBadge(dto.is_new_badge, dto.created_at),
   };
 }
 

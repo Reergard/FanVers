@@ -168,9 +168,9 @@
   align-items: center;
   justify-content: center;
   padding: 0 clamp(20px, 2.5vw, 28px) 0 clamp(14px, 1.8vw, 20px);
-  background: linear-gradient(90deg, #f58807 0%, #e67a00 50%, #f58807 100%);
+  background: #f58807;
   clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
-  box-shadow: 0 2px 12px rgba(245, 136, 7, 0.4);
+  box-shadow: 0 2px 12px #f58807;
   flex-shrink: 0;
 }
 
@@ -190,7 +190,7 @@
   border: 1px solid #f58807;
   border-radius: 17px;
   text-align: center;
-  box-shadow: 0 0 24px rgba(245, 136, 7, 0.15);
+  box-shadow: 0 0 20px #f58807;
 }
 
 @media (min-width: 1280px) {

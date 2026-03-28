@@ -908,7 +908,7 @@
     font-size: 12px;
     padding-inline: 5px;
     background: #F58807;
-    box-shadow: 0 0 12px rgba(245, 136, 7, 0.4);
+    box-shadow: 0 0 12px #f58807;
   }
 
   .coinsLine {

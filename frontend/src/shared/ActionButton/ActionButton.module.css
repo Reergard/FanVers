@@ -54,20 +54,20 @@
 .variant_primary {
   padding: clamp(5px, calc(1.1 * var(--vwu)), 9px) clamp(20px, calc(2.2 * var(--vwu)), 28px);
   font-size: clamp(12px, calc(1.2 * var(--vwu)), 14px);
-  border: 0px solid rgba(245, 136, 7, 0.4);
+  border: none;
   background: #050d11;
   color: #f58807;
-  box-shadow: 0px 0px 75px rgba(245, 136, 7, 0.35);
+  box-shadow: 0 0 56px #f58807;
 }
 
 .variant_primary:hover:not(:disabled):not(.loading) {
   background: #0a1519;
-  box-shadow: 0px 0px 75px rgba(245, 136, 7, 0.45);
+  box-shadow: 0 0 64px #f58807;
 }
 
 .variant_primary:disabled:hover,
 .variant_primary.loading:hover {
-  box-shadow: 0px 0px 75px rgba(245, 136, 7, 0.35);
+  box-shadow: 0 0 56px #f58807;
 }
 
 /* ===== Variant: outline (як Frame 4.svg — оранжевий контур, прозорий фон, rx ~4.5) ===== */
@@ -82,7 +82,8 @@
 }
 
 .variant_outline:hover:not(:disabled):not(.loading) {
-  background: rgba(245, 136, 7, 0.08);
+  background: #f58807;
+  color: #fff;
   border-color: #f58807;
 }
 
@@ -142,7 +143,7 @@
 .variant_showMore {
   padding: clamp(8px, 1vw, 10px) clamp(18px, 1.6vw, 24px);
   font-size: clamp(12px, 1vw, 13px);
-  border: 1px solid rgba(245, 136, 7, 0.55);
+  border: 1px solid #f58807;
   background: rgba(0, 0, 0, 0.16);
   color: #f58807;
   text-transform: none;
@@ -150,8 +151,9 @@
 }
 
 .variant_showMore:hover:not(:disabled):not(.loading) {
-  border-color: rgba(245, 136, 7, 0.8);
-  background: rgba(245, 136, 7, 0.08);
+  border-color: #f58807;
+  background: #f58807;
+  color: #fff;
 }
 
 /* ===== Variant: danger ===== */

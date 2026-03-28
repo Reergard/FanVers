@@ -144,7 +144,7 @@
 
 .starDotActive img {
   opacity: 0.95;
-  filter: drop-shadow(0 0 10px rgba(245, 136, 7, 0.35));
+  filter: drop-shadow(0 0 10px #f58807);
 }
 
 @media (min-width: 768px) and (max-width: 1024px) {
@@ -196,8 +196,8 @@
     --gap: 10px;
     --edge-left: 12px;
     --edge-right: 12px;
-    padding-top: 24px;
-    padding-bottom: 8px;
+    padding-top: 9px;
+    padding-bottom: 1px;
     scroll-snap-type: x proximity;
   }
 

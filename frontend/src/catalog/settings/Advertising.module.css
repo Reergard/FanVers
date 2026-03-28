@@ -34,14 +34,7 @@
   flex: 1;
   max-width: 4rem;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(245, 136, 7, 0.6) 20%,
-    rgba(245, 136, 7, 0.8) 50%,
-    rgba(245, 136, 7, 0.6) 80%,
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, #f58807 50%, transparent);
 }
 
 .note {
@@ -54,7 +47,7 @@
 /* ===== LIST ===== */
 .list {
   position: relative;
-  border-top: 1px solid rgba(245, 136, 7, 0.75);
+  border-top: 1px solid #f58807;
 }
 
 /* ===== ROW (ARTICLE) ===== */
@@ -69,7 +62,7 @@
   column-gap: clamp(1rem, 1.8vw, 2rem);
   align-items: start;
   padding-block: clamp(1.5rem, 2vw, 2rem);
-  border-bottom: 1px dotted rgba(245, 136, 7, 0.55);
+  border-bottom: 1px dotted #f58807;
 }
 
 /* ===== CHECKBOX COLUMN ===== */
@@ -239,7 +232,7 @@
 
 .targetFilterButton:global(.filters-item):focus {
   outline: none;
-  border-color: rgba(245, 136, 7, 0.8);
+  border-color: #f58807;
 }
 
 .targetFilterLabel {
@@ -284,7 +277,7 @@
 }
 
 .amountInputRow input:focus {
-  border-color: rgba(245, 136, 7, 0.8);
+  border-color: #f58807;
 }
 
 .amountSuffix {
@@ -319,7 +312,8 @@
 }
 
 .orderButton:hover {
-  background: rgba(245, 136, 7, 0.12);
+  background: #f58807;
+  color: #fff;
 }
 
 /* Іконка кнопки — placeholder, замінити на SVG emblem */
@@ -338,7 +332,7 @@
   gap: 1.5rem;
   align-items: end;
   padding-top: clamp(1.5rem, 2vw, 2rem);
-  border-top: 1px dotted rgba(245, 136, 7, 0.55);
+  border-top: 1px dotted #f58807;
 }
 
 .summary {
@@ -376,7 +370,8 @@
 }
 
 .publishButton:hover {
-  background: rgba(245, 136, 7, 0.12);
+  background: #f58807;
+  color: #fff;
 }
 
 /* Спільний клас для іконки кнопки (Замовити / Опублікувати) */

@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import type { Book, UserTranslationBook } from "../api/catalogApi";
-import type { BookmarkBook } from "../bookmarks/types";
+import type { UserTranslationBook } from "../api/catalogApi";
 import badge18 from "../assets/backgrounds/18+small.svg";
 import badge18Large from "../assets/backgrounds/18+.svg";
 import ellipseBg from "../assets/backgrounds/Ellipse_for_book.svg";
 import newBadge from "../assets/icons/NEW.svg";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
+import { resolveIsNewBadge } from "../shared/bookNewBadge";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import actionBtnStyles from "../shared/ActionButton/ActionButton.module.css";
 import { Icon } from "../shared/Icon";
@@ -38,8 +38,32 @@ function getTagNames(items: { name: string }[] | undefined): string[] {
   return items.map((item) => `#${item.name}`);
 }
 
-/** Мінімальний набір полів для картки (Book, UserTranslationBook, BookmarkBook) */
-export type BookCardBook = Book | UserTranslationBook | BookmarkBook;
+/** Єдиний контракт полів обкладинки та картки для всіх джерел API */
+export type BookCardBase = {
+  id: number;
+  slug?: string | null;
+  title?: string | null;
+  image?: string | null;
+
+  adult_content?: boolean;
+  book_type?: "AUTHOR" | "TRANSLATION" | string | null;
+  is_new_badge?: boolean;
+
+  fandoms?: { name: string }[];
+  tags?: { name: string }[];
+  genres?: { name: string }[];
+  translation_status_display?: string | null;
+  /** Код статусу перекладу з API (напр. ABANDONED) */
+  translation_status?: string | null;
+
+  created_at?: string | null;
+  last_updated?: string | null;
+  daily_views?: number | string;
+  daily_income?: number | string;
+  monthly_income?: number | string;
+};
+
+export type BookCardBook = BookCardBase;
 
 type Props = {
   book: BookCardBook;
@@ -50,6 +74,57 @@ type Props = {
 };
 
 type ExpandModal = "fandoms" | "tags" | "genres" | null;
+
+function renderCoverOverlays(options: {
+  showNewBadge: boolean;
+  showAdultBadge: boolean;
+  showAuthorBadge: boolean;
+  adultBadgeSrc: string;
+  adultBadgeWrapClassName?: string;
+}) {
+  const {
+    showNewBadge,
+    showAdultBadge,
+    showAuthorBadge,
+    adultBadgeSrc,
+    adultBadgeWrapClassName = "bookCard__badge-18-wrap",
+  } = options;
+
+  return (
+    <>
+      {showNewBadge && (
+        <span className="bookCard__badge-new-wrap">
+          <img
+            className="bookCard__badge-new"
+            src={newBadge}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+          />
+        </span>
+      )}
+
+      {showAdultBadge && (
+        <span className={adultBadgeWrapClassName}>
+          <img
+            className="bookCard__badge-18"
+            src={adultBadgeSrc}
+            alt="18+"
+            loading="lazy"
+            decoding="async"
+          />
+        </span>
+      )}
+
+      {showAuthorBadge && (
+        <div className="bookCard__corner-a" aria-hidden="true">
+          A
+        </div>
+      )}
+    </>
+  );
+}
 
 export function BookCard({ book, variant = "default", description = "" }: Props) {
   const navigate = useNavigate();
@@ -70,7 +145,17 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
   const hasMoreFandoms = allFandoms.length > 2;
   const hasMoreTags = allTags.length > 2;
   const hasMoreGenres = allGenres.length > 2;
-  const statusText = (book.translation_status_display ?? "Без статусу").toUpperCase();
+  const isAbandonedTranslation = book.translation_status === "ABANDONED";
+  const abandonedStatusText = (
+    book.translation_status_display?.trim() || "Покинутий"
+  ).toUpperCase();
+
+  const showAdultBadge = Boolean(book.adult_content);
+  const showAuthorBadge = book.book_type === "AUTHOR";
+  const showNewBadge = resolveIsNewBadge(
+    book.is_new_badge,
+    book.created_at ?? null,
+  );
 
   const openExpand = (type: ExpandModal) => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -89,16 +174,14 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
         data-variant="bookmark"
       >
         <div className="bookCard__cover bookCard__cover--bookmark">
-          <span className="bookCard__badge-new-wrap">
-            <img
-              className="bookCard__badge-new"
-              src={newBadge}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              decoding="async"
-            />
-          </span>
+          {renderCoverOverlays({
+            showNewBadge,
+            showAdultBadge,
+            showAuthorBadge,
+            adultBadgeSrc: badge18Large,
+            adultBadgeWrapClassName:
+              "bookCard__badge-18-wrap bookCard__badge-18-wrap--bookmark",
+          })}
           <img
             className="bookCard__cover-img"
             src={imageUrl}
@@ -106,27 +189,18 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
             loading="lazy"
             decoding="async"
           />
-          {book.adult_content && (
-            <span className="bookCard__badge-18-wrap bookCard__badge-18-wrap--bookmark">
-              <img
-                className="bookCard__badge-18"
-                src={badge18Large}
-                alt="18+"
-                loading="lazy"
-                decoding="async"
-              />
-            </span>
-          )}
           <span className="bookCard__bookmark-icon" aria-hidden>
             <Icon name="zakladki" />
           </span>
-          <div className="bookCard__corner-a" aria-hidden="true">
-            A
-          </div>
         </div>
         <h3 className="bookCard__title bookCard__title--bookmark">
           {book.title || "Без назви"}
         </h3>
+        {isAbandonedTranslation && (
+          <p className="bookCard__status bookCard__status--bookmark">
+            Статус: {abandonedStatusText}
+          </p>
+        )}
         <div className="bookCard__actions">
           <ActionButton
             variant="default"
@@ -149,16 +223,12 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
         style={{ "--ellipse-bg": `url(${ellipseBg})` } as React.CSSProperties}
       >
         <div className="bookCard__cover bookCard__cover--ad">
-          <span className="bookCard__badge-new-wrap">
-            <img
-              className="bookCard__badge-new"
-              src={newBadge}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              decoding="async"
-            />
-          </span>
+          {renderCoverOverlays({
+            showNewBadge,
+            showAdultBadge,
+            showAuthorBadge,
+            adultBadgeSrc: badge18Large,
+          })}
           <img
             className="bookCard__cover-img"
             src={imageUrl}
@@ -166,20 +236,6 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
             loading="lazy"
             decoding="async"
           />
-          {book.adult_content && (
-            <span className="bookCard__badge-18-wrap">
-              <img
-                className="bookCard__badge-18"
-                src={badge18Large}
-                alt="18+"
-                loading="lazy"
-                decoding="async"
-              />
-            </span>
-          )}
-          <div className="bookCard__corner-a" aria-hidden="true">
-            A
-          </div>
         </div>
         <h3 className="bookCard__title bookCard__title--ad">
           {book.title || "Без назви"}
@@ -213,20 +269,18 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
 
   const cardContent = (
     <article
-      className={`bookCard ${withTags ? "bookCard--withTags" : ""}`}
+      className={`bookCard ${withTags ? "bookCard--withTags" : ""}${
+        withTags && !isAbandonedTranslation ? " bookCard--noTranslationStatus" : ""
+      }`}
       data-variant={variant}
     >
       <div className="bookCard__cover">
-        <span className="bookCard__badge-new-wrap">
-          <img
-            className="bookCard__badge-new"
-            src={newBadge}
-            alt=""
-            aria-hidden="true"
-            loading="lazy"
-            decoding="async"
-          />
-        </span>
+        {renderCoverOverlays({
+          showNewBadge,
+          showAdultBadge,
+          showAuthorBadge,
+          adultBadgeSrc: badge18,
+        })}
         <img
           className="bookCard__cover-img"
           src={imageUrl}
@@ -234,20 +288,6 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
           loading="lazy"
           decoding="async"
         />
-        {book.adult_content && (
-          <span className="bookCard__badge-18-wrap">
-            <img
-              className="bookCard__badge-18"
-              src={badge18}
-              alt="18+"
-              loading="lazy"
-              decoding="async"
-            />
-          </span>
-        )}
-        <div className="bookCard__corner-a" aria-hidden="true">
-          A
-        </div>
       </div>
 
       <div className="bookCard__content">
@@ -375,9 +415,17 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
           )}
         </div>
 
+        {!withTags && isAbandonedTranslation && (
+          <div className="bookCard__defaultAbandonedStatus">
+            <span className="bookCard__status">Статус: {abandonedStatusText}</span>
+          </div>
+        )}
+
         {withTags && (
           <div className="bookCard__footer">
-            <span className="bookCard__status">Статус: {statusText}</span>
+            {isAbandonedTranslation && (
+              <span className="bookCard__status">Статус: {abandonedStatusText}</span>
+            )}
             <ActionButton
               to={slug ? `/books/${slug}` : undefined}
               disabled={!slug}

@@ -191,6 +191,13 @@
   width: 100%;
 }
 
+/* Каталог (default): рядок «Статус» лише для покинутих перекладів */
+.bookCard__defaultAbandonedStatus {
+  width: 100%;
+  margin-top: clamp(6px, 0.8vw, 10px);
+  text-align: center;
+}
+
 .bookCard__row {
   display: flex;
   justify-content: space-between;
@@ -368,6 +375,13 @@
     align-items: start;
     width: 100%;
     overflow: visible;
+  }
+
+  .bookCard--withTags.bookCard--noTranslationStatus {
+    grid-template-areas:
+      ". title"
+      "cover meta"
+      "button button";
   }
 
   .bookCard--withTags .bookCard__content {
@@ -567,6 +581,14 @@
   height: 1px;
   margin: clamp(6px, 0.8vw, 10px) auto 0;
   background: rgba(5, 180, 199, 0.33);
+}
+
+.bookCard--bookmark .bookCard__status--bookmark {
+  margin: 0;
+  padding: 0 clamp(10px, calc(1.2 * var(--vwu)), 16px);
+  font-size: clamp(13px, calc(1.15 * var(--vwu)), 16px);
+  line-height: 1.2;
+  text-align: center;
 }
 
 .bookCard--bookmark .bookCard__actions {
@@ -834,9 +856,10 @@
 /* ========== Mobile grid для Catalog і Власні переклади (default card) ========== */
 /* Ряд 1: [пусто] | Назва
    Ряд 2: [Обкладинка] | Мета (дати, перегляди, дохід) */
+/* Тільки default-картка каталогу; ad/bookmark/withTags не чіпати — інакше зламається карусель реклами */
 @media (max-width: 768px) {
-  .catalog-page .bookCard:not(.bookCard--withTags),
-  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) {
+  .catalog-page .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark),
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) {
     --cover-w: 120px;
     display: grid;
     grid-template-columns: var(--cover-w) minmax(0, 1fr);
@@ -851,13 +874,13 @@
     overflow: visible;
   }
 
-  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__content,
-  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__content {
+  .catalog-page .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__content,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__content {
     display: contents;
   }
 
-  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__cover,
-  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__cover {
+  .catalog-page .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__cover,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__cover {
     grid-area: cover;
     width: var(--cover-w);
     height: clamp(140px, 28vh, 180px);
@@ -866,14 +889,14 @@
       clamp(18px, calc(2.5 * var(--vwu)), 26px) 0;
   }
 
-  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__cover::after,
-  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__cover::after {
+  .catalog-page .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__cover::after,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__cover::after {
     width: clamp(8px, calc(1.2 * var(--vwu)), 12px);
     left: clamp(8px, calc(1.2 * var(--vwu)), 12px);
   }
 
-  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__cover-img,
-  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__cover-img {
+  .catalog-page .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__cover-img,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__cover-img {
     width: 100%;
     height: 100%;
     aspect-ratio: 2 / 3;
@@ -881,8 +904,8 @@
     border-radius: inherit;
   }
 
-  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__title,
-  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__title {
+  .catalog-page .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__title,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__title {
     grid-area: title;
     grid-column: 1 / -1;
     font-size: clamp(18px, 4vw, 22px);
@@ -895,29 +918,29 @@
     line-height: 1.3;
   }
 
-  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__meta,
-  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__meta {
+  .catalog-page .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__meta,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__meta {
     grid-area: meta;
     gap: 6px;
     min-width: 0;
     overflow: visible;
   }
 
-  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__row,
-  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__row {
+  .catalog-page .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__row,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__row {
     align-items: flex-start;
     flex-wrap: wrap;
     min-width: 0;
   }
 
-  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__label,
-  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__label {
+  .catalog-page .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__label,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__label {
     min-width: 52px;
     font-size: clamp(13px, 2.5vw, 15px);
   }
 
-  .catalog-page .bookCard:not(.bookCard--withTags) .bookCard__value,
-  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags) .bookCard__value {
+  .catalog-page .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__value,
+  .bookCard-mobile-grid .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__value {
     font-size: clamp(13px, 2.5vw, 15px);
     min-width: 0;
     overflow: hidden;

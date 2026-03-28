@@ -1,10 +1,10 @@
 /* Мінімальні стилі для сторінки додавання розділу (без повного CreateBookPage) */
 .page {
   --gold: #F58807;
-  --goldSoft: rgba(245, 136, 7, 0.35);
+  --goldSoft: #f58807;
   --panelBg: rgba(6, 15, 18, 0.55);
   --panelBg2: rgba(6, 15, 18, 0.35);
-  --line: rgba(245, 136, 7, 0.55);
+  --line: #f58807;
 
   display: grid;
   gap: clamp(18px, calc(2.2 * var(--vwu)), 34px);
@@ -109,7 +109,7 @@
   width: clamp(160px, calc(220 * 100vw / 1366), 220px);
   height: clamp(240px, calc(340 * 100vw / 1366), 340px);
   border-radius: 0 18px 18px 0;
-  border: 1px dashed rgba(245, 136, 7, 0.45);
+  border: 1px dashed #f58807;
   border-left: none;
   background: rgba(5, 180, 199, 0.15);
   cursor: pointer;
@@ -126,7 +126,7 @@
   width: clamp(70px, calc(101 * 100vw / 1366), 101px);
   height: clamp(70px, calc(101 * 100vw / 1366), 101px);
   border-radius: 50%;
-  border: 1px solid rgba(245, 136, 7, 0.55);
+  border: 1px solid #f58807;
   display: grid;
   place-items: center;
   flex-shrink: 0;

@@ -1,7 +1,7 @@
 .translators-list-page {
   --tl-accent: #f58807;
-  --tl-line: rgba(245, 136, 7, 0.38);
-  --tl-line-strong: rgba(245, 136, 7, 0.55);
+  --tl-line: #f58807;
+  --tl-line-strong: #f58807;
   --tl-glass: rgba(0, 0, 0, 0.22);
   --tl-header-text: rgba(255, 255, 255, 0.7);
 
@@ -198,7 +198,7 @@
   height: 16px;
   pointer-events: none;
   opacity: 0.85;
-  background: radial-gradient(circle, rgba(245, 136, 7, 0.95), rgba(245, 136, 7, 0) 62%);
+  background: radial-gradient(circle, #f58807, transparent 62%);
 }
 
 .translators-list-row-hover-frame {

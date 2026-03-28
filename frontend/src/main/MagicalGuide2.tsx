@@ -25,6 +25,8 @@ function getRecommendationStubBooks(): BookCardBook[] {
     slug: "",
     title: `Рекомендація · ${i + 1}`,
     adult_content: false,
+    book_type: "TRANSLATION",
+    is_new_badge: false,
     image: null,
   }));
 }

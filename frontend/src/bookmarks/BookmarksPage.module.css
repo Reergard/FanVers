@@ -43,7 +43,7 @@
 .subtitle {
   font-family: "BadScript", cursive;
   font-size: clamp(13px, calc(1.2 * var(--vwu)), 15px);
-  color: rgba(245, 136, 7, 0.5);
+  color: #f58807;
   margin: 0;
   font-style: italic;
 }
@@ -209,7 +209,7 @@
   padding: clamp(10px, 1.2vw, 14px) clamp(16px, 2vw, 24px);
   background: none;
   border: none;
-  border-bottom: 1px solid rgba(245, 136, 7, 0.3);
+  border-bottom: 1px solid #f58807;
   color: #f58807;
   font-family: "SofiaSansSemiCondensed", system-ui, sans-serif;
   font-size: clamp(13px, calc(1.2 * var(--vwu)), 15px);
@@ -224,12 +224,11 @@
 
 .filterItem:hover {
   color: #f58807;
-  background: rgba(245, 136, 7, 0.08);
 }
 
 .filterItemActive {
-  color: #f58807;
-  background: rgba(245, 136, 7, 0.12);
+  color: #fff;
+  background: #f58807;
 }
 
 .foundRow {
@@ -261,7 +260,7 @@
   min-height: clamp(60px, 7vw, 80px);
   padding: clamp(8px, 1vw, 12px);
   background: url("../assets/Rectangle 3975.svg") center / contain no-repeat;
-  filter: drop-shadow(4px 4px 10px rgba(245, 136, 7, 0.5));
+  filter: drop-shadow(4px 4px 10px #f58807);
 }
 
 .bookmarkCount {
@@ -288,7 +287,7 @@
   border: 1px solid #f58807;
   border-radius: 17px;
   text-align: center;
-  box-shadow: 0 0 24px rgba(245, 136, 7, 0.15);
+  box-shadow: 0 0 20px #f58807;
 }
 
 @media (min-width: 1280px) {

@@ -1,4 +1,5 @@
 import { http } from "./http";
+import { resolveIsNewBadge } from "../shared/bookNewBadge";
 import type { BookAccessRights, PermissionLevel } from "../catalog/settings/accessRights.types";
 
 const CATALOG = "/api/catalog";
@@ -55,6 +56,8 @@ export interface Book {
   fandoms?: BookMetaItem[];
   /** Тип: AUTHOR | TRANSLATION (API: book_type) */
   book_type?: string | null;
+  /** Бейдж «NEW» на обкладинці (API: is_new_badge), з бекенду за правилом created_at */
+  is_new_badge?: boolean;
   title_en?: string | null;
   /** Ім'я власника (API: owner_username) */
   owner_username?: string | null;
@@ -208,6 +211,10 @@ function normalizeBook(raw: Record<string, unknown>): Book {
   const fandomsRaw = Array.isArray(raw.fandoms) ? raw.fandoms : [];
 
   const ownerId = toOwnerId(raw.ownerId ?? raw.owner ?? raw.owner_id);
+  const createdAtForBadge =
+    raw.created_at != null && raw.created_at !== ""
+      ? String(raw.created_at)
+      : null;
 
   return {
     id: Number(raw.id),
@@ -249,6 +256,7 @@ function normalizeBook(raw: Record<string, unknown>): Book {
     tags: tagsRaw.map(normalizeMetaItem).filter((t): t is BookMetaItem => t != null),
     fandoms: fandomsRaw.map(normalizeMetaItem).filter((f): f is BookMetaItem => f != null),
     book_type: raw.book_type != null && raw.book_type !== "" ? String(raw.book_type) : null,
+    is_new_badge: resolveIsNewBadge(raw.is_new_badge, createdAtForBadge),
     title_en: raw.title_en != null && raw.title_en !== "" ? String(raw.title_en) : null,
     owner_username:
       raw.owner_username != null && raw.owner_username !== ""

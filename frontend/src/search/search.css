@@ -25,7 +25,7 @@
 }
 
 .search-filter-close {
-  border: 1px solid rgba(245, 136, 7, 0.5);
+  border: 1px solid #f58807;
   border-radius: 999px;
   background: rgba(10, 18, 20, 0.35);
   color: #f58807;
@@ -35,7 +35,8 @@
 }
 
 .search-filter-close:hover {
-  background: rgba(245, 136, 7, 0.16);
+  background: #f58807;
+  color: #fff;
 }
 
 .search-filter-options-wrap {
@@ -99,8 +100,8 @@
   border-radius: 999px;
   background-image: repeating-linear-gradient(
     to right,
-    rgba(245, 136, 7, 0.95) 0,
-    rgba(245, 136, 7, 0.95) 2px,
+    #f58807 0,
+    #f58807 2px,
     transparent 2px,
     transparent 10px
   );
@@ -111,8 +112,8 @@
   padding: 6px 14px;
   border-radius: 999px;
   background: rgba(10, 18, 20, 0.35);
-  border: 1px solid rgba(245, 136, 7, 0.5);
-  color: rgba(245, 136, 7, 0.78);
+  border: 1px solid #f58807;
+  color: #f58807;
   font-size: 13px;
   line-height: 1.25;
   cursor: pointer;
@@ -121,7 +122,7 @@
 }
 
 .search-filter-chip:hover {
-  border-color: rgba(245, 136, 7, 0.9);
+  border-color: #f58807;
   color: #f58807;
 }
 
@@ -132,7 +133,7 @@
 }
 
 .search-filter-empty {
-  color: rgba(245, 136, 7, 0.8);
+  color: #f58807;
   font-size: 14px;
   padding: 10px 4px;
 }
@@ -153,7 +154,7 @@
 .search-chapters-input {
   height: 34px;
   border-radius: 10px;
-  border: 1px solid rgba(245, 136, 7, 0.5);
+  border: 1px solid #f58807;
   background: rgba(10, 18, 20, 0.35);
   color: #f58807;
   padding: 6px 10px;
@@ -197,4 +198,27 @@
   padding: 8px 18px;
   white-space: nowrap;
   flex: 0 0 auto;
+}
+
+/* Підказка під полем пошуку (тільки сторінка Пошук) */
+.search-results-note {
+  margin: clamp(10px, 1.2vw, 18px) 0 0;
+  font-family: "BadScript", cursive;
+  font-weight: 500;
+  color: #f58807;
+  line-height: 1.25;
+}
+
+@media (min-width: 769px) {
+  .search-results-note {
+    font-size: clamp(17px, 1.45vw, 21px);
+    font-weight: 700;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-results-note {
+    font-size: clamp(15px, 1.55vw, 18px);
+    font-weight: 600;
+  }
 }

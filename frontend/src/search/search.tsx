@@ -335,8 +335,6 @@ export default function SearchPage() {
           <div className="abandoned-main-col">
             <PageTitle>Пошук</PageTitle>
 
-            <p className="abandoned-note">*Результати пошуку за заданими параметрами</p>
-
             <AdvertisingCarousel
               queryKey={advertisingKeys.searchAds(searchAdsFilterKey)}
               queryFn={() =>
@@ -381,6 +379,10 @@ export default function SearchPage() {
                 </button>
               </label>
             </div>
+
+            <p className="search-results-note">
+              *Результати пошуку за заданими параметрами
+            </p>
 
             <div className="abandoned-toolbar">
               <div className="abandoned-shown">Показано {filteredBooks.length} робіт</div>

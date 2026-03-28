@@ -46,7 +46,7 @@
   border-radius: 12px;
   padding: clamp(14px, 2vw, 22px);
   background:
-    linear-gradient(140deg, rgba(5, 180, 199, 0.08), rgba(5, 180, 199, 0.02) 45%, rgba(245, 136, 7, 0.08)),
+    linear-gradient(140deg, rgba(5, 180, 199, 0.08), rgba(5, 180, 199, 0.02) 45%, transparent),
     rgba(8, 16, 22, 0.65);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
 }
@@ -137,13 +137,13 @@
 }
 
 .buttonPrimary {
-  background: rgba(245, 136, 7, 0.88);
-  border-color: rgba(245, 136, 7, 0.9);
+  background: #f58807;
+  border-color: #f58807;
 }
 
 .buttonPrimary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgba(245, 136, 7, 0.25);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.28);
 }
 
 .buttonSecondary {

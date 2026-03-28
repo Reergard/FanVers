@@ -15,6 +15,9 @@ export interface AdBookDetails {
   /** URL обкладинки з БД */
   image?: string | null;
   adult_content?: boolean;
+  book_type?: string | null;
+  is_new_badge?: boolean;
+  created_at?: string | null;
 }
 
 /** Елемент реклами з API */

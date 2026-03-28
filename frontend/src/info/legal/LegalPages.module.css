@@ -29,7 +29,7 @@
   border-radius: 12px;
   padding: clamp(14px, 2vw, 22px);
   background:
-    linear-gradient(130deg, rgba(5, 180, 199, 0.08), rgba(5, 180, 199, 0.01) 45%, rgba(245, 136, 7, 0.08)),
+    linear-gradient(130deg, rgba(5, 180, 199, 0.08), rgba(5, 180, 199, 0.01) 45%, transparent),
     rgba(8, 16, 22, 0.66);
 }
 
@@ -89,7 +89,7 @@
 
 .note {
   margin-top: 12px;
-  border-left: 3px solid rgba(245, 136, 7, 0.8);
+  border-left: 3px solid #f58807;
   padding-left: 12px;
 }
 

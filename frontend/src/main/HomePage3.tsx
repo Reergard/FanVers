@@ -45,6 +45,9 @@ function toBookCardBook(book: BookRecentUpdateItem): BookCardBook {
     title: book.title,
     image: book.image,
     adult_content: book.adult_content,
+    book_type: book.book_type,
+    is_new_badge: book.is_new_badge,
+    created_at: book.created_at,
   };
 }
 

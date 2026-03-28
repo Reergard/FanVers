@@ -27,6 +27,9 @@ function toBookCardBook(book: BookNewsItem): BookCardBook {
     title: book.title,
     image: book.image,
     adult_content: book.adult_content,
+    book_type: book.book_type,
+    is_new_badge: book.is_new_badge,
+    created_at: book.created_at,
   };
 }
 
@@ -125,7 +128,10 @@ function MobileNewsCard({
           />
 
           <div className="mg2-mobileFrameContent">
-            <div className="mg2-mobileMediaCol">
+            <div
+              className="mg2-mobileMediaCol"
+              {...(book.is_new_badge ? { "data-new": "" } : {})}
+            >
               <div className="mg2-mobileBookCardWrap">
                 <BookCard
                   book={{

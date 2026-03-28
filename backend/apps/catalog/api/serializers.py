@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from apps.catalog.models import Book, Chapter, Genres, Tag, Country, Fandom, Volume, ChapterOrder
+from apps.catalog.badge_utils import book_shows_new_badge
 from apps.navigation.models import Bookmark 
 from django.conf import settings
 import logging
@@ -128,6 +129,7 @@ class BookOwnerSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     fandoms = FandomSerializer(many=True, read_only=True)
     country = CountrySerializer(read_only=True)
+    is_new_badge = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -137,6 +139,7 @@ class BookOwnerSerializer(serializers.ModelSerializer):
             'original_status', 'original_status_display',
             'country', 'slug', 'last_updated', 'owner', 'creator',
             'adult_content', 'owner_username', 'creator_username', 'book_type',
+            'is_new_badge',
             'genres', 'tags', 'fandoms', 'view_permission', 'comment_book_permission',
             'comment_chapter_permission', 'download_permission', 'rate_permission'
         ]
@@ -166,6 +169,9 @@ class BookOwnerSerializer(serializers.ModelSerializer):
 
     def get_creator_username(self, obj):
         return obj.creator.username if obj.creator else None
+
+    def get_is_new_badge(self, obj):
+        return book_shows_new_badge(obj)
 
     def update(self, instance, validated_data):
         old_ts = instance.translation_status
@@ -201,6 +207,7 @@ class BookReaderSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     fandoms = FandomSerializer(many=True, read_only=True)
     country = CountrySerializer(read_only=True)
+    is_new_badge = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -210,7 +217,7 @@ class BookReaderSerializer(serializers.ModelSerializer):
             'original_status', 'original_status_display',
             'country', 'slug', 'last_updated', 'owner_username', 
             'creator_username', 'bookmark_status', 'bookmark_id', 
-            'adult_content', 'book_type', 'chapters_count',
+            'adult_content', 'book_type', 'is_new_badge', 'chapters_count',
             'genres', 'tags', 'fandoms', 'created_at'
         ]
         read_only_fields = fields
@@ -251,6 +258,9 @@ class BookReaderSerializer(serializers.ModelSerializer):
 
     def get_creator_username(self, obj):
         return obj.creator.username if obj.creator else None
+
+    def get_is_new_badge(self, obj):
+        return book_shows_new_badge(obj)
 
 
 class VolumeSerializer(serializers.ModelSerializer):

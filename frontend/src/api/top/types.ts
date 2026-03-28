@@ -41,4 +41,5 @@ export interface BookReaderTopDto {
   tags: BookReaderTopMeta[];
   fandoms: BookReaderTopMeta[];
   created_at: string | null;
+  is_new_badge: boolean;
 }

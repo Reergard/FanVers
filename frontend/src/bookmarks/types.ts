@@ -18,7 +18,12 @@ export interface BookmarkBook {
   creator_username?: string;
   owner_username?: string;
   adult_content?: boolean;
+  book_type?: string | null;
+  is_new_badge?: boolean;
   created_at?: string;
+  /** З BookReaderSerializer у вкладеній книзі закладки */
+  translation_status?: string | null;
+  translation_status_display?: string | null;
 }
 
 /** Закладка зі списку користувача */

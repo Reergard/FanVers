@@ -299,7 +299,7 @@
 :global(.mg2-mobileStarDotActive img) {
   opacity: 1;
   filter:
-    drop-shadow(0 0 10px rgba(245, 136, 7, 0.35))
+    drop-shadow(0 0 10px #f58807)
     brightness(0)
     saturate(100%)
     invert(60%)
@@ -347,8 +347,8 @@
 }
 
 :global(.mg2-topTabActive) {
-  border-color: rgba(245, 136, 7, 0.65);
-  background: rgba(245, 136, 7, 0.15);
+  border-color: #f58807;
+  background: #f58807;
   color: #fff;
 }
 

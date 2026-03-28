@@ -190,7 +190,7 @@
   inline-size: clamp(40px, 2.8vw, 58px);
   block-size: clamp(40px, 2.8vw, 58px);
   border-radius: 50%;
-  border: 1px solid rgba(245, 136, 7, 0.9);
+  border: 1px solid #f58807;
   overflow: hidden;
   display: grid;
   place-items: center;
@@ -233,9 +233,9 @@
 }
 
 .deleteChatBtn {
-  border: 1px solid rgba(245, 136, 7, 0.75);
+  border: 1px solid #f58807;
   background: transparent;
-  color: rgba(245, 136, 7, 0.95);
+  color: #f58807;
   border-radius: 999px;
   padding: 6px 12px;
   font-family: "Inter", sans-serif;
@@ -308,7 +308,7 @@
   inline-size: clamp(46px, 3vw, 68px);
   block-size: clamp(46px, 3vw, 68px);
   border-radius: 50%;
-  border: 1px solid rgba(245, 136, 7, 0.9);
+  border: 1px solid #f58807;
   overflow: hidden;
   display: grid;
   place-items: center;

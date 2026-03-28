@@ -48,7 +48,7 @@
 
   .text {
     color: #F58807;
-    text-shadow: 0 0 18px rgba(245, 136, 7, 0.18);
+    text-shadow: 0 0 14px #f58807;
     font-size: clamp(22px, calc(2.2 * var(--vwu)), 34px);
   }
 
@@ -61,7 +61,7 @@
 @media (max-width: 1024px) {
   .text {
     color: #F58807;
-    text-shadow: 0 0 18px rgba(245, 136, 7, 0.18);
+    text-shadow: 0 0 14px #f58807;
   }
 
   /* Рамка видна на активной странице (нет hover на touch) */

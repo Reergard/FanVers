@@ -53,7 +53,7 @@
   flex-shrink: 0;
   width: clamp(80px, calc(10 * var(--vwu)), 120px);
   height: 34px;
-  color: rgba(245, 136, 7, 0.5);
+  color: #f58807;
 }
 
 .navTitle {
@@ -155,7 +155,7 @@
   position: absolute;
   inset: -6px -10px -6px -10px;
   pointer-events: none;
-  color: rgba(245, 136, 7, 0.5);
+  color: #f58807;
 }
 
 .reportBtnFrame svg {

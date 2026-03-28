@@ -2,6 +2,7 @@
  * Нормалізація сирого JSON для **GET /api/analytics_books/top/** (BookReaderSerializer).
  * Не плутати з майбутніми «Трендами» — окремий endpoint.
  */
+import { resolveIsNewBadge } from "../../shared/bookNewBadge";
 import type {
   BookReaderTopCountry,
   BookReaderTopDto,
@@ -85,5 +86,6 @@ export function normalizeBookReaderTopRow(raw: unknown): BookReaderTopDto | null
     tags: asMetaList(o.tags),
     fandoms: asMetaList(o.fandoms),
     created_at: asString(o.created_at),
+    is_new_badge: resolveIsNewBadge(o.is_new_badge, asString(o.created_at)),
   };
 }
