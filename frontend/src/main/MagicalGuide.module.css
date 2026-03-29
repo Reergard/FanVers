@@ -255,6 +255,8 @@
   height: auto;
   display: block;
   object-fit: contain;
+  opacity: 1;
+  filter: brightness(1.35) contrast(1.08);
 }
 
 :global(.mg2-nav .mg2-mobileStars.mg2-navStars) {
@@ -280,7 +282,7 @@
 }
 
 :global(.mg2-mobileStarDot:hover) {
-  opacity: 0.85;
+  opacity: 1;
 }
 
 :global(.mg2-mobileStarDot:active) {
@@ -292,22 +294,20 @@
   height: 27px;
   display: block;
   object-fit: contain;
-  opacity: 0.5;
+  opacity: 1;
+  filter: brightness(1.2);
   transition: opacity 140ms ease, filter 140ms ease;
+}
+
+:global(.mg2-mobileStarDot:hover img) {
+  filter: brightness(1.35) drop-shadow(0 0 6px rgba(245, 136, 7, 0.45));
 }
 
 :global(.mg2-mobileStarDotActive img) {
   opacity: 1;
   filter:
-    drop-shadow(0 0 10px #f58807)
-    brightness(0)
-    saturate(100%)
-    invert(60%)
-    sepia(98%)
-    saturate(2476%)
-    hue-rotate(360deg)
-    brightness(105%)
-    contrast(101%);
+    brightness(1.15)
+    drop-shadow(0 0 10px #f58807);
 }
 
 @media (max-width: 420px) {

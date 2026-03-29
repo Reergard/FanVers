@@ -105,6 +105,8 @@
   height: 30px;
   display: block;
   object-fit: contain;
+  opacity: 1;
+  filter: brightness(1.35) contrast(1.08);
 }
 
 .stars {
@@ -126,7 +128,7 @@
 }
 
 .starDot:hover {
-  opacity: 0.85;
+  opacity: 1;
 }
 
 .starDot:active {
@@ -138,13 +140,19 @@
   height: 27px;
   display: block;
   object-fit: contain;
-  opacity: 0.5;
+  opacity: 1;
+  filter: brightness(1.2);
   transition: opacity 140ms ease, filter 140ms ease;
 }
 
+.starDot:hover img {
+  filter: brightness(1.35) drop-shadow(0 0 6px rgba(245, 136, 7, 0.45));
+}
+
 .starDotActive img {
-  opacity: 0.95;
-  filter: drop-shadow(0 0 10px #f58807);
+  opacity: 1;
+  filter:
+    brightness(1.15) drop-shadow(0 0 10px #f58807);
 }
 
 @media (min-width: 768px) and (max-width: 1024px) {
@@ -240,6 +248,20 @@
   .carouselWrap {
     margin-inline: -8px;
     width: calc(100% + 16px);
+  }
+}
+
+@media (min-width: 769px) {
+  .section {
+    padding-top: 2px;
+  }
+
+  .carousel {
+    padding-top: clamp(8px, 1vw, 12px);
+  }
+
+  .nav {
+    margin-top: 0;
   }
 }
 

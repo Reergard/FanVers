@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { UserTranslationBook } from "../api/catalogApi";
 import badge18 from "../assets/backgrounds/18+small.svg";
@@ -11,7 +11,16 @@ import { ActionButton } from "../shared/ActionButton/ActionButton";
 import actionBtnStyles from "../shared/ActionButton/ActionButton.module.css";
 import { Icon } from "../shared/Icon";
 import { Modal } from "../shared/Modal/Modal";
+import { useMedia } from "../shared/hooks/useMedia";
 import "./BookCard.css";
+
+/** Як у каруселі «Новинки» (моб.): обмеження довжини + «...»; різні ліміти по ширині екрана. */
+function truncateAdDescription(text: string, maxChars: number): string {
+  const t = text.trim();
+  if (t.length <= maxChars) return t;
+  const slice = t.slice(0, maxChars).trimEnd();
+  return slice.length > 0 ? `${slice}...` : "…";
+}
 
 function formatStat(value: number | string | undefined): string {
   if (value === undefined || value === null) return "—";
@@ -135,6 +144,16 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
   const isAd = variant === "ad";
   const [expandModal, setExpandModal] = useState<ExpandModal>(null);
 
+  const adMax480 = useMedia("(max-width: 480px)");
+  const adMax768 = useMedia("(max-width: 768px)");
+  const adMax1024 = useMedia("(max-width: 1024px)");
+
+  const adDescriptionDisplay = useMemo(() => {
+    if (!isAd || !description) return "";
+    const maxChars = adMax480 ? 220 : adMax768 ? 300 : adMax1024 ? 400 : 480;
+    return truncateAdDescription(description, maxChars);
+  }, [isAd, description, adMax480, adMax768, adMax1024]);
+
   const userBook = book as UserTranslationBook;
   const allFandoms = getTagNames(book.fandoms);
   const allTags = getTagNames(book.tags);
@@ -240,8 +259,8 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
         <h3 className="bookCard__title bookCard__title--ad">
           {book.title || "Без назви"}
         </h3>
-        {description && (
-          <p className="bookCard__desc">{description}</p>
+        {adDescriptionDisplay && (
+          <p className="bookCard__desc">{adDescriptionDisplay}</p>
         )}
         <div className="bookCard__actions">
           <span
