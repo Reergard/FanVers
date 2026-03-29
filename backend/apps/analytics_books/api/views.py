@@ -160,6 +160,15 @@ class UpdateAnalyticsView(APIView):
             counted = record_unique_book_view_from_request(request, book)
             return Response({"status": "success", "counted": counted})
 
+        if action_type in ("translation_rating", "translation_rating_removed"):
+            if book.book_type == "AUTHOR":
+                return Response(
+                    {
+                        "error": "Оцінка перекладу недоступна для авторських книг.",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         if action_type == "comment":
             record_comment_created(book)
         elif action_type == "comment_removed":

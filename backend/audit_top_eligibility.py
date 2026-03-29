@@ -64,16 +64,24 @@ def period_scores_for_book(book_id: int) -> dict[str, float | int | None]:
     week_start = today - timedelta(days=6)
     month_start = today - timedelta(days=29)
 
-    day_row = DailyAnalytics.objects.filter(book_id=book_id, date=today).first()
+    day_row = (
+        DailyAnalytics.objects.filter(book_id=book_id, date=today)
+        .select_related("book")
+        .first()
+    )
     day_score = daily_row_score(day_row) if day_row else 0
 
-    week_rows = DailyAnalytics.objects.filter(book_id=book_id, date__gte=week_start)
+    week_rows = DailyAnalytics.objects.filter(
+        book_id=book_id, date__gte=week_start
+    ).select_related("book")
     week_score = sum(daily_row_score(d) for d in week_rows)
 
-    month_rows = DailyAnalytics.objects.filter(book_id=book_id, date__gte=month_start)
+    month_rows = DailyAnalytics.objects.filter(
+        book_id=book_id, date__gte=month_start
+    ).select_related("book")
     month_score = sum(daily_row_score(d) for d in month_rows)
 
-    ba = BookAnalytics.objects.filter(book_id=book_id).first()
+    ba = BookAnalytics.objects.filter(book_id=book_id).select_related("book").first()
     all_time_total = book_analytics_total_score(ba) if ba else 0
 
     return {

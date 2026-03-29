@@ -76,7 +76,7 @@ def get_trend_books(limit: int | None = None) -> list[Book]:
         book_id__in=allowed_ids,
         date__gte=start,
         date__lte=today,
-    )
+    ).select_related("book")
 
     by_key: dict[tuple[int, date], DailyAnalytics] = {}
     for r in rows:

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from ..models import BookRating
 from apps.catalog.models import Book
 
+
 class BookRatingSerializer(serializers.ModelSerializer):
     book_slug = serializers.CharField(write_only=True)
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
@@ -54,3 +55,30 @@ class BookRatingSerializer(serializers.ModelSerializer):
         if not 1 <= value <= 5:
             raise serializers.ValidationError("Рейтинг має бути від 1 до 5")
         return value
+
+    def validate(self, attrs):
+        rating_type = attrs.get("rating_type")
+        if rating_type is None and getattr(self, "instance", None):
+            rating_type = self.instance.rating_type
+        if rating_type != "TRANSLATION":
+            return attrs
+
+        book = None
+        if getattr(self, "instance", None):
+            book = self.instance.book
+        else:
+            slug = attrs.get("book_slug")
+            if not slug:
+                return attrs
+            try:
+                book = Book.objects.get(slug=slug)
+            except Book.DoesNotExist:
+                return attrs
+
+        if book.book_type == "AUTHOR":
+            raise serializers.ValidationError(
+                {
+                    "rating_type": "Оцінка якості перекладу недоступна для авторських книг."
+                }
+            )
+        return attrs

@@ -33,7 +33,8 @@
 /* ===== TOP ===== */
 .top {
   position: relative;
-  z-index: 1;
+  /* Выше .heroBookZone (2): иначе полоса heroBlurRect (1) с backdrop-filter размывает книгу */
+  z-index: 3;
   padding-top: 0px;
   padding-block: 0px;
 }
@@ -358,7 +359,8 @@
 /* 430x302 — при 430px ширина=430, высота=302; масштабируется адаптивно, ширина всегда 100% */
 .heroBookZone {
   position: relative;
-  z-index: 0;
+  /* Выше heroBlurRect (1), чтобы книга не попадала под backdrop-filter */
+  z-index: 2;
   width: 100%;
   aspect-ratio: 430 / 302;
   overflow: hidden;
@@ -370,9 +372,11 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  background-size: 100% auto;
+  /* Холст SVG 608px, книга 430px — иначе 100% по ширине даёт книгу ~71% ширины зоны */
+  background-size: calc(100% * 608 / 430) auto;
   background-repeat: no-repeat;
-  background-position: center bottom;
+  /* bottom -Npx: нижний край фона ниже низа зоны — больше |N| = картинка ниже */
+  background-position: center bottom -85px;
   pointer-events: none;
 }
 

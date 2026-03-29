@@ -11,6 +11,13 @@ from apps.catalog.models import Book
 from django.db import models
 from apps.catalog.api.permissions import check_book_access_permission
 
+from ..domain import (
+    available_rating_types,
+    compute_overall_rating,
+    translation_rating_applicable,
+)
+
+
 class BookRatingViewSet(viewsets.ModelViewSet):
     serializer_class = BookRatingSerializer
     permission_classes = [IsAuthenticated]
@@ -89,40 +96,63 @@ class BookRatingViewSet(viewsets.ModelViewSet):
                 )
 
             book = get_object_or_404(Book, slug=book_slug)
-            
+
             ratings = BookRating.objects.filter(book=book)
-            
-            # Отримуємо статистику за рейтингом книги
-            book_ratings = ratings.filter(rating_type='BOOK')
+
+            book_ratings = ratings.filter(rating_type="BOOK")
             book_rating_stats = book_ratings.aggregate(
-                avg_rating=Avg('rating'),
-                total_votes=models.Count('id')
+                avg_rating=Avg("rating"),
+                total_votes=models.Count("id"),
             )
-            
-            # Отримуємо статистику за рейтингом перекладу
-            translation_ratings = ratings.filter(rating_type='TRANSLATION')
-            translation_rating_stats = translation_ratings.aggregate(
-                avg_rating=Avg('rating'),
-                total_votes=models.Count('id')
-            )
+
+            b_avg = book_rating_stats["avg_rating"]
+            b_avg_f = float(b_avg) if b_avg is not None else 0.0
+
+            show_translation = translation_rating_applicable(book.book_type)
+            translation_payload = None
+            t_avg_f = None
+
+            if show_translation:
+                translation_qs = ratings.filter(rating_type="TRANSLATION")
+                translation_rating_stats = translation_qs.aggregate(
+                    avg_rating=Avg("rating"),
+                    total_votes=models.Count("id"),
+                )
+                t_avg = translation_rating_stats["avg_rating"]
+                t_avg_f = float(t_avg) if t_avg is not None else 0.0
+                translation_payload = {
+                    "average": t_avg_f,
+                    "total_votes": translation_rating_stats["total_votes"],
+                }
 
             user_ratings = None
             if request.user.is_authenticated:
-                user_ratings = ratings.filter(user=request.user).values(
-                    'rating_type', 'rating'
-                )
+                ur = ratings.filter(user=request.user).values("rating_type", "rating")
+                allowed = set(available_rating_types(book.book_type))
+                user_ratings = [
+                    row for row in ur if row["rating_type"] in allowed
+                ]
 
-            return Response({
-                'book_rating': {
-                    'average': book_rating_stats['avg_rating'] if book_rating_stats['avg_rating'] is not None else 0,
-                    'total_votes': book_rating_stats['total_votes']
-                },
-                'translation_rating': {
-                    'average': translation_rating_stats['avg_rating'] if translation_rating_stats['avg_rating'] is not None else 0,
-                    'total_votes': translation_rating_stats['total_votes']
-                },
-                'user_ratings': list(user_ratings) if user_ratings else None
-            })
+            overall = compute_overall_rating(
+                book.book_type,
+                b_avg_f if book_rating_stats["total_votes"] else None,
+                t_avg_f if show_translation else None,
+            )
+
+            return Response(
+                {
+                    "book_type": book.book_type,
+                    "available_rating_types": available_rating_types(book.book_type),
+                    "has_translation_rating": show_translation,
+                    "overall_rating": overall,
+                    "book_rating": {
+                        "average": b_avg_f,
+                        "total_votes": book_rating_stats["total_votes"],
+                    },
+                    "translation_rating": translation_payload,
+                    "user_ratings": user_ratings if user_ratings else None,
+                }
+            )
         except Http404:
             raise
         except Exception as e:

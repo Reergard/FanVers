@@ -11,7 +11,15 @@ import icon18Big from "../assets/icons/18+big.svg";
 import linearIcon from "../assets/icons/linear.svg";
 import newTranslaterIcon from "../assets/backgrounds/new_translater.svg";
 
-const SHORT_META_LABELS = ["Автор:", "Перекладач:", "Розділів:", "Статус перекладу:", "Країна:", "Статус випуску твору:"];
+const SHORT_META_LABELS = [
+  "Автор:",
+  "Перекладач:",
+  "Розділів:",
+  "Статус перекладу:",
+  "Статус публікації:",
+  "Країна:",
+  "Статус випуску твору:",
+];
 const CHIPS_META_LABELS = ["Жанр:", "Теги:", "Фендом:"];
 
 export type BookHeroProps = {
@@ -23,6 +31,8 @@ export type BookHeroProps = {
   authorMarkText?: string | null;
   metaRows: MetaRow[];
   bookSlug?: string;
+  /** AUTHOR | TRANSLATION — керує видимістю блоку «Якість перекладу» до завантаження /rating */
+  bookType?: string | null;
   ratingValue?: number | null;
   ratingCount?: number | null;
   thankAuthorLabel?: string;
@@ -44,6 +54,7 @@ export function BookHero({
   authorMarkText,
   metaRows,
   bookSlug,
+  bookType,
   ratingValue,
   ratingCount,
   thankAuthorLabel = "подякувати автору",
@@ -75,10 +86,21 @@ export function BookHero({
   const ratingsData = ratingsQuery.data;
   const ratingsLoading = ratingsQuery.isLoading;
   const bookRating = ratingsData?.book_rating ?? { average: 0, total_votes: 0 };
-  const translationRating = ratingsData?.translation_rating ?? { average: 0, total_votes: 0 };
+  const translationRating = ratingsData?.translation_rating;
   const userRatings = ratingsData?.user_ratings ?? null;
   const userBookRating = userRatings?.find((r) => r.rating_type === "BOOK")?.rating;
   const userTranslationRating = userRatings?.find((r) => r.rating_type === "TRANSLATION")?.rating;
+
+  const showTranslationRatingBlock = (() => {
+    if (bookType === "AUTHOR") return false;
+    if (bookType === "TRANSLATION") return true;
+    if (ratingsData) {
+      if (ratingsData.has_translation_rating === false) return false;
+      if (ratingsData.has_translation_rating === true) return true;
+      return ratingsData.translation_rating != null;
+    }
+    return bookType !== "AUTHOR";
+  })();
 
   const onRatingSuccess = () => {
     if (slugForRatings) {
@@ -173,16 +195,18 @@ export function BookHero({
                     isLoading={ratingsLoading}
                     onRatingSuccess={onRatingSuccess}
                   />
-                  <BookRatingStars
-                    bookSlug={slugForRatings}
-                    ratingType="TRANSLATION"
-                    title="ЯКІСТЬ ПЕРЕКЛАДУ:"
-                    average={translationRating.average}
-                    totalVotes={translationRating.total_votes}
-                    userRating={userTranslationRating}
-                    isLoading={ratingsLoading}
-                    onRatingSuccess={onRatingSuccess}
-                  />
+                  {showTranslationRatingBlock ? (
+                    <BookRatingStars
+                      bookSlug={slugForRatings}
+                      ratingType="TRANSLATION"
+                      title="ЯКІСТЬ ПЕРЕКЛАДУ:"
+                      average={translationRating?.average ?? 0}
+                      totalVotes={translationRating?.total_votes ?? 0}
+                      userRating={userTranslationRating}
+                      isLoading={ratingsLoading}
+                      onRatingSuccess={onRatingSuccess}
+                    />
+                  ) : null}
                 </>
               ) : (
                 <>
@@ -195,14 +219,16 @@ export function BookHero({
                     </div>
                     {ratingCount ? <div className={styles.ratingHint}>({ratingCount})</div> : null}
                   </div>
-                  <div className={styles.ratingBox}>
-                    <div className={styles.ratingTitle}>ЯКІСТЬ ПЕРЕКЛАДУ:</div>
-                    <div className={styles.ratingStars} aria-label="Якість перекладу: заглушка">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <span key={s} aria-hidden="true">★</span>
-                      ))}
+                  {bookType !== "AUTHOR" ? (
+                    <div className={styles.ratingBox}>
+                      <div className={styles.ratingTitle}>ЯКІСТЬ ПЕРЕКЛАДУ:</div>
+                      <div className={styles.ratingStars} aria-label="Якість перекладу: заглушка">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <span key={s} aria-hidden="true">★</span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  ) : null}
                 </>
               )}
               </div>

@@ -96,7 +96,10 @@ def recompute_book_analytics_totals(book_ids: Iterable[int] | None = None) -> in
         .values_list("book_id", "c")
     )
     translation_ratings = dict(
-        BookRating.objects.filter(rating_type="TRANSLATION")
+        BookRating.objects.filter(
+            rating_type="TRANSLATION",
+            book__book_type="TRANSLATION",
+        )
         .values("book_id")
         .annotate(c=Count("id"))
         .values_list("book_id", "c")
@@ -210,7 +213,11 @@ def rebuild_daily_analytics_for_date(d: date) -> int:
         .values_list("book_id", "c")
     )
     br_tr = dict(
-        BookRating.objects.filter(created_at__date=d, rating_type="TRANSLATION")
+        BookRating.objects.filter(
+            created_at__date=d,
+            rating_type="TRANSLATION",
+            book__book_type="TRANSLATION",
+        )
         .values("book_id")
         .annotate(c=Count("id"))
         .values_list("book_id", "c")

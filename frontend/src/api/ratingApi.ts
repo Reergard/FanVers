@@ -14,8 +14,15 @@ export interface UserRatingItem {
 }
 
 export interface BookRatingsResponse {
+  book_type?: string;
+  available_rating_types?: string[];
+  /** З бекенду: true/false; false = блок перекладу не застосовується (AUTHOR) */
+  has_translation_rating?: boolean;
+  /** Зведена оцінка: AUTHOR — середній BOOK; TRANSLATION — (BOOK+TRANSLATION)/2 */
+  overall_rating?: number;
   book_rating: RatingStats;
-  translation_rating: RatingStats;
+  /** Для AUTHOR — null (не «нуль голосів», а не застосовується) */
+  translation_rating: RatingStats | null;
   user_ratings: UserRatingItem[] | null;
 }
 
@@ -29,18 +36,18 @@ const clampRating = (n: unknown): number => {
 const clampTotalVotes = (n: unknown): number =>
   Math.max(0, Math.floor(Number(n) || 0));
 
-/** Нормалізація відповіді API: завжди числа в діапазоні, без null/undefined в полях. */
+/** Нормалізація відповіді API: завжди числа в діапазоні, без null/undefined в полях book_rating. */
 function normalizeRatingsResponse(raw: unknown): BookRatingsResponse {
   if (raw == null || typeof raw !== "object") {
     return {
       book_rating: { average: 0, total_votes: 0 },
-      translation_rating: { average: 0, total_votes: 0 },
+      translation_rating: null,
       user_ratings: null,
     };
   }
   const o = raw as Record<string, unknown>;
   const book = o.book_rating as Record<string, unknown> | undefined;
-  const translation = o.translation_rating as Record<string, unknown> | undefined;
+  const translationRaw = o.translation_rating;
   const userList = Array.isArray(o.user_ratings) ? o.user_ratings : null;
   const userRatings = userList
     ? userList
@@ -56,20 +63,57 @@ function normalizeRatingsResponse(raw: unknown): BookRatingsResponse {
         .filter((u) => u.rating >= 1 && u.rating <= 5)
     : null;
 
+  const bookType = typeof o.book_type === "string" ? o.book_type : "";
+  const apiHasTr = o.has_translation_rating;
+  const noTranslationBlock =
+    apiHasTr === false ||
+    bookType === "AUTHOR" ||
+    (translationRaw === null && bookType !== "TRANSLATION");
+
+  let translation_rating: RatingStats | null = null;
+  if (!noTranslationBlock && translationRaw != null && typeof translationRaw === "object") {
+    const tr = translationRaw as Record<string, unknown>;
+    translation_rating = {
+      average: clampRating(tr?.average ?? 0),
+      total_votes: clampTotalVotes(tr?.total_votes ?? 0),
+    };
+  }
+
+  const overallRaw = o.overall_rating;
+  const overall_rating =
+    typeof overallRaw === "number" && !Number.isNaN(overallRaw)
+      ? overallRaw
+      : typeof overallRaw === "string" && overallRaw.trim() !== ""
+        ? Number(overallRaw)
+        : undefined;
+
+  const hasTrComputed =
+    !noTranslationBlock && translation_rating !== null;
+
+  const has_translation_rating: boolean | undefined =
+    typeof apiHasTr === "boolean"
+      ? apiHasTr
+      : hasTrComputed
+        ? true
+        : undefined;
+
   return {
+    book_type: bookType || undefined,
+    available_rating_types: Array.isArray(o.available_rating_types)
+      ? (o.available_rating_types as string[]).filter((x) => typeof x === "string")
+      : undefined,
+    has_translation_rating,
+    overall_rating: overall_rating !== undefined && !Number.isNaN(overall_rating) ? overall_rating : undefined,
     book_rating: {
       average: clampRating(book?.average ?? 0),
       total_votes: clampTotalVotes(book?.total_votes ?? 0),
     },
-    translation_rating: {
-      average: clampRating(translation?.average ?? 0),
-      total_votes: clampTotalVotes(translation?.total_votes ?? 0),
-    },
+    translation_rating,
     user_ratings: userRatings?.length ? userRatings : null,
   };
 }
 
-/** Отримання рейтингів книги (рейтинг твору + якість перекладу) та оцінки поточного користувача. */
+/** Отримання рейтингів книги (рейтинг твору + за потреби якість перекладу) та оцінки поточного користувача. */
 export async function fetchBookRatings(bookSlug: string): Promise<BookRatingsResponse> {
   if (!bookSlug || typeof bookSlug !== "string" || !bookSlug.trim()) {
     return normalizeRatingsResponse(null);

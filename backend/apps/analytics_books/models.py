@@ -40,8 +40,8 @@ class DailyAnalytics(models.Model):
     def get_analytics_for_period(cls, book, days):
         """
         Суми сирих полів за останні `days` календарних днів включно з сьогодні.
-        Зважені очки як у ТОПу за періодом: `weighted_totals_for_period_dict(result)`
-        у `apps.analytics_books.services.scoring`.
+        Зважені очки як у ТОПу за періодом:
+        `weighted_totals_for_period_dict(result, book_type=book.book_type)`.
         """
         if days < 1:
             days = 1

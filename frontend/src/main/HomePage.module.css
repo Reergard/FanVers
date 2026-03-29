@@ -214,6 +214,393 @@
   height: clamp(12px, 1vw, 18px);
 }
 
+/* ========== Десктоп / планшет: НОВИНКИ — hero-банер (не чіпати мобільні mg2-mobile*) ========== */
+
+:global(.mg2-desktopNewsSection) {
+  --mg2-desktop-arrow-w: clamp(44px, 4.2vw, 72px);
+  --mg2-orange: #F58807;
+  overflow: visible;
+  /* ПК: без вертикальних padding від загального .mg2-section */
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+:global(.mg2-desktopBanner) {
+  position: relative;
+  width: 100%;
+  padding: 0 var(--mg2-desktop-arrow-w);
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+:global(.mg2-desktopBannerInner) {
+  display: grid;
+  grid-template-columns: 1.18fr 0.96fr;
+  align-items: center;
+  gap: clamp(8px, 1.5vw, 22px);
+  min-height: clamp(410px, 35vw, 535px);
+  overflow: visible;
+}
+
+/* Зовнішній контейнер колонки; геометрія сцени — лише всередині .mg2-desktopSceneStage */
+:global(.mg2-desktopMedia) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: clamp(360px, 34vw, 520px);
+  overflow: visible;
+}
+
+/* Виїзд сцени вправо під текст; artboard 1042×698 */
+:global(.mg2-desktopSceneStage) {
+  position: relative;
+  width: clamp(900px, 71vw, 1180px);
+  max-width: none;
+  aspect-ratio: 1042 / 698;
+  margin-left: 0;
+  margin-right: clamp(-150px, -11vw, -56px);
+  isolation: isolate;
+  overflow: visible;
+}
+
+:global(.mg2-desktopScene) {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(1);
+  transform-origin: center center;
+  filter:
+    drop-shadow(0 0 40px rgba(5, 180, 199, 0.18))
+    drop-shadow(0 0 80px rgba(5, 180, 199, 0.08));
+  pointer-events: none;
+  user-select: none;
+}
+
+/* NEW / A / 18+ — поверх NewBook.svg, нижній центр сцени (не на міні-обкладинці) */
+:global(.mg2-desktopSceneBadges) {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(6.5%, 8vw, 11%);
+  transform: translateX(calc(-50% + clamp(14px, 2.2vw, 28px)));
+  z-index: 4;
+  width: min(78%, 600px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+:global(.mg2-desktopSceneBadgesInner) {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(10px, 1.5vw, 24px);
+  flex-wrap: nowrap;
+}
+
+:global(.mg2-desktopSceneBadgesInner) :global(.bookCard__badge-new-wrap) {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  padding: 2px 4px;
+}
+
+:global(.mg2-desktopSceneBadgesInner) :global(.bookCard__badge-new) {
+  width: clamp(52px, 5.4vw, 76px);
+}
+
+:global(.mg2-desktopSceneBadgesInner) :global(.bookCard__corner-a) {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  width: clamp(36px, 3.8vw, 50px);
+  height: clamp(28px, 2.9vw, 40px);
+  font-size: clamp(28px, 2.9vw, 40px);
+}
+
+:global(.mg2-desktopSceneBadgesInner) :global(.bookCard__badge-18-wrap) {
+  position: relative;
+  top: auto;
+  right: auto;
+  width: clamp(38px, 3.9vw, 48px);
+  height: clamp(38px, 3.9vw, 48px);
+}
+
+/* Координати відносно сцени 1042×698 */
+:global(.mg2-desktopCoverWrap) {
+  position: absolute;
+  left: 39.9%;
+  top: 44.5%;
+  width: clamp(160px, 10.9vw, 182px);
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  border-radius: clamp(16px, 1.4vw, 22px);
+  overflow: visible;
+  filter:
+    drop-shadow(0 18px 36px rgba(0, 0, 0, 0.52))
+    drop-shadow(0 0 22px rgba(5, 180, 199, 0.18));
+}
+
+:global(.mg2-desktopCoverBookWrap) {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+:global(.mg2-desktopCoverBookWrap .bookCard) {
+  --cover-w: clamp(160px, 10.9vw, 182px);
+}
+
+:global(.mg2-desktopCoverBookWrap .bookCard__content) {
+  display: none;
+}
+
+:global(.mg2-desktopCoverBookWrap .bookCard-link),
+:global(.mg2-desktopCoverBookWrap .bookCard-no-link) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+:global(.mg2-desktopWorkRating) {
+  position: absolute;
+  left: 6.2%;
+  top: 9%;
+  z-index: 6;
+  max-width: 170px;
+}
+
+:global(.mg2-desktopTranslationRating) {
+  position: absolute;
+  left: 6.2%;
+  top: 72%;
+  z-index: 6;
+  max-width: 180px;
+}
+
+:global(.mg2-desktopRatingLabel) {
+  margin: 0 0 10px;
+  font-family: var(--font-decor);
+  font-size: clamp(17px, 1.22vw, 24px);
+  line-height: 1.08;
+  color: #f58807;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 8px rgba(245, 136, 7, 0.18),
+    0 0 14px rgba(245, 136, 7, 0.08);
+}
+
+:global(.mg2-desktopWorkRating) :global([class*="ratingStars"]),
+:global(.mg2-desktopTranslationRating) :global([class*="ratingStars"]) {
+  color: var(--mg2-orange);
+  filter: drop-shadow(0 0 4px rgba(245, 136, 7, 0.18));
+  font-size: clamp(20px, 1.55vw, 28px);
+  gap: 6px;
+}
+
+:global(.mg2-desktopWorkRating) :global([class*="ratingStarBtn"]),
+:global(.mg2-desktopTranslationRating) :global([class*="ratingStarBtn"]) {
+  opacity: 1 !important;
+}
+
+:global(.mg2-desktopWorkRating) :global([class*="ratingStarEmpty"]),
+:global(.mg2-desktopTranslationRating) :global([class*="ratingStarEmpty"]) {
+  color: rgba(255, 255, 255, 0.58) !important;
+}
+
+:global(.mg2-desktopWorkRating) :global([class*="ratingStarAverage"]),
+:global(.mg2-desktopTranslationRating) :global([class*="ratingStarAverage"]) {
+  color: #d79c2f !important;
+}
+
+:global(.mg2-desktopWorkRating) :global([class*="ratingStarFilled"]),
+:global(.mg2-desktopTranslationRating) :global([class*="ratingStarFilled"]) {
+  color: #f58807 !important;
+}
+
+:global(.mg2-desktopContent) {
+  position: relative;
+  z-index: 5;
+  width: min(100%, 640px);
+  height: clamp(320px, 24vw, 380px);
+  margin-inline: auto;
+  padding-inline: 0;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+:global(.mg2-desktopTitle) {
+  position: absolute;
+  top: 4%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  margin: 0;
+  font-family: var(--font-decor);
+  font-size: clamp(24px, 2.05vw, 44px);
+  line-height: 1.04;
+  text-transform: uppercase;
+  color: var(--mg2-orange);
+}
+
+:global(.mg2-desktopDescription) {
+  position: absolute;
+  top: 17%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 58ch;
+  margin: 0;
+  font-family: "BadScript", cursive;
+  font-size: clamp(16px, 1.02vw, 20px);
+  line-height: 1.46;
+  color: rgba(5, 180, 199, 0.92);
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 8;
+  line-clamp: 8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:global(.mg2-desktopReadBtn) {
+  position: absolute;
+  left: 50%;
+  bottom: 4%;
+  transform: translateX(-50%);
+  min-width: clamp(108px, 8.2vw, 140px);
+  min-height: clamp(32px, 2.5vw, 40px);
+  margin: 0;
+  font-family: var(--font-decor);
+  font-size: clamp(15px, 1vw, 20px);
+}
+
+:global(.mg2-desktopArrow) {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 6;
+  width: clamp(60px, 4.1vw, 86px);
+  height: clamp(60px, 4.1vw, 86px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+:global(.mg2-desktopArrowLeft) {
+  left: clamp(18px, 2vw, 34px);
+}
+
+:global(.mg2-desktopArrowRight) {
+  right: clamp(18px, 2vw, 34px);
+}
+
+:global(.mg2-desktopArrow img) {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: brightness(1.3) contrast(1.05);
+}
+
+:global(.mg2-desktopDots) {
+  margin-top: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(6px, 0.8vw, 10px);
+  flex-wrap: wrap;
+}
+
+:global(.mg2-desktopDot) {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform 140ms ease, opacity 140ms ease;
+}
+
+:global(.mg2-desktopDot:hover) {
+  opacity: 1;
+}
+
+:global(.mg2-desktopDot:active) {
+  transform: scale(0.95);
+}
+
+:global(.mg2-desktopDot img) {
+  width: clamp(22px, 1.9vw, 28px);
+  height: auto;
+  display: block;
+  object-fit: contain;
+  opacity: 1;
+  filter: brightness(1.15);
+  transition: opacity 140ms ease, filter 140ms ease;
+}
+
+:global(.mg2-desktopDot:hover img) {
+  filter: brightness(1.3) drop-shadow(0 0 6px rgba(245, 136, 7, 0.45));
+}
+
+:global(.mg2-desktopDotActive img) {
+  filter:
+    brightness(1.12)
+    drop-shadow(0 0 10px var(--mg2-orange));
+}
+
+@media (min-width: 1366px) {
+  :global(.mg2-desktopBannerInner) {
+    gap: clamp(16px, 2vw, 32px);
+    min-height: clamp(430px, 35vw, 540px);
+  }
+
+  :global(.mg2-desktopTitle) {
+    font-size: clamp(28px, 2.2vw, 46px);
+  }
+
+  :global(.mg2-desktopDescription) {
+    font-size: clamp(17px, 1.08vw, 21px);
+  }
+}
+
+@media (max-width: 1024px) {
+  :global(.mg2-desktopBannerInner) {
+    grid-template-columns: minmax(240px, 1fr) minmax(220px, 1fr);
+    gap: clamp(14px, 2.4vw, 28px);
+    min-height: clamp(300px, 42vw, 420px);
+  }
+
+  :global(.mg2-desktopSceneStage) {
+    width: clamp(620px, 85vw, 900px);
+    margin-left: 0;
+    margin-right: clamp(-70px, -6vw, -20px);
+  }
+
+  :global(.mg2-desktopCoverWrap) {
+    width: clamp(122px, 16vw, 166px);
+  }
+
+  :global(.mg2-desktopCoverBookWrap .bookCard) {
+    --cover-w: clamp(122px, 16vw, 166px);
+  }
+}
+
 @media (min-width: 1280px) {
   :global(.mg2-grid) {
     grid-template-columns: repeat(4, 273px);
@@ -443,9 +830,14 @@
   margin: 0;
   text-transform: uppercase;
   font-family: var(--font-decor);
-  font-size: clamp(1rem, 3vw, 1.15rem);
+  font-size: clamp(1.08rem, 3.2vw, 1.28rem);
   line-height: 1.05;
   color: #f58807;
+}
+
+:global(.mg2-mobileRatingBlock) :global([class*="ratingStars"]) {
+  font-size: clamp(1.12rem, 3.4vw, 1.38rem);
+  gap: 7px;
 }
 
 :global(.mg2-mobileRating) {

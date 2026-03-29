@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BookCard } from "../BookCard/BookCard";
 import { SectionLineTitle } from "../navigation/SectionLineTitle";
-import type { BookCardBook } from "../BookCard/BookCard";
+import {
+  NewsCarouselCover,
+  NewsCarouselSceneBadges,
+} from "./NewsCarouselCover";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { useMedia } from "../shared/hooks/useMedia";
 import { fetchBookRatings } from "../api/ratingApi";
@@ -11,6 +13,7 @@ import bookDetailStyles from "../catalog/styles/BookDetail.module.css";
 import "./HomePage.module.css";
 
 import newsFrame from "./assets/backgrounds/news_section.svg";
+import newBookBg from "./assets/backgrounds/NewBook.svg";
 import bookDecorRaw from "./assets/backgrounds/book.svg?raw";
 import starIcon from "../assets/backgrounds/star_navigation_books.svg";
 import leftArrow from "../assets/backgrounds/left_arrow.svg";
@@ -18,20 +21,8 @@ import rightArrow from "../assets/backgrounds/right_arrow.svg";
 
 const BOOKS_NEWS_STALE_MS = 5 * 60 * 1000;
 const AUTOPLAY_INTERVAL_MS = 9000;
-
-/** Маппінг BookNewsItem → BookCardBook для BookCard. */
-function toBookCardBook(book: BookNewsItem): BookCardBook {
-  return {
-    id: book.id,
-    slug: book.slug,
-    title: book.title,
-    image: book.image,
-    adult_content: book.adult_content,
-    book_type: book.book_type,
-    is_new_badge: book.is_new_badge,
-    created_at: book.created_at,
-  };
-}
+/** Скорочений опис у моб. і ПК — однакова логіка відображення тексту */
+const NEWS_DESCRIPTION_MAX_CHARS = 500;
 
 /** Ті самі зірки й логіка, що на сторінці книги: ★ з трьома станами (empty/average/filled). */
 function RatingStarsDisplay({
@@ -100,16 +91,18 @@ function MobileNewsCard({
   const workAverage = slugForRatings && ratingsData
     ? ratingsData.book_rating.average
     : 0;
-  const translationAverage = slugForRatings && ratingsData
-    ? ratingsData.translation_rating.average
-    : 0;
+  const translationAverage =
+    slugForRatings && ratingsData?.translation_rating
+      ? ratingsData.translation_rating.average
+      : 0;
 
   const description = book.description ?? "";
   const shortDescription =
-    description.length > 500 ? `${description.slice(0, 500)}...` : description;
+    description.length > NEWS_DESCRIPTION_MAX_CHARS
+      ? `${description.slice(0, NEWS_DESCRIPTION_MAX_CHARS)}...`
+      : description;
 
   const coverUrl = getBookNewsCoverUrl(book);
-  const bookCardBook = toBookCardBook(book);
 
   return (
     <section className="mg2-mobileSection" aria-label="Новинки">
@@ -133,12 +126,7 @@ function MobileNewsCard({
               {...(book.is_new_badge ? { "data-new": "" } : {})}
             >
               <div className="mg2-mobileBookCardWrap">
-                <BookCard
-                  book={{
-                    ...bookCardBook,
-                    image: coverUrl,
-                  }}
-                />
+                <NewsCarouselCover book={book} coverUrl={coverUrl} />
               </div>
             </div>
 
@@ -148,10 +136,12 @@ function MobileNewsCard({
                 <RatingStarsDisplay average={workAverage} label="Рейтинг твору" />
               </div>
 
-              <div className="mg2-mobileRatingBlock">
-                <p className="mg2-mobileRatingLabel">ЯКІСТЬ ПЕРЕКЛАДУ</p>
-                <RatingStarsDisplay average={translationAverage} label="Якість перекладу" />
-              </div>
+              {book.book_type !== "AUTHOR" ? (
+                <div className="mg2-mobileRatingBlock">
+                  <p className="mg2-mobileRatingLabel">ЯКІСТЬ ПЕРЕКЛАДУ</p>
+                  <RatingStarsDisplay average={translationAverage} label="Якість перекладу" />
+                </div>
+              ) : null}
 
               <div className="mg2-mobileBookDecorWrap" aria-hidden="true">
                 <div
@@ -214,11 +204,150 @@ function MobileNewsCard({
   );
 }
 
+function DesktopNewsBanner({
+  book,
+  onPrev,
+  onNext,
+  onGoTo,
+  currentBookIndex,
+  total,
+}: {
+  book: BookNewsItem;
+  onPrev: () => void;
+  onNext: () => void;
+  onGoTo: (index: number) => void;
+  currentBookIndex: number;
+  total: number;
+}) {
+  const slugForRatings = (book.slug && String(book.slug).trim()) || "";
+  const ratingsQuery = useQuery({
+    queryKey: ["book-ratings", slugForRatings],
+    queryFn: () => fetchBookRatings(slugForRatings),
+    enabled: Boolean(slugForRatings),
+    staleTime: 60_000,
+    retry: 1,
+  });
+
+  const ratingsData = ratingsQuery.data;
+  const workAverage =
+    slugForRatings && ratingsData ? ratingsData.book_rating.average : 0;
+  const translationAverage =
+    slugForRatings && ratingsData?.translation_rating
+      ? ratingsData.translation_rating.average
+      : 0;
+
+  const description = book.description ?? "";
+  const shortDescription =
+    description.length > NEWS_DESCRIPTION_MAX_CHARS
+      ? `${description.slice(0, NEWS_DESCRIPTION_MAX_CHARS)}...`
+      : description;
+
+  const coverUrl = getBookNewsCoverUrl(book);
+
+  const titleId = useId();
+
+  return (
+    <article className="mg2-desktopBanner" aria-labelledby={titleId}>
+      <button
+        type="button"
+        className="mg2-desktopArrow mg2-desktopArrowLeft"
+        aria-label="Попередня книга"
+        onClick={onPrev}
+      >
+        <img src={leftArrow} alt="" />
+      </button>
+
+      <div className="mg2-desktopBannerInner">
+        <div className="mg2-desktopMedia">
+          <div className="mg2-desktopSceneStage">
+            <div className="mg2-desktopCoverWrap">
+              <div className="mg2-desktopCoverBookWrap">
+                <NewsCarouselCover
+                  book={book}
+                  coverUrl={coverUrl}
+                  badgesOnCover={false}
+                />
+              </div>
+            </div>
+
+            <img
+              src={newBookBg}
+              alt=""
+              aria-hidden="true"
+              className="mg2-desktopScene"
+              width={1042}
+              height={698}
+            />
+
+            <div className="mg2-desktopSceneBadges" aria-hidden="true">
+              <NewsCarouselSceneBadges book={book} />
+            </div>
+
+            <div className="mg2-desktopWorkRating">
+              <p className="mg2-desktopRatingLabel">РЕЙТИНГ ТВОРУ</p>
+              <RatingStarsDisplay average={workAverage} label="Рейтинг твору" />
+            </div>
+
+            {book.book_type !== "AUTHOR" ? (
+              <div className="mg2-desktopTranslationRating">
+                <p className="mg2-desktopRatingLabel">ЯКІСТЬ ПЕРЕКЛАДУ</p>
+                <RatingStarsDisplay
+                  average={translationAverage}
+                  label="Якість перекладу"
+                />
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mg2-desktopContent">
+          <h3 id={titleId} className="mg2-desktopTitle">
+            {book.title}
+          </h3>
+          <p className="mg2-desktopDescription">{shortDescription}</p>
+
+          <ActionButton
+            to={book.slug ? `/books/${book.slug}` : "#"}
+            variant="primary"
+            size="sm"
+            className="mg2-desktopReadBtn"
+            ariaLabel={`Читати: ${book.title}`}
+          >
+            Читати
+          </ActionButton>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        className="mg2-desktopArrow mg2-desktopArrowRight"
+        aria-label="Наступна книга"
+        onClick={onNext}
+      >
+        <img src={rightArrow} alt="" />
+      </button>
+
+      <div className="mg2-desktopDots" aria-label="Сторінки каруселі">
+        {Array.from({ length: total }).map((_, i) => (
+          <button
+            key={i}
+            type="button"
+            className={`mg2-desktopDot ${
+              i === currentBookIndex ? "mg2-desktopDotActive" : ""
+            }`}
+            onClick={() => onGoTo(i)}
+            aria-label={`Книга ${i + 1} з ${total}`}
+          >
+            <img src={starIcon} alt="" />
+          </button>
+        ))}
+      </div>
+    </article>
+  );
+}
 
 export function HomePage2() {
-  const isTablet = useMedia("(max-width: 1024px)");
   const isMobile = useMedia("(max-width: 768px)");
-  const isNarrowMobile = useMedia("(max-width: 480px)");
 
   const { data: books = [], isLoading, isError } = useQuery({
     queryKey: ["books-news-homepage-2"],
@@ -233,41 +362,38 @@ export function HomePage2() {
   const currentBook = books?.[currentBookIndex];
   const booksLength = books?.length ?? 0;
 
-  const handleNext = () => {
-    if (!books || !Array.isArray(books) || booksLength === 0) return;
-    setCurrentBookIndex((prev) => (prev + 1) % booksLength);
-  };
+  const handleNext = useCallback(() => {
+    setCurrentBookIndex((prev) => {
+      if (booksLength <= 0) return prev;
+      return (prev + 1) % booksLength;
+    });
+  }, [booksLength]);
 
-  const handlePrev = () => {
-    if (!books || !Array.isArray(books) || booksLength === 0) return;
-    setCurrentBookIndex((prev) => (prev - 1 + booksLength) % booksLength);
-  };
+  const handlePrev = useCallback(() => {
+    setCurrentBookIndex((prev) => {
+      if (booksLength <= 0) return prev;
+      return (prev - 1 + booksLength) % booksLength;
+    });
+  }, [booksLength]);
 
-  const handleGoTo = (index: number) => {
-    if (index >= 0 && index < booksLength) {
-      setCurrentBookIndex(index);
-    }
-  };
+  const handleGoTo = useCallback((index: number) => {
+    setCurrentBookIndex((prev) => {
+      if (index >= 0 && index < booksLength) return index;
+      return prev;
+    });
+  }, [booksLength]);
 
   useEffect(() => {
     if (!books || !Array.isArray(books) || booksLength <= 1) return;
     const id = setInterval(handleNext, AUTOPLAY_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [books, booksLength]);
+  }, [books, booksLength, handleNext]);
 
   useEffect(() => {
     if (booksLength > 0 && currentBookIndex >= booksLength) {
       setCurrentBookIndex(0);
     }
   }, [booksLength, currentBookIndex]);
-
-  const cardsPerView = isNarrowMobile ? 1 : isMobile ? 2 : isTablet ? 3 : 4;
-  const maxStart = Math.max(0, booksLength - cardsPerView);
-  const start = Math.min(currentBookIndex, maxStart);
-  const visibleBooks = useMemo(
-    () => books.slice(start, start + cardsPerView),
-    [books, start, cardsPerView]
-  );
 
   if (isLoading) {
     return (
@@ -312,77 +438,17 @@ export function HomePage2() {
   }
 
   return (
-    <section className="mg2-section" aria-label="Новинки">
+    <section className="mg2-section mg2-desktopNewsSection" aria-label="Новинки">
       <SectionLineTitle text="НОВИНКИ" className="mg2-sectionLineTitle" />
 
-      <div className="mg2-grid">
-        {visibleBooks.map((book) => {
-          const description = book.description ?? "";
-          const shortDescription =
-            description.length > 500 ? `${description.slice(0, 500)}...` : description;
-          const coverUrl = getBookNewsCoverUrl(book);
-          const bookCardBook = toBookCardBook(book);
-
-          return (
-            <article key={book.id} className="mg2-cardShell">
-              <BookCard
-                book={{
-                  ...bookCardBook,
-                  image: coverUrl,
-                }}
-              />
-              <p className="mg2-description">{shortDescription}</p>
-              <ActionButton
-                to={book.slug ? `/books/${book.slug}` : "#"}
-                variant="default"
-                size="sm"
-                className="mg2-readBtn"
-                ariaLabel={`Читати: ${book.title}`}
-              >
-                Читати
-              </ActionButton>
-            </article>
-          );
-        })}
-      </div>
-
-      <div className="mg2-nav">
-        {booksLength > 1 && (
-          <>
-            <button
-              type="button"
-              className="mg2-arrowBtn"
-              aria-label="Попередня сторінка"
-              onClick={handlePrev}
-            >
-              <img src={leftArrow} alt="" className="mg2-arrowIcon" />
-            </button>
-
-            <div className="mg2-mobileStars mg2-navStars" aria-label="Сторінки каруселі">
-              {Array.from({ length: booksLength }).map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className={`mg2-mobileStarDot ${i === currentBookIndex ? "mg2-mobileStarDotActive" : ""}`}
-                  onClick={() => handleGoTo(i)}
-                  aria-label={`Книга ${i + 1} з ${booksLength}`}
-                >
-                  <img src={starIcon} alt="" />
-                </button>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              className="mg2-arrowBtn"
-              aria-label="Наступна сторінка"
-              onClick={handleNext}
-            >
-              <img src={rightArrow} alt="" className="mg2-arrowIcon" style={{ transform: "scaleX(-1)" }} />
-            </button>
-          </>
-        )}
-      </div>
+      <DesktopNewsBanner
+        book={currentBook!}
+        onPrev={handlePrev}
+        onNext={handleNext}
+        onGoTo={handleGoTo}
+        currentBookIndex={currentBookIndex}
+        total={booksLength}
+      />
     </section>
   );
 }

@@ -1002,3 +1002,8 @@
     text-overflow: ellipsis;
   }
 }
+
+/* Карусель «Новинки»: лише обкладинка (NewsCarouselCover), без мета-блоку */
+.bookCard--newsCarouselCover {
+  min-height: 0;
+}

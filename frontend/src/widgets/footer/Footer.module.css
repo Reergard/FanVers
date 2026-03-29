@@ -1,8 +1,12 @@
 .footer {
+  position: relative;
+  z-index: 1;
   color: #fff;
   padding: 5px;
   margin-top: auto;
   font-family: 'SofiaSansSemiCondensed', sans-serif;
+  /* Той самий фон, що й сторінка — перекриває краї контенту з blur/transform над футером */
+  background: #050d11;
 }
 
 /* ===== Верхняя строка (4 колонки) ===== */

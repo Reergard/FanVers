@@ -1,202 +1,141 @@
-# Рейтинги на Backend (Рейтинг твору + Якість перекладу)
+# Рейтинги книг — інженерний опис (backend)
 
-Документ описує **реалізацію рейтингів** у бекенді: моделі, API, валідацію, права доступу, збереження та повернення даних.
-
----
-
-## 1. Огляд
-
-Підтримуються два типи рейтингу для книги:
-
-- **BOOK** — рейтинг твору (1–5 зірок).
-- **TRANSLATION** — якість перекладу (1–5 зірок).
-
-Користувач може мати лише одну оцінку кожного типу на книгу; повторна відправка оновлює існуючий запис. Читання рейтингів (середнє, кількість голосів, оцінки поточного користувача) доступне всім; створення/оновлення оцінки — лише авторизованим користувачам з дозволом на оцінювання книги (згідно з налаштуваннями книги `rate_permission`).
+Документ для розробників: **що саме робить система**, де код, **що ламати не можна** при рефакторингу.
 
 ---
 
-## 2. Файли та відповідальність
+## 1. Джерело правди: тип книги
 
-| Файл | Призначення |
-|------|-------------|
-| **apps/rating/models.py** | Модель `BookRating`: книга, користувач, тип рейтингу, значення 1–5, unique_together (book, user, rating_type). |
-| **apps/rating/api/serializers.py** | `BookRatingSerializer`: валідація `rating_type` (BOOK/TRANSLATION), `rating` (1–5), перетворення `book_slug` → book, create-or-update при повторному голосуванні. |
-| **apps/rating/api/views.py** | `BookRatingViewSet`: права (AllowAny для читання, IsAuthenticated для create), `book_ratings` (GET статистики), `create` (POST оцінки з перевіркою доступу). |
-| **apps/rating/api/urls.py** | Маршрутизація: реєстрація ViewSet, URL префікс `/api/rating/`. |
-| **apps/catalog/api/permissions.py** | `check_book_access_permission(user, book, 'rate')`: перевірка `rate_permission` (all / bookmarked / none) для дозволу оцінювання. |
-| **apps/catalog/models.py** | Модель `Book`: поле `rate_permission` (або еквівалент), зв’язок з рейтингами. |
-| **apps/api/urls.py** | Підключення: `path('rating/', include('apps.rating.api.urls'))`. |
+У **`catalog.Book`** поле **`book_type`**: `AUTHOR` | `TRANSLATION`.
 
----
+Від нього залежить **все**:
 
-## 3. Модель даних
+- які **типи** оцінок (`BookRating.rating_type`) дозволені;
+- що повертає **GET** рейтингів (`translation_rating: null` vs об’єкт);
+- як рахується **`overall_rating`** (якість / порівняння книг);
+- як зважуються **лічильники** в ТОП/трендах (див. нижче — це **не** те саме, що `overall_rating`).
 
-**BookRating** (apps/rating/models.py):
+**Неправильно формулювати:** «API повертає рейтинг книги».
 
-| Поле | Тип | Опис |
-|------|-----|------|
-| book | ForeignKey(Book, CASCADE, related_name='ratings') | Книга |
-| user | ForeignKey(User, CASCADE) | Користувач |
-| rating_type | CharField(max_length=20, choices=RATING_TYPES) | 'BOOK' або 'TRANSLATION' |
-| rating | IntegerField(choices=1..5) | Оцінка 1–5 |
-| created_at | DateTimeField(auto_now_add=True) | Час створення |
-
-**Meta:** `unique_together = ('book', 'user', 'rating_type')` — один запис на пару (книга, користувач, тип).
+**Правильно:** «API працює з двома **логічними** типами оцінки — `BOOK` і `TRANSLATION`, але запис із `rating_type=TRANSLATION` **дозволений лише для книг з `book_type=TRANSLATION`**. Для `AUTHOR` другий тип **не існує в домені**, а не «дорівнює нулю».
 
 ---
 
-## 4. API ендпоінти
+## 2. Модель `BookRating` (`apps/rating/models.py`)
 
-Базовий префікс: **/api/rating/** (з кореневих url проекту).
+| Поле | Зміст |
+|------|--------|
+| `book`, `user` | FK |
+| `rating_type` | `BOOK` або `TRANSLATION` (рядок у БД) |
+| `rating` | 1–5 |
+| Унікальність | `(book, user, rating_type)` — одна оцінка на тип на користувача |
 
-### 4.1. Отримання рейтингів книги
+**Захист домену на рівні моделі:** `clean()` + `save()` викликає `full_clean()`. Якщо `rating_type=TRANSLATION`, а книга `AUTHOR` — `ValidationError`.
 
-- **Метод і URL:** `GET /api/rating/<book_slug>/book-ratings/`
-- **Права:** AllowAny (гості можуть читати).
-- **Призначення:** Повернути агреговану статистику по книзі та оцінки поточного користувача (якщо авторизований).
+**Обходиться:** `QuerySet.update()`, сирий SQL, `bulk_create` без виклику `save()` — можна зіпсувати дані. Рефакторинг **не** прибирати `full_clean()` без заміни іншим захистом.
 
-**Відповідь (200):**
+---
+
+## 3. Доменні правила (`apps/rating/domain.py`)
+
+| Функція | Поведінка |
+|---------|-----------|
+| `available_rating_types(book_type)` | `AUTHOR` → `["BOOK"]`; `TRANSLATION` → `["BOOK","TRANSLATION"]`; невідомий тип → **лише** `["BOOK"]` (безпечний дефолт). |
+| `translation_rating_applicable(book_type)` | `True` **тільки** для `TRANSLATION`. |
+| `compute_overall_rating(...)` | Зведена оцінка **якості для порівняння**: для `TRANSLATION` — середнє `(BOOK + TRANSLATION)/2` за агрегатами; для всіх інших (включно з `AUTHOR`) — **лише** середнє по `BOOK`. |
+
+**Не плутати** з ТОП/трендами: там інша формула (події/ваги), див. §7.
+
+---
+
+## 4. API
+
+Префікс: **`/api/rating/`** (див. `apps/api/urls.py` + `apps/rating/api/urls.py`).
+
+### 4.1 `GET /api/rating/<book_slug>/book-ratings/`
+
+**Права:** гість може читати.
+
+**Відповідь 200** — **контракт після змін домену** (обов’язково узгоджувати з фронтом):
 
 ```json
 {
-  "book_rating": {
-    "average": 4.2,
-    "total_votes": 15
-  },
-  "translation_rating": {
-    "average": 3.8,
-    "total_votes": 12
-  },
-  "user_ratings": [
-    { "rating_type": "BOOK", "rating": 5 },
-    { "rating_type": "TRANSLATION", "rating": 4 }
-  ]
+  "book_type": "AUTHOR",
+  "available_rating_types": ["BOOK"],
+  "has_translation_rating": false,
+  "overall_rating": 4.2,
+  "book_rating": { "average": 4.2, "total_votes": 10 },
+  "translation_rating": null,
+  "user_ratings": [ { "rating_type": "BOOK", "rating": 5 } ]
 }
 ```
 
-- `user_ratings` — `null`, якщо користувач не авторизований; інакше список об’єктів з полями `rating_type` та `rating`.
-- `average` — середнє арифметичне оцінок (при відсутності голосів повертається 0).
-- `total_votes` — кількість записів рейтингу відповідного типу.
+Для **`TRANSLATION`**-книги: `has_translation_rating: true`, `translation_rating` — **об’єкт** `{ average, total_votes }`, не `null` (навіть якщо голосів 0 — тоді `average` 0, це «немає голосів», а не «не застосовується»).
 
-**Помилки:**
+`user_ratings` фільтруються по `available_rating_types` — зайві типи (наприклад, історичний сміття) у відповідь не потрапляють.
 
-- 400 — відсутній або порожній `book_slug` (у URL або query).
-- 404 — книга з таким slug не знайдена (`get_object_or_404(Book, slug=book_slug)`).
+### 4.2 `POST /api/rating/`
 
-### 4.2. Надсилання або оновлення оцінки
+**Права:** авторизований + `check_book_access_permission(..., 'rate')` (див. `catalog/api/permissions.py`).
 
-- **Метод і URL:** `POST /api/rating/`
-- **Права:** IsAuthenticated.
-- **Тіло запиту:**
+Тіло: `book_slug`, `rating_type`, `rating`.
 
-```json
-{
-  "book_slug": "my-book-slug",
-  "rating_type": "BOOK",
-  "rating": 4
-}
-```
+**Серіалізатор** (`BookRatingSerializer`) відхиляє `rating_type=TRANSLATION`, якщо книга `AUTHOR` (дублює домен разом із моделлю).
 
-- **Призначення:** Зберегти або оновити оцінку поточного користувача для вказаної книги та типу. Якщо запис вже існує (за unique_together) — оновлюється поле `rating`.
+**Аналітика:** новий запис (не оновлення значення) викликає `record_book_rating_created` / `record_translation_rating_created`; зміна лише цифри в існуючому рядку — лічильники **не** +1 (логіка в `create` серіалізатора).
 
-**Відповідь:**
+### 4.3 `DELETE` та інші дії ViewSet
 
-- 201 Created — повертаються дані створеного/оновленого об’єкта (serializer.data).
-- 400 — невалідні дані (відсутній slug, невірний rating_type або rating не 1–5, книга не знайдена в serializer).
-- 403 — користувач не має права оцінювати цю книгу (перевірка `check_book_access_permission(..., 'rate')`).
-- 404 — книга не знайдена за `book_slug` при перевірці доступу (`get_object_or_404(Book, slug=book_slug)`).
+При видаленні оцінки — `record_book_rating_removed` / `record_translation_rating_removed`.
 
 ---
 
-## 5. Логіка роботи: GET book_ratings
+## 5. Дані та міграції
 
-1. Отримання `book_slug` з URL (або з query params).
-2. Якщо slug порожній — `Response({'error': 'Book slug is required'}, 400)`.
-3. `book = get_object_or_404(Book, slug=book_slug)` — при відсутності книги DRF поверне 404 (після re-raise Http404).
-4. Вибірка всіх рейтингів книги: `BookRating.objects.filter(book=book)`.
-5. Агрегація для BOOK: `filter(rating_type='BOOK').aggregate(avg_rating=Avg('rating'), total_votes=Count('id'))`.
-6. Агрегація для TRANSLATION: аналогічно з `rating_type='TRANSLATION'`.
-7. Якщо користувач авторизований — `ratings.filter(user=request.user).values('rating_type', 'rating')` → `user_ratings` (список словників); інакше `user_ratings: None`.
-8. Формування відповіді з `average` (0 при `avg_rating is None`) та `total_votes`.
-9. При будь-якому іншому виключенні (крім Http404) — 400 з текстом помилки.
+**`rating/migrations/0003_remove_translation_ratings_for_author_books.py`**
+
+- Видаляє всі `BookRating` з `rating_type=TRANSLATION` і `book__book_type=AUTHOR`.
+- Потім **`recompute_book_analytics_totals()`** — перерахунок `BookAnalytics` з джерел.
+
+Після деплою на середовище, де міграція ще не застосована — виконати `migrate`. Історичні **DailyAnalytics** при потребі перебудовуються окремо (вікно днів — як у `rebuild`).
 
 ---
 
-## 6. Логіка роботи: POST create (відправка оцінки)
+## 6. Rebuild аналітики (`apps/analytics_books/services/rebuild.py`)
 
-1. З тіла запиту береться `book_slug`.
-2. Якщо `book_slug` передано — знаходиться книга `get_object_or_404(Book, slug=book_slug)`; викликається `check_book_access_permission(request.user, book, 'rate')`. Якщо доступ заборонено — `Response({'error': error_message}, 403)`.
-3. Валідація даних через `BookRatingSerializer`: обов’язкові поля `book_slug`, `rating_type`, `rating`; `user` підставляється з `request.user` (CurrentUserDefault).
-4. У serializer:
-   - **validate_rating_type:** лише 'BOOK' або 'TRANSLATION'.
-   - **validate_rating:** ціле число від 1 до 5.
-   - **create:** за `book_slug` знаходиться книга; перевіряється наявність запису `BookRating` для (book, user, rating_type). Якщо є — оновлюється `rating` і повертається існуючий об’єкт; інакше створюється новий запис. При відсутності книги — `ValidationError` по полю `book_slug`.
-5. Успішний результат — 201 і дані об’єкта рейтингу.
-6. Http404 (книга не знайдена при перевірці доступу) — пробрасывается далі (404 відповідь).
-7. Інші виключення — 400 з текстом помилки.
+Підрахунок **`translation_ratings`** у підсумках ведеться **тільки** для оцінок, де **`book__book_type="TRANSLATION"`**. Інакше старі помилкові рядки знову «накачують» лічильник.
 
 ---
 
-## 7. Права доступу до оцінювання (rate_permission)
+## 7. ТОП і тренди vs «якість книги»
 
-Функція **check_book_access_permission(user, book, 'rate')** (apps/catalog/api/permissions.py):
+- **`overall_rating`** (GET рейтингів) — про **порівняння якості** (середні зірки за правилами домену).
+- **ТОП / тренди** використовують **`weighted_daily_score`** у **`apps/analytics_books/services/scoring.py`**: зважені події (`views`, `comments`, **`book_ratings`**, **`translation_ratings`**, …) з **іншими коефіцієнтами**.
 
-- Якщо користувач не авторизований — `(False, "Необхідна авторизація")`.
-- Власник книги завжди має доступ — `(True, None)`.
-- Інакше читається атрибут книги `rate_permission` (поле типу 'all' | 'bookmarked' | 'none' або аналог):
-  - **'none'** — `(False, "Доступ заборонено власником книги")`.
-  - **'bookmarked'** — перевірка наявності запису в Bookmark для (user, book); якщо закладки немає — `(False, "Доступ тільки для користувачів, у яких книга в закладках")`.
-  - **'all'** (або еквівалент) — `(True, None)`.
+Щоб **AUTHOR** не програвав лише через один допустимий канал рейтингу:
 
-Повідомлення з кортежа повертається клієнту в тілі 403 як `{'error': error_message}`.
+- **`AUTHOR`:** у формулі очок участь **`book_ratings` з вагою ×6** (умовно «повний» рейтинговий бюджет).
+- **`TRANSLATION`:** **`book_ratings×3 + translation_ratings×3`**.
 
----
+`daily_row_score` / `book_analytics_total_score` беруть **`book.book_type`** через **`_scoring_book_type`**; для рядків `DailyAnalytics` потрібен **`select_related("book")`**, інакше зайві запити або некоректний тип.
 
-## 8. Маршрутизація (apps/rating/api/urls.py)
-
-- Використовується `DefaultRouter`, реєстрація ViewSet з префіксом `r''` та `basename='rating'`.
-- Підключення в кореневому url: `path('rating/', include('apps.rating.api.urls'))`.
-
-Результат:
-
-- Список (для ViewSet): `GET /api/rating/`
-- Створення: `POST /api/rating/`
-- Custom action: `GET /api/rating/<book_slug>/book-ratings/` (url_path з regex для `book_slug`).
-
-Точний формат URL залежить від trailing slash у налаштуваннях Django (наприклад, `/api/rating/<slug>/book-ratings/`).
+**Важливо:** це **не** заміна пошуку за `overall_rating`. **`apps/search/filters.py`** (BookFilter) **не** містить сортування за рейтингом якості — якщо додаватимете, рахуйте **аналог домену** (`compute_overall_rating` / анотації з `BookRating`), а не копіюйте сліпо лічильники ТОПу.
 
 ---
 
-## 9. Аналітика та ТОП (зв’язок з `analytics_books`)
+## 8. Legacy endpoint аналітики
 
-- У **`BookRatingSerializer.create`**: якщо для пари (книга, користувач, `rating_type`) запису **ще не було** і створюється новий — викликається **`record_book_rating_created`** або **`record_translation_rating_created`** (оновлюються **BookAnalytics** / поточний день **DailyAnalytics**). Якщо запис уже існував — лише оновлюється значення `rating`, **лічильник голосів у аналітиці не змінюється** (щоб не рахувати зміну думки як новий голос).
-- У **`perform_destroy`** view — **`record_book_rating_removed`** / **`record_translation_rating_removed`**.
-
-Повна картина: **ANALYTICS_BOOKS_BACKEND.md**.
+**`apps/analytics_books/api/views.py`** — `UpdateAnalyticsView`: для дій `translation_rating` / `translation_rating_removed` на книзі **`AUTHOR`** повертається **400** (узгоджено з доменом).
 
 ---
 
-## 10. Зв’язки з іншими модулями
+## 9. Чеклист при зміні коду
 
-- **catalog.Book:** модель книги; має поле доступу для оцінювання (`rate_permission` або аналог); рейтинги з `related_name='ratings'`.
-- **catalog.api.permissions:** використовується лише для перевірки доступу при створенні оцінки (create), не для GET book_ratings.
-- **users (auth):** `request.user` для IsAuthenticated і для підстановки user у serializer; у book_ratings — визначення `user_ratings` для авторизованого користувача.
-- **navigation.Bookmark:** використовується при `rate_permission == 'bookmarked'` у `check_book_access_permission`.
-
----
-
-## 11. Можливі помилки та відповіді
-
-| Ситуація | Код | Тіло (приклад) |
-|----------|-----|-----------------|
-| Книга не знайдена (GET book_ratings) | 404 | — |
-| Книга не знайдена (POST create, при перевірці доступу) | 404 | — |
-| Відсутній/порожній book_slug (GET) | 400 | `{"error": "Book slug is required"}` |
-| Немає прав на оцінювання (POST) | 403 | `{"error": "..."}` з текстом з check_book_access_permission |
-| Невалідні дані (POST): rating_type або rating | 400 | serializer.errors (наприклад, поля rating_type, rating) |
-| Книга не знайдена в serializer create | 400 | `{"book_slug": ["Книгу не знайдено"]}` |
-| Неавторизований POST | 401 | — (DRF/IsAuthenticated) |
+1. Змінили GET — оновити **`frontend`** (`ratingApi.ts`, нормалізація) і цей документ.
+2. Змінили правила допустимих типів — **`domain.py`**, серіалізатор, модель, **GET**, фронт.
+3. Змінили ваги ТОПу — **`scoring.py`**, за потреби тести/аудит (`audit_top_eligibility.py`).
+4. Не покладайтеся на «`translation_rating` завжди об’єкт»: для **AUTHOR** це **`null`** за контрактом.
 
 ---
 
-**Останнє оновлення:** 2026-03-21 — зв’язок з аналітикою / ТОПом (**ANALYTICS_BOOKS_BACKEND.md**).
+**Останнє оновлення документа:** 2026-03-29 (домен AUTHOR/TRANSLATION, контракт GET, аналітика, міграція 0003).
