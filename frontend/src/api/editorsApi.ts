@@ -37,3 +37,7 @@ export async function getChapterForEdit(chapterId: number): Promise<ChapterForEd
 export async function updateChapter(chapterId: number, formData: FormData): Promise<void> {
   await http.put(`${EDITORS}/chapters/${chapterId}/update/`, formData);
 }
+export const editorsApi = {
+  getChapterForEdit,
+  updateChapter,
+};
