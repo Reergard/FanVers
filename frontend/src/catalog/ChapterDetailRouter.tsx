@@ -41,7 +41,6 @@ export default function ChapterDetailRouter() {
   const purchaseMutation = useMutation({
     mutationFn: ({
       chapterId,
-      targetChapterSlug,
       useBalance,
     }: {
       chapterId: number;

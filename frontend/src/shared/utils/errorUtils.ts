@@ -152,7 +152,7 @@ export function extractUserMessage(
       // 3. Помилки полів (username, email, password, etc.)
       else if (typeof data === "object") {
         const fieldErrors: string[] = [];
-        for (const [field, errors] of Object.entries(data)) {
+        for (const [, errors] of Object.entries(data)) {
           if (Array.isArray(errors) && errors.length > 0) {
             fieldErrors.push(String(errors[0]));
           } else if (typeof errors === "string") {

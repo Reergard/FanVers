@@ -1,4 +1,3 @@
-import React from "react";
 import { Modal } from "../Modal/Modal";
 import { ActionButton } from "../ActionButton/ActionButton";
 import styles from "./NotificationModal.module.css";

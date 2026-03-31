@@ -13,7 +13,7 @@ export default defineConfig({
         target: 'http://127.0.0.1:8000',
         ws: true,
         configure: (proxy) => {
-          proxy.on('proxyReqWs', (proxyReq, req, socket) => {
+          proxy.on('proxyReqWs', (proxyReq, req) => {
             if (req.headers.cookie) {
               proxyReq.setHeader('Cookie', req.headers.cookie);
             }

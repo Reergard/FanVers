@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Modal } from "../Modal/Modal";
 import styles from "./NotificationModal.module.css";
 

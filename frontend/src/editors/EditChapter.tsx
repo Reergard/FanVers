@@ -84,7 +84,7 @@ export default function EditChapter() {
   const { bookSlug = "", chapterId = "" } = useParams<{ bookSlug: string; chapterId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isAuthenticated, userId, authReady } = useAuth();
+  const { isAuthenticated, authReady } = useAuth();
   const { showError } = useNotification();
 
   const chapterIdNum = parseInt(chapterId, 10);

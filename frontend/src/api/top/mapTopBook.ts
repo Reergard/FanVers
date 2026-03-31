@@ -49,8 +49,6 @@ export function mapTopDtoToBook(dto: BookReaderTopDto): Book {
         ? dto.bookmark_id
         : null,
     chapters_count: dto.chapters_count,
-    created_at: dto.created_at,
-    last_updated: dto.last_updated,
     is_new_badge: resolveIsNewBadge(dto.is_new_badge, dto.created_at),
   };
 }
