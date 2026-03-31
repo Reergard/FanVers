@@ -19,3 +19,11 @@ ENV/
 debug.log
 dump.rdb
 *.rdb
+
+dump.rdb
+/celery.log
+/backend/celery.log
+/backend/celerybeat-schedule.*
+/backend/_beat_err.txt
+/backend/_beat_out.txt
+.cursor/
