@@ -6,7 +6,9 @@ export const API = {
   logout: "/api/users/logout/",
   authStatus: "/api/users/auth-status/",
   oauthExchange: "/api/users/oauth-exchange/",
-  oauthBegin: (provider: "google-oauth2" | "facebook") => `/api/auth/o/${provider}/`,
+  // social_django default routes: /api/auth/login/<backend>/
+  // (backend names: "google-oauth2", "facebook", etc.)
+  oauthBegin: (provider: "google-oauth2" | "facebook") => `/api/auth/login/${provider}/`,
 
   // Profile
   userProfile: "/api/users/profile/",
