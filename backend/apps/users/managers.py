@@ -2,6 +2,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.utils.translation import gettext_lazy as _
+import uuid
 
 
 class CustomUserManager(BaseUserManager):
@@ -12,16 +13,22 @@ class CustomUserManager(BaseUserManager):
         except ValidationError:
             raise ValueError(_("You must provide a valid email"))
 
-    def create_user(self, username, email, password, **extra_fields):
+    def create_user(self, username, email=None, password=None, **extra_fields):
 
         if not username:
             raise ValueError(_("Users must submit a username"))
 
+        # Ensure role flags are set before model instantiation
+        extra_fields.setdefault("is_staff", False)
+        extra_fields.setdefault("is_superuser", False)
+
+        # Email can be missing for some social providers / privacy settings.
+        # Our User.email field is required+unique, so generate a valid unique placeholder.
         if email:
             email = self.normalize_email(email)
             self.email_validator(email)
         else:
-            raise ValueError(_("Base User: and email address is required"))
+            email = f"{uuid.uuid4().hex}@noemail.fan-vers.com"
 
         user = self.model(
             username=username,
@@ -29,11 +36,13 @@ class CustomUserManager(BaseUserManager):
             **extra_fields
         )
 
-        user.set_password(password)
-        extra_fields.setdefault("is_staff", False)
-        extra_fields.setdefault("is_superuser", False)
+        if password:
+            user.set_password(password)
+        else:
+            # Social-auth creates users without a local password.
+            user.set_unusable_password()
 
-        user.save()
+        user.save(using=self._db)
 
         return user
 
@@ -58,8 +67,4 @@ class CustomUserManager(BaseUserManager):
         else:
             raise ValueError(_("Admin User: and email address is required"))
 
-        user = self.create_user(username, email, password, **extra_fields)
-
-        user.save()
-
-        return user
+        return self.create_user(username, email, password, **extra_fields)
