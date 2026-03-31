@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout as django_logout
 from django.contrib.auth import get_user_model
 from rest_framework import status, generics, permissions
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
@@ -32,6 +32,11 @@ logger = logging.getLogger(__name__)
 REFRESH_COOKIE_NAME = "refresh_token"
 REFRESH_MAX_AGE = 60 * 60 * 24 * 7  # 7 днів (remember_me=False) — тиждень бездіяльності
 REFRESH_MAX_AGE_REMEMBER = 60 * 60 * 24 * 30  # 30 днів (remember_me=True) — довга сесія
+
+# Служебная cookie, чтобы режим remember_me переживал refresh.
+SESSION_MODE_COOKIE_NAME = "session_mode"
+SESSION_MODE_DEFAULT = "default"
+SESSION_MODE_REMEMBER = "remember"
 
 def _cookie_params(remember_me=False):
     """
@@ -80,6 +85,14 @@ def set_refresh_cookie(response, refresh_str: str, remember_me: bool = False):
     if settings.DEBUG:
         logger.info(f"🍪 [set_refresh_cookie] Refresh cookie установлена")
 
+def set_session_mode_cookie(response, remember_me: bool = False):
+    params = _cookie_params(remember_me=remember_me)
+    response.set_cookie(
+        SESSION_MODE_COOKIE_NAME,
+        SESSION_MODE_REMEMBER if remember_me else SESSION_MODE_DEFAULT,
+        **params
+    )
+
 def del_refresh_cookie(response):
     """Видалити refresh cookie
     ВАЖНО: Используем те же параметры (domain/path/samesite), что и при установке,
@@ -99,6 +112,15 @@ def del_refresh_cookie(response):
     )
     if settings.DEBUG:
         logger.info(f"🍪 [del_refresh_cookie] Refresh cookie удалена")
+
+def del_session_mode_cookie(response):
+    params = _cookie_params(remember_me=False)
+    response.delete_cookie(
+        SESSION_MODE_COOKIE_NAME,
+        path=params["path"],
+        domain=params.get("domain"),
+        samesite=params.get("samesite", "None")
+    )
 
 from apps.users.api.serializers import (
     ProfileSerializer, 
@@ -186,7 +208,10 @@ def _oauth_exchange_impl(request):
 
     cache.delete(f"oauth_code_{code}")
     resp = Response({'access': data['access']})
-    set_refresh_cookie(resp, data['refresh'], remember_me=False)
+    # Social login: предсказуемо используем "длинную" сессию.
+    remember_me = True
+    set_refresh_cookie(resp, data['refresh'], remember_me=remember_me)
+    set_session_mode_cookie(resp, remember_me=remember_me)
     return resp
 
 
@@ -236,6 +261,15 @@ class RegisterView(APIView):
             if settings.DEBUG:
                 logger.info(f"📝 [RegisterView] Шаг 1: Пользователь создан: {user.username} (ID: {user.id})")
                 logger.info(f"📝 [RegisterView] Шаг 2: Генерируем токены...")
+
+            # Если включен activation flow и пользователь ещё не активирован —
+            # не логиним и не выдаём токены (согласовано с LoginView).
+            if not getattr(user, "is_active", True):
+                return Response(
+                    {"detail": "Реєстрація успішна. Підтвердіть email для входу."},
+                    status=status.HTTP_201_CREATED,
+                )
+
             refresh = RefreshToken.for_user(user)
             access = str(refresh.access_token)
             if settings.DEBUG:
@@ -256,6 +290,7 @@ class RegisterView(APIView):
             if settings.DEBUG:
                 logger.info(f"📝 [RegisterView] Шаг 4: Устанавливаем refresh cookie (remember_me={remember_me})...")
             set_refresh_cookie(resp, str(refresh), remember_me=remember_me)
+            set_session_mode_cookie(resp, remember_me=remember_me)
             if settings.DEBUG:
                 logger.info(f"📝 [RegisterView] === REGISTER SUCCESS ===")
             return resp
@@ -321,6 +356,7 @@ class LoginView(APIView):
             if settings.DEBUG:
                 logger.info(f"🔐 [LoginView] Шаг 4: Устанавливаем refresh cookie (remember_me={remember_me})...")
             set_refresh_cookie(resp, str(refresh), remember_me=remember_me)
+            set_session_mode_cookie(resp, remember_me=remember_me)
             if settings.DEBUG:
                 logger.info(f"🔐 [LoginView] === LOGIN SUCCESS ===")
             return resp
@@ -356,7 +392,13 @@ class LogoutView(APIView):
                 logger.warning(f"🚪 [LogoutView] Не удалось добавить в blacklist: {e}")
 
         resp = Response(status=status.HTTP_205_RESET_CONTENT)
+        # Симметрично завершаем Django-сессию (login() вызывается для WS cookie-based auth)
+        try:
+            django_logout(request)
+        except Exception:
+            pass
         del_refresh_cookie(resp)
+        del_session_mode_cookie(resp)
         if settings.DEBUG:
             logger.info(f"🚪 [LogoutView] === LOGOUT SUCCESS ===")
         return resp
@@ -395,12 +437,19 @@ class CookieTokenRefreshView(APIView):
             User = get_user_model()
             user = User.objects.get(id=user_id)
 
+            if not getattr(user, "is_active", True):
+                logger.warning(f"🔐 [CookieTokenRefreshView] Inactive user: {user_id}")
+                return Response({"detail": "Inactive account"}, status=status.HTTP_401_UNAUTHORIZED)
+
             if settings.DEBUG:
                 logger.info(f"🔐 [CookieTokenRefreshView] Генерируем новые токены...")
             new_refresh = RefreshToken.for_user(user)
             new_access = str(new_refresh.access_token)
             resp = Response({"access": new_access}, status=status.HTTP_200_OK)
-            set_refresh_cookie(resp, str(new_refresh))
+            session_mode = request.COOKIES.get(SESSION_MODE_COOKIE_NAME, SESSION_MODE_DEFAULT)
+            remember_me = session_mode == SESSION_MODE_REMEMBER
+            set_refresh_cookie(resp, str(new_refresh), remember_me=remember_me)
+            set_session_mode_cookie(resp, remember_me=remember_me)
             if settings.DEBUG:
                 logger.info(f"🔐 [CookieTokenRefreshView] === REFRESH SUCCESS ===")
             return resp

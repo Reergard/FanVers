@@ -57,9 +57,19 @@ http.interceptors.response.use(
         const res = await http(original);
         authLog("RETRY_OK", { url: url.slice(-40) });
         return res;
-      } catch {
-        authLog("RETRY_FAIL", { url: url.slice(-40), hadAccess: hadAccessBeforeRefresh });
-        await doLogout();
+      } catch (refreshError: any) {
+        const refreshStatus = refreshError?.response?.status;
+        authLog("RETRY_FAIL", {
+          url: url.slice(-40),
+          hadAccess: hadAccessBeforeRefresh,
+          refreshStatus: refreshStatus ?? null,
+        });
+
+        // Logout только если refresh явно сказал "сессия мертва" (401/403).
+        // Сетевые/5xx ошибки не должны автоматически выбивать пользователя.
+        if (refreshStatus === 401 || refreshStatus === 403) {
+          await doLogout();
+        }
         return Promise.reject(error);
       }
     }

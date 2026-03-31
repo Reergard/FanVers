@@ -24,7 +24,13 @@ class RequestMiddleware:
             logger.info(f"🔍 [RequestMiddleware] Path: {request.path}")
             logger.info(f"🔍 [RequestMiddleware] Headers: X-CSRFToken={request.headers.get('X-CSRFToken', 'NOT SET')[:50] if request.headers.get('X-CSRFToken') else 'NOT SET'}, X-Requested-With={request.headers.get('X-Requested-With', 'NOT SET')}")
             logger.info(f"🔍 [RequestMiddleware] CSRF cookie: {request.COOKIES.get('csrftoken', 'NOT SET')[:50] if request.COOKIES.get('csrftoken') else 'NOT SET'}")
-            logger.info(f"🔍 [RequestMiddleware] Refresh cookie: {request.COOKIES.get('refresh_token', 'NOT SET')[:50] if request.COOKIES.get('refresh_token') else 'NOT SET'}")
+            refresh_cookie = request.COOKIES.get('refresh_token')
+            masked_refresh = (
+                f"{refresh_cookie[:6]}...{refresh_cookie[-4:]}"
+                if refresh_cookie
+                else "NOT SET"
+            )
+            logger.info(f"🔍 [RequestMiddleware] Refresh cookie: {masked_refresh}")
             logger.info(f"🔍 [RequestMiddleware] Origin: {request.headers.get('Origin', 'NOT SET')}")
             logger.info(f"🔍 [RequestMiddleware] Referer: {request.headers.get('Referer', 'NOT SET')}")
         

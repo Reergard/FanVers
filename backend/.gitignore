@@ -22,8 +22,9 @@ dump.rdb
 
 dump.rdb
 /celery.log
-/backend/celery.log
-/backend/celerybeat-schedule.*
-/backend/_beat_err.txt
-/backend/_beat_out.txt
+# In backend/.gitignore patterns are relative to backend/
+celery.log
+celerybeat-schedule.*
+_beat_err.txt
+_beat_out.txt
 .cursor/
