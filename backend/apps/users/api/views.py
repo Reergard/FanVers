@@ -193,7 +193,9 @@ def oauth_complete_redirect(request):
     access = str(refresh.access_token)
     cache.set(f"oauth_code_{code}", {'user_id': user.id, 'access': access, 'refresh': str(refresh)}, timeout=60)
 
-    login(request, user)
+    # Multiple AUTHENTICATION_BACKENDS are configured (social + ModelBackend),
+    # so we must specify which backend to use for a manual session login.
+    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
     return redirect(f"{settings.FRONTEND_URL}/oauth/callback?code={code}")
 
 
@@ -284,7 +286,7 @@ class RegisterView(APIView):
             }, status=status.HTTP_201_CREATED)
 
             # Сесія для WebSocket cookie-based auth
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
             # ВАЖНО: ставим refresh в HttpOnly cookie (як у LoginView)
             if settings.DEBUG:
@@ -351,7 +353,7 @@ class LoginView(APIView):
             resp = Response({"access": access}, status=status.HTTP_200_OK)
 
             # Сесія для WebSocket cookie-based auth
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
             if settings.DEBUG:
                 logger.info(f"🔐 [LoginView] Шаг 4: Устанавливаем refresh cookie (remember_me={remember_me})...")
