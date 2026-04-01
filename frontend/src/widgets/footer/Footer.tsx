@@ -15,8 +15,10 @@ export function Footer() {
           <div className={styles.col}>
             <ul className={styles.list}>
               <li><Link to="/for-copyright-holders" className={styles.link}>Для правовласників</Link></li>
-              <li><Link to="/user-agreement" className={styles.link}>Угода користувача</Link></li>
+              <li><Link to="/user-agreement" className={styles.link}>Умови використання</Link></li>
               <li><Link to="/privacy-policy" className={styles.link}>Політика компанії щодо обробки персональних даних</Link></li>
+              <li><Link to="/cookie-policy" className={styles.link}>Політика cookies</Link></li>
+              <li><Link to="/refund-policy" className={styles.link}>Політика повернень і скасувань</Link></li>
               <li><Link to="/content-rules" className={styles.link}>Правила розміщення авторського контенту</Link></li>
               <li><Link to="/author-agreement" className={styles.link}>Публічний договір з автором</Link></li>
             </ul>
@@ -35,7 +37,7 @@ export function Footer() {
           <div className={styles.col}>
             <ul className={styles.list}>
               <li><Link to="/balance-help" className={styles.link}>Довідка</Link></li>
-              <li><Link to="/translator-agreement" className={styles.link}>Довідки від автора та перекладача</Link></li>
+              <li><Link to="/translator-agreement" className={styles.link}>Приклад договору: автор і перекладач</Link></li>
               <li><Link to="/say-thanks" className={styles.link}>Сказати дякую!</Link></li>
               <li><Link to="/contacts" className={styles.link}>Контакти</Link></li>
               <li><Link to="/payment" className={styles.link}>Не поповнився баланс?</Link></li>

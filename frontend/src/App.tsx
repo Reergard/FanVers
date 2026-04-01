@@ -57,6 +57,8 @@ const AuthorAgreementPage = lazy(() => import("./info/legal/author-agreement"));
 const ContentRulesPage = lazy(() => import("./info/legal/content-rules"));
 const ForCopyrightHoldersPage = lazy(() => import("./info/legal/for-copyright-holders"));
 const PrivacyPolicyPage = lazy(() => import("./info/legal/privacy-policy"));
+const CookiePolicyPage = lazy(() => import("./info/legal/cookie-policy"));
+const RefundPolicyPage = lazy(() => import("./info/legal/refund-policy"));
 const TranslatorAgreementPage = lazy(() => import("./info/legal/translator-agreement"));
 const UserAgreementPage = lazy(() => import("./info/legal/user-agreement"));
 const OAuthCallbackPage = lazy(() =>
@@ -277,6 +279,22 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <PrivacyPolicyPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/cookie-policy"
+                element={
+                  <Suspense fallback={<div />}>
+                    <CookiePolicyPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/refund-policy"
+                element={
+                  <Suspense fallback={<div />}>
+                    <RefundPolicyPage />
                   </Suspense>
                 }
               />
