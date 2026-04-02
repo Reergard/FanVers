@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Container } from "../../shared/Container";
 import { Icon } from "../../shared/Icon";
 import logo from "../../assets/logos/logo.png";
+import { openCookieSettingsModal } from "../cookieConsent/CookieConsentManager";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -18,6 +19,11 @@ export function Footer() {
               <li><Link to="/user-agreement" className={styles.link}>Умови використання</Link></li>
               <li><Link to="/privacy-policy" className={styles.link}>Політика компанії щодо обробки персональних даних</Link></li>
               <li><Link to="/cookie-policy" className={styles.link}>Політика cookies</Link></li>
+              <li>
+                <button type="button" className={`${styles.link} ${styles.linkButton}`} onClick={openCookieSettingsModal}>
+                  Налаштування cookies
+                </button>
+              </li>
               <li><Link to="/refund-policy" className={styles.link}>Політика повернень і скасувань</Link></li>
               <li><Link to="/content-rules" className={styles.link}>Правила розміщення авторського контенту</Link></li>
               <li><Link to="/author-agreement" className={styles.link}>Публічний договір з автором</Link></li>

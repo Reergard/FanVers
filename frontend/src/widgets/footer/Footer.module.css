@@ -70,6 +70,17 @@
   opacity: 1;
 }
 
+.linkButton {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: start;
+}
+
 /* Центр: логотип */
 .centerLogo {
   display: grid;

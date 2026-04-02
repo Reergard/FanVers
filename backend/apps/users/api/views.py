@@ -131,7 +131,8 @@ from apps.users.api.serializers import (
     ProfileImageUploadSerializer,
     EmailUpdateSerializer,
     PasswordChangeSerializer,
-    NotificationSettingsSerializer
+    NotificationSettingsSerializer,
+    CookieConsentSerializer,
 )
 from apps.users.models import Profile
 # Удаляем импорт старых throttling классов
@@ -720,6 +721,46 @@ def update_notification_settings(request):
             {'error': 'Помилка при оновленні налаштувань'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+class CookieConsentView(APIView):
+    """
+    GET/PUT cookie consent for the current user.
+
+    Endpoint is intentionally small to avoid fetching full profile for sync.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "profile"
+
+    def get(self, request):
+        try:
+            profile = request.user.profile
+            return Response({"cookie_consent": profile.cookie_consent})
+        except Exception as e:
+            logger.error(f"Помилка отримання cookie consent: {str(e)}", exc_info=True)
+            return Response(
+                {"error": "Помилка при отриманні cookie consent"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def put(self, request):
+        try:
+            serializer = CookieConsentSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            profile = request.user.profile
+            profile.cookie_consent = serializer.to_storage_value()
+            profile.save(update_fields=["cookie_consent"])
+            return Response({"cookie_consent": profile.cookie_consent})
+        except Exception as e:
+            logger.error(f"Помилка оновлення cookie consent: {str(e)}", exc_info=True)
+            return Response(
+                {"error": "Помилка при оновленні cookie consent"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 @api_view(['GET'])

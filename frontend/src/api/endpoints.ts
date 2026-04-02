@@ -12,6 +12,7 @@ export const API = {
 
   // Profile
   userProfile: "/api/users/profile/",
+  cookieConsent: "/api/users/cookie-consent/",
   profileUploadImage: "/api/users/profile/upload-image/",
   profileDeleteImage: "/api/users/profile/delete-image/",
   profileUpdateEmail: "/api/users/profile/update-email/",

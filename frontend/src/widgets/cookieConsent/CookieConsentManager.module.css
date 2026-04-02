@@ -1,0 +1,126 @@
+.banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2500;
+  padding: 10px;
+  background: rgba(5, 13, 17, 0.82);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(80, 220, 220, 0.16);
+}
+
+.bannerInner {
+  max-width: var(--container-max, 1280px);
+  margin-inline: auto;
+  padding-inline: var(--gutter, 24px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.text {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.title {
+  font-family: var(--font-decor, "SofiaSansSemiCondensed", sans-serif);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.desc {
+  font-family: "Inter", sans-serif;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.link {
+  color: #05b4c7;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.modalBody {
+  display: grid;
+  gap: 14px;
+}
+
+.modalHint {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.switchList {
+  display: grid;
+  gap: 10px;
+}
+
+.switchRow {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  align-items: start;
+  gap: 10px;
+  font-family: "Inter", sans-serif;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.switchRow input {
+  margin-top: 2px;
+  accent-color: #05b4c7;
+}
+
+.switchText {
+  display: grid;
+  gap: 2px;
+}
+
+.switchTitle {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.switchDesc {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+}
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  padding-top: 6px;
+}
+
+@media (max-width: 768px) {
+  .bannerInner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .actions {
+    justify-content: flex-start;
+  }
+}
+

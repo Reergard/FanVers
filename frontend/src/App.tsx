@@ -9,6 +9,7 @@ import { bootstrapAuth, attachAuthAutoRefresh } from "./auth/bootstrap";
 import { AuthModalProvider } from "./auth/AuthModalContext";
 import { NotificationProvider } from "./shared/NotificationModal/NotificationProvider";
 import BookDetailSkeleton from "./catalog/BookDetailSkeleton";
+import { CookieConsentSyncRoot } from "./settings/CookieConsentSyncRoot";
 
 const BookDetailRouter = lazy(() => import("./catalog/BookDetailRouter"));
 const BookmarksPage = lazy(() => import("./bookmarks/BookmarksPage"));
@@ -92,6 +93,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <NotificationProvider>
+        <CookieConsentSyncRoot />
         <BrowserRouter>
           <AuthModalProvider>
             <ScrollToTop />

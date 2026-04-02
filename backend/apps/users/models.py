@@ -102,6 +102,19 @@ class Profile(models.Model):
         default=True,
         verbose_name='Сповіщення увімкнені'
     )
+    # Cookie consent (зберігаємо лише користувацький вибір; necessary завжди true на фронті/бекенді)
+    # Приклад:
+    # {
+    #   "necessary": true,
+    #   "preferences": false,
+    #   "analytics": false,
+    #   "updated_at": "2026-04-02T12:34:56Z"
+    # }
+    cookie_consent = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name='Cookie consent'
+    )
     hide_adult_content = models.BooleanField(
         default=False,
         verbose_name='Прибрати 18+ контент'

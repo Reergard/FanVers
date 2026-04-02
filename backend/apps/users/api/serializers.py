@@ -15,6 +15,7 @@ from decimal import Decimal
 from django.contrib.auth.password_validation import validate_password
 import uuid
 import time
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -290,6 +291,30 @@ class NotificationSettingsSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class CookieConsentSerializer(serializers.Serializer):
+    """
+    Payload for cookie consent. necessary is always true.
+    We store `updated_at` server-side.
+    """
+    necessary = serializers.BooleanField(required=True)
+    preferences = serializers.BooleanField(required=True)
+    analytics = serializers.BooleanField(required=True)
+
+    def validate_necessary(self, value):
+        if value is not True:
+            raise serializers.ValidationError("necessary must be true")
+        return value
+
+    def to_storage_value(self):
+        data = {
+            "necessary": True,
+            "preferences": bool(self.validated_data.get("preferences")),
+            "analytics": bool(self.validated_data.get("analytics")),
+            "updated_at": timezone.now().isoformat(),
+        }
+        return data
+
+
 class ProfileSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     total_characters = serializers.SerializerMethodField()
@@ -331,6 +356,7 @@ class ProfileSerializer(serializers.ModelSerializer):
                 decimal_places=2
             )
             self.fields['balance_history'] = serializers.SerializerMethodField()
+            self.fields["cookie_consent"] = serializers.JSONField(required=False, allow_null=True)
 
     def get_is_owner(self, obj):
         return obj.is_owner
