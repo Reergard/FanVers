@@ -46,6 +46,8 @@ export function OAuthCallbackPage() {
             userId: userData?.userId ?? null,
             username: userData?.username ?? null,
             balance: userData?.balance ?? null,
+            canWithdrawBalance: Boolean(userData?.can_withdraw_balance),
+            roleSelfPromotionAllowed: Boolean(userData?.role_self_promotion_allowed),
           });
           navigate("/", { replace: true });
         } else {

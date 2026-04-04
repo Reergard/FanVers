@@ -22,6 +22,12 @@ from django.core.files.storage import default_storage
 from django.core.cache import cache
 from django.shortcuts import redirect
 from django.conf import settings
+
+from apps.users.role_self_promotion import (
+    ROLE_SELF_PROMOTION_DISABLED_CODE,
+    ROLE_SELF_PROMOTION_DISABLED_MESSAGE,
+    is_role_self_promotion_allowed,
+)
 import os
 import secrets
 import time
@@ -853,19 +859,25 @@ get_user_profile = api_view(['GET'])(permission_classes([AllowAny])(
 # @throttle_classes([ProfileThrottle])  # Розкоментувати на продакшені
 def become_translator(request):
     try:
-        user = request.user
-        profile = user.profile
-        
-        # Проверяем текущую роль
-        if profile.role == 'Перекладач':
-            return Response({
-                'error': 'Ви вже є перекладачем'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
+        if not is_role_self_promotion_allowed():
+            return Response(
+                {
+                    "error": ROLE_SELF_PROMOTION_DISABLED_MESSAGE,
+                    "code": ROLE_SELF_PROMOTION_DISABLED_CODE,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         with transaction.atomic():
+            profile = Profile.objects.select_for_update().get(user_id=request.user.pk)
+            if profile.role == 'Перекладач':
+                return Response(
+                    {'error': 'Ви вже є перекладачем'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             profile.role = 'Перекладач'
-            profile.save()
-        
+            profile.save(update_fields=['role'])
+
         return Response({
             'message': 'Ви успішно стали перекладачем',
             'role': profile.role
@@ -883,19 +895,25 @@ def become_translator(request):
 # @throttle_classes([ProfileThrottle])  # Розкоментувати на продакшені
 def become_author(request):
     try:
-        user = request.user
-        profile = user.profile
-        
-        # Проверяем текущую роль
-        if profile.role == 'Літератор':
-            return Response({
-                'error': 'Ви вже є літератором'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
+        if not is_role_self_promotion_allowed():
+            return Response(
+                {
+                    "error": ROLE_SELF_PROMOTION_DISABLED_MESSAGE,
+                    "code": ROLE_SELF_PROMOTION_DISABLED_CODE,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         with transaction.atomic():
+            profile = Profile.objects.select_for_update().get(user_id=request.user.pk)
+            if profile.role == 'Літератор':
+                return Response(
+                    {'error': 'Ви вже є літератором'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             profile.role = 'Літератор'
-            profile.save()
-        
+            profile.save(update_fields=['role'])
+
         return Response({
             'message': 'Ви успішно стали літератором',
             'role': profile.role
@@ -921,14 +939,19 @@ class AuthStatusView(APIView):
     def get(self, request):
         # Если дошли сюда - значит access токен валиден и пользователь аутентифицирован
         try:
-            balance = str(request.user.profile.balance)
+            profile = request.user.profile
+            balance = str(profile.balance)
+            can_withdraw_balance = profile.can_withdraw_balance()
         except (Profile.DoesNotExist, AttributeError):
             balance = '0'
+            can_withdraw_balance = False
         return Response({
             'isAuthenticated': True,
             'userId': request.user.id,
             'username': request.user.username,
             'balance': balance,
+            'can_withdraw_balance': can_withdraw_balance,
+            'role_self_promotion_allowed': is_role_self_promotion_allowed(),
         })
 
 

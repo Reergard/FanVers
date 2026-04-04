@@ -6,10 +6,23 @@ export type AuthState = {
   userId: number | null;
   username: string | null;
   balance: string | null;
+  canWithdrawBalance: boolean | null;
+  roleSelfPromotionAllowed: boolean | null;
   authReady: boolean;
 };
 
-let cachedSnapshot: { csrfToken: string | null; bootstrapped: boolean; status: string; user: { userId: number | null; username: string | null; balance: string | null } } | null = null;
+let cachedSnapshot: {
+  csrfToken: string | null;
+  bootstrapped: boolean;
+  status: string;
+  user: {
+    userId: number | null;
+    username: string | null;
+    balance: string | null;
+    canWithdrawBalance: boolean | null;
+    roleSelfPromotionAllowed: boolean | null;
+  };
+} | null = null;
 let cachedVersion = -1;
 
 function getSnapshot() {
@@ -37,6 +50,8 @@ export function useAuth(): AuthState {
     userId: s.user.userId,
     username: s.user.username,
     balance: s.user.balance,
+    canWithdrawBalance: s.user.canWithdrawBalance,
+    roleSelfPromotionAllowed: s.user.roleSelfPromotionAllowed,
     authReady,
   };
 }

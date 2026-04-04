@@ -29,13 +29,21 @@ export async function bootstrapAuth() {
           userId: data?.userId ?? null,
           username: data?.username ?? null,
           balance: data?.balance ?? null,
+          canWithdrawBalance: Boolean(data?.can_withdraw_balance),
+          roleSelfPromotionAllowed: Boolean(data?.role_self_promotion_allowed),
         });
       } catch (err: any) {
         // Только 401 = невалидный токен → clearAuth. Сетевые/5xx — оставляем залогиненным.
         if (err?.response?.status === 401) {
           clearAuth();
         } else {
-          setAuthAuthenticated({ userId: null, username: null, balance: null });
+          setAuthAuthenticated({
+            userId: null,
+            username: null,
+            balance: null,
+            canWithdrawBalance: null,
+            roleSelfPromotionAllowed: null,
+          });
         }
       }
     } else {

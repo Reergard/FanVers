@@ -29,6 +29,9 @@ SIGNING_KEY = env("SIGNING_KEY", default=SECRET_KEY)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
+# Якщо False — POST become-translator / become-author повертають 403 (роль лише через адмінку).
+ALLOW_USER_ROLE_SELF_PROMOTION = env.bool("ALLOW_USER_ROLE_SELF_PROMOTION", default=False)
+
 # Hosts
 if DEBUG:
     ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost'])

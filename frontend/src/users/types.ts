@@ -33,12 +33,21 @@ export type UserProfile = {
   chapter_comment_notifications?: boolean;
 
   is_owner?: boolean;
+  /** Право на виведення балансу; для чужого профілю з API приходить null */
+  can_withdraw_balance?: boolean | null;
+  /** Чи увімкнені POST become-translator / become-author (зазвичай false у проді) */
+  role_self_promotion_allowed?: boolean;
+  /** Історія BalanceLog для власника профілю */
+  balance_history?: BalanceHistoryItem[] | null;
 };
 
-/** Елемент історії транзакцій */
+/** Елемент історії транзакцій (відповідає BalanceLogSerializer) */
 export type BalanceHistoryItem = {
-  amount?: number;
+  amount?: string | number;
+  operation_type?: string;
+  /** @deprecated використовуйте operation_type */
   type?: string;
+  status?: string;
   created_at?: string;
   date?: string;
 };

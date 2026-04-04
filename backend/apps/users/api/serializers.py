@@ -7,6 +7,11 @@ from rest_framework import serializers
 from djoser.serializers import UserCreateSerializer
 from django.contrib.auth import get_user_model
 from apps.users.models import Profile, BalanceLog
+from apps.users.balance_access import (
+    API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE,
+    profile_can_request_balance_withdraw,
+)
+from apps.users.role_self_promotion import is_role_self_promotion_allowed
 from apps.catalog.models import Chapter, Book
 from django.db import models
 import logging
@@ -317,6 +322,8 @@ class CookieConsentSerializer(serializers.Serializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
+    can_withdraw_balance = serializers.SerializerMethodField()
+    role_self_promotion_allowed = serializers.SerializerMethodField()
     total_characters = serializers.SerializerMethodField()
     total_chapters = serializers.SerializerMethodField()
     free_chapters = serializers.SerializerMethodField()
@@ -334,7 +341,8 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['id', 'username', 'about', 'image', 'role',
+        fields = ['id', 'username', 'about', 'image', 'role', 'can_withdraw_balance',
+                 'role_self_promotion_allowed',
                  'total_characters', 'total_chapters', 'free_chapters', 
                  'total_author', 'total_translations', 'is_owner', 'balance_history', 'commission',
                  'read_chapters', 'purchased_chapters', 'completed_books',
@@ -352,14 +360,24 @@ class ProfileSerializer(serializers.ModelSerializer):
         if is_owner:
             self.fields['email'] = serializers.EmailField(source='user.email')
             self.fields['balance'] = serializers.DecimalField(
-                max_digits=10, 
-                decimal_places=2
+                max_digits=10,
+                decimal_places=2,
+                read_only=True,
             )
             self.fields['balance_history'] = serializers.SerializerMethodField()
             self.fields["cookie_consent"] = serializers.JSONField(required=False, allow_null=True)
 
     def get_is_owner(self, obj):
         return obj.is_owner
+
+    def get_can_withdraw_balance(self, obj):
+        request = self.context.get('request')
+        if not request or request.user != obj.user:
+            return None
+        return obj.can_withdraw_balance()
+
+    def get_role_self_promotion_allowed(self, obj):
+        return is_role_self_promotion_allowed()
 
     def get_balance_history(self, obj):
         if obj.is_owner:
@@ -590,11 +608,20 @@ class BalanceOperationSerializer(serializers.Serializer):
 
     def validate(self, data):
         request = self.context.get('request')
-        if not request or not request.user.is_authenticated:
+        user = getattr(request, 'user', None) if request else None
+        if not user or not user.is_authenticated:
             raise serializers.ValidationError("Необхідна авторизація")
 
         if data['operation_type'] == 'withdraw':
-            profile = request.user.profile
+            try:
+                profile = user.profile
+            except Exception:
+                profile = None
+            if profile is None:
+                raise serializers.ValidationError("Профіль не знайдено")
+            if not profile_can_request_balance_withdraw(profile):
+                raise serializers.ValidationError(API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE)
+            # Не захист від гонки: лише швидкий UX-відсікач; гонку закриває select_for_update у моделі/міксіні.
             if not profile.can_perform_operation('withdraw', data['amount']):
                 raise serializers.ValidationError("Недостатньо коштів для виведення")
 

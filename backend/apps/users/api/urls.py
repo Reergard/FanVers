@@ -9,9 +9,7 @@ from .views import (
     oauth_complete_redirect, oauth_exchange_view,
     CookieConsentView,
 )
-from .balance_views import (
-    AddBalanceView, withdraw_balance, update_balance, purchase_chapter
-)
+from .balance_views import AddBalanceView, WithdrawBalanceView, purchase_chapter
 
 app_name = 'users'
 
@@ -28,8 +26,8 @@ urlpatterns = [
     
     # Balance operations
     path('add-balance/', AddBalanceView.as_view(), name='add_balance'),
-    path('withdraw-balance/', withdraw_balance, name='withdraw_balance'),
-    path('update-balance/', update_balance, name='update_balance'),
+    path('withdraw-balance/', WithdrawBalanceView.as_view(), name='withdraw_balance'),
+    path('update-balance/', AddBalanceView.as_view(), name='update_balance'),
     path('purchase-chapter/<int:chapter_id>/', purchase_chapter, name='purchase_chapter'),
     
     # Lists

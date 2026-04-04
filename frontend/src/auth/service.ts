@@ -48,7 +48,13 @@ export async function loginSession(payload: {
     authLog("LOGIN_OK", { hasAccess: !!data?.access });
 
     // Сразу переключаем Header (оптимистично)
-    setAuthAuthenticated({ username: payload.username, userId: null, balance: null });
+    setAuthAuthenticated({
+      username: payload.username,
+      userId: null,
+      balance: null,
+      canWithdrawBalance: null,
+      roleSelfPromotionAllowed: null,
+    });
 
     try {
       const userData = await authStatus();
@@ -56,6 +62,8 @@ export async function loginSession(payload: {
         userId: userData?.userId ?? null,
         username: userData?.username ?? payload.username ?? null,
         balance: userData?.balance ?? null,
+        canWithdrawBalance: Boolean(userData?.can_withdraw_balance),
+        roleSelfPromotionAllowed: Boolean(userData?.role_self_promotion_allowed),
       });
     } catch {
       // Не setAuthAnonymous — access есть
@@ -89,13 +97,21 @@ export async function registerSession(payload: {
     if (data?.access) {
       setAccess(data.access);
       authLog("LOGIN_OK", { source: "register", hasAccess: true });
-      setAuthAuthenticated({ username: payload.username, userId: null, balance: null });
+      setAuthAuthenticated({
+        username: payload.username,
+        userId: null,
+        balance: null,
+        canWithdrawBalance: null,
+        roleSelfPromotionAllowed: null,
+      });
       try {
         const userData = await authStatus();
         setAuthAuthenticated({
           userId: userData?.userId ?? null,
           username: userData?.username ?? payload.username ?? null,
           balance: userData?.balance ?? null,
+          canWithdrawBalance: Boolean(userData?.can_withdraw_balance),
+          roleSelfPromotionAllowed: Boolean(userData?.role_self_promotion_allowed),
         });
       } catch {
         // Не setAuthAnonymous
@@ -155,6 +171,8 @@ export async function refreshAuthStatus(): Promise<void> {
       userId: userData?.userId ?? null,
       username: userData?.username ?? null,
       balance: userData?.balance ?? null,
+      canWithdrawBalance: Boolean(userData?.can_withdraw_balance),
+      roleSelfPromotionAllowed: Boolean(userData?.role_self_promotion_allowed),
     });
   } catch {
     // Ignore — не сбрасываем, если сервер временно недоступен

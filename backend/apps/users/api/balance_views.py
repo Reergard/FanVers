@@ -5,20 +5,28 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.core.exceptions import ValidationError
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.throttling import ScopedRateThrottle
 
 from .serializers import (
     UpdateBalanceSerializer,
     BalanceOperationSerializer
 )
 from .mixins import BalanceOperationMixin
+from apps.users.balance_access import (
+    API_WITHDRAW_ROLE_FORBIDDEN_CODE,
+    API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE,
+    profile_can_request_balance_withdraw,
+)
 import logging
 
 logger = logging.getLogger(__name__)
 
+
 class AddBalanceView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
-    throttle_scope = 'balance'  # Операции с балансом
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'balance'
 
     def post(self, request):
         serializer = UpdateBalanceSerializer(data=request.data)
@@ -31,8 +39,15 @@ class AddBalanceView(APIView):
                     amount,
                     'deposit'
                 )
+                # Alias URL update-balance/ — та сама логіка, інше повідомлення для сумісності.
+                path = (request.path or "").rstrip("/")
+                ok_message = (
+                    "Баланс успішно оновлено"
+                    if path.endswith("update-balance")
+                    else "Баланс успішно поповнено"
+                )
                 return Response({
-                    'message': 'Баланс успішно поповнено',
+                    'message': ok_message,
                     'new_balance': new_balance
                 })
             except ValidationError as e:
@@ -59,29 +74,56 @@ class AddBalanceView(APIView):
         )
 
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def withdraw_balance(request):
-    try:
-        amount = float(request.data.get('amount', 0))
-        
-        logger.info(f"Запит на виведення коштів: {request.data}")
-        logger.info(f"Сума після конвертації: {amount}")
-        
+class WithdrawBalanceView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'balance'
+
+    def post(self, request):
+        try:
+            profile = request.user.profile
+        except Exception:
+            return Response(
+                {'error': 'Профіль користувача не знайдено'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            return self._post_withdraw(request, profile)
+        except Exception as e:
+            logger.error("Неочікувана помилка при виведенні коштів: %s", e, exc_info=True)
+            return Response(
+                {'error': 'Неочікувана помилка при виведенні коштів'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    def _post_withdraw(self, request, profile):
+        if not profile_can_request_balance_withdraw(profile):
+            return Response(
+                {
+                    'error': API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE,
+                    'code': API_WITHDRAW_ROLE_FORBIDDEN_CODE,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        logger.info("Запит на виведення коштів: %s", request.data)
+
         serializer = BalanceOperationSerializer(
             data={
-                'amount': amount,
-                'operation_type': 'withdraw'
+                'amount': request.data.get('amount'),
+                'operation_type': 'withdraw',
             },
-            context={'request': request}
+            context={'request': request},
         )
-        
+
         if serializer.is_valid():
             try:
                 amount = serializer.validated_data['amount']
                 balance_mixin = BalanceOperationMixin()
                 new_balance = balance_mixin.perform_balance_operation(
-                    request.user.profile,
+                    profile,
                     amount,
                     'withdraw'
                 )
@@ -91,7 +133,6 @@ def withdraw_balance(request):
                 })
             except ValidationError as e:
                 logger.error(f"Помилка валідації: {str(e)}")
-                # Улучшенные сообщения об ошибках для пользователя
                 error_message = str(e)
                 if "Недостатньо коштів" in error_message:
                     error_message = "Вибачте, але на вашому балансі недостатньо коштів для виведення"
@@ -103,64 +144,19 @@ def withdraw_balance(request):
                     error_message = "Сума повинна бути більше нуля"
                 elif "Мінімальна сума виведення" in error_message:
                     error_message = "Мінімальна сума виведення: 1,000 FanCoins"
-                
+                elif API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE in error_message:
+                    error_message = API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE
+
                 return Response(
                     {'error': error_message},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-        else:
-            logger.error(f"Помилки серіалізатора: {serializer.errors}")
-            return Response(
-                {'error': serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-    except Exception as e:
-        logger.error(f"Неочікувана помилка: {str(e)}")
+
+        logger.error(f"Помилки серіалізатора: {serializer.errors}")
         return Response(
-            {'error': 'Неочікувана помилка при виведенні коштів'},
+            {'error': serializer.errors},
             status=status.HTTP_400_BAD_REQUEST
         )
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def update_balance(request):
-    serializer = UpdateBalanceSerializer(data=request.data)
-    if serializer.is_valid():
-        try:
-            amount = serializer.validated_data['amount']
-            balance_mixin = BalanceOperationMixin()
-            new_balance = balance_mixin.perform_balance_operation(
-                request.user.profile,
-                amount,
-                'deposit'
-            )
-            return Response({
-                'message': 'Баланс успішно оновлено',
-                'new_balance': new_balance
-            })
-        except ValidationError as e:
-            # Улучшенные сообщения об ошибках для пользователя
-            error_message = str(e)
-            if "Недостатньо коштів" in error_message:
-                error_message = "Вибачте, але на вашому балансі недостатньо коштів для цієї операції"
-            elif "Максимальний баланс" in error_message:
-                error_message = "Максимальний баланс перевищено"
-            elif "Невірна сума операції" in error_message:
-                error_message = "Невірна сума операції"
-            elif "Сума повинна бути більше нуля" in error_message:
-                error_message = "Сума повинна бути більше нуля"
-            elif "Мінімальна сума поповнення" in error_message:
-                error_message = "Мінімальна сума поповнення: 100 FanCoins"
-            
-            return Response(
-                {'error': error_message},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-    return Response(
-        serializer.errors,
-        status=status.HTTP_400_BAD_REQUEST
-    )
 
 
 @api_view(['POST'])
@@ -232,4 +228,4 @@ def purchase_chapter(request, chapter_id):
         return Response(
             {'error': 'Внутрішня помилка сервера при покупці глави'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        ) 
+        )

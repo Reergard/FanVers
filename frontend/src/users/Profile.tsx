@@ -137,6 +137,9 @@ export default function Profile() {
     queryKey: ["profile"],
     queryFn: getMyProfile,
     enabled: isAuthenticated,
+    // Після зміни ролі/балансу в адмінці — оновлення при поверненні на вкладку
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   const profile = profileQuery.data;
@@ -190,8 +193,9 @@ export default function Profile() {
 
   const becomeTranslatorMutation = useMutation({
     mutationFn: becomeTranslator,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await refreshAuthStatus();
       showSuccess(data?.message ?? "Роль оновлено");
     },
     onError: (err: any) => {
@@ -201,8 +205,9 @@ export default function Profile() {
 
   const becomeAuthorMutation = useMutation({
     mutationFn: becomeAuthor,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await refreshAuthStatus();
       showSuccess(data?.message ?? "Роль оновлено");
     },
     onError: (err: any) => {
@@ -408,6 +413,8 @@ export default function Profile() {
       : (profile.profile_image_large ?? profile.image ?? profile.profile_image_small)
   );
   const balanceNum = parseBalance(profile.balance);
+  const mayWithdrawBalance = profile.can_withdraw_balance === true;
+  const maySelfPromoteRole = profile.role_self_promotion_allowed === true;
   const avatarBgSvgClean = useMemo(() => stripSvgFilter(backgroundsAvatarsSvgRaw), []);
 
   const renderProfileTypeRow = () => (
@@ -415,7 +422,8 @@ export default function Profile() {
       <span className={styles.profileTypeLabel}>Тип профілю:</span>
       <span className={styles.profileTypeActive}>{profile.role}</span>
 
-      {(profile.role === "Читач" || profile.role === "Перекладач") &&
+      {maySelfPromoteRole &&
+        (profile.role === "Читач" || profile.role === "Перекладач") &&
         (profile.role === "Читач" ? (
           <button
             type="button"
@@ -619,17 +627,19 @@ export default function Profile() {
                   <span className={styles.mutedGold}>Комісія з транзакцій:</span>
                   <span className={styles.balanceCommissionValue}>{profile.commission ?? 15}%</span>
                 </div>
-                <button
-                  type="button"
-                  className={`${styles.btnRed} ${styles.balanceBtnWithdraw}`}
-                  onClick={() => setWithdrawModalOpen(true)}
-                  disabled={withdrawMutation.isPending || balanceNum <= 0}
-                >
-                  <img src={cashWithdrawalIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
-                  <span className={styles.btnBalanceText}>
-                    {withdrawMutation.isPending ? "Завантаження..." : <>Вивести<br />кошти</>}
-                  </span>
-                </button>
+                {mayWithdrawBalance ? (
+                  <button
+                    type="button"
+                    className={`${styles.btnRed} ${styles.balanceBtnWithdraw}`}
+                    onClick={() => setWithdrawModalOpen(true)}
+                    disabled={withdrawMutation.isPending || balanceNum <= 0}
+                  >
+                    <img src={cashWithdrawalIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
+                    <span className={styles.btnBalanceText}>
+                      {withdrawMutation.isPending ? "Завантаження..." : <>Вивести<br />кошти</>}
+                    </span>
+                  </button>
+                ) : null}
               </div>
               <div className={styles.balanceRow}>
                 <div className={styles.balanceInfo} data-mobile-area="balance">
@@ -876,7 +886,7 @@ export default function Profile() {
       </Modal>
 
       <Modal
-        open={withdrawModalOpen}
+        open={withdrawModalOpen && mayWithdrawBalance}
         onClose={() => setWithdrawModalOpen(false)}
         title="Вивести кошти"
       >
@@ -919,7 +929,9 @@ export default function Profile() {
             <ul>
               {balanceHistory.map((item, i) => (
                 <li key={i}>
-                  {item.amount ?? ""} — {String(item.created_at ?? item.date ?? "")}
+                  {item.amount ?? ""}{" "}
+                  {item.operation_type ?? item.type ?? ""} —{" "}
+                  {String(item.created_at ?? item.date ?? "")}
                 </li>
               ))}
             </ul>

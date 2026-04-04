@@ -6,6 +6,10 @@ export type AuthUser = {
   userId: number | null;
   username: string | null;
   balance: string | null;
+  /** Право на виведення балансу (з auth-status); null — ще не завантажено */
+  canWithdrawBalance: boolean | null;
+  /** Чи дозволена самостійна зміна ролі через API (зазвичай false у проді) */
+  roleSelfPromotionAllowed: boolean | null;
 };
 
 export type AuthStore = {
@@ -19,7 +23,13 @@ export const authStore: AuthStore = {
   csrfToken: null,
   bootstrapped: false,
   status: "unknown",
-  user: { userId: null, username: null, balance: null },
+  user: {
+    userId: null,
+    username: null,
+    balance: null,
+    canWithdrawBalance: null,
+    roleSelfPromotionAllowed: null,
+  },
 };
 
 let storeVersion = 0;
@@ -51,16 +61,29 @@ export function markBootstrapped() {
 
 export function setAuthAnonymous() {
   authStore.status = "anonymous";
-  authStore.user = { userId: null, username: null, balance: null };
+  authStore.user = {
+    userId: null,
+    username: null,
+    balance: null,
+    canWithdrawBalance: null,
+    roleSelfPromotionAllowed: null,
+  };
   emit();
 }
 
 export function setAuthAuthenticated(user: Partial<AuthUser>) {
   authStore.status = "authenticated";
+  const prev = authStore.user;
   authStore.user = {
-    userId: user.userId ?? authStore.user.userId ?? null,
-    username: user.username ?? authStore.user.username ?? null,
-    balance: user.balance ?? authStore.user.balance ?? null,
+    userId: user.userId ?? prev.userId ?? null,
+    username: user.username ?? prev.username ?? null,
+    balance: user.balance !== undefined ? user.balance : prev.balance,
+    canWithdrawBalance:
+      user.canWithdrawBalance !== undefined ? user.canWithdrawBalance : prev.canWithdrawBalance,
+    roleSelfPromotionAllowed:
+      user.roleSelfPromotionAllowed !== undefined
+        ? user.roleSelfPromotionAllowed
+        : prev.roleSelfPromotionAllowed,
   };
   emit();
 }
@@ -69,6 +92,12 @@ export function clearAuth() {
   setAccess(null);
   authStore.csrfToken = null;
   authStore.status = "anonymous";
-  authStore.user = { userId: null, username: null, balance: null };
+  authStore.user = {
+    userId: null,
+    username: null,
+    balance: null,
+    canWithdrawBalance: null,
+    roleSelfPromotionAllowed: null,
+  };
   emit();
 }

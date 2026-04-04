@@ -17,6 +17,11 @@ from datetime import datetime
 import logging
 from decimal import Decimal
 
+from .balance_access import (
+    API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE,
+    profile_can_request_balance_withdraw,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -174,29 +179,43 @@ class Profile(models.Model):
         return bool(self.image and getattr(self.image, "name", None))
 
     def update_balance(self, amount, operation_type):
+        """
+        Зміна балансу з блокуванням рядка (select_for_update).
+        Для withdraw — перевірка ролі та достатності коштів лише після блокування.
+        """
         with transaction.atomic():
-            if operation_type == 'withdraw' and self.balance < amount:
-                raise ValidationError('Недостатньо коштів')
-            
+            profile = Profile.objects.select_for_update().get(pk=self.pk)
+
+            if operation_type == 'withdraw':
+                if not profile_can_request_balance_withdraw(profile):
+                    raise ValidationError(API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE)
+                if profile.balance < amount:
+                    raise ValidationError('Недостатньо коштів')
+            elif operation_type in ('purchase', 'advertising'):
+                if profile.balance < amount:
+                    raise ValidationError('Недостатньо коштів')
+
             if operation_type in ['withdraw', 'purchase', 'advertising']:
-                self.balance -= amount
+                profile.balance -= amount
             else:
-                self.balance += amount
-            
-            self.save()
-            
-            balance_log = self.balance_logs.create(
+                profile.balance += amount
+
+            profile.save(update_fields=['balance'])
+
+            return profile.balance_logs.create(
                 amount=amount,
                 operation_type=operation_type,
                 status='completed'
             )
-            
-            return balance_log
     
     def can_perform_operation(self, operation_type, amount=None):
         if operation_type == 'withdraw':
             return self.balance >= amount
         return True
+
+    def can_withdraw_balance(self):
+        """Чи дозволено користувачу ініціювати виведення через API (лише за роллю)."""
+        return profile_can_request_balance_withdraw(self)
     
     @property
     def is_owner(self):
