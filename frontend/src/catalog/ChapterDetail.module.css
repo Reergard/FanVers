@@ -122,6 +122,12 @@
   margin-top: clamp(10px, calc(1.9 * var(--vwu)), 16px);
 }
 
+.readerSelecting .reader__inner {
+  outline: 1px dashed rgba(245, 136, 7, 0.55);
+  outline-offset: 6px;
+  border-radius: 4px;
+}
+
 /* ===== FOOTER NAV ===== */
 .chapterFooter {
   padding-top: clamp(6px, calc(1.2 * var(--vwu)), 12px);
@@ -166,22 +172,50 @@
 
 .reportBtn {
   position: relative;
+  z-index: 1;
+  /* Прозора зона кліку поверх SVG — підпис уже в символі report-error-frame */
   width: clamp(180px, calc(22 * var(--vwu)), 214px);
-  padding: clamp(7px, calc(1.2 * var(--vwu)), 10px) clamp(10px, calc(2 * var(--vwu)), 16px);
+  min-height: 34px;
+  padding: 0;
   border: 0;
   background: transparent;
-  color: rgba(255, 255, 255, 0.88);
   cursor: pointer;
   font-size: clamp(12px, calc(1.2 * var(--vwu)), 14px);
   letter-spacing: 0.02em;
-  min-height: 34px;
   font-family: inherit;
   transition: color 160ms ease, opacity 160ms ease;
 }
 
-.reportBtn:hover {
-  color: rgba(255, 255, 255, 0.95);
+.reportBtnWrap:has(.reportBtn:hover) .reportBtnFrame {
   opacity: 0.92;
+}
+
+.reportBtn:focus-visible {
+  outline: 2px solid rgba(5, 180, 199, 0.75);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.selectionMode {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(10px, calc(1.8 * var(--vwu)), 14px);
+  max-width: min(100%, 420px);
+}
+
+.instructionsText {
+  margin: 0;
+  font-size: clamp(12px, calc(1.25 * var(--vwu)), 14px);
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.selectionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
 /* ===== COMMENTS WRAP (дизайн 1:1 з BookComments — використовуємо той самий компонент і стилі з BookDetail) ===== */
@@ -229,7 +263,12 @@
     padding: clamp(6px, 1.2vw, 10px) clamp(8px, 2vw, 14px);
   }
 
-  .reportBtn {
-    padding: clamp(6px, 1.2vw, 10px) clamp(8px, 2vw, 14px);
+  .selectionMode {
+    max-width: 100%;
+  }
+
+  .selectionActions {
+    flex-direction: column;
+    width: 100%;
   }
 }

@@ -9,10 +9,10 @@ from apps.catalog.api.serializers import ChapterSerializer
 from .serializers import ChapterEditSerializer
 import os
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import viewsets
+from rest_framework import mixins, viewsets
+from django.db.models import Q
 from ..models import ErrorReport
 from .serializers import ErrorReportSerializer
-from apps.notification.models import Notification
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -334,41 +334,36 @@ def reorder_chapters(request, book_slug):
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ErrorReportViewSet(viewsets.ModelViewSet):
+class ErrorReportViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
     serializer_class = ErrorReportSerializer
     permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        return ErrorReport.objects.filter(
-            book__owner=self.request.user
-        ) | ErrorReport.objects.filter(
-            user=self.request.user
-        )
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+    def get_queryset(self):
+        user = self.request.user
+        return ErrorReport.objects.filter(
+            Q(book__owner=user) | Q(user=user)
+        ).distinct()
 
     def perform_create(self, serializer):
-        error_report = serializer.save(user=self.request.user)
-        
-        notification_exists = Notification.objects.filter(
-            user=error_report.book.owner,
-            error_report=error_report
-        ).exists()
-        
-        if not notification_exists:
-            Notification.objects.create(
-                user=error_report.book.owner,
-                book=error_report.book,
-                message=f'Увага, користувач {self.request.user.username} пропонує виправлення у книзі "{error_report.book.title}"',
-                error_report=error_report
-            )
+        serializer.save(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
         try:
-            book_id = request.data.get('book')
+            raw_book = request.data.get("book_id", request.data.get("book"))
+            book_id = int(raw_book) if raw_book is not None else None
+            if book_id is None:
+                return Response(
+                    {
+                        "error": "book_required",
+                        "message": "Не вказано книгу",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             book = Book.objects.get(id=book_id)
             
             if not book.owner:
@@ -381,7 +376,15 @@ class ErrorReportViewSet(viewsets.ModelViewSet):
                 )
             
             return super().create(request, *args, **kwargs)
-            
+
+        except (ValueError, TypeError):
+            return Response(
+                {
+                    "error": "invalid_book",
+                    "message": "Некоректний ідентифікатор книги",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except Book.DoesNotExist:
             return Response(
                 {

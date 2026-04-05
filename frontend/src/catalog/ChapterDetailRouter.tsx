@@ -296,6 +296,12 @@ export default function ChapterDetailRouter() {
         nextChapterSlug={navigation?.next_chapter?.slug ?? null}
         isOwner={isOwner}
         onNavigateToChapter={handleNavigateToChapter}
+        chapterMeta={{
+          id: chapter.id,
+          book_id: chapter.book_id,
+          book_title: chapter.book_title,
+          title: chapter.title,
+        }}
       />
       <Modal
         open={forbiddenAccessError != null}

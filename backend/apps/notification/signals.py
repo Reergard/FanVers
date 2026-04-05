@@ -54,10 +54,12 @@ def notify_book_owner_on_error_report(sender, instance, created, **kwargs):
         book = instance.book
         owner = book.owner
         if owner:
-            notification_message = f'Увага, користувач {instance.user.username} пропонує виправлення у книзі {book.title}. Для більш детальної інформації натисніть '
+            notification_message = (
+                f'Увага, користувач {instance.user.username} пропонує виправлення у книзі "{book.title}".'
+            )
             Notification.objects.create(
                 user=owner,
                 book=book,
                 message=notification_message,
                 error_report=instance
-            ) 
+            )

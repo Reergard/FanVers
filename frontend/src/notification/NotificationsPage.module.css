@@ -257,6 +257,91 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
+.detailsBtn {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+
+  font-size: inherit;
+  color: #05b4c7;
+  text-decoration: underline;
+  text-decoration-color: rgba(5, 180, 199, 0.6);
+  text-underline-offset: 2px;
+  font-family: inherit;
+  line-height: inherit;
+}
+
+.detailsBtn:hover {
+  color: #2dd4e8;
+}
+
+/* ===== Error report detail modal ===== */
+.reportDetail {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.6vw, 16px);
+}
+
+.reportDetailRow {
+  display: grid;
+  grid-template-columns: clamp(80px, 9vw, 110px) 1fr;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.reportDetailLabel {
+  font-size: clamp(12px, 1.15vw, 13px);
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+}
+
+.reportDetailValue {
+  font-size: clamp(13px, 1.25vw, 14px);
+  color: rgba(255, 255, 255, 0.9);
+  word-break: break-word;
+}
+
+.reportDetailSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reportDetailBox {
+  padding: clamp(10px, 1.4vw, 12px);
+  border-radius: 10px;
+  border: 1px solid rgba(5, 180, 199, 0.35);
+  background: rgba(0, 0, 0, 0.22);
+  font-size: clamp(13px, 1.25vw, 14px);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.88);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.reportDetailBoxTall {
+  padding: clamp(10px, 1.4vw, 12px);
+  border-radius: 10px;
+  border: 1px solid rgba(5, 180, 199, 0.35);
+  background: rgba(0, 0, 0, 0.22);
+  font-size: clamp(13px, 1.25vw, 14px);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.88);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.reportDetailLoading {
+  margin: 0;
+  font-size: clamp(13px, 1.25vw, 14px);
+  color: rgba(255, 255, 255, 0.55);
+}
+
 .unreadDot {
   display: inline-block;
   width: 6px;

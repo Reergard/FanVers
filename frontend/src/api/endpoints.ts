@@ -85,6 +85,9 @@ export const API = {
     `/api/subscription/books/${encodeURIComponent(bookSlug)}/apply-plan/`,
   subscriptionUserSubscriptions: "/api/subscription/user/subscriptions/",
 
+  // Editors (репорти помилок у тексті розділу)
+  errorReports: "/api/editors/error-reports/",
+
   // Support (звернення в підтримку)
   supportTickets: "/api/support/tickets/",
 

@@ -15,9 +15,10 @@ class NotificationViewSet(viewsets.ModelViewSet):
             base_queryset = Notification.objects.filter(
                 user=self.request.user
             ).select_related(
-                'book', 
-                'error_report', 
-                'error_report__user'
+                'book',
+                'error_report',
+                'error_report__user',
+                'error_report__chapter',
             )
 
             queryset = base_queryset.order_by('-created_at')

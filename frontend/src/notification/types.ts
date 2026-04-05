@@ -9,6 +9,9 @@ export type AppNotification = {
   error_report_id?: number | string;
   reporter_username?: string;
   book_title?: string;
+  chapter_title?: string;
+  error_text?: string;
+  suggestion?: string;
   book?: unknown;
 };
 

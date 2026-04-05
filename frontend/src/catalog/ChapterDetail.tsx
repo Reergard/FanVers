@@ -1,12 +1,26 @@
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Container } from "../shared/Container";
 import { Icon } from "../shared/Icon";
 import { SvgSpriteBook } from "../shared/SvgSpriteBook";
 import { BookCommentsContainer } from "./sections/BookCommentsContainer";
+import { useAuth } from "../auth/useAuth";
+import { useAuthModal } from "../auth/AuthModalContext";
+import { useNotification } from "../shared/NotificationModal/NotificationProvider";
+import { ActionButton } from "../shared/ActionButton/ActionButton";
+import { ModalErrorReport } from "./ModalErrorReport";
 import styles from "./ChapterDetail.module.css";
 
 const prevLabel = "Попередній розділ";
 const nextLabel = "Наступний розділ";
+
+/** Метадані розділу для репорту помилки (узгоджено з завантаженими даними каталогу). */
+export type ChapterReaderMeta = {
+  title: string;
+  book_title: string;
+  id: number | null;
+  book_id: number | null;
+};
 
 type ChapterDetailProps = {
   bookSlug: string;
@@ -17,7 +31,16 @@ type ChapterDetailProps = {
   nextChapterSlug?: string | null;
   isOwner: boolean;
   onNavigateToChapter?: (targetChapterSlug: string) => void;
+  chapterMeta: ChapterReaderMeta;
 };
+
+function selectionInsideReader(readerEl: HTMLElement | null): boolean {
+  if (!readerEl) return false;
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return false;
+  const range = sel.getRangeAt(0);
+  return readerEl.contains(range.commonAncestorContainer);
+}
 
 export default function ChapterDetail({
   bookSlug,
@@ -28,7 +51,92 @@ export default function ChapterDetail({
   nextChapterSlug = null,
   isOwner,
   onNavigateToChapter,
+  chapterMeta,
 }: ChapterDetailProps) {
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
+  const { openLoginModal } = useAuthModal();
+  const { showError } = useNotification();
+
+  const readerRef = useRef<HTMLDivElement>(null);
+  const onMouseUpSelectionRef = useRef<() => void>(() => {});
+
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [selectedText, setSelectedText] = useState("");
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+
+  const stableMouseUp = useCallback(() => {
+    onMouseUpSelectionRef.current();
+  }, []);
+
+  onMouseUpSelectionRef.current = () => {
+    const readerEl = readerRef.current;
+    if (!readerEl) return;
+    const sel = window.getSelection();
+    const text = sel?.toString().trim() ?? "";
+    if (!text) return;
+    if (!selectionInsideReader(readerEl)) return;
+    setSelectedText(text);
+  };
+
+  const cancelSelectionMode = useCallback((): void => {
+    setIsSelectionMode(false);
+    document.removeEventListener("mouseup", stableMouseUp);
+  }, [stableMouseUp]);
+
+  useEffect(() => {
+    return () => {
+      document.removeEventListener("mouseup", stableMouseUp);
+    };
+  }, [stableMouseUp]);
+
+  useEffect(() => {
+    setSelectedText("");
+    setIsSelectionMode(false);
+    setShowErrorModal(false);
+    document.removeEventListener("mouseup", stableMouseUp);
+  }, [chapterSlug, stableMouseUp]);
+
+  useEffect(() => {
+    if (!isSelectionMode) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        cancelSelectionMode();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isSelectionMode, cancelSelectionMode]);
+
+  const chapterMetaReady =
+    chapterMeta.id != null &&
+    chapterMeta.book_id != null &&
+    chapterMeta.id > 0 &&
+    chapterMeta.book_id > 0;
+
+  const handleStartSelection = (): void => {
+    if (!isAuthenticated) {
+      openLoginModal(location.pathname);
+      return;
+    }
+    if (!chapterMetaReady) {
+      showError("Зачекайте завантаження розділу і спробуйте ще раз.");
+      return;
+    }
+    setIsSelectionMode(true);
+    document.addEventListener("mouseup", stableMouseUp);
+  };
+
+  const confirmSelectedText = (): void => {
+    const text = selectedText.trim();
+    if (!text) {
+      showError("Спочатку виділіть текст у розділі.");
+      return;
+    }
+    setShowErrorModal(true);
+    cancelSelectionMode();
+  };
+
   const prevTo = prevChapterSlug
     ? `/books/${bookSlug}/chapters/${prevChapterSlug}`
     : `/books/${bookSlug}`;
@@ -80,8 +188,12 @@ export default function ChapterDetail({
       <Icon name="chapter-dots" className={styles.dottedDivider} role="separator" aria-hidden />
 
       {/* READER */}
-      <section className={styles.reader} aria-label="Текст розділу">
+      <section
+        className={`${styles.reader} ${isSelectionMode ? styles.readerSelecting : ""}`}
+        aria-label="Текст розділу"
+      >
         <div
+          ref={readerRef}
           className={styles.reader__inner}
           dangerouslySetInnerHTML={{
             __html: chapterContentHtml || `<p class="${styles.p}">Зміст глави відсутній.</p>`,
@@ -126,15 +238,57 @@ export default function ChapterDetail({
           </div>
 
           <div className={styles.reportRow}>
-            <div className={styles.reportBtnWrap}>
-              <span className={styles.reportBtnFrame} aria-hidden="true">
-                <Icon name="report-error-frame" width="100%" height="100%" />
-              </span>
-              <button className={styles.reportBtn} type="button" aria-label="Повідомити про помилку" />
-            </div>
+            {!isSelectionMode ? (
+              <div className={styles.reportBtnWrap}>
+                <span className={styles.reportBtnFrame} aria-hidden="true">
+                  <Icon name="report-error-frame" width="100%" height="100%" />
+                </span>
+                <button
+                  className={styles.reportBtn}
+                  type="button"
+                  onClick={handleStartSelection}
+                  aria-label="Повідомити про помилку"
+                  title="Повідомити про помилку"
+                />
+              </div>
+            ) : (
+              <div className={styles.selectionMode}>
+                {!selectedText.trim() && (
+                  <p className={styles.instructionsText}>
+                    Виділіть будь ласка текст, у якому ви знайшли помилку!
+                  </p>
+                )}
+                <div className={styles.selectionActions}>
+                  {selectedText.trim() ? (
+                    <ActionButton
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      onClick={confirmSelectedText}
+                    >
+                      Підтвердити вибраний текст
+                    </ActionButton>
+                  ) : null}
+                  <ActionButton type="button" variant="outline" size="sm" onClick={cancelSelectionMode}>
+                    Скасувати
+                  </ActionButton>
+                </div>
+              </div>
+            )}
           </div>
         </Container>
       </footer>
+
+      <ModalErrorReport
+        show={showErrorModal}
+        onHide={() => setShowErrorModal(false)}
+        bookId={chapterMeta.book_id}
+        chapterId={chapterMeta.id}
+        bookTitle={chapterMeta.book_title}
+        chapterTitle={chapterMeta.title}
+        selectedText={selectedText}
+        onSubmitted={() => setSelectedText("")}
+      />
 
       {/* COMMENTS — дизайн 1:1 як у BookComments (той самий компонент і стилі) */}
       <section className={styles.commentsWrap} aria-label="Коментарі до розділу">

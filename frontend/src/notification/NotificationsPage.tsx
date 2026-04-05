@@ -6,10 +6,13 @@ import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation.tsx";
 import { SaveButton } from "../shared/SaveButton/SaveButton";
 import { FilterCheckbox } from "../shared/FilterCheckbox/FilterCheckbox";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
+import { Modal } from "../shared/Modal/Modal";
 import { useAuth } from "../auth/useAuth";
 import { useAuthModal } from "../auth/AuthModalContext";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { useNotifications } from "./useNotifications";
+import { getNotificationById } from "./notificationsService";
+import { parseErrorReportSuggestion } from "./parseErrorReportSuggestion";
 import { getMyProfile, updateNotificationSettings } from "../users/profileService";
 import type { AppNotification } from "./types";
 import type { NotificationSettingsPatch } from "../users/types";
@@ -58,6 +61,9 @@ export function NotificationsPage() {
 
   const [filters, setFilters] = useState<Partial<Record<keyof NotificationSettingsPatch, boolean>>>({});
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [activeReport, setActiveReport] = useState<AppNotification | null>(null);
+  const [reportDetail, setReportDetail] = useState<AppNotification | null>(null);
+  const [reportDetailLoading, setReportDetailLoading] = useState(false);
 
   const profileQuery = useQuery({
     queryKey: ["profile"],
@@ -103,6 +109,35 @@ export function NotificationsPage() {
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
   }, [notifications.length]);
+
+  useEffect(() => {
+    if (!activeReport?.id) {
+      setReportDetail(null);
+      setReportDetailLoading(false);
+      return;
+    }
+    if (!activeReport.error_report_id) {
+      setReportDetail(activeReport);
+      setReportDetailLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setReportDetailLoading(true);
+    setReportDetail(null);
+    getNotificationById(activeReport.id)
+      .then((full) => {
+        if (!cancelled) setReportDetail(full);
+      })
+      .catch(() => {
+        if (!cancelled) setReportDetail(activeReport);
+      })
+      .finally(() => {
+        if (!cancelled) setReportDetailLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeReport]);
 
   const handleFilterChange = (key: keyof NotificationSettingsPatch, checked: boolean) => {
     setFilters((prev) => ({ ...prev, [key]: checked }));
@@ -159,6 +194,11 @@ export function NotificationsPage() {
       </section>
     );
   }
+
+  const errorReportModalData = activeReport ? (reportDetail ?? activeReport) : null;
+  const errorReportParsed = errorReportModalData
+    ? parseErrorReportSuggestion(errorReportModalData.suggestion)
+    : { typeLabel: "—", comment: "—" };
 
   return (
     <section className={styles.page}>
@@ -325,6 +365,18 @@ export function NotificationsPage() {
 
                         <p className={styles.itemText}>
                           {m.message || "Немає тексту повідомлення"}
+                          {m.error_report_id && (
+                            <>
+                              {" "}
+                              <button
+                                type="button"
+                                className={styles.detailsBtn}
+                                onClick={() => setActiveReport(m)}
+                              >
+                                Натисніть аби побачити деталі помилки
+                              </button>
+                            </>
+                          )}
                         </p>
                         {m.created_at && (
                           <small className={styles.itemDate}>{formatDate(m.created_at)}</small>
@@ -368,6 +420,56 @@ export function NotificationsPage() {
           </main>
         </div>
       </Container>
+      <Modal
+        open={activeReport != null}
+        onClose={() => {
+          setActiveReport(null);
+          setReportDetail(null);
+        }}
+        title="Деталі помилки"
+      >
+        {activeReport && errorReportModalData && (
+          <div className={styles.reportDetail}>
+            {reportDetailLoading && (
+              <p className={styles.reportDetailLoading}>Завантаження деталей…</p>
+            )}
+            <div className={styles.reportDetailRow}>
+              <span className={styles.reportDetailLabel}>Ким знайдено</span>
+              <span className={styles.reportDetailValue}>
+                {errorReportModalData.reporter_username ?? "—"}
+              </span>
+            </div>
+            <div className={styles.reportDetailRow}>
+              <span className={styles.reportDetailLabel}>Дата</span>
+              <span className={styles.reportDetailValue}>
+                {errorReportModalData.created_at ? formatDate(errorReportModalData.created_at) : "—"}
+              </span>
+            </div>
+            <div className={styles.reportDetailRow}>
+              <span className={styles.reportDetailLabel}>Книга</span>
+              <span className={styles.reportDetailValue}>{errorReportModalData.book_title ?? "—"}</span>
+            </div>
+            <div className={styles.reportDetailRow}>
+              <span className={styles.reportDetailLabel}>Розділ</span>
+              <span className={styles.reportDetailValue}>{errorReportModalData.chapter_title ?? "—"}</span>
+            </div>
+            <div className={styles.reportDetailRow}>
+              <span className={styles.reportDetailLabel}>Тип помилки</span>
+              <span className={styles.reportDetailValue}>{errorReportParsed.typeLabel}</span>
+            </div>
+            <div className={styles.reportDetailSection}>
+              <span className={styles.reportDetailLabel}>Фрагмент з помилкою</span>
+              <div className={styles.reportDetailBox}>
+                {errorReportModalData.error_text?.trim() || "—"}
+              </div>
+            </div>
+            <div className={styles.reportDetailSection}>
+              <span className={styles.reportDetailLabel}>Коментар</span>
+              <div className={styles.reportDetailBoxTall}>{errorReportParsed.comment}</div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </section>
   );
 }

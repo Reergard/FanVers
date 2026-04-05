@@ -12,8 +12,13 @@ class ChapterEditSerializer(serializers.ModelSerializer):
 
 
 class ErrorReportSerializer(serializers.ModelSerializer):
-    book = serializers.PrimaryKeyRelatedField(queryset=Book.objects.all())
-    chapter = serializers.PrimaryKeyRelatedField(queryset=Chapter.objects.all())
+    # Клієнт шле book_id / chapter_id; обов'язковість перевіряємо в validate()
+    book = serializers.PrimaryKeyRelatedField(
+        queryset=Book.objects.all(), required=False, allow_null=True
+    )
+    chapter = serializers.PrimaryKeyRelatedField(
+        queryset=Chapter.objects.all(), required=False, allow_null=True
+    )
     book_id = serializers.IntegerField(write_only=True, required=False)
     chapter_id = serializers.IntegerField(write_only=True, required=False)
 
@@ -27,19 +32,27 @@ class ErrorReportSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         try:
-            # Отримуємо book і chapter з ID якщо вони надані
             if 'book_id' in data:
                 data['book'] = Book.objects.get(id=data['book_id'])
             if 'chapter_id' in data:
                 data['chapter'] = Chapter.objects.get(id=data['chapter_id'])
-            
-            # Використовуємо об'єкти book і chapter
-            book = data['book']
-            chapter = data['chapter']
-            
-            if chapter.book != book:
-                raise serializers.ValidationError("Глава не принадлежит указанной книге")
-            
+
+            book = data.get('book')
+            chapter = data.get('chapter')
+            if book is None or chapter is None:
+                raise serializers.ValidationError(
+                    "Потрібні ідентифікатори книги та розділу (book_id, chapter_id)."
+                )
+
+            if chapter.book_id != book.id:
+                raise serializers.ValidationError(
+                    "Глава не належить вказаній книзі."
+                )
+
+            data.pop('book_id', None)
+            data.pop('chapter_id', None)
             return data
         except (Book.DoesNotExist, Chapter.DoesNotExist):
-            raise serializers.ValidationError("Указанная книга или глава не существует")
+            raise serializers.ValidationError(
+                "Вказана книга або розділ не існує."
+            )
