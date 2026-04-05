@@ -235,8 +235,12 @@ export default function BookDetailOwner({
           bookType={book.book_type ?? undefined}
           ratingValue={book.ratingValue ?? null}
           ratingCount={book.ratingCount ?? null}
-          thankAuthorCoins={book.thankAuthorCoins ?? 10}
+          thankAuthorCoins={book.thankAuthorCoins ?? 20}
           bookId={book.id}
+          thankAuthorLabel={
+            book.book_type === "TRANSLATION" ? "Подякувати перекладачу" : "Подякувати автору"
+          }
+          thankAuthorInteractive={false}
           showSettings
           onBecomeTranslator={() => {}}
         />

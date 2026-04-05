@@ -4,7 +4,7 @@ import { Icon } from "../../shared/Icon";
 import { StarSvg } from "../../shared/StarSvg/StarSvg";
 import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { FrameLink } from "../../shared/FrameLink/FrameLink";
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import logo from "../../assets/logos/logo.png";
 import mobileHomeBg from "../../assets/backgrounds/mobile_home_bg.svg";
@@ -18,6 +18,7 @@ import { counterWs } from "../../chat/ws/counterWs";
 import type { ChatMessage } from "../../chat/api/types";
 import { getMyProfile } from "../../users/profileService";
 import { resolveAvatarUrl } from "../../shared/avatar/resolveAvatarUrl";
+import { useNotifications } from "../../notification/useNotifications";
 
 // Single source of truth (Desktop)
 const NAV_MENU_OLD = [
@@ -131,6 +132,13 @@ export function Header() {
     staleTime: 60_000,
   });
 
+  const { query: notificationsQuery } = useNotifications(isAuthenticated);
+  const unreadNotificationsCount = useMemo(() => {
+    const items = notificationsQuery.data?.notifications;
+    if (!items?.length) return 0;
+    return items.filter((n) => !n.is_read).length;
+  }, [notificationsQuery.data?.notifications]);
+
   const avatarUrl = resolveAvatarUrl(
     profileQuery.data?.has_custom_image === false
       ? null
@@ -143,10 +151,18 @@ export function Header() {
   const user = {
     name: isAuthenticated ? (username ?? "Користувач") : "Гість",
     coins: isAuthenticated ? (balance ?? "0") : "0",
-    notifications: 4,
+    notifications: unreadNotificationsCount,
     messages: chatState.unreadTotal,
     avatarUrl,
   };
+
+  const goToNotifications = useCallback(() => {
+    if (isAuthenticated) navigate("/messages");
+  }, [isAuthenticated, navigate]);
+
+  const goToChats = useCallback(() => {
+    if (isAuthenticated) navigate("/chat");
+  }, [isAuthenticated, navigate]);
 
   // Состояние меню
   const [menuOpen, setMenuOpen] = useState(false);
@@ -288,7 +304,13 @@ export function Header() {
 
               <div className={styles.compactMeta} style={{ visibility: isAuthenticated ? "visible" : "hidden" }}>
                 <div className={styles.compactActions} aria-label="Сповіщення та повідомлення">
-                  <button className={styles.iconBtn} type="button" aria-label="Сповіщення" disabled={!isAuthenticated}>
+                  <button
+                    className={styles.iconBtn}
+                    type="button"
+                    aria-label="Сповіщення"
+                    disabled={!isAuthenticated}
+                    onClick={goToNotifications}
+                  >
                     <span className={styles.badgeWrap}>
                       <Icon name="bell" className={styles.icon} title="Сповіщення" />
                       {isAuthenticated && user.notifications > 0 ? (
@@ -299,7 +321,13 @@ export function Header() {
                     </span>
                   </button>
 
-                  <button className={styles.iconBtn} type="button" aria-label="Повідомлення" disabled={!isAuthenticated}>
+                  <button
+                    className={styles.iconBtn}
+                    type="button"
+                    aria-label="Повідомлення"
+                    disabled={!isAuthenticated}
+                    onClick={goToChats}
+                  >
                     <span className={styles.badgeWrap}>
                       <Icon name="mail" className={styles.icon} title="Повідомлення" />
                       {isAuthenticated && user.messages > 0 ? (
@@ -335,24 +363,42 @@ export function Header() {
             <button
               className={styles.iconBtn}
               type="button"
-              aria-label="Сповіщення"
+              aria-label={
+                user.notifications > 0
+                  ? `Сповіщення, ${user.notifications} нових`
+                  : "Сповіщення"
+              }
               style={{ visibility: isAuthenticated ? "visible" : "hidden" }}
+              disabled={!isAuthenticated}
+              onClick={goToNotifications}
             >
               <span className={styles.badgeWrap}>
                 <Icon name="bell" className={styles.icon} title="Сповіщення" />
-                {user.notifications > 0 ? <span className={styles.badge}>{user.notifications}</span> : null}
+                {isAuthenticated && user.notifications > 0 ? (
+                  <span className={styles.badge} aria-hidden>
+                    {user.notifications}
+                  </span>
+                ) : null}
               </span>
             </button>
 
             <button
               className={styles.iconBtn}
               type="button"
-              aria-label="Повідомлення"
+              aria-label={
+                user.messages > 0 ? `Повідомлення, ${user.messages} нових` : "Повідомлення"
+              }
               style={{ visibility: isAuthenticated ? "visible" : "hidden" }}
+              disabled={!isAuthenticated}
+              onClick={goToChats}
             >
               <span className={styles.badgeWrap}>
                 <Icon name="mail" className={styles.icon} title="Повідомлення" />
-                {user.messages > 0 ? <span className={styles.badge}>{user.messages}</span> : null}
+                {isAuthenticated && user.messages > 0 ? (
+                  <span className={styles.badge} aria-hidden>
+                    {user.messages}
+                  </span>
+                ) : null}
               </span>
             </button>
 

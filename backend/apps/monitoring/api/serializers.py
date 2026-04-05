@@ -21,16 +21,20 @@ class AuthorThanksSerializer(serializers.ModelSerializer):
 
 class CreateAuthorThanksSerializer(serializers.Serializer):
     book_id = serializers.IntegerField(min_value=1)
-    amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('10'), max_value=Decimal('10000'))
+    amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=Decimal('20'),
+        max_value=Decimal('10000'),
+    )
+    idempotency_key = serializers.CharField(
+        min_length=8,
+        max_length=64,
+        trim_whitespace=True,
+        allow_blank=False,
+    )
     message = serializers.CharField(max_length=500, required=False, allow_blank=True)
-    
-    def validate_book_id(self, value):
-        """Проверяем существование книги"""
-        from apps.catalog.models import Book
-        if not Book.objects.filter(id=value).exists():
-            raise serializers.ValidationError("Книга не знайдена")
-        return value
-    
+
     def validate_message(self, value):
         """Валидация сообщения"""
         if value and len(value.strip()) > 500:

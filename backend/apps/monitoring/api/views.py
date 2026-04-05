@@ -4,8 +4,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.core.exceptions import ValidationError
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from apps.catalog.models import Chapter, Book
 from ..models import UserChapterProgress, AuthorThanks
 from .serializers import UserChapterProgressSerializer, UserReadingStatsSerializer, CreateAuthorThanksSerializer
@@ -14,6 +15,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from apps.navigation.models import Bookmark
 from apps.users.api.mixins import BalanceOperationMixin
+from apps.users.models import Profile
 import logging
 
 logger = logging.getLogger(__name__)
@@ -108,15 +110,15 @@ class UserReadingStatsView(APIView):
 
 class AuthorThanksView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'thanks'
 
     def post(self, request):
-        """Создание благодарности автору"""
+        """Подяка власнику книги (автору або перекладачу): списання з балансу дарувальника, зарахування власнику."""
         try:
-            # Валидация входных данных
             serializer = CreateAuthorThanksSerializer(data=request.data)
-            
+
             if not serializer.is_valid():
                 error_messages = []
                 for field, errors in serializer.errors.items():
@@ -124,88 +126,151 @@ class AuthorThanksView(APIView):
                         error_messages.extend(errors)
                     else:
                         error_messages.append(str(errors))
-                
+
                 return Response(
-                    {'error': '; '.join(error_messages)}, 
+                    {'error': '; '.join(error_messages)},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
             book_id = serializer.validated_data['book_id']
             amount = serializer.validated_data['amount']
             message = serializer.validated_data.get('message', '')
-            
-            # Получаем книгу с дополнительными проверками
+            idempotency_key = serializer.validated_data['idempotency_key']
+
             try:
                 book = Book.objects.select_related('owner').get(id=book_id)
             except Book.DoesNotExist:
                 return Response(
-                    {'error': 'Книга не знайдена'}, 
+                    {'error': 'Книга не знайдена'},
                     status=status.HTTP_404_NOT_FOUND
                 )
-            
-            # Проверяем, что пользователь не пытается поблагодарить сам себя
-            if book.owner == request.user:
+
+            if book.owner_id is None:
                 return Response(
-                    {'error': 'Ви не можете подякувати самому собі'}, 
+                    {'error': 'У цієї книги немає власника для отримання подяки'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
-            # Получаем профили с проверками
+
+            if book.owner_id == request.user.id:
+                return Response(
+                    {'error': 'Ви не можете подякувати самому собі'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             try:
                 giver_profile = request.user.profile
-                receiver_profile = book.owner.profile
-            except Exception as e:
-                logger.error(f"Error getting profiles: {str(e)}")
+            except Profile.DoesNotExist:
                 return Response(
-                    {'error': 'Помилка отримання профілів користувачів'}, 
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-            
-            # Проверяем максимальную сумму (валидация уже прошла в сериализаторе, но для безопасности)
-            if amount > 10000:
-                return Response(
-                    {'error': 'Максимальна сума подяки: 10,000 FanCoins'}, 
+                    {'error': 'Профіль користувача не знайдено'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
-            # Throttling уже ограничивает частоту запросов (5/min), поэтому дополнительная проверка не нужна
-            
+
+            try:
+                receiver_profile = book.owner.profile
+            except Profile.DoesNotExist:
+                return Response(
+                    {'error': 'У власника книги немає профілю для отримання подяки'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             balance_mixin = BalanceOperationMixin()
-            
-            with transaction.atomic():
-                # Списываем с дарителя
-                giver_result = balance_mixin.perform_balance_operation(
-                    giver_profile,
-                    amount,
-                    'thanks_given'
-                )
-                
-                # Начисляем получателю
-                receiver_result = balance_mixin.perform_balance_operation(
-                    receiver_profile,
-                    amount,
-                    'thanks_received'
-                )
-                
-                # Создаем запись о благодарности
-                thanks = AuthorThanks.objects.create(
+            duplicate_payload = None
+            success_payload = None
+
+            try:
+                with transaction.atomic():
+                    for pid in sorted([giver_profile.id, receiver_profile.id]):
+                        Profile.objects.select_for_update().get(pk=pid)
+
+                    existing = (
+                        AuthorThanks.objects.select_for_update()
+                        .filter(giver=request.user, idempotency_key=idempotency_key)
+                        .first()
+                    )
+                    if existing:
+                        giver_db = Profile.objects.get(pk=giver_profile.pk)
+                        duplicate_payload = {
+                            'message': 'Подяку вже було надіслано',
+                            'new_balance': float(giver_db.balance),
+                            'thanks_id': existing.id,
+                            'amount': float(existing.amount),
+                            'duplicate': True,
+                        }
+                    else:
+                        giver_result = balance_mixin.perform_balance_operation(
+                            giver_profile,
+                            amount,
+                            'thanks_given'
+                        )
+
+                        balance_mixin.perform_balance_operation(
+                            receiver_profile,
+                            amount,
+                            'thanks_received'
+                        )
+
+                        thanks = AuthorThanks.objects.create(
+                            giver=request.user,
+                            receiver=book.owner,
+                            book=book,
+                            amount=amount,
+                            message=message or '',
+                            idempotency_key=idempotency_key,
+                        )
+
+                        logger.info(
+                            "User %s thanked %s for book %s with %s FanCoins",
+                            request.user.username,
+                            book.owner.username,
+                            book.title,
+                            amount,
+                        )
+
+                        success_payload = {
+                            'message': 'Подяку успішно відправлено',
+                            'new_balance': float(giver_result),
+                            'thanks_id': thanks.id,
+                            'amount': float(amount),
+                        }
+
+            except IntegrityError:
+                existing = AuthorThanks.objects.filter(
                     giver=request.user,
-                    receiver=book.owner,
-                    book=book,
-                    amount=amount,
-                    message=message
+                    idempotency_key=idempotency_key,
+                ).first()
+                if existing:
+                    try:
+                        bal = float(request.user.profile.balance)
+                    except Exception:
+                        bal = 0.0
+                    return Response({
+                        'message': 'Подяку вже було надіслано',
+                        'new_balance': bal,
+                        'thanks_id': existing.id,
+                        'amount': float(existing.amount),
+                        'duplicate': True,
+                    })
+                logger.error(
+                    "IntegrityError in author thanks without duplicate row (key=%s)",
+                    idempotency_key,
+                    exc_info=True,
                 )
-                
-                # Логируем операцию
-                logger.info(f"User {request.user.username} thanked {book.owner.username} for book {book.title} with {amount} FanCoins")
-            
-            return Response({
-                'message': 'Подяку успішно відправлено',
-                'new_balance': float(giver_result),
-                'thanks_id': thanks.id,
-                'amount': float(amount)
-            })
-            
+                return Response(
+                    {'error': 'Не вдалося завершити операцію. Спробуйте ще раз.'},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+            if duplicate_payload is not None:
+                return Response(duplicate_payload)
+            if success_payload is not None:
+                return Response(success_payload)
+
+            logger.error("Author thanks: atomic completed without duplicate or success payload")
+            return Response(
+                {'error': 'Внутрішня помилка сервера. Спробуйте пізніше'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
         except ValidationError as e:
             logger.warning(f"Validation error in author thanks: {str(e)}")
             # Передаем конкретное сообщение об ошибке пользователю

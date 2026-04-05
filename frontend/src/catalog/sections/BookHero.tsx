@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import styles from "../styles/BookDetail.module.css";
 import { ActionButton } from "../../shared/ActionButton/ActionButton";
@@ -6,6 +7,9 @@ import { BookMeta, type MetaRow } from "./BookMeta";
 import { BookActions } from "./BookActions";
 import { BookRatingStars } from "./BookRatingStars";
 import { fetchBookRatings } from "../../api/ratingApi";
+import { useAuth } from "../../auth/useAuth";
+import { useAuthModal } from "../../auth/AuthModalContext";
+import { ModalThankAuthor } from "../ModalThankAuthor";
 import backBalanceIcon from "../assets/icons/back_balance.svg";
 import icon18Big from "../assets/icons/18+big.svg";
 import linearIcon from "../assets/icons/linear.svg";
@@ -38,6 +42,8 @@ export type BookHeroProps = {
   thankAuthorLabel?: string;
   thankAuthorCoins?: string | number;
   bookId?: number;
+  /** false для власника книги — блок лише декоративний */
+  thankAuthorInteractive?: boolean;
   onBecomeTranslator?: () => void;
   /** Показувати кнопку Налаштування (тільки для власників книги) */
   showSettings?: boolean;
@@ -57,12 +63,18 @@ export function BookHero({
   bookType,
   ratingValue,
   ratingCount,
-  thankAuthorLabel = "подякувати автору",
+  thankAuthorLabel = "Подякувати автору",
+  thankAuthorCoins = 20,
   bookId,
+  thankAuthorInteractive = true,
   onBecomeTranslator,
   showSettings = false,
 }: BookHeroProps) {
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
+  const { openLoginModal } = useAuthModal();
+  const [thankModalOpen, setThankModalOpen] = useState(false);
   const slugForRatings = (bookSlug && String(bookSlug).trim()) || "";
 
   const { shortMetaRows, chipsMetaRows } = useMemo(() => {
@@ -107,6 +119,20 @@ export function BookHero({
       queryClient.invalidateQueries({ queryKey: ["book-ratings", slugForRatings] });
     }
   };
+
+  const thankCoinsDisplay =
+    typeof thankAuthorCoins === "number"
+      ? String(thankAuthorCoins)
+      : String(thankAuthorCoins ?? "20");
+
+  function handleThankAuthorClick() {
+    if (!thankAuthorInteractive || bookId == null) return;
+    if (!isAuthenticated) {
+      openLoginModal(location.pathname);
+      return;
+    }
+    setThankModalOpen(true);
+  }
 
   return (
     <section className={styles.hero} aria-labelledby="book-title-ua">
@@ -172,16 +198,34 @@ export function BookHero({
           {/* 5. RATING + AUTHOR MARK — обгортка для правильного порядку на ПК (спочатку рейтинг, потім Авторська книга) */}
           <div className={styles.heroRatingWrap}>
             <aside className={styles.heroRating} aria-label="Панель рейтингу та підтримки автора">
-              <div className={styles.thankAuthor}>
-                <div className={styles.thankAuthorIconWrap}>
-                  <img src={backBalanceIcon} alt="" className={styles.thankAuthorIcon} aria-hidden />
-                  <div className={styles.thankAuthorCoins}>
-                    <p>10</p>
-                    <p>FanCoins</p>
+              {thankAuthorInteractive && bookId != null ? (
+                <button
+                  type="button"
+                  className={`${styles.thankAuthor} ${styles.thankAuthorInteractive}`}
+                  onClick={handleThankAuthorClick}
+                  aria-label={`${thankAuthorLabel}. Відкрити форму подяки власнику книги.`}
+                >
+                  <div className={styles.thankAuthorIconWrap}>
+                    <img src={backBalanceIcon} alt="" className={styles.thankAuthorIcon} aria-hidden />
+                    <div className={styles.thankAuthorCoins}>
+                      <p>{thankCoinsDisplay}</p>
+                      <p>FanCoins</p>
+                    </div>
                   </div>
+                  <span className={styles.thankAuthorLabel}>{thankAuthorLabel}</span>
+                </button>
+              ) : (
+                <div className={styles.thankAuthor}>
+                  <div className={styles.thankAuthorIconWrap}>
+                    <img src={backBalanceIcon} alt="" className={styles.thankAuthorIcon} aria-hidden />
+                    <div className={styles.thankAuthorCoins}>
+                      <p>{thankCoinsDisplay}</p>
+                      <p>FanCoins</p>
+                    </div>
+                  </div>
+                  <span className={styles.thankAuthorLabel}>{thankAuthorLabel}</span>
                 </div>
-                <span className={styles.thankAuthorLabel}>{thankAuthorLabel}</span>
-              </div>
+              )}
               <div className={styles.ratingsStack}>
               {slugForRatings ? (
                 <>
@@ -233,12 +277,21 @@ export function BookHero({
               )}
               </div>
             </aside>
-            <div className={styles.heroAuthorMark}>
-              {authorMarkText ?? "Авторська книга"}
-            </div>
+            {authorMarkText != null && authorMarkText !== "" ? (
+              <div className={styles.heroAuthorMark}>{authorMarkText}</div>
+            ) : null}
           </div>
         </div>
       </div>
+
+      {bookId != null ? (
+        <ModalThankAuthor
+          open={thankModalOpen}
+          onClose={() => setThankModalOpen(false)}
+          bookId={bookId}
+          bookTitle={title}
+        />
+      ) : null}
     </section>
   );
 }

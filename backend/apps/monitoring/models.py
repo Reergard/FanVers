@@ -268,11 +268,25 @@ class AuthorThanks(models.Model):
         auto_now_add=True,
         verbose_name='Дата подяки'
     )
-    
+    idempotency_key = models.CharField(
+        max_length=64,
+        null=True,
+        blank=True,
+        verbose_name='Ключ ідемпотентності',
+        help_text='Унікальний ключ з клієнта; повтор з тим самим ключем не списує баланс повторно.',
+    )
+
     class Meta:
         verbose_name = 'Подяка авторові'
         verbose_name_plural = 'Подяки авторам'
         ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=('giver', 'idempotency_key'),
+                condition=Q(idempotency_key__isnull=False) & ~Q(idempotency_key=''),
+                name='monitoring_authorthanks_giver_idem_uniq',
+            ),
+        ]
         indexes = [
             models.Index(fields=['giver', 'created_at']),
             models.Index(fields=['receiver', 'created_at']),
