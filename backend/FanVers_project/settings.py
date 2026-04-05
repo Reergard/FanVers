@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'apps.monitoring.apps.MonitoringConfig',
     'apps.analytics_books.apps.AnalyticsBooksConfig',
     'apps.subscription.apps.SubscriptionConfig',
+    'apps.support.apps.SupportConfig',
 
     'rest_framework',
     'rest_framework.authtoken',
@@ -219,6 +220,7 @@ REST_FRAMEWORK = {
         'auth_login': '5/min',     # логин
         'auth_refresh': '30/min',  # обновление токенов
         'auth_logout': '20/min',   # логаут
+        'support_ticket': '10/hour',  # звернення в підтримку (на IP / user id)
     }
 }
 
@@ -407,8 +409,10 @@ STATIC_ROOT = os.getenv(
 
 # Налаштування безпеки для завантаження файлів
 SECURE_CONTENT_TYPE_NOSNIFF = True
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
+# Підтримка: до 3 вкладень по 5 МБ + поля форми — ліміт тіла запиту вищий за один файл.
+_FILE_UPLOAD_MAX = int(os.getenv("DATA_UPLOAD_MAX_MB", "18")) * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = _FILE_UPLOAD_MAX
+DATA_UPLOAD_MAX_MEMORY_SIZE = _FILE_UPLOAD_MAX
 FILE_UPLOAD_TEMP_DIR = None  # Використовуємо тимчасову папку системи
 
 # Додаткові налаштування безпеки
