@@ -141,7 +141,7 @@ const { isAuthenticated, userId, username, balance, authReady } = useAuth();
 - сторінка `/chat` бере `authReady`, `isAuthenticated`, `username`, `userId` із `useAuth()`;
 - при `!isAuthenticated` робить редірект на `/login`;
 - для HTTP-запитів чату використовується `http.ts` (Bearer + refresh/retry);
-- для ws токен береться з `auth/token.ts` (`getAccess()`).
+- для **WebSocket** чату та counter — **сесійні cookies** (як на бекенді `SessionMiddlewareStack` + `AuthMiddlewareStack`); **токен у URL не передається**.
 
 Потік даних:
 
@@ -153,19 +153,16 @@ const { isAuthenticated, userId, username, balance, authReady } = useAuth();
 4. Надсилання повідомлення:
    - спочатку через `chatWs.sendMessage`,
    - якщо ws не відкритий — fallback `chatApi.sendMessage`.
-5. Вхідні ws події оновлюють:
-   - `messagesByChatId`,
-   - `last_message` у списку чатів,
-   - `unreadTotal` (через store recalculation).
+5. Вхідні ws-події counter оновлюють лічильники через `applyCounterEvent` (зокрема поле **`unread_count`** з бекенду); для відкритого чату події `chatWs` оновлюють `messagesByChatId` і список чатів через `handleIncomingMessage`.
 
 Header і unread:
 
-- у `widgets/header/Header.tsx` підключений `counterWs`;
-- бейдж повідомлень у хедері бере значення з `useChat().state.unreadTotal`.
+- у `widgets/header/Header.tsx` підключений `counterWs` (з автореконектом), періодичний **`fetchChats` ~30 с** як запасний варіант;
+- бейдж повідомлень у хедері: **`useChat().state.unreadTotal`**.
 
-Нюанс:
+Список чатів:
 
-- у лівому списку чатів окремий бейдж unread не рендериться, але `unreadTotal` зберігається в store і використовується в Header.
+- у `ChatList` для кожного діалогу з **`unread_count > 0`** показується бейдж (`.unreadBadge`); глобальна сума — у хедері.
 
 ## Створення книги та Налаштування книги
 

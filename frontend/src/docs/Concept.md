@@ -370,9 +370,9 @@ Container увеличивает max-width до 1680px
 - UI-частини: `src/chat/components/ChatList.tsx`, `ChatWindow.tsx`, `CreateChatModal.tsx`;
 - store: `src/chat/store/chatStore.ts` + `useChat.ts` (`useSyncExternalStore`);
 - API: `src/chat/api/chatApi.ts` через `api/http.ts` і `API.chat` у `api/endpoints.ts`;
-- realtime:
-  - `src/chat/ws/chatWs.ts` -> `ws/chat/{chatId}/`,
-  - `src/chat/ws/counterWs.ts` -> `ws/counter/`.
+- realtime (WebSocket без токена в URL — cookies / сесія):
+  - `src/chat/ws/chatWs.ts` → `ws/chat/{chatId}/` (з автореконектом),
+  - `src/chat/ws/counterWs.ts` → `ws/counter/` (з автореконектом; payload з `unread_count`).
 
 Як працює:
 
@@ -384,9 +384,9 @@ Container увеличивает max-width до 1680px
   - fallback через HTTP `sendMessage`.
 - Видалення чату — через confirm modal (Так/Ні) і `DELETE /api/chat/{id}/`.
 
-Нюанс:
+Також:
 
-- глобальний counter WebSocket підключається в `widgets/header/Header.tsx`; `unreadTotal` береться із chat-store і використовується для бейджа повідомлень у хедері.
+- глобальний counter WS у `widgets/header/Header.tsx`; `unreadTotal` з chat-store для бейджа в хедері; у списку чатів — бейдж `unread_count` на рівні `ChatList`.
 
 Деталі:
 

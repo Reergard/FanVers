@@ -1,202 +1,155 @@
 # Чат на Frontend (`/chat`)
 
-Документ описывает реальную реализацию чата во фронтенде: какие файлы участвуют, как идут данные, как работают кнопки и проверки.
+Документ описує фактичну реалізацію чату: файли, потоки даних, WS і store.
 
 ---
 
-## 1) Где находится код
+## 1) Де лежить код
 
-### Основная фича
+### Основна фіча
 
 `frontend/src/chat/`
 
-- `Chat.tsx` — реэкспорт страницы (`export { default } from "./ChatPage"`).
-- `ChatPage.tsx` — оркестрация страницы, auth-гейт, ws-подключение, модалка создания чата.
-- `Chat.module.css` — стили страницы и локальных модалок.
+- `Chat.tsx` — реекспорт сторінки (`export { default } from "./ChatPage"`).
+- `ChatPage.tsx` — оркестрація: auth-gейт, `fetchChats`, lifecycle `chatWs`, модалка створення чату, `visibilitychange` → повторне `fetchChats`.
+- `Chat.module.css` — стилі сторінки та локальних модалок (у т.ч. `.unreadBadge` у списку чатів).
 
-### Компоненты
+### Компоненти
 
-- `components/ChatList.tsx` — левый столбик: список диалогов + кнопка "Створити чат".
-- `components/ChatWindow.tsx` — правое окно: header выбранного чата, сообщения, отправка, подтверждение удаления.
-- `components/CreateChatModal.tsx` — модалка создания чата (через общий `shared/Modal/Modal`).
+- `components/ChatList.tsx` — лівий стовпчик: список діалогів (з **бейджем `unread_count`** при `> 0`), кнопка «Створити чат».
+- `components/ChatWindow.tsx` — вікно вибраного чату: повідомлення, відправка, підтвердження видалення.
+- `components/CreateChatModal.tsx` — модалка створення (`shared/Modal/Modal`).
 
-### Данные и состояние
+### Дані та стан
 
-- `api/types.ts` — типы `ChatListItem`, `ChatMessage`, `ChatParticipant`.
-- `api/chatApi.ts` — HTTP-обертки на `/api/chat/*` через общий `http.ts`.
-- `store/chatStore.ts` — внешний store чата (state + actions + subscribe).
-- `store/useChat.ts` — React-хук над `useSyncExternalStore`.
+- `api/types.ts` — `ChatListItem`, `ChatMessage`, `ChatParticipant` (у списку є **`unread_count?`**).
+- `api/chatApi.ts` — HTTP до `/api/chat/*` через `http.ts`.
+- `store/chatStore.ts` — зовнішній store (стан + actions + `subscribe`).
+- `store/useChat.ts` — `useSyncExternalStore` над снапшотом store.
 
 ### Realtime
 
-- `ws/chatWs.ts` — WebSocket выбранного чата (`/ws/chat/:chatId/`).
-- `ws/counterWs.ts` — глобальный WebSocket счетчика (`/ws/counter/`).
+- `ws/chatWs.ts` — WebSocket кімнати чату: `/ws/chat/{chatId}/` (**без токена в URL**; auth через cookies / сесію, як і на бекенді).
+- `ws/counterWs.ts` — глобальний лічильник: `/ws/counter/`; парсить **`unread_count`** / `unreadCount`; **автореконект** через ~3 с після обриву.
 
-### Интеграция с остальным приложением
+### Інтеграція в додаток
 
-- `src/App.tsx` — роут `/chat` (lazy: `import("./chat/Chat")`).
-- `src/widgets/header/Header.tsx` — подключение `counterWs`, загрузка `chatStore.fetchChats()`, бейдж сообщений = `chatState.unreadTotal`.
-- `src/api/endpoints.ts` — раздел `API.chat`.
-
----
-
-## 2) HTTP API, который вызывает фронтенд
-
-Используется `chatApi.ts` + `API.chat`:
-
-- `GET /api/chat/` — список чатов (`getChats`).
-- `GET /api/chat/{id}/messages/` — сообщения чата (`getChatMessages`).
-- `POST /api/chat/create/` — создать чат (`createChat`), payload: `{ username, message? }`.
-- `DELETE /api/chat/{id}/` — удалить чат (`deleteChat`).
-- `POST /api/chat/{id}/mark_as_read/` — отметить как прочитанный (`markChatAsRead`).
-- `POST /api/chat/{id}/send_message/` — fallback-отправка сообщения, если ws не открыт (`sendMessage`).
-
-Все запросы идут через `api/http.ts`, значит:
-
-- Bearer токен берется автоматически;
-- при 401 работает refresh + retry (по общему механизму auth).
+- `src/App.tsx` — маршрут `/chat` (lazy: `import("./chat/Chat")`).
+- `src/widgets/header/Header.tsx` — для авторизованого користувача: `chatActions.fetchChats()`, **`counterWs.connect()`**, обробник викликає **`applyCounterEvent(..., unreadCount)`**; періодичний **`fetchChats` кожні 30 с** як fallback; перехід на **`/chat`** по іконці повідомлень (окремо від сторінки сповіщень **`/messages`**).
+- `src/api/endpoints.ts` — об’єкт `API.chat`.
 
 ---
 
-## 3) Store: что хранится и зачем
+## 2) HTTP API, який викликає фронт
 
-`chatStore.ts` хранит:
+`chatApi.ts` + `API.chat`:
 
-- `chats: ChatListItem[]`
-- `messagesByChatId: Record<number, ChatMessage[]>`
-- `selectedChatId: number | null`
-- `loadingChats: boolean`
-- `loadingMessages: Record<number, boolean>`
-- `error: string | null`
-- `unreadTotal: number`
+- `GET /api/chat/` — список чатів (`getChats`).
+- `GET /api/chat/{id}/messages/` — повідомлення (`getChatMessages`).
+- `POST /api/chat/create/` — створити чат, body: `{ username, message? }`.
+- `DELETE /api/chat/{id}/` — видалити чат.
+- `POST /api/chat/{id}/mark_as_read/` — позначити прочитаним.
+- `POST /api/chat/{id}/send_message/` — fallback-відправка, якщо WS чату не відкритий (`sendMessage`).
 
-Важные моменты реализации:
-
-- подписка: `subscribeChat`;
-- снапшот для React: `getChatStoreSnapshot` с кэшем по `storeVersion` (чтобы не было лишних циклов рендера);
-- сортировка диалогов по `last_message.created_at`;
-- защита от дублей сообщений по `message.id`;
-- локальный unread total пересчитывается через `recalcUnreadTotalInternal`.
+Запити йдуть через `api/http.ts` (Bearer + загальний механізм refresh/retry).
 
 ---
 
-## 4) WebSocket-логика
+## 3) Store: що зберігається
 
-## 4.1 `chatWs` (конкретный чат)
+`chatStore.ts`:
+
+- `chats`, `messagesByChatId`, `selectedChatId`
+- `loadingChats`, `loadingMessages`, `error`
+- `unreadTotal` — сума `unread_count` по чатах
+
+Важливо:
+
+- **`fetchChats`**: на початку **`if (state.loadingChats) return`** — захист від паралельних HTTP-запитів.
+- **`applyCounterEvent(chatId, message, username, unreadCount?)`**: якщо чату ще нема в store і не йде завантаження — **`fetchChats()`**; якщо з WS прийшов **`unreadCount`** — він перезаписує локальний лічильник (узгоджено з БД); інакше — інкремент через `upsertChatFromMessage`.
+- Сортування діалогів за `last_message.created_at`, захист від дублікатів повідомлень за `id`, `recalcUnreadTotalInternal`.
+
+---
+
+## 4) WebSocket
+
+### 4.1 `chatWs` (обраний чат)
 
 Файл: `ws/chatWs.ts`
 
-- Подключение: `ws://.../ws/chat/{chatId}/?token={access}`.
-- Токен: только из `auth/token.ts` (`getAccess()`), не из localStorage.
-- Отправка: `sendMessage(text)` -> `{"message":"..."}`.
-- Подписка на входящие: `onMessage(handler)`.
+- Підключення до **`/ws/chat/{chatId}/`** (base з `VITE_WS_BASE_URL` / `VITE_API_BASE_URL` / same-origin у dev).
+- **Токен у query не передається** — сесійні cookies.
+- Відправка: `sendMessage(text)` → `{"message":"..."}`.
+- **Автореконект** (~3 с) лише якщо розрив стався «випадково», а цільовий чат той самий (`targetChatId` / `activeSocketChatId`); при перемиканні чату або **`disconnect()`** реконект вимикається.
 
-В `ChatPage.tsx`:
+У `ChatPage.tsx`: при зміні `selectedChatId` — `connect` / cleanup `disconnect`; вхідні події → `actions.handleIncomingMessage`.
 
-- при выборе `selectedChatId` подключается `chatWs.connect(selectedChatId)`;
-- входящие сообщения идут в `actions.handleIncomingMessage(chatId, message, username)`.
-
-## 4.2 `counterWs` (глобальный)
+### 4.2 `counterWs` (глобальний)
 
 Файл: `ws/counterWs.ts`
 
-- Подключение: `ws://.../ws/counter/?token={access}`.
-- На `onopen` отправляется ping: `{"type":"ping"}`.
-- События обновляют store через `applyCounterEvent`.
+- Підключення до **`/ws/counter/`** (ті самі правила base URL).
+- На `onopen` — `{"type":"ping"}`.
+- Події з **`unread_count`** передаються в **`applyCounterEvent`**.
+- **Реконект** після обриву (~3 с), доки не викликано **`disconnect()`**.
 
-Где используется:
-
-- в `Header.tsx` (глобально для авторизованного пользователя);
-- `Header` на auth-сессии вызывает `chatActions.fetchChats()`, `counterWs.connect()`, подписывается на события.
+У **`Header.tsx`**: підписка для оновлення бейджа **`unreadTotal`**.
 
 ---
 
-## 5) Поведение страницы `/chat`
+## 5) Поведінка сторінки `/chat` (`ChatPage.tsx`)
 
-Файл: `ChatPage.tsx`
-
-1. Берет auth-состояние из `useAuth()`.
-2. Пока `!authReady` показывает "Завантаження…".
-3. Если `!isAuthenticated` делает `<Navigate to="/login" />`.
-4. После готовности и авторизации:
-   - `fetchChats()`;
-   - при `visibilitychange -> visible` повторно обновляет список чатов;
-   - управляет `chatWs` для выбранного чата.
+1. `useAuth()`: `authReady`, `isAuthenticated`, `username`, `userId`.
+2. Поки `!authReady` — «Завантаження…».
+3. Якщо `!isAuthenticated` — `<Navigate to="/login" />`.
+4. Після авторизації: **`fetchChats()`**; при **`visibilitychange` → visible** — знову **`fetchChats()`**.
+5. `chatWs` підключається до **`selectedChatId`**; у cleanup — `offMessage` + **`disconnect()`**.
 
 ---
 
-## 6) Логика кнопок (фактическая)
+## 6) Кнопки та дії (фактично)
 
-### "Створити чат" (`ChatList` -> `CreateChatModal`)
+### «Створити чат» → `CreateChatModal`
 
-- Открывает `CreateChatModal`.
-- Поля:
-  - username (обязательно),
-  - первое сообщение (необязательно).
-- По submit:
-  - вызывает `actions.createChat(username, firstMessage?)`;
-  - если ошибка содержит "already exists"/"уже существует" -> `showWarning("Чат з цим користувачем вже створено.")`;
-  - иначе `showError(...)`;
-  - при успехе модалка закрывается.
+- Submit → `createChat(username, firstMessage?)`; дублікат чату → `showWarning`; інакше помилка → `showError`.
 
-### Выбор чата в списке
+### Вибір чату в списку
 
-- `onSelect` -> `actions.selectChat(chatId)`.
-- В `ChatWindow` при первой инициализации конкретного chatId:
-  - `onLoadMessages(chatId)`;
-  - `onMarkRead(chatId)` (`markReadLocal` + `markChatAsRead`).
+- `selectChat(chatId)`; у **`ChatList`** для чатів з **`unread_count > 0`** показується **`.unreadBadge`**.
+- У `ChatWindow` при ініціалізації чату: завантаження повідомлень + **`markReadLocal` + `markChatAsRead`**.
 
-### Отправка сообщения
+### Відправка повідомлення
 
-- Кнопка submit в `ChatWindow`.
-- Если есть живой ws на этом chatId -> отправка через `chatWs.sendMessage`.
-- Иначе fallback через HTTP `sendMessageFallback`.
+- Якщо WS відкритий — `chatWs.sendMessage`; інакше **`sendMessageFallback`** (HTTP). Бекенд у обох випадках шле події в кімнату чату та counter — співрозмовник бачить оновлення в реальному часі.
 
-### "Видалити чат"
+### «Видалити чат»
 
-- Нажатие открывает confirm-модалку.
-- Текст: "Ви впевнені що хочете видалити цей чат?"
-- Кнопки:
-  - `Ні` — закрыть;
-  - `Так` — `onDeleteChat(chatId)`.
+- Підтвердження → `deleteChat(chatId)`.
 
 ---
 
-## 7) Как определяется "моё сообщение" (право/лево)
+## 7) «Моє повідомлення» (ліво / право)
 
-Файл: `components/ChatWindow.tsx`
-
-Сообщение считается своим, если:
-
-- `message.sender.id === currentUserId` (приоритетно), или
-- fallback: username совпадает после нормализации (`trim().toLowerCase()`).
-
-Это сделано потому, что в части ws-событий backend присылает только username.
+`ChatWindow.tsx`: своє, якщо `message.sender.id === userId` або fallback за нормалізованим `username` (WS інколи дає лише username).
 
 ---
 
-## 8) Проверки и защиты
+## 8) Захисти та перевірки
 
-- В store:
-  - `selectChat` не эмитит обновление, если chatId не изменился;
-  - `fetchMessages` не запускается повторно, если уже грузится этот chatId;
-  - `markReadLocal` не эмитит, если unread уже 0;
-  - duplicate message guard по id.
-- В `ChatWindow`:
-  - `initializedChatRef` не дает заново триггерить load/read для того же chatId.
-- В `CreateChatModal`:
-  - disabled submit при пустом username.
+- Store: `selectChat` без зайвого emit; `fetchMessages` не дублюється під час завантаження; `markReadLocal` якщо вже 0; дедуп повідомлень за `id`.
+- `ChatWindow`: `initializedChatRef` уникає повторних load/read для того ж `chatId`.
+- `CreateChatModal`: submit disabled при порожньому username.
 
 ---
 
-## 9) Известные нюансы текущей реализации
+## 9) Нюанси
 
-- В dev может появляться предупреждение вида `WebSocket is closed before the connection is established` для `counterWs`, если соединение закрывается раньше завершения рукопожатия (например, при быстрых mount/unmount циклах).
-- Левый список чатов не показывает отдельный бейдж unread (скрыт в UI), но `unreadTotal` сохраняется в store и используется в Header.
+- У dev можливе попередження браузера про закриття WebSocket до завершення handshake при швидких mount/unmount — зазвичай не критично.
+- Якщо **лише** змінити порядок полів у `ChatSerializer` так, що **`unread_count` обчислюється раніше за `last_message`**, на бекенді можливе зайве навантаження на prefetch повідомлень; на фронті це не налаштовується.
 
 ---
 
-## 10) Файлы документации, связанные с чатом
+## 10) Пов’язана документація
 
-- `frontend/src/docs/USER_DATA_FLOW.md` (добавлена секция про чат и auth-store/useAuth).
-- `backend/docs/CHAT_BACKEND.md` (backend-часть: модели, API, consumers).
+- `frontend/src/docs/USER_DATA_FLOW.md` — чат і header у контексті auth.
+- `backend/docs/CHAT_BACKEND.md` — моделі, REST, consumers, counter payload.

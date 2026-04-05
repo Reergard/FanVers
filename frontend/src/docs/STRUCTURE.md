@@ -436,7 +436,7 @@ export function AppRoutes() {
 Пов’язано з:
 
 - `api/endpoints.ts` (`API.chat`)
-- `widgets/header/Header.tsx` (глобальний unread через `useChat`)
+- `widgets/header/Header.tsx` (`counterWs`, періодичний refetch списку чатів, бейдж `unreadTotal` через `useChat`)
 - `docs/CHAT_FRONTEND.md`
 
 ---
