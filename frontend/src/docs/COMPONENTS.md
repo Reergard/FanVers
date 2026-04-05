@@ -382,7 +382,7 @@
 - Props: `bookSlug`, `ratingType` (BOOK | TRANSLATION), `title`, `average`, `totalVotes`, `userRating`, `isLoading`, `onRatingSuccess`.
 - Три стани зірки: порожня (0), середня (0.5), заповнена (1); hover показує попередній вибір до кліку.
 - Відправка оцінки: через `ratingApi.submitRating` з троттлінгом (`requestThrottle`); після успіху викликається `onRatingSuccess` (invalidate query у BookHero).
-- Сповіщення: `useNotification()` — `showWarning` коли гость клікає зірку («Для голосування необхідно увійти в систему»); `showError` при помилці відправки (в т.ч. 429, повідомлення з `data.error` / `data.detail`). Див. NOTIFICATIONS_FRONTEND.md, RATINGS_FRONTEND.md.
+- Зворотний зв’язок: `useNotification()` (глобальні модалки з **`NotificationProvider`**) — `showWarning`, коли гість клікає зірку («Для голосування необхідно увійти в систему»); `showError` при помилці відправки (в т.ч. 429, текст з `data.error` / `data.detail`). Див. **RATINGS_FRONTEND.md**. Це **не** сторінка внутрішніх повідомлень `/messages` — та описана в **NOTIFICATIONS_FRONTEND.md**.
 
 **Місця використання:**
 - `catalog/sections/BookHero.tsx` — два екземпляри з різними `ratingType` і даними з useQuery book-ratings.

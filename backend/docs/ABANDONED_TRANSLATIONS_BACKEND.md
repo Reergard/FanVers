@@ -115,6 +115,7 @@
 | `apps/catalog/abandoned_thresholds.py` | пороги 90 / 83 і режим хвилин |
 | `apps/notification/tasks.py` | попередження та перенос у `ABANDONED` |
 | `apps/notification/models.py` | `Notification` |
+| `docs/NOTIFICATIONS_BACKEND.md` | REST списку повідомлень, права, `version`, сигнали |
 | `FanVers_project/celery.py` | `beat_schedule`, задача `check_abandoned_books` |
 | `apps/analytics_books/services/books_filter.py` | виключення `ABANDONED` з ТОП/трендів |
 

@@ -1,6 +1,8 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from ..models import Notification
 from .serializers import NotificationSerializer
 import time
@@ -9,6 +11,8 @@ from rest_framework import status
 
 class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     
     def get_queryset(self):
         try:
@@ -28,12 +32,10 @@ class NotificationViewSet(viewsets.ModelViewSet):
         except Exception:
             return Notification.objects.none()
 
-    @transaction.atomic
     def list(self, request, *args, **kwargs):
         try:
             current_version = request.query_params.get('version', '0')
-            request_id = request.headers.get('X-Request-ID', 'unknown')
-            
+
             queryset = self.get_queryset()
             
             if queryset.exists():
@@ -53,11 +55,9 @@ class NotificationViewSet(viewsets.ModelViewSet):
                 })
 
             serializer = self.get_serializer(queryset, many=True)
-            
-            unique_data = {item['id']: item for item in serializer.data}.values()
-            
+
             return Response({
-                'notifications': list(unique_data),
+                'notifications': serializer.data,
                 'version': new_version
             })
             

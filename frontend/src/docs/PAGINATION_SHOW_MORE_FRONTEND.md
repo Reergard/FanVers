@@ -123,7 +123,7 @@
 
 ### `frontend/src/notification/NotificationsPage.tsx`
 
-- Дані: `useNotifications()` (`/api/notification/notifications/`).
+- Дані: `useNotifications(isAuthenticated)` (`/api/notification/notifications/`); той самий хук використовується в `Header` для лічильника непрочитаних (спільний ключ React Query `["notifications"]`). Деталі — `docs/NOTIFICATIONS_FRONTEND.md`.
 - Логіка:
   - `visibleNotifications = notifications.slice(0, visibleCount)`.
 - Скидання:

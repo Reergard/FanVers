@@ -77,7 +77,8 @@
 - `GET /api/notification/notifications/`
   - файл: `backend/apps/notification/api/views.py`
   - клас: `NotificationViewSet.list`
-  - використовує `version` для "є зміни / немає змін", але не сторінкову пагінацію.
+  - **Не** серверна пагінація: повертається повний список користувача або скорочена відповідь при незмінній **`version`** (query-параметр, мілісекунди): тоді `{ "notifications": [], "version": ... }`.
+  - Доступ: **`IsAuthenticated`**, **`JWTAuthentication`** на ViewSet (див. `NOTIFICATIONS_BACKEND.md`).
 
 ---
 

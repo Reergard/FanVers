@@ -64,6 +64,8 @@ export function NotificationsPage() {
   const [activeReport, setActiveReport] = useState<AppNotification | null>(null);
   const [reportDetail, setReportDetail] = useState<AppNotification | null>(null);
   const [reportDetailLoading, setReportDetailLoading] = useState(false);
+  const [pendingMarkReadId, setPendingMarkReadId] = useState<number | string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | string | null>(null);
 
   const profileQuery = useQuery({
     queryKey: ["profile"],
@@ -157,13 +159,18 @@ export function NotificationsPage() {
   const canSaveFilters = profileLoaded && Object.keys(filters).length > 0;
 
   const handleMarkAsRead = (id: number | string) => {
-    markRead.mutate(id);
+    setPendingMarkReadId(id);
+    markRead.mutate(id, {
+      onSettled: () => setPendingMarkReadId(null),
+    });
   };
 
   const handleDelete = (id: number | string) => {
+    setPendingDeleteId(id);
     remove.mutate(id, {
       onSuccess: () => showSuccess("Повідомлення видалено"),
       onError: () => showError("Помилка при видаленні повідомлення"),
+      onSettled: () => setPendingDeleteId(null),
     });
   };
 
@@ -388,7 +395,7 @@ export function NotificationsPage() {
                               type="button"
                               className={styles.markReadBtn}
                               onClick={() => handleMarkAsRead(m.id)}
-                              disabled={markRead.isPending}
+                              disabled={pendingMarkReadId === m.id}
                             >
                               Позначити як прочитане
                             </button>
@@ -397,7 +404,7 @@ export function NotificationsPage() {
                             type="button"
                             className={styles.deleteBtn}
                             onClick={() => handleDelete(m.id)}
-                            disabled={remove.isPending}
+                            disabled={pendingDeleteId === m.id}
                           >
                             Видалити
                           </button>

@@ -176,6 +176,8 @@ frontend/src/
 └── responsive-variables.css
 ```
 
+Повідомлення в застосунку (`/messages`): **`docs/NOTIFICATIONS_FRONTEND.md`**; бекенд того ж модуля — **`backend/docs/NOTIFICATIONS_BACKEND.md`** (від кореня репозиторію).
+
 ---
 
 ## `main.tsx` — точка входу React (старт застосунку)

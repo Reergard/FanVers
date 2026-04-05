@@ -19,7 +19,13 @@ export function useNotifications(enabled = true) {
         notifications: AppNotification[];
         version: string | null;
       }>(KEY);
-      return getNotifications({ version: prev?.version ?? null });
+      const result = await getNotifications({ version: prev?.version ?? null });
+
+      if (result.notifications.length === 0 && prev?.notifications?.length) {
+        return { notifications: prev.notifications, version: result.version };
+      }
+
+      return result;
     },
     staleTime: 20_000,
     refetchOnWindowFocus: true,

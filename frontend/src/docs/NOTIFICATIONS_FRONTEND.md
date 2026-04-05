@@ -1,336 +1,240 @@
 # Уведомлення на Frontend
 
-Цей документ описує, як працює система уведомлень на фронтенді: які файли залучені, їх відповідальність, послідовність виконання, логіка та нюанси.
+Цей документ описує, як працює система **внутрішніх повідомлень** (список на `/messages`): файли, потік даних, кеш React Query, API та відмінність від **toast** у `NotificationProvider`.
+
+Повна картина бекенду (версії, права, сигнали): **`backend/docs/NOTIFICATIONS_BACKEND.md`**.
 
 ---
 
 ## 1. Огляд
 
-Сторінка уведомлень (`/messages`) дозволяє користувачу:
+Сторінка **`/messages`** (`NotificationsPage`) дозволяє:
 
-- переглядати список повідомлень, отриманих від системи;
-- позначати повідомлення як прочитані;
-- видаляти повідомлення;
-- налаштовувати типи уведомлень, які потрібно отримувати (через профіль).
+- переглядати список повідомлень з API;
+- позначати як прочитані та видаляти;
+- для записів з репортом помилки — відкрити модалку з деталями (див. **`BOOK_ERROR_REPORT_FRONTEND.md`**);
+- зберігати **налаштування типів** повідомлень у профілі (чекбокси; це не фільтр поточного списку на клієнті).
 
-Дані беруться з REST API через axios-клієнт `http.ts`. Авторизація — JWT Bearer. React Query керує кешем та мутаціями.
+Дані — REST через `api/http.ts` (JWT). Кеш і мутації — **React Query**. Той самий запит списку використовується в **шапці** для лічильника непрочитаних.
 
 ---
 
-## 2. Файли та їх відповідальність
+## 2. Файли та відповідальність
 
-### 2.1. Слотова структура
+### 2.1. Структура
 
 ```
 frontend/src/
 ├── api/
-│   ├── endpoints.ts          # URL-и для API уведомлень
-│   └── http.ts               # Axios-клієнт з інтерцепторами
+│   ├── endpoints.ts          # URL повідомлень та профілю
+│   └── http.ts               # Axios + інтерцептори
 ├── notification/
-│   ├── types.ts              # Типи AppNotification, NotificationsResponse
-│   ├── notificationsService.ts # API-функції (get, mark_read, delete)
-│   ├── useNotifications.ts    # React Query-хук для сторінки
-│   ├── NotificationsPage.tsx # UI-компонент сторінки
-│   └── NotificationsPage.module.css
+│   ├── types.ts
+│   ├── notificationsService.ts
+│   ├── useNotifications.ts
+│   ├── NotificationsPage.tsx
+│   ├── NotificationsPage.module.css
+│   └── parseErrorReportSuggestion.ts   # розбір suggestion для модалки репорту
 ├── users/
-│   ├── profileService.ts     # updateNotificationSettings()
-│   └── types.ts              # NotificationSettingsPatch, UserProfile
-└── shared/
-    └── NotificationModal/
-        └── NotificationProvider.tsx  # Глобальні toast (showSuccess, showError)
+│   ├── profileService.ts
+│   └── types.ts
+├── widgets/header/
+│   └── Header.tsx            # useNotifications → бейдж непрочитаних
+└── shared/NotificationModal/
+    ├── NotificationProvider.tsx
+    ├── NotificationModal.tsx
+    └── AutoCloseNotificationModal.tsx
 ```
 
-### 2.2. Детальний опис файлів
+### 2.2. Таблиця файлів
 
 | Файл | Відповідальність |
 |------|------------------|
-| **api/endpoints.ts** | Зберігає URL-и для уведомлень: `notifications`, `notificationById(id)`, `notificationMarkAsRead(id)`. Єдине місце визначення шляхів. |
-| **api/http.ts** | Axios-інстанція з інтерцепторами: підставляє `Authorization: Bearer`, при 401 викликає refresh, один retry, при невдалій спробі — logout. Всі запити уведомлень йдуть через цей клієнт. |
-| **notification/types.ts** | `AppNotification` — модель одного повідомлення (id, message, is_read, created_at, опційно error_report_id, book_title тощо). `NotificationsResponse` — union типу для двох форматів відповіді: масив або `{ notifications, version }`. |
-| **notification/notificationsService.ts** | Чистий API-шар: `getNotifications()`, `markNotificationAsRead()`, `deleteNotification()`. Нормалізує відповідь з бекенду, робить дедуплікацію по id. |
-| **notification/useNotifications.ts** | React Query-хук: `useQuery` для завантаження, `useMutation` для mark_read і delete. Оновлює кеш без refetch після мутацій. |
-| **notification/NotificationsPage.tsx** | UI-компонент: гейти по auth, рендер списку, обробники кліків, фільтри з профілю, збереження налаштувань. |
-| **users/profileService.ts** | `updateNotificationSettings(patch)` — PUT на `/api/users/profile/notification-settings/`. Використовується для збереження чекбоксів фільтрів. |
-| **users/types.ts** | `NotificationSettingsPatch` — частковий тип з полями `comment_notifications`, `translation_status_notifications` тощо. |
-| **shared/NotificationModal/NotificationProvider.tsx** | Глобальний контекст для toast: `showSuccess`, `showError`, `showInfo`, `showWarning`, **`showSuccessAutoClose(message)`** (модалка без кнопок, авто-закриття через 3 с). Рендерить NotificationModal або AutoCloseNotificationModal залежно від variant. Використовується для зворотного зв’язку після збереження/видалення та після створення глави. |
-| **shared/NotificationModal/AutoCloseNotificationModal.tsx** | Модалка успіху без кнопок: тільки заголовок «Успіх» і текст; закривається по таймеру (prop `autoCloseMs`). Використовується для повідомлення після створення глави. |
+| **api/endpoints.ts** | `notifications`, `notificationById(id)`, `notificationMarkAsRead(id)`; налаштування: `profileNotificationSettings`. |
+| **api/http.ts** | `Authorization: Bearer`, 401 → refresh → один retry; CSRF тощо. |
+| **notification/types.ts** | `AppNotification`; `NotificationsResponse` — масив (legacy) або `{ notifications, version? }`. |
+| **notification/notificationsService.ts** | `getNotifications`, `markNotificationAsRead`, `deleteNotification`, **`getNotificationById`** (GET одного запису для повних полів репорту). Нормалізація snake_case/camelCase, дедуп по `id`. |
+| **notification/useNotifications.ts** | `useQuery` + merge, якщо відповідь має порожній `notifications`, а в кеші вже був непорожній список (узгоджено з контрактом бекенда «без змін»); мутації оновлюють кеш без повного refetch. |
+| **notification/NotificationsPage.tsx** | UI сторінки, фільтри профілю, локальне «Показати ще», pending **по id** на кнопках. |
+| **widgets/header/Header.tsx** | `useNotifications(isAuthenticated)`; `unreadNotificationsCount` = кількість елементів з `!is_read` у кеші. |
+| **users/profileService.ts** | `updateNotificationSettings` → PUT на `profileNotificationSettings`. |
+| **users/types.ts** | `NotificationSettingsPatch` тощо. |
+| **shared/NotificationModal/NotificationProvider.tsx** | Toast: `showSuccess`, `showError`, `showSuccessAutoClose` тощо — **не** список `/messages`. |
 
 ---
 
-## 3. Маршрутизація та вхід на сторінку
+## 3. Маршрутизація та вхід
 
 - **Шлях:** `/messages`
-- **Компонент:** `NotificationsPage` (lazy-завантаження через `React.lazy`)
-- **Опис:** `App.tsx` містить `<Route path="/messages" element={<NotificationsPage />} />`
+- **Компонент:** `NotificationsPage` — lazy у `App.tsx` (`React.lazy`).
 
-При переході на `/messages`:
+Порядок:
 
-1. Змонтується `NotificationsPage`.
-2. Викликається `useAuth()` → перевірка `authReady` і `isAuthenticated`.
-3. Якщо `!authReady` — показується «Завантаження…».
-4. Якщо `!isAuthenticated` — показується блок з посиланням на `/login`.
-5. Якщо `isAuthenticated` — рендериться повний контент і запускаються запити.
+1. `useAuth()` → `authReady`, `isAuthenticated`.
+2. `!authReady` — «Завантаження…».
+3. `!isAuthenticated` — заклик увійти; **`openLoginModal("/messages")`** (модалка входу з поверненням на `/messages`), а не окремий лінк лише на `/login`.
+4. Інакше — контент сторінки та запити з `enabled: isAuthenticated`.
 
 ---
 
-## 4. Отримання даних уведомлень
+## 4. Отримання списку
 
-### 4.1. Послідовність
+### 4.1. Ланцюжок
 
-1. **NotificationsPage** викликає `useNotifications(isAuthenticated)`.
-2. **useNotifications** створює `useQuery` з `enabled: isAuthenticated`:
-   - Запит не виконується, доки `isAuthenticated === false`.
-3. **queryFn**:
-   - Бере з кешу попередні дані (`qc.getQueryData(KEY)`).
-   - Передає `version` у `getNotifications({ version })` (для оптимізації на бекенді).
-4. **notificationsService.getNotifications()**:
-   - Робить `http.get(API.notifications, { params: { version }, headers: { "Cache-Control": "no-cache" } })`.
-   - `http` додає `Authorization: Bearer <access>`.
-   - Бекенд повертає `{ notifications: [...], version }` або масив (legacy).
-5. **normalizeNotifications(res.data)**:
-   - Якщо `Array.isArray(data)` → `{ items: [...], version: "0" }`.
-   - Якщо `data.notifications` → `{ items: data.notifications, version: data.version }`.
-   - Фільтрує елементи без `id`.
-6. **Дедуплікація:** `[...new Map(items.map(n => [n.id, n])).values()]`.
-7. Повертається `{ notifications, version }` і зберігається в React Query-кеші за ключем `["notifications"]`.
+1. Сторінка та `Header` викликають **`useNotifications(isAuthenticated)`** → `useQuery` з `enabled: isAuthenticated`.
+2. **`queryFn`**:
+   - читає попередній кеш `qc.getQueryData(["notifications"])`;
+   - викликає `getNotifications({ version: prev?.version ?? null })`.
+3. **`getNotifications`** (`notificationsService.ts`):
+   - `GET API.notifications` з **`Cache-Control: no-cache`**;
+   - query-параметр **`version` додається лише якщо значення truthy** (`params?.version ? { version } : undefined`) — перший запит іде **без** `version`; якщо збережене `version` дорівнює **`0`** (число), воно теж не потрапить у query (falsy), бекенд використає дефолт **`'0'`**;
+   - після відповіді — нормалізація та дедуп по `id`.
+4. **Злиття з кешем (важливо):** бекенд при **збігу версій** повертає порожній масив (див. бекенд-док). У `queryFn` умова в коді саме така: **`result.notifications.length === 0` і `prev.notifications` непорожній** — тоді повертається **`{ notifications: prev.notifications, version: result.version }`**. Явного порівняння `version` у TypeScript немає: коректність забезпечує контракт API (порожній список лише в сценарії «нічого не змінилось»). Інакше повертається `result`.
 
 ### 4.2. Формати відповіді бекенду
 
-- **Новий формат:** `{ notifications: AppNotification[], version?: string }`
-- **Legacy-формат:** `AppNotification[]` (масив напряму)
+- Основний: `{ notifications: [...], version }` (`version` у JSON часто **число**, на клієнті зберігається як прийшло).
+- Legacy: масив напряму — `normalizeNotifications` приводить до єдиної форми.
 
-`normalizeNotifications` коректно обробляє обидва варіанти.
+### 4.3. React Query
 
-### 4.3. Параметри React Query
-
-- `staleTime: 20_000` — дані вважаються свіжими 20 секунд.
-- `refetchOnWindowFocus: true` — при поверненні на вкладку список оновлюється.
+- `queryKey`: **`["notifications"]`** — спільний для сторінки та шапки.
+- `staleTime: 20_000` мс.
+- `refetchOnWindowFocus: true`.
 
 ---
 
 ## 5. Авторизація та безпека
 
-### 5.1. Гейти на сторінці
-
-- **authReady** — bootstrap завершено, статус не `unknown`.
-- **isAuthenticated** — `status === "authenticated"` в auth store.
-
-`useNotifications(isAuthenticated)` передає в `useQuery` параметр `enabled: isAuthenticated`. Тому **API-запити уведомлень не відправляються, доки `isAuthenticated === false`**. Параметр `authReady` не впливає на `enabled` — він лише контролює ранній return («Завантаження…»), коли bootstrap ще не завершено (у цей момент зазвичай `isAuthenticated` теж false).
-
-### 5.2. Інтерцептори http.ts
-
-- **Request:** підставляється `Authorization: Bearer <access>`.
-- **Response 401:** викликається `refreshSessionForce()`, один retry оригінального запиту.
-- **Якщо retry невдалий:** `doLogout()`, помилка пробрасывается далі.
-
-Для неавторизованих користувачів запити не йдуть, тому 401 від уведомлень не виникає.
+- Поки **`isAuthenticated === false`**, запит списку **не виконується** (`enabled: false`).
+- Бекенд для `/api/notification/notifications/` вимагає **JWT** та **`IsAuthenticated`**; при простроченому токені спрацьовує ланцюжок refresh у `http.ts`.
 
 ---
 
-## 6. Стани UI та відображення
+## 6. Стани UI
 
-### 6.1. Умовний рендеринг
+### 6.1. Умовний рендеринг (`NotificationsPage`)
 
-| Умова | Відображення |
-|-------|---------------|
-| `!authReady` | «Завантаження…» |
-| `!isAuthenticated` | Блок «Увійти» з посиланням на `/login` |
-| `isError` | Повідомлення про помилку + кнопка «Спробувати ще раз» |
-| `isLoading` | «Завантаження повідомлень…» |
-| `notifications.length === 0` | «Немає повідомлень» |
-| Є дані | Список уведомлень |
+| Умова | Екран |
+|--------|--------|
+| `!authReady` | Завантаження |
+| `!isAuthenticated` | Потрібен вхід (модалка) |
+| `isError` | Помилка + «Спробувати ще раз» (`refetch`) |
+| `isLoading` | Завантаження списку |
+| `notifications.length === 0` | Порожній стан |
+| Є дані | Список |
 
-### 6.2. Структура картки уведомлення
+### 6.2. Картка повідомлення
 
-- **Заголовок:** «Повідомлення N» + індикатор (крапка), якщо `!is_read`.
-- **Текст:** `message` або «Немає тексту повідомлення».
-- **Дата:** `created_at` у форматі uk-UA.
-- **Дії:**
-  - «Позначити як прочитане» — тільки для непрочитаних, при `markRead.isPending` кнопка disabled.
-  - «Видалити» — при `remove.isPending` disabled.
+- Заголовок «Повідомлення N», крапка якщо `!is_read`.
+- Текст `message`, дата `created_at` (uk-UA).
+- **«Позначити як прочитане»** — `disabled`, коли **для цього** `id` йде мутація (`pendingMarkReadId === m.id`).
+- **«Видалити»** — `disabled`, коли `pendingDeleteId === m.id`.
 
-### 6.3. Пагінація списку на сторінці
+### 6.3. «Показати ще»
 
-На сторінці використовується локальна пагінація через кнопку `Показати ще`:
+- **`PAGE_SIZE = 10`** (порція на екран).
+- `visibleNotifications = notifications.slice(0, visibleCount)`.
+- `ShowMoreNavigation`; при зміні **`notifications.length`** скидається `visibleCount` до `PAGE_SIZE`.
 
-- `visibleCount` зберігається у state (`PAGE_SIZE = 1` у поточному тестовому режимі).
-- Для рендеру береться `visibleNotifications = notifications.slice(0, visibleCount)`.
-- Кнопка рендериться через `ShowMoreNavigation` (`frontend/src/navigation/ShowMoreNavigation.tsx`).
-- По кліку: `setVisibleCount(prev => prev + PAGE_SIZE)`.
-- Коли `visibleCount >= notifications.length`, `ShowMoreNavigation` повертає `null`, і кнопка зникає.
-- При зміні `notifications.length` виконується reset: `setVisibleCount(PAGE_SIZE)`.
+Деталі патерну — **`PAGINATION_SHOW_MORE_FRONTEND.md`**.
 
 ---
 
-## 7. Дії з уведомленнями
+## 7. Мутації
 
-### 7.1. Позначити як прочитане
+### 7.1. Прочитано
 
-1. Клік по кнопці → `handleMarkAsRead(m.id)` → `markRead.mutate(id)`.
-2. **useNotifications.markRead**:
-   - `mutationFn: markNotificationAsRead` → `http.patch(API.notificationMarkAsRead(id))`.
-   - `onSuccess`: оновлює кеш: елемент з `id` отримує `is_read: true`.
-3. UI оновлюється без refetch.
+`handleMarkAsRead` → `setPendingMarkReadId(id)` → `markRead.mutate(id, { onSettled: () => setPendingMarkReadId(null) })`.
+
+- HTTP: **`PATCH`** `API.notificationMarkAsRead(id)`.
+- `onSuccess` у хуку: у кеші оновлюється `is_read: true` для відповідного `id`.
 
 ### 7.2. Видалити
 
-1. Клік → `handleDelete(m.id)` → `remove.mutate(id, { onSuccess, onError })`.
-2. **useNotifications.remove**:
-   - `mutationFn: deleteNotification` → `http.delete(API.notificationById(id))`.
-   - `onSuccess`: елемент з `id` видаляється з кешу.
-3. Викликається `showSuccess("Повідомлення видалено")` або `showError(...)` при помилці.
+`handleDelete` → аналогічно з `pendingDeleteId`, плюс `showSuccess` / `showError` у колбеках мутації на сторінці.
 
-### 7.3. Спробувати ще раз (після помилки)
+- HTTP: **`DELETE`** `API.notificationById(id)`.
+- `onSuccess` у хуку: елемент прибирається з масиву в кеші.
 
-- `refetch()` — примусове повторне завантаження списку.
+### 7.3. Деталі репорту в модалці
 
----
-
-## 8. Фільтри (налаштування уведомлень)
-
-### 8.1. Призначення
-
-Фільтри — це не клієнтський фільтр списку, а налаштування типу уведомлень, які користувач хоче отримувати. Вони зберігаються на сервері в профілі.
-
-### 8.2. Поля з профілю
-
-`NOTIFICATION_FILTERS` мапляться на `NotificationSettingsPatch`:
-
-| key | label |
-|-----|-------|
-| `comment_notifications` | Коментарі у ваших постах та відповіді на ваші коментарі |
-| `translation_status_notifications` | Зміна статусу перекладу |
-| `chapter_subscription_notifications` | Зняття розділу з передплати |
-| `chapter_comment_notifications` | Коментарі до розділу |
-
-### 8.3. Завантаження початкових значень
-
-1. `profileQuery` з `queryKey: ["profile"]`, `queryFn: getMyProfile`, `enabled: isAuthenticated`.
-2. Після приходу `profile` — `useEffect` заповнює `filters` з `profile[key]`.
-3. Якщо `profile[key]` не boolean — береться `true`.
-
-### 8.4. Зміна чекбоксів
-
-- `handleFilterChange(key, checked)` → `setFilters(prev => ({ ...prev, [key]: checked }))`.
-- Тип: `Partial<Record<keyof NotificationSettingsPatch, boolean>>` — захист від збереження зайвих ключів.
-
-### 8.5. Збереження
-
-1. Клік «Зберегти» → `handleSaveFilters()`.
-2. Будується `patch`: тільки ключі з `NOTIFICATION_FILTERS`, значення перевіряються на `typeof === "boolean"`.
-3. `saveFiltersMutation.mutate(patch)` → `updateNotificationSettings(patch)` → у `profileService` використовується `http.put(API.profileNotificationSettings, patch)`.
-4. `onSuccess`: `invalidateQueries(["profile"])`, `showSuccess("Налаштування збережено")`.
-5. `onError`: `showError(msg ?? "Помилка при збереженні")`.
-
-### 8.6. Блокування кнопки «Зберегти»
-
-- `profileLoaded = !profileQuery.isLoading && !!profile`.
-- `canSaveFilters = profileLoaded && Object.keys(filters).length > 0`.
-- Кнопка disabled, якщо `!canSaveFilters || saveFiltersMutation.isPending`.
-
-Це не дає зберегти порожній patch до завантаження профілю.
+Після вибору повідомлення в `activeReport`: якщо **`error_report_id` відсутній** — у модалці використовується лише об’єкт зі списку. Якщо **`error_report_id` є** — виконується **`getNotificationById(activeReport.id)`** (GET одного ресурсу); при помилці запиту показуються дані зі списку як запасний варіант.
 
 ---
 
-## 9. API Endpoints
+## 8. Фільтри (налаштування в профілі)
+
+Не фільтрують список на клієнті: зберігаються на сервері через **`updateNotificationSettings`** → **PUT** `API.profileNotificationSettings`.
+
+Поля `NOTIFICATION_FILTERS` / ключі `NotificationSettingsPatch` без змін (див. код `NotificationsPage.tsx`).
+
+Після збереження: `invalidateQueries({ queryKey: ["profile"] })`.
+
+---
+
+## 9. API Endpoints (фронт)
 
 | Ключ | URL | Метод | Призначення |
 |------|-----|-------|-------------|
-| `API.notifications` | `/api/notification/notifications/` | GET | Список уведомлень. Query: `version` (опційно). |
-| `API.notificationById(id)` | `/api/notification/notifications/{id}/` | DELETE | Видалення уведомлення. |
-| `API.notificationMarkAsRead(id)` | `/api/notification/notifications/{id}/mark_as_read/` | PATCH | Позначити як прочитане. |
-| `API.profileNotificationSettings` | `/api/users/profile/notification-settings/` | PUT | Збереження налаштувань уведомлень (через users). |
+| `API.notifications` | `/api/notification/notifications/` | GET | Список; query `version` — лише коли передано непорожнє значення. |
+| `API.notificationById(id)` | `/api/notification/notifications/{id}/` | GET | Один запис (деталі для модалки). |
+| `API.notificationById(id)` | той самий шлях | DELETE | Видалення. |
+| `API.notificationMarkAsRead(id)` | `.../{id}/mark_as_read/` | PATCH | Прочитано. |
+| `API.profileNotificationSettings` | `/api/users/profile/notification-settings/` | PUT | Налаштування типів повідомлень. |
 
 ---
 
-## 10. Нюанси та обмеження
+## 10. Нюанси
 
-### 10.1. Versioning
+### 10.1. Версіонування
 
-- Кеш React Query зберігає `version` з попередньої відповіді.
-- При наступному запиті `version` передається на бекенд.
-- Бекенд може повертати порожній список, якщо нічого не змінилося (зменшення трафіку).
+- Бекенд при **рівних** client `version` і server `new_version` відповідає **`notifications: []`** і **`version`** (див. `NOTIFICATIONS_BACKEND.md`).
+- Клієнт при цьому **не очищує** кеш (див. п. 4.1); без merge порожня відповідь замінила б список у React Query і спорожнила б UI.
 
-### 10.2. isPending на кнопках
+### 10.2. Pending по id
 
-- `markRead.isPending` і `remove.isPending` — глобальні: при будь-якій мутації блокуються всі відповідні кнопки.
-- Немає «pending per id» — поки йде одна операція, блокуються всі кнопки mark-read і delete.
+- Глобальні `markRead.isPending` / `remove.isPending` на сторінці **не** використовуються для disabled усіх кнопок; блокується лише рядок, по якому пішов запит.
 
-### 10.3. Спільний кеш із профілем
+### 10.3. Спільний кеш і шапка
 
-- `profileQuery` використовує `["profile"]`.
-- Після `updateNotificationSettings` викликається `invalidateQueries(["profile"])`.
-- Інші екрани (наприклад, Profile), що використовують той самий ключ, отримають оновлені дані.
+- `Header` і `NotificationsPage` ділять **`["notifications"]`**: оновлення на сторінці одразу відображаються на бейджі непрочитаних.
 
 ### 10.4. NotificationProvider vs повідомлення в системі
 
-- **NotificationProvider** — глобальні toast (success, error, info, warning).
-- **Уведомлення в системі** — список повідомлень із бекенду (коментарі, передплати тощо).
-- Це різні сутності; вони спільні тільки в назві.
+- **NotificationProvider** — модальні toast (успіх/помилка/…).
+- **Повідомлення `/messages`** — окрема сутність з API.
 
-**Коментарі (catalog):** секція коментарів використовує тільки **showError** з `useNotification()` — для помилок завантаження списку, помилок 403 при відправці/видаленні та загальних помилок API. Success-повідомлення після відправки коментаря, відповіді або видалення не показуються.
+### 10.5. Дедуплікація в сервісі
 
-**Рейтинги (catalog):** компонент `BookRatingStars` використовує `useNotification()`: **showWarning** — коли неавторизований користувач клікає по зірці («Для голосування необхідно увійти в систему»); **showError** — при помилці відправки оцінки (в т.ч. 429, або текст з `data.error` / `data.detail` з відповіді сервера). Детально: RATINGS_FRONTEND.md.
+- Після нормалізації список проходить через `Map` по `id`.
 
-**Сторінка глави (catalog):** `ChapterDetailRouter` при `403` під час переходів Prev/Next показує **локальну `Modal`** (`shared/Modal/Modal`), а не `useNotification()`. Тобто повідомлення про недоступну платну главу на цій сторінці йдуть окремим UI-механізмом.
+### 10.6. Інші екрани (довідково)
 
-### 10.5. Глобальні toast (NotificationProvider) — два варіанти
-
-**Файли:** `shared/NotificationModal/NotificationProvider.tsx`, `NotificationModal.tsx`, `AutoCloseNotificationModal.tsx`, `Modal/Modal.tsx`.
-
-- Провайдер зберігає state: `open`, `message`, `type`, **variant** (`"default"` | `"autoClose"`).
-- **variant "default"**: рендериться `NotificationModal` — заголовок за типом, текст, кнопка «Зрозуміло», у Modal показується кнопка ×. Закриття: клік по overlay, ×, «Зрозуміло», Escape.
-- **variant "autoClose"**: рендериться `AutoCloseNotificationModal` — заголовок «Успіх», тільки текст повідомлення, **без кнопок** (Modal з `showCloseButton={false}`). Закриття **автоматично** через `AUTO_CLOSE_MS` (3000 мс) по таймеру в useEffect; overlay-клік і Escape також викликають `onClose`.
-- Метод **showSuccessAutoClose(message)** встановлює variant `"autoClose"` і відкриває модалку. Використовується в `catalog/BookDetailRouter.tsx`: після редиректу з сторінки додавання глави перевіряється `location.state?.chapterCreated`; якщо true — викликається `showSuccessAutoClose("Розділ успішно створено")`, потім state очищається (navigate replace), щоб при оновленні сторінки модалка не показувалась знову.
-
-### 10.5. Дедуплікація
-
-- У `notificationsService` застосовується `Map` по `id`, щоб уникнути дублікатів у списку.
+Глобальні модалки успіху/помилки — це **`NotificationProvider`** (toast), не список `/messages`. Рейтинги, коментарі, репорти, створення розділу: див. **`RATINGS_FRONTEND.md`**, **`BOOK_ERROR_REPORT_FRONTEND.md`**, **`ADD_CHAPTER_FLOW.md`** та відповідний код (`BookDetailRouter`, `NotificationProvider`).
 
 ---
 
-## 11. Діаграма потоку даних
+## 11. Діаграма потоку
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         NotificationsPage.tsx                             │
-├─────────────────────────────────────────────────────────────────────────┤
-│  useAuth() ──► authReady, isAuthenticated                                │
-│  useNotifications(isAuthenticated) ──► query, markRead, remove             │
-│  profileQuery (getMyProfile) ──► profile                                 │
-│  useNotification() ──► showSuccess, showError                            │
-└─────────────────────────────────────────────────────────────────────────┘
-         │                    │                      │
-         ▼                    ▼                      ▼
-┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────────┐
-│   useAuth        │  │ useNotifications │  │ profileQuery                 │
-│   (auth/store)   │  │ useQuery(KEY)     │  │ useQuery(["profile"])        │
-│                  │  │ useMutation       │  │ getMyProfile()               │
-└─────────────────┘  └────────┬──────────┘  └──────────────┬──────────────┘
-                              │                             │
-                              ▼                             ▼
-                    ┌──────────────────┐          ┌──────────────────────┐
-                    │ notifications    │          │ profileService        │
-                    │ Service          │          │ updateNotification    │
-                    │ getNotifications │          │ Settings()            │
-                    │ markAsRead       │          └──────────┬───────────┘
-                    │ delete           │                     │
-                    └────────┬─────────┘                     │
-                             │                              │
-                             ▼                              ▼
-                    ┌──────────────────────────────────────────────────────┐
-                    │              api/http.ts (axios)                       │
-                    │  Authorization: Bearer / 401 → refresh → retry       │
-                    └────────────────────────┬─────────────────────────────┘
-                                             │
-                                             ▼
-                    ┌──────────────────────────────────────────────────────┐
-                    │           Backend API                                  │
-                    │  /api/notification/notifications/                    │
-                    │  /api/users/profile/notification-settings/             │
-                    └──────────────────────────────────────────────────────┘
+NotificationsPage.tsx          Header.tsx
+       │                            │
+       └──── useNotifications(isAuthenticated)
+                      │
+                      ▼
+              useQuery(["notifications"])
+                      │
+                      ▼
+         notificationsService.getNotifications
+                      │
+                      ▼
+                 api/http.ts  ──►  GET /api/notification/notifications/
+                      │              (опційно ?version=)
+                      ▼
+         merge у queryFn, якщо [] + у кеші вже був непорожній список (контракт з бекендом)
 ```
 
 ---
 
-**Останнє оновлення:** з урахуванням showSuccessAutoClose та AutoCloseNotificationModal (створення глави).
+**Останнє оновлення:** узгоджено з `useNotifications.ts` (merge), `NotificationsPage.tsx` (PAGE_SIZE 10, pending по id), `Header.tsx` (бейдж), `notificationsService.ts` (умовний `version`), **`backend/docs/NOTIFICATIONS_BACKEND.md`**.

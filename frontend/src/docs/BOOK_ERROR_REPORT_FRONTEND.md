@@ -26,7 +26,7 @@
 | `notification/parseErrorReportSuggestion.ts` | Розбір рядка `suggestion` з API на **тип помилки** (рядок після `Тип помилки:`) та **коментар** (після `Коментар:`). |
 | `notification/types.ts` | Тип `AppNotification` з опційними полями для репорту. |
 
-Загальний опис сторінки `/messages` див. у **`NOTIFICATIONS_FRONTEND.md`**; тут лише «гілка» репортів.
+Загальний опис сторінки `/messages` — **`NOTIFICATIONS_FRONTEND.md`**; REST і версії на бекенді — **`backend/docs/NOTIFICATIONS_BACKEND.md`**. Тут лише «гілка» репортів.
 
 ---
 

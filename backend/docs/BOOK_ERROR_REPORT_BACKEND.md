@@ -13,6 +13,7 @@
 | Повідомлення власнику | `apps/notification/signals.py` — сигнал після створення `ErrorReport` |
 | Віддача даних у списку повідомлень | `apps/notification/api/serializers.py` — `NotificationSerializer` |
 | Завантаження зв’язків у списку | `apps/notification/api/views.py` — `select_related` для `book`, `error_report`, користувача репорту, розділу |
+| Повний опис REST повідомлень (`list`, `version`, права, сигнали) | **`docs/NOTIFICATIONS_BACKEND.md`** |
 
 Підключення URL: префікс **`/api/editors/`** (див. `apps/api/urls.py`).
 

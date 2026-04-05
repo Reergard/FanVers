@@ -8,18 +8,19 @@ from .models import Notification
 
 @receiver(post_save, sender=Chapter)
 def notify_bookmarked_users(sender, instance, created, **kwargs):
-    if created: # Тільки для нових розділів
-        book = instance.book
-        # Отримуємо всіх користувачів, у яких є закладка на цю книгу
-        bookmarks = Bookmark.objects.filter(book=book)
-        
-        for bookmark in bookmarks:
-            notification_message = f'Повідомляємо, що в книзі "{book.title}" вийшов новий розділ {instance.title}'
-            Notification.objects.create(
-                user=bookmark.user,
-                book=book,
-                message=notification_message
-            )
+    if not created:
+        return
+    book = instance.book
+    bookmarks = Bookmark.objects.filter(book=book).select_related('user')
+    message = (
+        f'Повідомляємо, що в книзі "{book.title}" вийшов новий розділ {instance.title}'
+    )
+    notifications = [
+        Notification(user=bookmark.user, book=book, message=message)
+        for bookmark in bookmarks
+    ]
+    if notifications:
+        Notification.objects.bulk_create(notifications, ignore_conflicts=True)
 
 @receiver(post_save, sender=BookComment)
 def notify_book_owner_on_book_comment(sender, instance, created, **kwargs):
