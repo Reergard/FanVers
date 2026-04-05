@@ -1,6 +1,7 @@
 import { fetchCsrfToken } from "./csrf";
 import { refreshSessionSilent, authStatus } from "./service";
 import { markBootstrapped, setAuthAnonymous, setAuthAuthenticated, clearAuth } from "./store";
+import { authStatusToStorePatch } from "./authStatusPatch";
 import { getAccess } from "./token";
 import { authSelfTest } from "./authSelfTest";
 
@@ -25,24 +26,18 @@ export async function bootstrapAuth() {
     if (token) {
       try {
         const data = await authStatus();
-        setAuthAuthenticated({
-          userId: data?.userId ?? null,
-          username: data?.username ?? null,
-          balance: data?.balance ?? null,
-          canWithdrawBalance: Boolean(data?.can_withdraw_balance),
-          roleSelfPromotionAllowed: Boolean(data?.role_self_promotion_allowed),
-        });
+        setAuthAuthenticated(authStatusToStorePatch(data));
       } catch (err: any) {
         // Только 401 = невалидный токен → clearAuth. Сетевые/5xx — оставляем залогиненным.
         if (err?.response?.status === 401) {
           clearAuth();
         } else {
+          // 5xx / мережа: токен ще може бути валідним — не затираємо canWithdrawBalance / roleSelfPromotionAllowed
+          // (профіль у шапці може тимчасово без userId — getMyProfile / повторний auth-status пізніше).
           setAuthAuthenticated({
             userId: null,
             username: null,
             balance: null,
-            canWithdrawBalance: null,
-            roleSelfPromotionAllowed: null,
           });
         }
       }

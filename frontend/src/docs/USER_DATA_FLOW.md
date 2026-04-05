@@ -55,7 +55,9 @@ const { isAuthenticated, userId, username, balance, authReady } = useAuth();
 | **Backend** | `AuthStatusView` (views.py): `request.user.profile.balance` → `str()`; при отсутствии профиля — `'0'` |
 | **Модель** | `Profile.balance` (DecimalField, 10 цифр, 2 знака) |
 | **API** | В ответе `auth-status`: `balance: string` |
-| **Frontend** | `authStatus()` → `setAuthAuthenticated` → store → Header берёт `balance` |
+| **Frontend** | `authStatus()` → `authStatusToStorePatch` (`auth/authStatusPatch.ts`) → `setAuthAuthenticated` → store → Header берёт `balance`, `canWithdrawBalance` |
+
+`can_withdraw_balance` / `role_self_promotion_allowed` в store оновлюються **лише якщо в JSON прийшов явний boolean**; не можна робити `Boolean(undefined)` — інакше затирається попереднє значення `false`.
 
 Баланс запрашивается вместе с ником при вызове `authStatus()`; при logout сбрасывается в `null`.
 

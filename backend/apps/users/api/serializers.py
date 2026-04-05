@@ -354,7 +354,16 @@ class ProfileSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         request = self.context.get('request')
-        is_owner = request and request.user == self.instance.user
+        user = getattr(request, "user", None) if request else None
+        # Не використовуємо `request.user == instance.user` — різні інстанси User дають False.
+        is_owner = False
+        if user is not None and getattr(user, "is_authenticated", False):
+            upk, uid = getattr(user, "pk", None), getattr(self.instance, "user_id", None)
+            if upk is not None and uid is not None:
+                try:
+                    is_owner = int(upk) == int(uid)
+                except (TypeError, ValueError):
+                    is_owner = upk == uid
 
         # Добавляем чувствительные поля только для владельца
         if is_owner:
@@ -372,7 +381,24 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def get_can_withdraw_balance(self, obj):
         request = self.context.get('request')
-        if not request or request.user != obj.user:
+        user = getattr(request, "user", None) if request else None
+        if not user or not getattr(user, "is_authenticated", False):
+            return None
+        # UserProfileView передає is_owner — надійніше за порівняння інстансів User.
+        ctx_owner = self.context.get("is_owner")
+        if ctx_owner is True:
+            return obj.can_withdraw_balance()
+        if ctx_owner is False:
+            return None
+        # ProfileDetailView, PATCH профілю тощо — за pk (int/str від JWT/ORM)
+        upk, uid = getattr(user, "pk", None), getattr(obj, "user_id", None)
+        if upk is None or uid is None:
+            return None
+        try:
+            same_user = int(upk) == int(uid)
+        except (TypeError, ValueError):
+            same_user = upk == uid
+        if not same_user:
             return None
         return obj.can_withdraw_balance()
 

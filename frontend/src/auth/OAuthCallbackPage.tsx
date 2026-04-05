@@ -5,6 +5,7 @@ import { API } from "../api/endpoints";
 import { setAccess } from "./token";
 import { setAuthAuthenticated } from "./store";
 import { authStatus } from "./service";
+import { authStatusToStorePatch } from "./authStatusPatch";
 
 /**
  * Сторінка OAuth callback. Backend редіректить сюди з ?code=XXX після успішного Google/Facebook login.
@@ -42,13 +43,7 @@ export function OAuthCallbackPage() {
         if (data?.access) {
           setAccess(data.access);
           const userData = await authStatus();
-          setAuthAuthenticated({
-            userId: userData?.userId ?? null,
-            username: userData?.username ?? null,
-            balance: userData?.balance ?? null,
-            canWithdrawBalance: Boolean(userData?.can_withdraw_balance),
-            roleSelfPromotionAllowed: Boolean(userData?.role_self_promotion_allowed),
-          });
+          setAuthAuthenticated(authStatusToStorePatch(userData));
           navigate("/", { replace: true });
         } else {
           setError("Не вдалося отримати токен");

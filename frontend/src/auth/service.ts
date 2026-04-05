@@ -5,6 +5,7 @@ import { runSingleFlight } from "./refreshMutex";
 import { doRefresh, doLogout, refreshSessionForce } from "./refreshCore";
 import { setAuthAuthenticated } from "./store";
 import { authLog } from "./authLogger";
+import { authStatusToStorePatch } from "./authStatusPatch";
 
 // ВАЖНО: login/register — csrf_exempt, но refresh/logout — требуют CSRF
 
@@ -59,11 +60,8 @@ export async function loginSession(payload: {
     try {
       const userData = await authStatus();
       setAuthAuthenticated({
-        userId: userData?.userId ?? null,
+        ...authStatusToStorePatch(userData),
         username: userData?.username ?? payload.username ?? null,
-        balance: userData?.balance ?? null,
-        canWithdrawBalance: Boolean(userData?.can_withdraw_balance),
-        roleSelfPromotionAllowed: Boolean(userData?.role_self_promotion_allowed),
       });
     } catch {
       // Не setAuthAnonymous — access есть
@@ -107,11 +105,8 @@ export async function registerSession(payload: {
       try {
         const userData = await authStatus();
         setAuthAuthenticated({
-          userId: userData?.userId ?? null,
+          ...authStatusToStorePatch(userData),
           username: userData?.username ?? payload.username ?? null,
-          balance: userData?.balance ?? null,
-          canWithdrawBalance: Boolean(userData?.can_withdraw_balance),
-          roleSelfPromotionAllowed: Boolean(userData?.role_self_promotion_allowed),
         });
       } catch {
         // Не setAuthAnonymous
@@ -167,13 +162,7 @@ export async function refreshAuthStatus(): Promise<void> {
   if (!token) return;
   try {
     const userData = await authStatus();
-    setAuthAuthenticated({
-      userId: userData?.userId ?? null,
-      username: userData?.username ?? null,
-      balance: userData?.balance ?? null,
-      canWithdrawBalance: Boolean(userData?.can_withdraw_balance),
-      roleSelfPromotionAllowed: Boolean(userData?.role_self_promotion_allowed),
-    });
+    setAuthAuthenticated(authStatusToStorePatch(userData));
   } catch {
     // Ignore — не сбрасываем, если сервер временно недоступен
   }

@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from apps.users.models import Profile
 
-# Відповідає choices у Profile.role: «Перекладач», «Літератор» (автор).
+# Лише значення з choices у Profile.role (укр.). strip() — лише від пробілів у БД.
 WITHDRAW_ELIGIBLE_PROFILE_ROLES = frozenset({"Перекладач", "Літератор"})
 
 # Єдині текст і код відмови для withdraw (view — основне місце; serializer — та сама константа).
@@ -24,4 +24,5 @@ API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE = (
 def profile_can_request_balance_withdraw(profile: Profile | None) -> bool:
     if profile is None:
         return False
-    return profile.role in WITHDRAW_ELIGIBLE_PROFILE_ROLES
+    role = (profile.role or "").strip()
+    return role in WITHDRAW_ELIGIBLE_PROFILE_ROLES

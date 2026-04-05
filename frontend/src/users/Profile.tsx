@@ -636,7 +636,7 @@ export default function Profile() {
                   >
                     <img src={cashWithdrawalIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
                     <span className={styles.btnBalanceText}>
-                      {withdrawMutation.isPending ? "Завантаження..." : <>Вивести<br />кошти</>}
+                      {withdrawMutation.isPending ? "Завантаження..." : <>Запросити<br />виплату</>}
                     </span>
                   </button>
                 ) : null}
@@ -654,7 +654,7 @@ export default function Profile() {
                 >
                   <img src={paymentIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
                   <span className={styles.btnBalanceText}>
-                    {depositMutation.isPending ? "Завантаження..." : <>Поповнити<br />баланс</>}
+                    {depositMutation.isPending ? "Завантаження..." : <>Купити<br />coins</>}
                   </span>
                 </button>
               </div>
@@ -858,7 +858,7 @@ export default function Profile() {
       <Modal
         open={depositModalOpen}
         onClose={() => setDepositModalOpen(false)}
-        title="Поповнити баланс"
+        title="Купити coins"
       >
         <div className={styles.modalForm}>
           <label className={styles.field}>
@@ -880,7 +880,7 @@ export default function Profile() {
             onClick={handleDeposit}
             disabled={depositMutation.isPending || !amount}
           >
-            {depositMutation.isPending ? "Завантаження..." : "Поповнити"}
+            {depositMutation.isPending ? "Завантаження..." : "Купити coins"}
           </button>
         </div>
       </Modal>
@@ -888,7 +888,7 @@ export default function Profile() {
       <Modal
         open={withdrawModalOpen && mayWithdrawBalance}
         onClose={() => setWithdrawModalOpen(false)}
-        title="Вивести кошти"
+        title="Запросити виплату"
       >
         <div className={styles.modalForm}>
           <p className={styles.modalHint}>Доступно: {profile.balance}</p>
@@ -912,7 +912,7 @@ export default function Profile() {
             onClick={handleWithdraw}
             disabled={withdrawMutation.isPending || !amount || balanceNum <= 0}
           >
-            {withdrawMutation.isPending ? "Завантаження..." : "Вивести"}
+            {withdrawMutation.isPending ? "Завантаження..." : "Запросити виплату"}
           </button>
         </div>
       </Modal>
