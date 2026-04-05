@@ -3,11 +3,17 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
+from django.db.models import Prefetch
 from ..models import Chat, Message, ChatReadStatus
 from .serializers import ChatSerializer, MessageSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from django.utils import timezone
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
+from ..counter_broadcast import build_counter_message_event, build_counter_read_reset_event
+from ..unread_utils import unread_message_count_for_participant
 
 User = get_user_model()
 
@@ -22,9 +28,22 @@ class ChatViewSet(viewsets.ModelViewSet):
         return Chat.objects.filter(participants=self.request.user)
 
     def list(self, request, *args, **kwargs):
-        print("List method called")
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True, context={'request': request})
+        queryset = self.get_queryset().prefetch_related(
+            Prefetch(
+                "messages",
+                queryset=Message.objects.select_related("sender__profile"),
+            ),
+            Prefetch(
+                "read_statuses",
+                queryset=ChatReadStatus.objects.filter(user=request.user),
+                to_attr="user_read_statuses",
+            ),
+            Prefetch(
+                "participants",
+                queryset=User.objects.select_related("profile"),
+            ),
+        )
+        serializer = self.get_serializer(queryset, many=True, context={"request": request})
         return Response(serializer.data)
 
     @action(detail=False, methods=['post'])
@@ -56,14 +75,33 @@ class ChatViewSet(viewsets.ModelViewSet):
             
             chat = Chat.objects.create()
             chat.participants.add(request.user, other_user)
-            
+
+            created_msg = None
             if message:
-                Message.objects.create(
+                created_msg = Message.objects.create(
                     chat=chat,
                     sender=request.user,
                     content=message
                 )
-            
+
+            if created_msg is not None:
+                channel_layer = get_channel_layer()
+                for participant in chat.participants.all():
+                    if participant.id == request.user.id:
+                        continue
+                    unread_count = unread_message_count_for_participant(chat.id, participant.id)
+                    async_to_sync(channel_layer.group_send)(
+                        f"counter_{participant.id}",
+                        build_counter_message_event(
+                            chat_id=chat.id,
+                            message_id=created_msg.id,
+                            message_text=created_msg.content,
+                            sender_username=request.user.username,
+                            timestamp_iso=created_msg.created_at.isoformat(),
+                            unread_count=unread_count,
+                        ),
+                    )
+
             print(f"Created chat: {chat}")
             return Response(
                 self.serializer_class(chat, context={'request': request}).data,
@@ -102,7 +140,35 @@ class ChatViewSet(viewsets.ModelViewSet):
                 sender=request.user,
                 content=content
             )
-            
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"chat_{chat.id}",
+                {
+                    "type": "chat_message",
+                    "id": message.id,
+                    "message": message.content,
+                    "sender": {"username": request.user.username},
+                    "timestamp": message.created_at.isoformat(),
+                },
+            )
+
+            for participant in chat.participants.all():
+                if participant.id == request.user.id:
+                    continue
+                unread_count = unread_message_count_for_participant(chat.id, participant.id)
+                async_to_sync(channel_layer.group_send)(
+                    f"counter_{participant.id}",
+                    build_counter_message_event(
+                        chat_id=chat.id,
+                        message_id=message.id,
+                        message_text=message.content,
+                        sender_username=request.user.username,
+                        timestamp_iso=message.created_at.isoformat(),
+                        unread_count=unread_count,
+                    ),
+                )
+
             serializer = MessageSerializer(message)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -137,7 +203,17 @@ class ChatViewSet(viewsets.ModelViewSet):
             # Обновляем время последнего прочтения
             read_status.last_read_at = timezone.now()
             read_status.save()
-        
+
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"counter_{request.user.id}",
+            build_counter_read_reset_event(
+                chat_id=chat.id,
+                username=request.user.username,
+                timestamp_iso=read_status.last_read_at.isoformat(),
+            ),
+        )
+
         return Response({
             'message': 'Чат отмечен как прочитанный',
             'last_read_at': read_status.last_read_at

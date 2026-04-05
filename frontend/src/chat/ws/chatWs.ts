@@ -47,30 +47,58 @@ function toChatMessage(raw: WireMessage): ChatMessage | null {
 
 class ChatWsService {
   private socket: WebSocket | null = null;
-  private chatId: number | null = null;
+  /** Кімната, до якої прагнемо залишитись підключеними (реконект після обриву). */
+  private targetChatId: number | null = null;
+  /** chatId сокета, що щойно закрився — щоб не реконектити після перемикання чату. */
+  private activeSocketChatId: number | null = null;
   private handlers = new Set<Handler>();
+  private shouldReconnect = false;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   connect(chatId: number): boolean {
-    if (this.socket && this.chatId === chatId && this.socket.readyState <= WebSocket.OPEN) {
-      return true;
+    this.shouldReconnect = true;
+    this.targetChatId = chatId;
+
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
     }
 
-    this.disconnect();
+    if (this.socket) {
+      const rs = this.socket.readyState;
+      if (
+        (rs === WebSocket.OPEN || rs === WebSocket.CONNECTING) &&
+        this.activeSocketChatId === chatId
+      ) {
+        return true;
+      }
+      this.socket.close();
+      this.socket = null;
+    }
+
+    this.openSocket();
+    return true;
+  }
+
+  private openSocket(): void {
+    const chatId = this.targetChatId;
+    if (chatId == null) return;
 
     const base = resolveWsBaseUrl();
     const path = `/ws/chat/${chatId}/`;
     const url = base ? `${base}${path}` : path;
     const socket = new WebSocket(url);
     this.socket = socket;
-    this.chatId = chatId;
+    this.activeSocketChatId = chatId;
 
     socket.onmessage = (event) => {
       try {
         const parsed = JSON.parse(event.data) as WireMessage;
         const message = toChatMessage(parsed);
-        if (!message || this.chatId == null) return;
+        const emitChatId = this.targetChatId;
+        if (!message || emitChatId == null) return;
         for (const handler of this.handlers) {
-          handler({ chatId: this.chatId, message });
+          handler({ chatId: emitChatId, message });
         }
       } catch {
         // Skip malformed ws frames to avoid breaking connection lifecycle.
@@ -78,28 +106,50 @@ class ChatWsService {
     };
 
     socket.onclose = () => {
+      const closedForChatId = this.activeSocketChatId;
       if (this.socket === socket) {
         this.socket = null;
+        this.activeSocketChatId = null;
+      }
+      if (
+        this.shouldReconnect &&
+        this.targetChatId != null &&
+        closedForChatId != null &&
+        closedForChatId === this.targetChatId
+      ) {
+        if (this.reconnectTimer) {
+          clearTimeout(this.reconnectTimer);
+        }
+        this.reconnectTimer = setTimeout(() => {
+          this.reconnectTimer = null;
+          if (this.shouldReconnect && this.targetChatId != null) {
+            this.openSocket();
+          }
+        }, 3_000);
       }
     };
 
     socket.onerror = () => {
       // Browser will call onclose afterwards, no-op here.
     };
-
-    return true;
   }
 
   disconnect(): void {
-    if (this.socket) {
-      this.socket.close();
+    this.shouldReconnect = false;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
     }
+    this.targetChatId = null;
+    this.socket?.close();
     this.socket = null;
-    this.chatId = null;
+    this.activeSocketChatId = null;
   }
 
   isConnectedTo(chatId: number): boolean {
-    return this.chatId === chatId && this.socket?.readyState === WebSocket.OPEN;
+    return (
+      this.activeSocketChatId === chatId && this.socket?.readyState === WebSocket.OPEN
+    );
   }
 
   sendMessage(text: string): boolean {

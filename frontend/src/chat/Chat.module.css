@@ -90,7 +90,7 @@
   border: 1px solid rgba(228, 148, 17, 0.62);
   padding: clamp(5px, 0.5vw, 9px) clamp(8px, 0.8vw, 12px);
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: clamp(8px, 0.8vw, 12px);
   text-align: left;

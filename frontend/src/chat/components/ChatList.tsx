@@ -58,6 +58,15 @@ export function ChatList({ chats, selectedChatId, currentUsername, onSelect, onC
                     <span className={styles.chatName}>{otherUsername}</span>
                     <span className={styles.chatPreview}>{chat.last_message?.content || "\u00A0"}</span>
                   </span>
+
+                  {(chat.unread_count ?? 0) > 0 ? (
+                    <span
+                      className={styles.unreadBadge}
+                      aria-label={`${chat.unread_count} непрочитаних`}
+                    >
+                      {chat.unread_count}
+                    </span>
+                  ) : null}
                 </button>
               </li>
             );

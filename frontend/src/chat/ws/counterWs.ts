@@ -1,15 +1,23 @@
 import type { ChatMessage } from "../api/types";
 
-type CounterHandler = (payload: { chatId: number; message: ChatMessage }) => void;
+export type CounterWsPayload = {
+  chatId: number;
+  message: ChatMessage | null;
+  unreadCount?: number;
+};
+
+type CounterHandler = (payload: CounterWsPayload) => void;
 
 type CounterWireMessage = {
   type?: string;
-  id?: number;
+  id?: number | null;
   chat_id?: number;
   message?: string;
   sender?: { id?: number; username?: string };
   timestamp?: string;
   created_at?: string;
+  unread_count?: number;
+  unreadCount?: number;
 };
 
 /** WebSocket base URL. Cookie-based auth — токен в URL не передається (OWASP). */
@@ -30,35 +38,63 @@ function resolveWsBaseUrl(): string {
   return `${protocol}://${window.location.host}`;
 }
 
-function toCounterPayload(raw: CounterWireMessage): { chatId: number; message: ChatMessage } | null {
-  const chatId = Number(raw.chat_id);
-  const id = Number(raw.id);
-  const content = typeof raw.message === "string" ? raw.message : "";
-  if (Number.isNaN(chatId) || Number.isNaN(id) || !content) return null;
+function parseUnreadCount(raw: CounterWireMessage): number | undefined {
+  const v = raw.unread_count ?? raw.unreadCount;
+  if (typeof v === "number" && !Number.isNaN(v)) return v;
+  if (typeof v === "string" && v !== "" && !Number.isNaN(Number(v))) return Number(v);
+  return undefined;
+}
 
-  return {
-    chatId,
-    message: {
-      id,
-      content,
-      sender: {
-        id: Number.isNaN(Number(raw.sender?.id)) ? undefined : Number(raw.sender?.id),
-        username: raw.sender?.username ?? "",
+function toCounterPayload(raw: CounterWireMessage): CounterWsPayload | null {
+  const chatId = Number(raw.chat_id);
+  if (Number.isNaN(chatId)) return null;
+
+  const unreadCount = parseUnreadCount(raw);
+  const idRaw = raw.id;
+  const id = idRaw != null ? Number(idRaw) : NaN;
+  const content = typeof raw.message === "string" ? raw.message : "";
+  const hasMessage = !Number.isNaN(id) && content.length > 0;
+
+  if (hasMessage) {
+    return {
+      chatId,
+      message: {
+        id,
+        content,
+        sender: {
+          id: Number.isNaN(Number(raw.sender?.id)) ? undefined : Number(raw.sender?.id),
+          username: raw.sender?.username ?? "",
+        },
+        created_at: raw.created_at ?? raw.timestamp ?? new Date().toISOString(),
       },
-      created_at: raw.created_at ?? raw.timestamp ?? new Date().toISOString(),
-    },
-  };
+      ...(unreadCount !== undefined ? { unreadCount } : {}),
+    };
+  }
+
+  if (unreadCount !== undefined) {
+    return { chatId, message: null, unreadCount };
+  }
+
+  return null;
 }
 
 class CounterWsService {
   private socket: WebSocket | null = null;
   private handlers = new Set<CounterHandler>();
+  private shouldReconnect = false;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   connect(): boolean {
-    if (this.socket && this.socket.readyState <= WebSocket.OPEN) return true;
+    this.shouldReconnect = true;
+    if (this.socket) {
+      const rs = this.socket.readyState;
+      if (rs === WebSocket.OPEN || rs === WebSocket.CONNECTING) return true;
+    }
+    this.openSocket();
+    return true;
+  }
 
-    this.disconnect();
-
+  private openSocket(): void {
     const base = resolveWsBaseUrl();
     const path = "/ws/counter/";
     const url = base ? `${base}${path}` : path;
@@ -86,19 +122,31 @@ class CounterWsService {
       if (this.socket === socket) {
         this.socket = null;
       }
+      if (this.shouldReconnect) {
+        if (this.reconnectTimer) {
+          clearTimeout(this.reconnectTimer);
+        }
+        this.reconnectTimer = setTimeout(() => {
+          this.reconnectTimer = null;
+          if (this.shouldReconnect) {
+            this.openSocket();
+          }
+        }, 3_000);
+      }
     };
 
     socket.onerror = () => {
-      // Browser will trigger close, nothing else needed.
+      // Browser will trigger onclose after this.
     };
-
-    return true;
   }
 
   disconnect(): void {
-    if (this.socket) {
-      this.socket.close();
+    this.shouldReconnect = false;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
     }
+    this.socket?.close();
     this.socket = null;
   }
 

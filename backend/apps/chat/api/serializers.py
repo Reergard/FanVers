@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from ..models import Chat, Message
 from django.contrib.auth import get_user_model
+
+from ..models import Chat, ChatReadStatus, Message
 
 User = get_user_model()
 
@@ -33,36 +34,30 @@ class ChatSerializer(serializers.ModelSerializer):
         fields = ['id', 'participants', 'created_at', 'updated_at', 'last_message', 'unread_count']
 
     def get_last_message(self, obj):
-        last_message = obj.messages.order_by('-created_at').first()
-        if last_message:
-            return MessageSerializer(last_message).data
-        return None
-    
+        # Meta.fields: last_message перед unread_count — list() прогріває prefetch-кеш для get_unread_count
+        messages = obj.messages.all()
+        msg_list = list(messages)
+        if not msg_list:
+            return None
+        return MessageSerializer(msg_list[-1]).data
+
     def get_unread_count(self, obj):
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            from django.db.models import Q
-            from ..models import ChatReadStatus
-            
-            # Получаем время последнего прочтения чата пользователем
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return 0
+
+        uid = request.user.id
+        user_read_statuses = getattr(obj, "user_read_statuses", None)
+
+        if user_read_statuses is not None:
+            last_read_at = user_read_statuses[0].last_read_at if user_read_statuses else None
+        else:
             try:
-                read_status = ChatReadStatus.objects.get(chat=obj, user=request.user)
-                last_read_at = read_status.last_read_at
+                last_read_at = ChatReadStatus.objects.get(chat=obj, user_id=uid).last_read_at
             except ChatReadStatus.DoesNotExist:
-                # Если пользователь никогда не открывал чат, считаем все сообщения от других непрочитанными
                 last_read_at = None
-            
-            if last_read_at:
-                # Считаем сообщения от других пользователей, созданные ПОСЛЕ последнего прочтения
-                unread_count = obj.messages.filter(
-                    ~Q(sender=request.user),
-                    created_at__gt=last_read_at
-                ).count()
-            else:
-                # Если пользователь никогда не открывал чат, считаем все сообщения от других
-                unread_count = obj.messages.filter(
-                    ~Q(sender=request.user)
-                ).count()
-            
-            return unread_count
-        return 0
+
+        messages = obj.messages.all()
+        if last_read_at:
+            return sum(1 for m in messages if m.sender_id != uid and m.created_at > last_read_at)
+        return sum(1 for m in messages if m.sender_id != uid)

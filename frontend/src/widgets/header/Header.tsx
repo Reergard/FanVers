@@ -185,8 +185,16 @@ export function Header() {
 
     chatActions.fetchChats();
     counterWs.connect();
-    const handleCounter = ({ chatId, message }: { chatId: number; message: ChatMessage }) => {
-      chatActions.applyCounterEvent(chatId, message, username);
+    const handleCounter = ({
+      chatId,
+      message,
+      unreadCount,
+    }: {
+      chatId: number;
+      message: ChatMessage | null;
+      unreadCount?: number;
+    }) => {
+      chatActions.applyCounterEvent(chatId, message, username, unreadCount);
     };
     counterWs.onMessage(handleCounter);
     return () => {
@@ -194,6 +202,14 @@ export function Header() {
       counterWs.disconnect();
     };
   }, [chatActions, isAuthenticated, username]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const interval = setInterval(() => {
+      chatActions.fetchChats();
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, chatActions]);
 
   // Определяем контент меню
   const menuItems = USER_MENU;

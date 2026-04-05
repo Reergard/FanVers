@@ -120,6 +120,8 @@ export function getChatStoreSnapshot(): ChatStoreState {
 
 export const chatStore = {
   async fetchChats(): Promise<void> {
+    if (state.loadingChats) return;
+
     setState((draft) => {
       draft.loadingChats = true;
       draft.error = null;
@@ -254,9 +256,41 @@ export const chatStore = {
     });
   },
 
-  applyCounterEvent(chatId: number, message: ChatMessage, currentUsername: string | null): void {
+  applyCounterEvent(
+    chatId: number,
+    message: ChatMessage | null,
+    currentUsername: string | null,
+    unreadCount?: number
+  ): void {
+    const chatExists = state.chats.some((c) => c.id === chatId);
+    if (!chatExists) {
+      if (!state.loadingChats) {
+        void chatStore.fetchChats();
+      }
+      return;
+    }
+
     setState((draft) => {
-      upsertChatFromMessage(draft, chatId, message, currentUsername);
+      const index = draft.chats.findIndex((c) => c.id === chatId);
+      if (index === -1) return;
+
+      if (unreadCount !== undefined) {
+        const existing = draft.chats[index];
+        draft.chats[index] = {
+          ...existing,
+          unread_count: unreadCount,
+          ...(message ? { last_message: message } : {}),
+        };
+        if (message) {
+          draft.chats = sortChatsByLastMessage(draft.chats);
+        }
+        recalcUnreadTotalInternal(draft);
+        return;
+      }
+
+      if (message) {
+        upsertChatFromMessage(draft, chatId, message, currentUsername);
+      }
     });
   },
 
