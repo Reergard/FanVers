@@ -180,9 +180,13 @@ class AdvertisementViewSet(
                     msg = e.messages if hasattr(e, "messages") else [str(e)]
                     raise serializers.ValidationError(msg[0] if msg else str(e))
 
-                services.assert_no_overlap(
-                    book, location, target_kind, target_id, start_date, end_date
-                )
+                try:
+                    services.assert_no_overlap(
+                        book, location, target_kind, target_id, start_date, end_date
+                    )
+                except DjangoValidationError as e:
+                    msg = e.messages if hasattr(e, "messages") else [str(e)]
+                    raise serializers.ValidationError(msg[0] if msg else str(e))
 
                 item_cost = services.calc_total_cost(
                     location, start_date, end_date, target_kind
