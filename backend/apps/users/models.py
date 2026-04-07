@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from .middleware import get_current_request
 from .managers import CustomUserManager
 
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
 from django.db.models import Sum
 from django.core.cache import cache
@@ -76,10 +76,16 @@ class Profile(models.Model):
     token = models.CharField(max_length=255, default=generate_token)
     is_default = models.BooleanField(default=False)
     balance = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
+        max_digits=10,
+        decimal_places=2,
         default=Decimal('0'),
         verbose_name='Баланс'
+    )
+    total_characters = models.BigIntegerField(
+        default=0,
+        verbose_name='Загальна кількість символів',
+        help_text='Накопичена сума символів по всіх главах книг власника. '
+                  'Оновлюється автоматично при збереженні/видаленні глав.',
     )
     purchased_chapters = models.ManyToManyField('catalog.Chapter', blank=True, related_name='purchased_by')
     role = models.CharField(
@@ -252,18 +258,23 @@ class Profile(models.Model):
         super().save(*args, **kwargs)
 
     def update_commission(self):
-        """Оновлення комісії на основі кількості символів"""
-        total_chars = self.user.owned_books.aggregate(
-            total=models.Sum('chapters__characters_count')
-        )['total'] or 0
+        """Оновлення комісії на основі накопиченого total_characters.
 
-        if total_chars >= 10000000:  # 10 мільйонів
-            self.commission = 10.00
-        elif total_chars >= 5000000:  # 5 мільйонів
-            self.commission = 12.00
+        Пороги: ≥10 млн → 10%, ≥5 млн → 12%, інакше → 15%.
+        Запис у БД виконується лише якщо значення змінилося.
+        """
+        total_chars = self.total_characters  # хранимое поле — без агрегатного запроса
+
+        if total_chars >= 10_000_000:
+            new_commission = Decimal('10.00')
+        elif total_chars >= 5_000_000:
+            new_commission = Decimal('12.00')
         else:
-            self.commission = 15.00
-        self.save(update_fields=['commission'])
+            new_commission = Decimal('15.00')
+
+        if self.commission != new_commission:
+            self.commission = new_commission
+            self.save(update_fields=['commission'])
 
     def calculate_commission_amount(self, price):
         """Розрахунок суми комісії"""
@@ -400,11 +411,96 @@ def sync_user_email_to_profile(sender, instance, **kwargs):
 #         print(f"🔴 Ошибка синхронизации email: {e}")
 
 
+@receiver(pre_save, sender='catalog.Chapter')
+def capture_old_chapter_chars(sender, instance, **kwargs):
+    """Запам'ятовує поточний characters_count з БД перед збереженням.
+
+    Необхідно для точного розрахунку дельти в post_save:
+    delta = new_characters_count - old_characters_count.
+    Для нових об'єктів (pk=None) old = 0.
+    """
+    if instance.pk:
+        try:
+            old = sender.objects.only('characters_count').get(pk=instance.pk)
+            instance._old_characters_count = old.characters_count or 0
+        except sender.DoesNotExist:
+            instance._old_characters_count = 0
+    else:
+        instance._old_characters_count = 0
+
+
 @receiver(post_save, sender='catalog.Chapter')
-def update_user_commission(sender, instance, **kwargs):
-    if instance.book and instance.book.owner:
-        profile = instance.book.owner.profile
-        profile.update_commission()
+def update_profile_on_chapter_save(sender, instance, **kwargs):
+    """Атомарно оновлює Profile.total_characters власника і перераховує комісію.
+
+    Використовує дельту (new - old), щоб уникнути повного агрегатного запиту.
+    F()-вираз гарантує атомарність при конкурентних запитах.
+    Комісія перераховується лише якщо символи реально змінилися.
+    """
+    if not instance.book_id:
+        return
+
+    new_count = instance.characters_count or 0
+    old_count = getattr(instance, '_old_characters_count', 0) or 0
+    delta = new_count - old_count
+
+    if delta == 0:
+        return
+
+    try:
+        owner_id = instance.book.owner_id
+    except Exception:
+        return
+
+    if not owner_id:
+        return
+
+    # Атомарний UPDATE: без SELECT + збереження об'єкту, безпечно при конкуренції
+    updated = Profile.objects.filter(user_id=owner_id).update(
+        total_characters=F('total_characters') + delta
+    )
+    if not updated:
+        return
+
+    # Отримуємо свіжий профіль для перерахунку комісії
+    try:
+        profile = Profile.objects.get(user_id=owner_id)
+    except Profile.DoesNotExist:
+        return
+
+    profile.update_commission()
+
+
+@receiver(post_delete, sender='catalog.Chapter')
+def update_profile_on_chapter_delete(sender, instance, **kwargs):
+    """Вираховує символи видаленої глави з Profile.total_characters власника.
+
+    Викликається після фізичного видалення глави з БД.
+    """
+    chars = instance.characters_count or 0
+    if chars == 0 or not instance.book_id:
+        return
+
+    try:
+        owner_id = instance.book.owner_id
+    except Exception:
+        return
+
+    if not owner_id:
+        return
+
+    updated = Profile.objects.filter(user_id=owner_id).update(
+        total_characters=F('total_characters') - chars
+    )
+    if not updated:
+        return
+
+    try:
+        profile = Profile.objects.get(user_id=owner_id)
+    except Profile.DoesNotExist:
+        return
+
+    profile.update_commission()
 
 
 @receiver(post_save, sender='monitoring.UserChapterProgress')

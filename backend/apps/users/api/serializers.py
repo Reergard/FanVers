@@ -432,8 +432,8 @@ class ProfileSerializer(serializers.ModelSerializer):
         return obj.has_custom_image()
 
     def get_total_characters(self, obj):
-        return Chapter.objects.filter(book__owner=obj.user).aggregate(
-            total=models.Sum('characters_count'))['total'] or 0
+        # Читаємо хранимое поле — без агрегатного запиту
+        return obj.total_characters
 
     def get_total_chapters(self, obj):
         return Chapter.objects.filter(book__owner=obj.user).count()

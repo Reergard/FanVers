@@ -85,5 +85,6 @@
 
 - Frontend-потік: `frontend/src/docs/ADD_CHAPTER_FLOW.md`.
 - Доступ до читання глав та навігація: `backend/docs/CHAPTER_ACCESS_BACKEND.md`.
+- Підрахунок символів і комісія (що відбувається після `save_html_content`): `backend/docs/CHARACTERS_COUNT_COMMISSION_BACKEND.md`.
 
 **Останнє оновлення:** за поточним коду в проєкті.
