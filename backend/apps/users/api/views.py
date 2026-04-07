@@ -23,11 +23,7 @@ from django.core.cache import cache
 from django.shortcuts import redirect
 from django.conf import settings
 
-from apps.users.role_self_promotion import (
-    ROLE_SELF_PROMOTION_DISABLED_CODE,
-    ROLE_SELF_PROMOTION_DISABLED_MESSAGE,
-    is_role_self_promotion_allowed,
-)
+from apps.users.role_self_promotion import is_role_self_promotion_allowed
 import os
 import secrets
 import time
@@ -859,20 +855,11 @@ get_user_profile = api_view(['GET'])(permission_classes([AllowAny])(
 # @throttle_classes([ProfileThrottle])  # Розкоментувати на продакшені
 def become_translator(request):
     try:
-        if not is_role_self_promotion_allowed():
-            return Response(
-                {
-                    "error": ROLE_SELF_PROMOTION_DISABLED_MESSAGE,
-                    "code": ROLE_SELF_PROMOTION_DISABLED_CODE,
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
         with transaction.atomic():
             profile = Profile.objects.select_for_update().get(user_id=request.user.pk)
-            if profile.role == 'Перекладач':
+            if profile.role != 'Читач':
                 return Response(
-                    {'error': 'Ви вже є перекладачем'},
+                    {'error': 'Стати перекладачем можна лише з ролі «Читач»'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             profile.role = 'Перекладач'
@@ -895,20 +882,11 @@ def become_translator(request):
 # @throttle_classes([ProfileThrottle])  # Розкоментувати на продакшені
 def become_author(request):
     try:
-        if not is_role_self_promotion_allowed():
-            return Response(
-                {
-                    "error": ROLE_SELF_PROMOTION_DISABLED_MESSAGE,
-                    "code": ROLE_SELF_PROMOTION_DISABLED_CODE,
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
         with transaction.atomic():
             profile = Profile.objects.select_for_update().get(user_id=request.user.pk)
-            if profile.role == 'Літератор':
+            if profile.role not in ('Читач', 'Перекладач'):
                 return Response(
-                    {'error': 'Ви вже є літератором'},
+                    {'error': 'Стати літератором можна з ролей «Читач» або «Перекладач»'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             profile.role = 'Літератор'

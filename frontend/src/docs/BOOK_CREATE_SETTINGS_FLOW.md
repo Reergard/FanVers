@@ -89,8 +89,8 @@
 
 - **Теги:** групи з `meta.tagGroups`. На create — спочатку 1 група, кнопка «Показати ще» показує всі групи. На update — одразу всі групи, кнопки немає.
 - **Контент 18+:** чекбокс синхронізований з тегом «18+» (adultTagId). Якщо вибрано 18+ — тег додається/прибирається з `tags`.
-- **Зображення:** max 5 МБ, тільки image/*. На update — можна залишити поточне (image=null у payload) або завантажити нове.
-- **Опис:** лічильник слів (max 250 — `DESCRIPTION_MAX_WORDS`).
+- **Зображення:** max 10 МБ, тільки image/*. На update — можна залишити поточне (image=null у payload) або завантажити нове.
+- **Опис:** лічильник символів (max 300 — `DESCRIPTION_MAX_CHARS`).
 
 ### 4.3. handleSubmit
 
@@ -107,7 +107,7 @@
 
 - title не пустий;
 - author не пустий;
-- description max 250 слів;
+- description max 300 символів;
 - genres.length > 0;
 - country вибрана, Number(country) не NaN;
 - original_status вибрано;

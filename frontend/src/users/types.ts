@@ -35,7 +35,7 @@ export type UserProfile = {
   is_owner?: boolean;
   /** Право на виведення балансу; для чужого профілю з API приходить null */
   can_withdraw_balance?: boolean | null;
-  /** Чи увімкнені POST become-translator / become-author (зазвичай false у проді) */
+  /** Завжди true у поточній версії API (сумісність); самозміна ролі без глобального вимикача в settings */
   role_self_promotion_allowed?: boolean;
   /** Історія BalanceLog для власника профілю */
   balance_history?: BalanceHistoryItem[] | null;

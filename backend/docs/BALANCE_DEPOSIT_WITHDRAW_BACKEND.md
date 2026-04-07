@@ -9,7 +9,7 @@
 | Модуль | Що визначає |
 |--------|-------------|
 | `apps/users/balance_access.py` | Хто може ініціювати **withdraw** через публічний API: ролі з `WITHDRAW_ELIGIBLE_PROFILE_ROLES` (`Перекладач`, `Літератор`). Константи `API_WITHDRAW_ROLE_FORBIDDEN_*` для єдиного тексту/коду відмови. |
-| `apps/users/role_self_promotion.py` | Чи дозволені POST `become-translator` / `become-author` без адмінки: `is_role_self_promotion_allowed()` → `settings.ALLOW_USER_ROLE_SELF_PROMOTION` (дефолт **false**). |
+| `apps/users/role_self_promotion.py` | Для сумісності API: `is_role_self_promotion_allowed()` завжди **true**. Дозволені переходи задаються в `become_translator` / `become_author` за поточною роллю (глобального вимикача в `settings` немає). |
 
 Перевірка «достатньо грошей» і ліміти сум — окремо від права на вивід; право на вивід **не** прив’язане до наявності доходу чи книг.
 
@@ -58,11 +58,11 @@
 
 - `balance`, `can_withdraw_balance`, `role_self_promotion_allowed`.
 
-У профілі ті самі сенси через `ProfileSerializer` (+ `role_self_promotion_allowed` глобально з настроювання).
+У профілі ті самі сенси через `ProfileSerializer` (+ `role_self_promotion_allowed` для клієнтської сумісності, завжди **true**).
 
 ## Самозміна ролі (зв’язок із виводом)
 
-`become_translator` / `become_author`: у межах `transaction.atomic()` — `Profile.objects.select_for_update().get(user_id=...)`, перевірка поточної ролі, `save(update_fields=['role'])`. Якщо `ALLOW_USER_ROLE_SELF_PROMOTION=False` — одразу **403** з `ROLE_SELF_PROMOTION_DISABLED`.
+`become_translator` / `become_author`: у межах `transaction.atomic()` — `Profile.objects.select_for_update().get(user_id=...)`, перевірка поточної ролі, `save(update_fields=['role'])`. `become_translator` — лише з ролі **«Читач»**; `become_author` — з **«Читач»** або **«Перекладач»**; інакше **400** з поясненням.
 
 ## Обмеження швидкості
 

@@ -1,7 +1,7 @@
 import type { CreateBookPayload, UpdateBookPayload } from "../../../api/catalogApi";
 import type { BookFormData, BookFormMode } from "./BookForm";
 
-export const DESCRIPTION_MAX_WORDS = 250;
+export const DESCRIPTION_MAX_CHARS = 300;
 /** Статуси перекладу, заборонені для нових книг при створенні */
 export const INVALID_NEW_BOOK_TRANSLATION_STATUSES = ["PAUSED", "ABANDONED"];
 
@@ -15,8 +15,8 @@ export function validateBookForm(state: BookFormData, ctx: ValidateContext): str
   if (!state.title?.trim()) errors.push("Назва книги обов'язкова");
   if (!state.author?.trim()) errors.push("Ім'я автора обов'язкове");
 
-  if (state.description && state.description.trim().split(/\s+/).filter(Boolean).length > DESCRIPTION_MAX_WORDS) {
-    errors.push(`Опис не може перевищувати ${DESCRIPTION_MAX_WORDS} слів`);
+  if (state.description && state.description.length > DESCRIPTION_MAX_CHARS) {
+    errors.push(`Опис не може перевищувати ${DESCRIPTION_MAX_CHARS} символів`);
   }
 
   if (state.genres.length === 0) errors.push("Виберіть хоча б один жанр");

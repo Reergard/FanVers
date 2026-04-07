@@ -414,7 +414,6 @@ export default function Profile() {
   );
   const balanceNum = parseBalance(profile.balance);
   const mayWithdrawBalance = profile.can_withdraw_balance === true;
-  const maySelfPromoteRole = profile.role_self_promotion_allowed === true;
   const avatarBgSvgClean = useMemo(() => stripSvgFilter(backgroundsAvatarsSvgRaw), []);
 
   const renderProfileTypeRow = () => (
@@ -422,33 +421,33 @@ export default function Profile() {
       <span className={styles.profileTypeLabel}>Тип профілю:</span>
       <span className={styles.profileTypeActive}>{profile.role}</span>
 
-      {maySelfPromoteRole &&
-        (profile.role === "Читач" || profile.role === "Перекладач") &&
-        (profile.role === "Читач" ? (
-          <button
-            type="button"
-            className={`${styles.linkCyanBtn} ${styles.profileTypeRoleBtn}`}
-            style={{ backgroundImage: `url(${vectorProfile})` }}
-            onClick={() => becomeTranslatorMutation.mutate()}
-            disabled={becomeTranslatorMutation.isPending}
-          >
-            {becomeTranslatorMutation.isPending
-              ? "Зміна ролі..."
-              : "Стати перекладачем"}
-          </button>
-        ) : (
-          <button
-            type="button"
-            className={`${styles.linkCyanBtn} ${styles.profileTypeRoleBtn}`}
-            style={{ backgroundImage: `url(${vectorProfile})` }}
-            onClick={() => becomeAuthorMutation.mutate()}
-            disabled={becomeAuthorMutation.isPending}
-          >
-            {becomeAuthorMutation.isPending
-              ? "Зміна ролі..."
-              : "Стати літератором"}
-          </button>
-        ))}
+      {profile.role === "Читач" && (
+        <button
+          type="button"
+          className={`${styles.linkCyanBtn} ${styles.profileTypeRoleBtn}`}
+          style={{ backgroundImage: `url(${vectorProfile})` }}
+          onClick={() => becomeTranslatorMutation.mutate()}
+          disabled={
+            becomeTranslatorMutation.isPending || becomeAuthorMutation.isPending
+          }
+        >
+          {becomeTranslatorMutation.isPending ? "Зміна ролі..." : "Стати перекладачем"}
+        </button>
+      )}
+      {(profile.role === "Читач" || profile.role === "Перекладач") && (
+        <button
+          type="button"
+          className={`${styles.linkCyanBtn} ${styles.profileTypeRoleBtn}`}
+          style={{ backgroundImage: `url(${vectorProfile})` }}
+          onClick={() => becomeAuthorMutation.mutate()}
+          disabled={
+            becomeAuthorMutation.isPending ||
+            (profile.role === "Читач" && becomeTranslatorMutation.isPending)
+          }
+        >
+          {becomeAuthorMutation.isPending ? "Зміна ролі..." : "Стати літератором"}
+        </button>
+      )}
     </div>
   );
 

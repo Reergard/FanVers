@@ -29,9 +29,6 @@ SIGNING_KEY = env("SIGNING_KEY", default=SECRET_KEY)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-# Якщо False — POST become-translator / become-author повертають 403 (роль лише через адмінку).
-ALLOW_USER_ROLE_SELF_PROMOTION = env.bool("ALLOW_USER_ROLE_SELF_PROMOTION", default=False)
-
 # Hosts
 if DEBUG:
     ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost'])
@@ -409,7 +406,7 @@ STATIC_ROOT = os.getenv(
 
 # Налаштування безпеки для завантаження файлів
 SECURE_CONTENT_TYPE_NOSNIFF = True
-# Підтримка: до 3 вкладень по 5 МБ + поля форми — ліміт тіла запиту вищий за один файл.
+# Загальний ліміт тіла запиту (кілька файлів / обкладинка + поля); окремі серіалізатори додатково обмежують розмір файлів.
 _FILE_UPLOAD_MAX = int(os.getenv("DATA_UPLOAD_MAX_MB", "18")) * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = _FILE_UPLOAD_MAX
 DATA_UPLOAD_MAX_MEMORY_SIZE = _FILE_UPLOAD_MAX

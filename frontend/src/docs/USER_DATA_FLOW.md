@@ -57,7 +57,7 @@ const { isAuthenticated, userId, username, balance, authReady } = useAuth();
 | **API** | В ответе `auth-status`: `balance: string` |
 | **Frontend** | `authStatus()` → `authStatusToStorePatch` (`auth/authStatusPatch.ts`) → `setAuthAuthenticated` → store → Header берёт `balance`, `canWithdrawBalance` |
 
-`can_withdraw_balance` / `role_self_promotion_allowed` в store оновлюються **лише якщо в JSON прийшов явний boolean**; не можна робити `Boolean(undefined)` — інакше затирається попереднє значення `false`.
+`can_withdraw_balance` / `role_self_promotion_allowed` в store оновлюються **лише якщо в JSON прийшов явний boolean**; не можна робити `Boolean(undefined)` — інакше затирається попереднє значення. `role_self_promotion_allowed` у поточному API завжди **true** (самозміна ролі не вимикається глобально в `settings`).
 
 Баланс запрашивается вместе с ником при вызове `authStatus()`; при logout сбрасывается в `null`.
 

@@ -5,7 +5,7 @@ import { Icon } from "../../../shared/Icon";
 import icon18CreateBook from "../../../assets/backgrounds/18+CreateBook.svg";
 import type { BookCountry, BookMetaItem, CreateBookPayload, TagWithGroup, UpdateBookPayload } from "../../../api/catalogApi";
 import {
-  DESCRIPTION_MAX_WORDS,
+  DESCRIPTION_MAX_CHARS,
   INVALID_NEW_BOOK_TRANSLATION_STATUSES,
   normalizeBookPayload,
   validateBookForm,
@@ -30,7 +30,9 @@ export const ORIGINAL_STATUSES = [
   { value: "COMPLETED", label: "Завершено" },
 ];
 
-export const IMAGE_MAX_SIZE = 5 * 1024 * 1024;
+/** Обкладинка книги: макс. розмір при створенні / редагуванні */
+export const BOOK_COVER_MAX_MB = 10;
+export const IMAGE_MAX_SIZE = BOOK_COVER_MAX_MB * 1024 * 1024;
 export const TAG_GROUPS_PAGE_SIZE = 1;
 
 export type BookFormMode = "create" | "update";
@@ -219,7 +221,7 @@ export function BookForm({
         return;
       }
       if (file.size > IMAGE_MAX_SIZE) {
-        onError("Розмір файлу не повинен перевищувати 5 МБ");
+        onError(`Розмір файлу не повинен перевищувати ${BOOK_COVER_MAX_MB} МБ`);
         return;
       }
       if (objectUrlRef.current) {
@@ -346,11 +348,12 @@ export function BookForm({
             className={styles.textarea}
             placeholder="Напишіть будь ласка опис/рецензію до цього твору..."
             value={formData.description}
+            maxLength={DESCRIPTION_MAX_CHARS}
             onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
           />
           {formData.description && (
             <div className={styles.hint} style={{ marginTop: 4 }}>
-              {formData.description.trim().split(/\s+/).filter(Boolean).length}/{DESCRIPTION_MAX_WORDS} слів
+              {formData.description.length}/{DESCRIPTION_MAX_CHARS} символів
             </div>
           )}
         </Field>

@@ -7,6 +7,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Обкладинка книги (створення / оновлення) — узгоджено з frontend BookForm
+BOOK_COVER_IMAGE_MAX_MB = 10
+BOOK_COVER_IMAGE_MAX_BYTES = BOOK_COVER_IMAGE_MAX_MB * 1024 * 1024
+
 
 class GenresSerializer(serializers.ModelSerializer):
     class Meta:
@@ -308,6 +312,13 @@ class BookCreateSerializer(serializers.ModelSerializer):
             'download_permission', 'rate_permission'
         ]
 
+    def validate_image(self, value):
+        if value and getattr(value, "size", 0) > BOOK_COVER_IMAGE_MAX_BYTES:
+            raise serializers.ValidationError(
+                f"Розмір файлу не може перевищувати {BOOK_COVER_IMAGE_MAX_MB} МБ"
+            )
+        return value
+
     def validate(self, data):
         book_type = data.get('book_type')
         
@@ -348,8 +359,13 @@ class BookCreateSerializer(serializers.ModelSerializer):
         if data.get('title') and len(data.get('title', '').strip()) < 2:
             errors['title'] = "Назва книги повинна містити мінімум 2 символи"
             
-        if data.get('description') and len(data.get('description', '').strip()) < 10:
-            errors['description'] = "Опис повинен містити мінімум 10 символів"
+        desc = data.get('description')
+        if desc is not None:
+            desc_str = str(desc)
+            if len(desc_str) > 300:
+                errors['description'] = "Опис не може перевищувати 300 символів"
+            elif desc_str and len(desc_str.strip()) < 10:
+                errors['description'] = "Опис повинен містити мінімум 10 символів"
             
         if data.get('genres') and len(data.get('genres', [])) > 5:
             errors['genres'] = "Можна вибрати максимум 5 жанрів"

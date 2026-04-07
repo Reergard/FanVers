@@ -41,7 +41,7 @@ UI **не** є захистом: усі обмеження перевіряют�
 |--------------------------------|------------------------|
 | `balance` | `balance` |
 | `canWithdrawBalance` | `can_withdraw_balance` |
-| `roleSelfPromotionAllowed` | `role_self_promotion_allowed` |
+| `roleSelfPromotionAllowed` | `role_self_promotion_allowed` (завжди `true` у поточному API) |
 
 Оновлення: `bootstrap`, `login`/`register`, `OAuthCallback`, `refreshAuthStatus` (`auth/service.ts`).
 
