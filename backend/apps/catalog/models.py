@@ -454,7 +454,7 @@ class Chapter(models.Model):
         blank=True,
         related_name='chapters'
     )
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(unique=False, blank=True)
     file = models.FileField(upload_to=chapter_directory_path, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
@@ -485,6 +485,10 @@ class Chapter(models.Model):
                 fields=['book', 'order'],
                 name='uniq_chapter_order_no_volume',
                 condition=Q(volume__isnull=True),
+            ),
+            models.UniqueConstraint(
+                fields=['book', 'slug'],
+                name='uniq_chapter_slug_per_book',
             ),
         ]
 
