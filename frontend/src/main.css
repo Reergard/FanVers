@@ -95,6 +95,7 @@
 html {
   min-height: 100%;
   overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -107,6 +108,7 @@ body {
   font-family: "RobotoCondensedLightItalic", "Inter", sans-serif;
   font-weight: 300;
   font-style: italic;
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
@@ -168,8 +170,18 @@ html.is-scrolling .scrollIndicator__thumb{
 
 a{ color:inherit; }
 
-button{ font: inherit; }
+button {
+  font: inherit;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 img{ max-width:100%; display:block; }
+
+:focus-visible {
+  outline: 2px solid #05b4c7;
+  outline-offset: 2px;
+}
 
 /* Модалки входу/реєстрації — заголовок */
 .auth-modal h2 {

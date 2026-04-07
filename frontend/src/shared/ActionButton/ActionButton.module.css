@@ -39,17 +39,6 @@
   color: rgba(255, 255, 255, 0.92);
 }
 
-.variant_default:hover:not(:disabled):not(.loading) {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.75);
-}
-
-.variant_default:disabled:hover,
-.variant_default.loading:hover {
-  background: rgba(0, 0, 0, 0.1);
-  border-color: rgba(255, 255, 255, 0.55);
-}
-
 /* ===== Variant: primary (як button 6.svg — темний фон, оранжевий текст, тінь) ===== */
 .variant_primary {
   padding: clamp(5px, calc(1.1 * var(--vwu)), 9px) clamp(20px, calc(2.2 * var(--vwu)), 28px);
@@ -57,16 +46,6 @@
   border: none;
   background: #050d11;
   color: #f58807;
-  box-shadow: 0 0 56px #f58807;
-}
-
-.variant_primary:hover:not(:disabled):not(.loading) {
-  background: #0a1519;
-  box-shadow: 0 0 64px #f58807;
-}
-
-.variant_primary:disabled:hover,
-.variant_primary.loading:hover {
   box-shadow: 0 0 56px #f58807;
 }
 
@@ -79,18 +58,6 @@
   border: 1px solid #f58807;
   background: transparent;
   color: #f58807;
-}
-
-.variant_outline:hover:not(:disabled):not(.loading) {
-  background: #f58807;
-  color: #fff;
-  border-color: #f58807;
-}
-
-.variant_outline:disabled:hover,
-.variant_outline.loading:hover {
-  background: transparent;
-  border-color: #f58807;
 }
 
 /* ===== Variant: bookFrame (ліше рамка SVG + текст) ===== */
@@ -115,15 +82,6 @@
   color: #f58807;
 }
 
-.variant_bookFrame:hover:not(:disabled):not(.loading) {
-  background: none;
-}
-
-.variant_bookFrame:disabled:hover,
-.variant_bookFrame.loading:hover {
-  background: none;
-}
-
 /* ===== Variant: ghost ===== */
 .variant_ghost {
   padding: clamp(8px, calc(0.9 * var(--vwu)), 10px) clamp(16px, calc(1.6 * var(--vwu)), 22px);
@@ -132,11 +90,6 @@
   border: 1px solid transparent;
   background: transparent;
   color: rgba(255, 255, 255, 0.92);
-}
-
-.variant_ghost:hover:not(:disabled):not(.loading) {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* ===== Variant: showMore (orange pill + arrow icon) ===== */
@@ -150,12 +103,6 @@
   letter-spacing: 0.02em;
 }
 
-.variant_showMore:hover:not(:disabled):not(.loading) {
-  border-color: #f58807;
-  background: #f58807;
-  color: #fff;
-}
-
 /* ===== Variant: danger ===== */
 .variant_danger {
   padding: clamp(8px, calc(0.9 * var(--vwu)), 10px) clamp(16px, calc(1.6 * var(--vwu)), 22px);
@@ -164,11 +111,6 @@
   border: 1px solid rgba(220, 53, 69, 0.6);
   background: rgba(220, 53, 69, 0.15);
   color: #dc3545;
-}
-
-.variant_danger:hover:not(:disabled):not(.loading) {
-  background: rgba(220, 53, 69, 0.25);
-  border-color: #dc3545;
 }
 
 /* ===== Sizes ===== */
@@ -210,6 +152,66 @@
   display: block;
   object-fit: contain;
   flex-shrink: 0;
+}
+
+@media (hover: hover) {
+  .variant_default:hover:not(:disabled):not(.loading) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.75);
+  }
+
+  .variant_default:disabled:hover,
+  .variant_default.loading:hover {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(255, 255, 255, 0.55);
+  }
+
+  .variant_primary:hover:not(:disabled):not(.loading) {
+    background: #0a1519;
+    box-shadow: 0 0 64px #f58807;
+  }
+
+  .variant_primary:disabled:hover,
+  .variant_primary.loading:hover {
+    box-shadow: 0 0 56px #f58807;
+  }
+
+  .variant_outline:hover:not(:disabled):not(.loading) {
+    background: #f58807;
+    color: #fff;
+    border-color: #f58807;
+  }
+
+  .variant_outline:disabled:hover,
+  .variant_outline.loading:hover {
+    background: transparent;
+    border-color: #f58807;
+  }
+
+  .variant_bookFrame:hover:not(:disabled):not(.loading) {
+    background: none;
+  }
+
+  .variant_bookFrame:disabled:hover,
+  .variant_bookFrame.loading:hover {
+    background: none;
+  }
+
+  .variant_ghost:hover:not(:disabled):not(.loading) {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .variant_showMore:hover:not(:disabled):not(.loading) {
+    border-color: #f58807;
+    background: #f58807;
+    color: #fff;
+  }
+
+  .variant_danger:hover:not(:disabled):not(.loading) {
+    background: rgba(220, 53, 69, 0.25);
+    border-color: #dc3545;
+  }
 }
 
 /* ===== Loading spinner ===== */

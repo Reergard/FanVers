@@ -10,6 +10,9 @@
 
 .catalog-page__sort {
   --sort-label-display: none;
+  position: relative;
+}
+
 .catalog-page__sort-value {
   font-size: clamp(12px, 1vw, 13px);
   line-height: 1;
@@ -32,8 +35,6 @@
   border-right: 1.5px solid #f58807;
   border-bottom: 1.5px solid #f58807;
   transform: translateY(-60%) rotate(45deg);
-}
-
 }
 
 .catalog-page__grid {

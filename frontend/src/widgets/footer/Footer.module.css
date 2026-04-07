@@ -66,10 +66,6 @@
   opacity: 0.85;
 }
 
-.link:hover {
-  opacity: 1;
-}
-
 .linkButton {
   appearance: none;
   background: none;
@@ -134,10 +130,16 @@
   transition: all 0.2s ease;
 }
 
-.socialBtn:hover {
-  border-color: rgba(80, 220, 220, 0.65);
-  background: rgba(10, 20, 22, 0.55);
-  box-shadow: 0 0 12px rgba(80, 220, 220, 0.25);
+@media (hover: hover) {
+  .link:hover {
+    opacity: 1;
+  }
+
+  .socialBtn:hover {
+    border-color: rgba(80, 220, 220, 0.65);
+    background: rgba(10, 20, 22, 0.55);
+    box-shadow: 0 0 12px rgba(80, 220, 220, 0.25);
+  }
 }
 
 .socialIcon {
