@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import styles from "./components/BookForm/BookForm.module.css";
 import { Container } from "../shared/Container";
 import { RequireAuth } from "../auth/RequireAuth";
+import { useAuth } from "../auth/useAuth";
+import { getMyProfile } from "../users/profileService";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import {
   createBook,
@@ -16,6 +18,13 @@ import { PageTitle } from "../navigation/PageTitle";
 function CreateBookPageInner() {
   const navigate = useNavigate();
   const { showError, showSuccess } = useNotification();
+  const { isAuthenticated, role: authRole } = useAuth();
+  const profileQuery = useQuery({
+    queryKey: ["profile"],
+    queryFn: getMyProfile,
+    enabled: isAuthenticated,
+  });
+  const bookCreationProfileRole = profileQuery.data?.role ?? authRole ?? null;
   const meta = useBookFormMeta();
 
   const createBookMutation = useMutation({
@@ -74,6 +83,8 @@ function CreateBookPageInner() {
           submitting={isSubmitting}
           onError={showError}
           onSubmit={(payload) => createBookMutation.mutate(payload as CreateBookPayload)}
+          bookCreationProfileRole={bookCreationProfileRole}
+          bookCreationProfileLoading={profileQuery.isLoading}
         />
       </section>
     </Container>

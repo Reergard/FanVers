@@ -5,11 +5,13 @@ import { StarSvg } from "../../shared/StarSvg/StarSvg";
 import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { FrameLink } from "../../shared/FrameLink/FrameLink";
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import type { CreateBookCtaMode } from "../../shared/MenuPanel/MenuPanel";
 import { useQuery } from "@tanstack/react-query";
 import logo from "../../assets/logos/logo.png";
 import mobileHomeBg from "../../assets/backgrounds/mobile_home_bg.svg";
 import mobileHeaderBg from "../../assets/backgrounds/mobile_header_bg.svg";
 import { UserMenuOverlay } from "./UserMenuOverlay/UserMenuOverlay";
+import { CreateBookReaderModal } from "./CreateBookReaderModal";
 import { USER_MENU } from "../../shared/menu/menuData";
 import { useMedia } from "../../shared/hooks/useMedia";
 import { useAuth } from "../../auth/useAuth";
@@ -114,7 +116,7 @@ const SearchIcon = ({ className }: { className?: string }) => {
 export function Header() {
   const { pathname } = useLocation();
   const isHome = pathname === "/";
-  const { isAuthenticated, username, balance } = useAuth();
+  const { isAuthenticated, username, balance, role: authRole } = useAuth();
   const { state: chatState, actions: chatActions } = useChat();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -166,6 +168,7 @@ export function Header() {
 
   // Состояние меню
   const [menuOpen, setMenuOpen] = useState(false);
+  const [readerCreateBookModalOpen, setReaderCreateBookModalOpen] = useState(false);
   const lastTriggerRef = useRef<"dropdown" | "burger">("dropdown");
 
   // Refs для кнопок
@@ -236,7 +239,23 @@ export function Header() {
     setMenuOpen(true);
   }, []);
 
-  // Обработчик закрытия
+  const createBookCtaMode = useMemo((): CreateBookCtaMode => {
+    if (!isAuthenticated) return "reader";
+    const resolvedRole = profileQuery.data?.role ?? authRole ?? null;
+    const roleStillUnknown =
+      resolvedRole === null &&
+      (profileQuery.isLoading || profileQuery.isFetching);
+    if (roleStillUnknown) return "loading";
+    if (resolvedRole === "Перекладач" || resolvedRole === "Літератор") return "creator";
+    return "reader";
+  }, [
+    isAuthenticated,
+    authRole,
+    profileQuery.data?.role,
+    profileQuery.isLoading,
+    profileQuery.isFetching,
+  ]);
+
   const closeMenu = useCallback(() => {
     setMenuOpen(false);
     // Возвращаем фокус на кнопку
@@ -553,6 +572,16 @@ export function Header() {
         name={user.name}
         avatarUrl={user.avatarUrl}
         isAuthenticated={isAuthenticated}
+        createBookCtaMode={createBookCtaMode}
+        onReaderCreateBook={() => {
+          setReaderCreateBookModalOpen(true);
+          closeMenu();
+        }}
+      />
+
+      <CreateBookReaderModal
+        open={readerCreateBookModalOpen}
+        onClose={() => setReaderCreateBookModalOpen(false)}
       />
     </header>
   );

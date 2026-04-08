@@ -6,6 +6,7 @@ export type AuthState = {
   userId: number | null;
   username: string | null;
   balance: string | null;
+  role: string | null;
   canWithdrawBalance: boolean | null;
   roleSelfPromotionAllowed: boolean | null;
   authReady: boolean;
@@ -19,6 +20,7 @@ let cachedSnapshot: {
     userId: number | null;
     username: string | null;
     balance: string | null;
+    role: string | null;
     canWithdrawBalance: boolean | null;
     roleSelfPromotionAllowed: boolean | null;
   };
@@ -50,6 +52,7 @@ export function useAuth(): AuthState {
     userId: s.user.userId,
     username: s.user.username,
     balance: s.user.balance,
+    role: s.user.role,
     canWithdrawBalance: s.user.canWithdrawBalance,
     roleSelfPromotionAllowed: s.user.roleSelfPromotionAllowed,
     authReady,

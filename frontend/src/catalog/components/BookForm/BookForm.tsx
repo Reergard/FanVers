@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { Link } from "react-router-dom";
 import { ShowMoreNavigation } from "../../../navigation/ShowMoreNavigation";
 import { ActionButton } from "../../../shared/ActionButton/ActionButton";
 import { Icon } from "../../../shared/Icon";
@@ -87,6 +88,9 @@ type BookFormProps = {
   submitting: boolean;
   onSubmit: (payload: CreateBookPayload | UpdateBookPayload) => void;
   onError: (msg: string) => void;
+  /** Лише mode="create": роль для обмежень «Створити книгу» */
+  bookCreationProfileRole?: string | null;
+  bookCreationProfileLoading?: boolean;
 };
 
 function DashedLine({ className }: { className?: string }) {
@@ -118,6 +122,8 @@ export function BookForm({
   submitting,
   onSubmit,
   onError,
+  bookCreationProfileRole,
+  bookCreationProfileLoading = false,
 }: BookFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const objectUrlRef = useRef<string | null>(null);
@@ -240,6 +246,12 @@ export function BookForm({
       e.preventDefault();
       if (submitting) return;
 
+      if (mode === "create") {
+        if (bookCreationProfileLoading) return;
+        if (bookCreationProfileRole === "Читач") return;
+        if (bookCreationProfileRole === "Перекладач" && formData.book_type === "AUTHOR") return;
+      }
+
       const errors = validateBookForm(formData, { mode });
       if (errors.length > 0) {
         onError(errors.join(". "));
@@ -249,10 +261,27 @@ export function BookForm({
       const payload = normalizeBookPayload(formData, mode);
       onSubmit(payload);
     },
-    [formData, mode, onError, onSubmit, submitting]
+    [
+      formData,
+      mode,
+      onError,
+      onSubmit,
+      submitting,
+      bookCreationProfileLoading,
+      bookCreationProfileRole,
+    ]
   );
 
   const isReadOnly = mode === "update";
+  const readerCreateBlocked =
+    mode === "create" && bookCreationProfileRole === "Читач";
+  const translatorAuthorBlocked =
+    mode === "create" &&
+    bookCreationProfileRole === "Перекладач" &&
+    formData.book_type === "AUTHOR";
+  const createSubmitDisabled =
+    mode === "create" &&
+    (bookCreationProfileLoading || readerCreateBlocked || translatorAuthorBlocked);
   const bookTypeLabel = BOOK_TYPES.find((o) => o.value === formData.book_type)?.label ?? formData.book_type;
   const countryLabel = meta.countries.find((c) => String(c.id) === formData.country)?.name ?? formData.country;
 
@@ -489,11 +518,34 @@ export function BookForm({
         </section>
       </div>
 
+      {readerCreateBlocked ? (
+        <div className={styles.roleNotice} role="alert">
+          <p className={styles.roleNoticeText}>
+            Читачі не можуть створювати книги. Щоб отримати це право, змініть тип профілю на сторінці{" "}
+            <Link to="/profile" className={styles.roleNoticeLink}>
+              Профіль
+            </Link>
+            .
+          </p>
+        </div>
+      ) : null}
+      {translatorAuthorBlocked ? (
+        <div className={styles.roleNotice} role="status">
+          <p className={styles.roleNoticeText}>
+            Ми з радістю вітаємо авторські твори на платформі! Публікувати твір з типом «Авторський» можуть лише
+            літератори. Змініть тип профілю на сторінці{" "}
+            <Link to="/profile" className={styles.roleNoticeLink}>
+              Профіль
+            </Link>
+            .
+          </p>
+        </div>
+      ) : null}
       <div className={styles.submitRow}>
         <ActionButton
           type="submit"
           variant="bookFrame"
-          disabled={submitting}
+          disabled={submitting || createSubmitDisabled}
           ariaLabel={submitLabel}
         >
           {submitting ? "Збереження…" : submitLabel}

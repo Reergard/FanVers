@@ -5,6 +5,8 @@ export type AuthStatusPayload = {
   userId?: number | null;
   username?: string | null;
   balance?: string | null;
+  /** «Читач» | «Перекладач» | «Літератор» з бекенду */
+  role?: string | null;
   can_withdraw_balance?: boolean | null;
   role_self_promotion_allowed?: boolean | null;
 };
@@ -25,6 +27,9 @@ export function authStatusToStorePatch(
     username: data.username ?? null,
     balance: data.balance ?? null,
   };
+  if (data.role !== undefined) {
+    patch.role = data.role ?? null;
+  }
   if (typeof data.can_withdraw_balance === "boolean") {
     patch.canWithdrawBalance = data.can_withdraw_balance;
   }

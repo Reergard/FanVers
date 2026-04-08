@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
 import styles from "./UserMenuOverlay.module.css";
-import { MenuPanel } from "../../../shared/MenuPanel/MenuPanel";
+import { MenuPanel, type CreateBookCtaMode } from "../../../shared/MenuPanel/MenuPanel";
 import { useScrollLock } from "../../../shared/hooks/useScrollLock";
 import type { MenuItem } from "../../../shared/menu/menuData";
 import { AvatarOrbit } from "../../../shared/AvatarOrbit/AvatarOrbit";
@@ -19,6 +19,8 @@ type Props = {
   name: string;
   avatarUrl?: string;
   isAuthenticated: boolean;
+  createBookCtaMode: CreateBookCtaMode;
+  onReaderCreateBook: () => void;
 };
 
 export function UserMenuOverlay({
@@ -31,6 +33,8 @@ export function UserMenuOverlay({
   name,
   avatarUrl,
   isAuthenticated,
+  createBookCtaMode,
+  onReaderCreateBook,
 }: Props) {
   const location = useLocation();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -169,6 +173,8 @@ export function UserMenuOverlay({
               avatarUrl={avatarUrl}
               items={items}
               onSelect={handleSelect}
+              createBookCtaMode={createBookCtaMode}
+              onReaderCreateBook={onReaderCreateBook}
             />
           ) : (
             <div className={styles.guestMenu}>

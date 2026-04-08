@@ -192,40 +192,26 @@
   gap: clamp(8px, 1.2vw, 12px);
 }
 
-/* Блок «Про себе»: точки як у BookForm (strokeDasharray 0.1 10), текст поверх */
+/* Блок «Про себе»: штрихована лінія повторюється з кроком рядка, текст поверх */
 .aboutBlock {
   position: relative;
   min-height: 7em;
+  /* Базовий розмір шрифту для кроку ліній = розмір тексту «Про себе» */
+  font-size: clamp(12px, 1.05vw, 14px);
+  --about-line-step: calc(1.65 * 1em);
 }
 
-.aboutPlaceholder {
+.aboutNotebookLines {
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   pointer-events: none;
   z-index: 0;
+  opacity: 0.9;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1013 24' preserveAspectRatio='none'%3E%3Cpath d='M1 20H1012' stroke='%23F58807' stroke-width='2' stroke-linecap='round' stroke-dasharray='0.1 10' fill='none'/%3E%3C/svg%3E");
+  background-size: 100% var(--about-line-step);
+  background-repeat: repeat-y;
+  background-position: left 2px top 0;
 }
-
-.aboutPlaceholderLine {
-  display: block;
-  height: 2px;
-  min-width: 40px;
-  flex-shrink: 0;
-}
-
-.aboutPlaceholderLine svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  opacity: 0.85;
-}
-
-.aboutPlaceholderLine:nth-child(1) { width: 90%; }
-.aboutPlaceholderLine:nth-child(2) { width: 70%; }
-.aboutPlaceholderLine:nth-child(3) { width: 50%; }
-.aboutPlaceholderLine:nth-child(n+4) { display: none; }
 
 .aboutLabel {
   font-family: var(--font-decor, "Seminaria"), serif;
@@ -240,10 +226,72 @@
   position: relative;
   z-index: 1;
   margin: 0;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: clamp(12px, 1.05vw, 14px);
-  line-height: 1.45;
+  padding-top: 2px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: inherit;
+  line-height: 1.65;
   max-width: 78ch;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-ui, "Inter", system-ui, sans-serif);
+}
+
+.aboutModalTextarea {
+  width: 100%;
+  min-height: clamp(140px, 22vh, 220px);
+  box-sizing: border-box;
+  padding: clamp(10px, 1.2vw, 14px);
+  border-radius: 12px;
+  border: 1px solid rgba(5, 180, 199, 0.45);
+  background: rgba(6, 15, 18, 0.55);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: clamp(13px, 1.1vw, 15px);
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+}
+
+.aboutModalTextarea:focus {
+  border-color: rgba(5, 180, 199, 0.85);
+  box-shadow: 0 0 0 1px rgba(5, 180, 199, 0.25);
+}
+
+.aboutModalMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: clamp(11px, 0.95vw, 13px);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.aboutModalMetaError {
+  color: #ff8a80;
+}
+
+.aboutModalActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(10px, 1.2vw, 14px);
+  margin-top: clamp(4px, 0.8vw, 8px);
+}
+
+.aboutModalActions > button[type="button"]:first-child {
+  flex: 1;
+  min-width: 120px;
+}
+
+.aboutModalActions .saveButtonWrap {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  justify-content: stretch;
+}
+
+.aboutModalActions .saveButtonWrap > button {
+  width: 100%;
 }
 
 .linkCyan {
@@ -963,32 +1011,9 @@
     height: 18px;
   }
 
-  .aboutPlaceholder {
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-start;
+  .aboutBlock {
+    font-size: 16px;
   }
-
-  .aboutPlaceholderLine {
-    height: 4px;
-  }
-
-  .aboutPlaceholderLine svg {
-    opacity: 1;
-  }
-
-  .aboutPlaceholderPath {
-    stroke-width: 3;
-    stroke-dasharray: 0.2 10;
-  }
-
-  .aboutPlaceholderLine:nth-child(n+4) { display: block; }
-  .aboutPlaceholderLine:nth-child(1) { width: 92%; }
-  .aboutPlaceholderLine:nth-child(2) { width: 88%; }
-  .aboutPlaceholderLine:nth-child(3) { width: 82%; }
-  .aboutPlaceholderLine:nth-child(4) { width: 55%; }
-  .aboutPlaceholderLine:nth-child(5) { width: 38%; }
-  .aboutPlaceholderLine:nth-child(6) { width: 22%; }
 
   .btnPhotoChange {
     width: 100%;
@@ -1003,9 +1028,9 @@
   }
 
   .aboutText {
-    font-size: 16px;
-    line-height: 1.45;
     max-width: none;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
 
   .linkCyan {
@@ -1339,9 +1364,8 @@
     font-size: 18px;
   }
 
-  .aboutText {
+  .aboutBlock {
     font-size: 15px;
-    line-height: 1.4;
   }
 
   .colPhoto .btnPhotoChange {

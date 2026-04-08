@@ -22,8 +22,8 @@ Backend (AuthStatusView)  →  authStatus()  →  setAuthAuthenticated()  →  a
 | `api/http.ts` | Axios-клиент: подставляет `Authorization: Bearer {access}`, при 401 — refresh и retry |
 | `auth/token.ts` | Access-токен в памяти, `getAccess()` / `setAccess()`. `subscribeAccessToken` не используется; useAuth подписывается на store |
 | `auth/store.ts` | store (status, user, bootstrapped), `subscribeAuth`, `emit`, `storeVersion` |
-| `auth/service.ts` | `authStatus()` — `http.get(API.authStatus)` → возвращает `{ isAuthenticated, userId, username, balance }`; `refreshAuthStatus()` — обновляет store |
-| `auth/useAuth.ts` | Хук: подписка на store через `useSyncExternalStore`; возвращает `{ isAuthenticated, userId, username, balance, authReady }` |
+| `auth/service.ts` | `authStatus()` — `http.get(API.authStatus)` → тело ответа включает `userId`, `username`, `balance`, `can_withdraw_balance`, `role_self_promotion_allowed`, **`role`** (роль профілю); `refreshAuthStatus()` — обновляет store |
+| `auth/useAuth.ts` | Хук: подписка на store через `useSyncExternalStore`; возвращает `{ isAuthenticated, userId, username, balance, role, canWithdrawBalance, roleSelfPromotionAllowed, authReady }` |
 
 ## Важно
 
@@ -34,15 +34,17 @@ Backend (AuthStatusView)  →  authStatus()  →  setAuthAuthenticated()  →  a
 
 - **Эндпоинт:** `GET /api/users/auth-status/`
 - **Авторизация:** JWT в `Authorization: Bearer`
-- **Ответ:** `{ isAuthenticated: true, userId: number, username: string, balance: string }`
+- **Ответ:** `{ isAuthenticated: true, userId: number, username: string, balance: string, can_withdraw_balance: boolean, role_self_promotion_allowed: boolean, role: string }` — поле **`role`** завжди присутнє: `Profile.role` або, якщо профілю немає, рядок **`'Читач'`** (`AuthStatusView`).
 
 ## Использование
 
 ```ts
-const { isAuthenticated, userId, username, balance, authReady } = useAuth();
+const { isAuthenticated, userId, username, balance, role, canWithdrawBalance, roleSelfPromotionAllowed, authReady } = useAuth();
 // userId — id пользователя при авторизации (для Owner vs Reader в каталоге), иначе null
 // username — ник (user.username) при авторизации, иначе null
 // balance — баланс (profile.balance) при авторизации, иначе null
+// role — роль профілю з auth-status («Читач» | «Перекладач» | «Літератор»), иначе null, поки не прийшла відповідь або поле відсутнє в JSON
+// canWithdrawBalance / roleSelfPromotionAllowed — з auth-status (boolean | null)
 // authReady — bootstrapped && status !== "unknown" (можно показывать загрузку)
 ```
 
@@ -58,6 +60,8 @@ const { isAuthenticated, userId, username, balance, authReady } = useAuth();
 | **Frontend** | `authStatus()` → `authStatusToStorePatch` (`auth/authStatusPatch.ts`) → `setAuthAuthenticated` → store → Header берёт `balance`, `canWithdrawBalance` |
 
 `can_withdraw_balance` / `role_self_promotion_allowed` в store оновлюються **лише якщо в JSON прийшов явний boolean**; не можна робити `Boolean(undefined)` — інакше затирається попереднє значення. `role_self_promotion_allowed` у поточному API завжди **true** (самозміна ролі не вимикається глобально в `settings`).
+
+Поле **`role`** у store оновлюється через `authStatusToStorePatch`: якщо в JSON є ключ `role` (включно з порожнім рядком), значення потрапляє в store; якщо ключ відсутній — попереднє `role` в store не змінюється.
 
 Баланс запрашивается вместе с ником при вызове `authStatus()`; при logout сбрасывается в `null`.
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import styles from "./Profile.module.css";
 import crownSvg from "./assets/icons/crown.svg";
@@ -16,6 +16,7 @@ import { refreshAuthStatus } from "../auth/service";
 import {
   getMyProfile,
   uploadProfileImage,
+  updateProfileAbout,
   updateEmail,
   changePassword,
   updateNotificationSettings,
@@ -43,6 +44,74 @@ function stripSvgFilter(svg: string): string {
 
 const AVATAR_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+/** Узгоджено з бекендом `ProfileAboutUpdateSerializer` */
+const PROFILE_ABOUT_MAX_LEN = 2500;
+const PROFILE_ABOUT_MAX_LINES = 80;
+const PLACEHOLDER_ABOUT_TEXT = "Немає опису.";
+
+function normalizeAboutForEdit(about: string | null | undefined): string {
+  if (about == null || about === "" || about === PLACEHOLDER_ABOUT_TEXT) return "";
+  return about;
+}
+
+function hasDisplayableAbout(about: string | null | undefined): boolean {
+  return Boolean(about && about !== PLACEHOLDER_ABOUT_TEXT);
+}
+
+/**
+ * Узгоджено з бекендом: `trim_whitespace`, `max_length`, ліміт рядків як `splitlines()` після trim.
+ * Розбіжність `\r` як окремого рядка теоретично можлива між JS `split(/\r\n|\r|\n/)` і Python `splitlines()` для екзотичних символів; для типового тексту збігається.
+ */
+function validateAboutInput(text: string): string | null {
+  if (text.includes("\x00")) {
+    return "Текст містить недопустимі символи.";
+  }
+  const t = text.trim();
+  if (t.length > PROFILE_ABOUT_MAX_LEN) {
+    return `Максимум ${PROFILE_ABOUT_MAX_LEN} символів після обрізки пробілів (зараз ${t.length}).`;
+  }
+  if (t.length > 0) {
+    const lines = t.split(/\r\n|\r|\n/);
+    if (lines.length > PROFILE_ABOUT_MAX_LINES) {
+      return `Максимум ${PROFILE_ABOUT_MAX_LINES} рядків.`;
+    }
+  }
+  return null;
+}
+
+function parseAboutUpdateError(err: unknown): string {
+  const ax = err as {
+    response?: {
+      status?: number;
+      data?: { error?: string; details?: Record<string, string[] | string> };
+    };
+  };
+  const status = ax.response?.status;
+  const data = ax.response?.data;
+  const details = data?.details;
+  if (details && typeof details === "object") {
+    const aboutErr = details.about;
+    if (Array.isArray(aboutErr) && aboutErr[0]) {
+      const first = aboutErr[0];
+      if (typeof first === "string") return first;
+      if (first && typeof first === "object" && "string" in first) return String((first as { string: string }).string);
+    }
+    if (typeof aboutErr === "string") return aboutErr;
+    const firstKey = Object.keys(details)[0];
+    if (firstKey) {
+      const v = details[firstKey];
+      if (Array.isArray(v) && v[0]) return String(v[0]);
+      if (typeof v === "string") return v;
+    }
+  }
+  if (typeof data?.error === "string") return data.error;
+  if (status === 401) return "Потрібна авторизація. Увійдіть знову.";
+  if (status === 403) return "Немає прав на зміну профілю.";
+  if (status === 404) return "Профіль не знайдено.";
+  if (status === 429) return "Забагато запитів. Спробуйте пізніше.";
+  return "Не вдалося зберегти текст. Спробуйте ще раз.";
+}
 
 function validateAvatarFile(file: File): string | null {
   if (file.size > AVATAR_MAX_SIZE) {
@@ -110,6 +179,7 @@ function validatePasswords(
 
 export default function Profile() {
   const { isAuthenticated, authReady } = useAuth();
+  const { openLoginModal } = useAuthModal();
   const { showSuccess, showError } = useNotification();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -129,9 +199,13 @@ export default function Profile() {
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
   const [adultConfirmModalOpen, setAdultConfirmModalOpen] = useState(false);
+  const [aboutModalOpen, setAboutModalOpen] = useState(false);
+  const [aboutDraft, setAboutDraft] = useState("");
   const [amount, setAmount] = useState("");
   const [balanceHistory, setBalanceHistory] = useState<BalanceHistoryItem[]>([]);
   const { hideAdultContent, setHideAdultContent } = useAdultContent();
+
+  const avatarBgSvgClean = useMemo(() => stripSvgFilter(backgroundsAvatarsSvgRaw), []);
 
   const profileQuery = useQuery({
     queryKey: ["profile"],
@@ -149,6 +223,18 @@ export default function Profile() {
     if (profile?.hide_adult_content == null) return;
     setHideAdultContent(Boolean(profile.hide_adult_content));
   }, [profile?.hide_adult_content, setHideAdultContent]);
+
+  const updateAboutMutation = useMutation({
+    mutationFn: (about: string) => updateProfileAbout(about),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setAboutModalOpen(false);
+      showSuccess("Блок «Про себе» успішно збережено");
+    },
+    onError: (err: unknown) => {
+      showError(parseAboutUpdateError(err));
+    },
+  });
 
   const uploadAvatarMutation = useMutation({
     mutationFn: uploadProfileImage,
@@ -244,6 +330,36 @@ export default function Profile() {
       showError(err?.response?.data?.error ?? "Помилка при виведенні коштів");
     },
   });
+
+  const openAboutModal = useCallback(() => {
+    setAboutDraft(normalizeAboutForEdit(profile?.about));
+    setAboutModalOpen(true);
+  }, [profile?.about]);
+
+  const closeAboutModal = useCallback(() => {
+    if (updateAboutMutation.isPending) return;
+    setAboutModalOpen(false);
+  }, [updateAboutMutation.isPending]);
+
+  const aboutTrimmed = aboutDraft.trim();
+  const aboutClientError = validateAboutInput(aboutDraft);
+  const aboutUnchanged =
+    profile != null && normalizeAboutForEdit(profile.about) === aboutTrimmed;
+  const canSaveAbout =
+    aboutClientError == null && !updateAboutMutation.isPending && !aboutUnchanged;
+
+  const handleSaveAbout = useCallback(() => {
+    const err = validateAboutInput(aboutDraft);
+    if (err) {
+      showError(err);
+      return;
+    }
+    const next = aboutDraft.trim();
+    if (profile != null && normalizeAboutForEdit(profile.about) === next) {
+      return;
+    }
+    updateAboutMutation.mutate(next);
+  }, [aboutDraft, profile, showError, updateAboutMutation]);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -376,8 +492,6 @@ export default function Profile() {
     );
   }
 
-  const { openLoginModal } = useAuthModal();
-
   if (!isAuthenticated) {
     return (
       <section className={styles.page}>
@@ -414,7 +528,6 @@ export default function Profile() {
   );
   const balanceNum = parseBalance(profile.balance);
   const mayWithdrawBalance = profile.can_withdraw_balance === true;
-  const avatarBgSvgClean = useMemo(() => stripSvgFilter(backgroundsAvatarsSvgRaw), []);
 
   const renderProfileTypeRow = () => (
     <div className={styles.profileTypeRow}>
@@ -520,7 +633,9 @@ export default function Profile() {
               <button
                 type="button"
                 className={`${styles.btnOutlineGold} ${styles.btnPhotoChange} ${styles.btnEditAbout}`}
-                onClick={() => document.getElementById("edit-about")?.scrollIntoView?.({ behavior: "smooth" })}
+                onClick={openAboutModal}
+                aria-haspopup="dialog"
+                aria-label="Редагувати блок «Про себе»"
               >
                 <span className={styles.btnTextDesktop}>Змінити</span>
                 <svg className={styles.iconPhotoChange} viewBox="0 0 22 22" aria-hidden="true">
@@ -529,18 +644,10 @@ export default function Profile() {
               </button>
             </div>
             <div className={styles.aboutBlock}>
-              <div className={styles.aboutPlaceholder} aria-hidden="true">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <span key={i} className={styles.aboutPlaceholderLine}>
-                    <svg width="100%" height="2" viewBox="0 0 1013 2" fill="none" preserveAspectRatio="none" aria-hidden>
-                      <path className={styles.aboutPlaceholderPath} d="M1 1H1012" stroke="#F58807" strokeWidth="2" strokeLinecap="round" strokeDasharray="0.1 10" />
-                    </svg>
-                  </span>
-                ))}
-              </div>
-              {(profile.about && profile.about !== "Немає опису.") && (
+              <div className={styles.aboutNotebookLines} aria-hidden="true" />
+              {hasDisplayableAbout(profile.about) ? (
                 <p className={styles.aboutText}>{profile.about}</p>
-              )}
+              ) : null}
             </div>
             <div className={`${styles.profileTypeSection} ${styles.profileTypeSectionDesktop}`}>
               {renderProfileTypeRow()}
@@ -853,6 +960,62 @@ export default function Profile() {
           </section>
         </div>
       </div>
+
+      <Modal
+        open={aboutModalOpen}
+        onClose={closeAboutModal}
+        title="Редагувати «Про себе»"
+      >
+        <div className={styles.modalForm}>
+          <p className={styles.modalHint}>
+            Короткий текст про вас бачитимуть інші користувачі там, де відображається ваш профіль. Можна залишити поле
+            порожнім — тоді на сторінці залишаться лише лінії-намітки.
+          </p>
+          <label className={styles.field} htmlFor="profile-about-modal-text">
+            <span className={styles.fieldLabel}>Текст</span>
+            <textarea
+              id="profile-about-modal-text"
+              className={styles.aboutModalTextarea}
+              value={aboutDraft}
+              onChange={(e) => setAboutDraft(e.target.value)}
+              maxLength={PROFILE_ABOUT_MAX_LEN}
+              disabled={updateAboutMutation.isPending}
+              rows={6}
+              spellCheck
+              autoComplete="off"
+              aria-invalid={aboutClientError != null}
+              aria-describedby="profile-about-modal-meta"
+            />
+          </label>
+          <div id="profile-about-modal-meta" className={styles.aboutModalMeta}>
+            <span className={aboutClientError ? styles.aboutModalMetaError : undefined}>
+              {aboutClientError ?? `${PROFILE_ABOUT_MAX_LINES} рядків максимум`}
+            </span>
+            <span aria-live="polite">
+              {aboutDraft.length} / {PROFILE_ABOUT_MAX_LEN}
+            </span>
+          </div>
+          <div className={styles.aboutModalActions}>
+            <button
+              type="button"
+              className={styles.btnRed}
+              onClick={closeAboutModal}
+              disabled={updateAboutMutation.isPending}
+            >
+              Скасувати
+            </button>
+            <div className={styles.saveButtonWrap}>
+              <SaveButton
+                type="button"
+                onClick={handleSaveAbout}
+                disabled={!canSaveAbout}
+                loading={updateAboutMutation.isPending}
+                variant="green"
+              />
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       <Modal
         open={depositModalOpen}

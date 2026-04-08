@@ -724,6 +724,33 @@
   color: #F58807;
 }
 
+.roleNotice {
+  border-radius: 0 20px 20px 0;
+  border: 1px solid var(--frame-stroke);
+  border-left: 4px solid rgba(5, 180, 199, 0.85);
+  background: var(--panelBg);
+  padding: clamp(14px, 2vw, 18px) clamp(16px, 2.5vw, 22px);
+  box-shadow: inset 0 0 0 1px rgba(245, 136, 7, 0.12);
+}
+
+.roleNoticeText {
+  margin: 0;
+  font-size: clamp(14px, 1.15vw, 16px);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.roleNoticeLink {
+  color: #f58807;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.roleNoticeLink:hover {
+  color: rgba(255, 180, 90, 0.95);
+}
+
 .submitRow {
   display: grid;
   place-items: center;

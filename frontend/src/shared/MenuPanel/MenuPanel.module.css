@@ -199,6 +199,13 @@
   outline-offset: 2px;
 }
 
+.ctaButton:disabled,
+.ctaButtonLoading {
+  cursor: wait;
+  opacity: 0.72;
+  pointer-events: none;
+}
+
 .menuSection {
   display: flex;
   flex-direction: column;

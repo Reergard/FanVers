@@ -15,6 +15,7 @@ export const API = {
   cookieConsent: "/api/users/cookie-consent/",
   profileUploadImage: "/api/users/profile/upload-image/",
   profileDeleteImage: "/api/users/profile/delete-image/",
+  profileUpdateAbout: "/api/users/profile/about/",
   profileUpdateEmail: "/api/users/profile/update-email/",
   profileChangePassword: "/api/users/profile/change-password/",
   profileNotificationSettings: "/api/users/profile/notification-settings/",

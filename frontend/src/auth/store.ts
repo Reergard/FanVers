@@ -6,6 +6,8 @@ export type AuthUser = {
   userId: number | null;
   username: string | null;
   balance: string | null;
+  /** Роль профілю з GET auth-status («Читач» | «Перекладач» | «Літератор»); null — ще не в відповіді */
+  role: string | null;
   /** Право на виведення балансу (з auth-status); null — ще не завантажено */
   canWithdrawBalance: boolean | null;
   /** Чи дозволена самостійна зміна ролі через API (зазвичай false у проді) */
@@ -27,6 +29,7 @@ export const authStore: AuthStore = {
     userId: null,
     username: null,
     balance: null,
+    role: null,
     canWithdrawBalance: null,
     roleSelfPromotionAllowed: null,
   },
@@ -65,6 +68,7 @@ export function setAuthAnonymous() {
     userId: null,
     username: null,
     balance: null,
+    role: null,
     canWithdrawBalance: null,
     roleSelfPromotionAllowed: null,
   };
@@ -78,6 +82,7 @@ export function setAuthAuthenticated(user: Partial<AuthUser>) {
     userId: user.userId ?? prev.userId ?? null,
     username: user.username ?? prev.username ?? null,
     balance: user.balance !== undefined ? user.balance : prev.balance,
+    role: user.role !== undefined ? user.role : prev.role,
     canWithdrawBalance:
       user.canWithdrawBalance !== undefined ? user.canWithdrawBalance : prev.canWithdrawBalance,
     roleSelfPromotionAllowed:
@@ -96,6 +101,7 @@ export function clearAuth() {
     userId: null,
     username: null,
     balance: null,
+    role: null,
     canWithdrawBalance: null,
     roleSelfPromotionAllowed: null,
   };

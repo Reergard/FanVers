@@ -29,6 +29,12 @@ export async function deleteProfileImage(): Promise<void> {
   await http.delete(API.profileDeleteImage);
 }
 
+/** Оновити блок «Про себе» */
+export async function updateProfileAbout(about: string): Promise<UserProfile> {
+  const { data } = await http.put<UserProfile>(API.profileUpdateAbout, { about });
+  return data;
+}
+
 /** Оновити email */
 export async function updateEmail(newEmail: string): Promise<{ new_email: string }> {
   const { data } = await http.post<{ new_email: string }>(

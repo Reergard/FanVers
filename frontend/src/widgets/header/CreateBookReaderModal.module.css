@@ -1,0 +1,39 @@
+.text {
+  margin: 0 0 clamp(16px, 2.5vw, 20px);
+  font-size: clamp(14px, 1.2vw, 16px);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.profileLink {
+  color: rgba(5, 180, 199, 0.95);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.profileLink:hover {
+  color: rgba(5, 220, 235, 1);
+}
+
+.okBtn {
+  font-family: "Inter", sans-serif;
+  appearance: none;
+  border-radius: 12px;
+  padding: clamp(8px, 1vw, 10px) clamp(16px, 1.6vw, 20px);
+  font-size: clamp(13px, 1.1vw, 15px);
+  cursor: pointer;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #05ff00;
+  background: rgba(5, 255, 0, 0.1);
+  color: #05ff00;
+  width: 100%;
+  min-height: 44px;
+}
+
+.okBtn:hover {
+  box-shadow: 0 0 0 1px rgba(5, 255, 0, 0.2) inset;
+}
