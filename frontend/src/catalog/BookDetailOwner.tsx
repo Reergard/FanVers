@@ -50,14 +50,18 @@ export default function BookDetailOwner({
   const metaRows = useMemo(() => {
     const publicationLabel =
       book.book_type === "AUTHOR" ? "Статус публікації:" : "Статус перекладу:";
+    const publicationPermissionLabel =
+      book.view_permission === "all"
+        ? "Публічна"
+        : book.view_permission === "bookmarked"
+          ? "Для закладок"
+          : book.view_permission === "none"
+            ? "Приватна"
+            : "—";
     const publicationValue =
       book.book_type === "AUTHOR"
-        ? book.isPublic === true
-          ? "Публічна"
-          : book.isPublic === false
-            ? "Приватна"
-            : "—"
-        : book.translation_status_display ?? (book.isPublic ? "Публічна" : "Перекладається");
+        ? publicationPermissionLabel
+        : book.translation_status_display ?? "Перекладається";
 
     return [
       { label: "Автор:", value: book.author ?? "—" },
@@ -97,7 +101,7 @@ export default function BookDetailOwner({
     book.country,
     book.translation_status_display,
     book.original_status_display,
-    book.isPublic,
+    book.view_permission,
   ]);
 
   const authorMarkText =

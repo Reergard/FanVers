@@ -216,13 +216,23 @@ function normalizeBook(raw: Record<string, unknown>): Book {
       ? String(raw.created_at)
       : null;
 
+  // Backward-compatible: API uses permission levels ('all'/'bookmarked'/'none').
+  // Some older clients/APIs may send 'PUBLIC'/'PRIVATE' — handle both.
+  const viewPermRaw = raw.view_permission;
+  const isPublic =
+    viewPermRaw === "all" || viewPermRaw === "PUBLIC"
+      ? true
+      : viewPermRaw === "none" || viewPermRaw === "PRIVATE"
+        ? false
+        : undefined;
+
   return {
     id: Number(raw.id),
     slug: String(raw.slug ?? ""),
     title: String(raw.title ?? ""),
     owner: ownerId,
     ownerId,
-    isPublic: raw.view_permission !== undefined ? raw.view_permission === "PUBLIC" : undefined,
+    isPublic,
     chapters_count: raw.chapters_count != null ? Number(raw.chapters_count) : undefined,
     description:
       raw.description != null && raw.description !== ""
