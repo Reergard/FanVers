@@ -264,12 +264,15 @@
   overflow: visible; /* ВАЖНО: чтобы ::before не обрезался */
   position: relative;
   flex: 0 0 auto;
+  isolation: isolate;
 
   /* картинка */
   background-color: rgba(255, 255, 255, 0.10);
 }
 
 .avatarImage {
+  position: relative;
+  z-index: 2;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -277,43 +280,45 @@
   border-radius: inherit;
 }
 
-/* Мягкий наружный ореол (градиент от кольца наружу) */
+/* Мягкое пятно ПОД аватаркой (не равномерный halo) */
 .avatar::before {
   content: "";
   position: absolute;
-  inset: -28px;              /* пропорционально увеличено с -22px */
-  border-radius: 999px;
+  z-index: 0;
+  left: -12px;
+  right: -12px;
+  top: 5px;
+  bottom: -14px;
+  border-radius: 50%;
   pointer-events: none;
 
-  /* центр прозрачный, яркое кольцо у края + широкий мягкий хвост наружу */
   background: radial-gradient(
-    circle,
-    rgba(5, 180, 199, 0) 52%,
-    rgba(5, 180, 199, 0.55) 64%,
-    rgba(5, 180, 199, 0.32) 78%,
-    rgba(5, 180, 199, 0.12) 88%,
-    rgba(5, 180, 199, 0) 100%
+    ellipse at 50% 68%,
+    rgba(5, 180, 199, 0.72) 0%,
+    rgba(5, 180, 199, 0.50) 22%,
+    rgba(5, 180, 199, 0.26) 46%,
+    rgba(5, 180, 199, 0.11) 63%,
+    rgba(5, 180, 199, 0.00) 79%
   );
 
-  filter: blur(12px);        /* мягче, шире */
+  transform: scale(1.14, 0.98);
+  filter: blur(13px);
   opacity: 1;
 }
 
-/* Само кольцо + маленький внутренний блеск */
+/* Тонкий контур + лёгкое свечение по краю */
 .avatar::after {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 3;
   border-radius: inherit;
   pointer-events: none;
-  opacity: 0.75;
+  opacity: 1;
 
   box-shadow:
-    /* тонкое кольцо (не жирное!) */
-    inset 0 0 0 1px rgba(5, 180, 199, 0.9),
-
-    /* маленькое свечение прямо на границе */
-    0 0 6px rgba(5, 180, 199, 0.28);
+    inset 0 0 0 1px rgba(5, 180, 199, 0.95),
+    0 0 6px rgba(5, 180, 199, 0.24);
 }
 
 .userText {
@@ -470,6 +475,17 @@
   .navSeparator {
     margin-inline: -10px;
   }
+
+  /* Только desktop: увеличиваем расстояние между аватаркой и текстом */
+  .user .avatar {
+    margin-right: 10px;
+  }
+
+  /* Только desktop: бейджи снизу иконок (bell/mail) */
+  .badge {
+    top: auto;
+    bottom: -6px;
+  }
 }
 
 /* ============================================================
@@ -485,8 +501,9 @@
 
   .avatar { 
     flex: 0 0 auto;
-    width: 72px;
-    height: 72px; 
+    width: 76px;
+    height: 76px;
+    margin-top: 4px;
   }
 
   /* Фоны (тучки, blur) прибиты к верху — padding у top убран */
@@ -540,7 +557,7 @@
   .coinsLine {
     position: relative;
     max-width: 100%;
-    font-size: 16px;
+    font-size: 18px;
     color: rgba(5, 180, 199, 0.95);
     text-shadow: 0 0 14px rgba(5, 180, 199, 0.18);
   }
@@ -581,6 +598,7 @@
     flex: 0 0 auto;
     gap: 10px;
     align-items: center;
+    margin-top: 4px;
   }
 
   .rightCompact {
@@ -660,13 +678,10 @@
   }
 
   .avatar {
-    width: 72px;
-    height: 72px;
+    width: 78px;
+    height: 78px;
     flex-shrink: 0;
-  }
-
-  .avatar::before {
-    inset: -30px;
+    margin-top: 4px;
   }
 
   .iconBtn {
@@ -753,13 +768,10 @@
   }
 
   .avatar {
-    width: 80px;
-    height: 80px;
+    width: 84px;
+    height: 84px;
     flex-shrink: 0;
-  }
-
-  .avatar::before {
-    inset: -32px;
+    margin-top: 4px;
   }
 
   .iconBtn {
@@ -808,8 +820,9 @@
    ============================================================ */
 @media (width: 1024px) {
   .avatar {
-    width: 80px !important;
-    height: 80px !important;
+    width: 84px !important;
+    height: 84px !important;
+    margin-top: 4px;
   }
 
   .icon {
@@ -865,16 +878,9 @@
   }
 
   .avatar {
-    width: 46px;
-    height: 46px;
-  }
-
-  .avatar::before {
-    inset: -7px;
-  }
-
-  .avatar::after {
-    inset: 1px;
+    width: 52px;
+    height: 52px;
+    margin-top: 3px;
   }
 
   .compactMeta {
@@ -882,7 +888,8 @@
   }
 
   .compactActions {
-    margin-left: 2px;
+    margin-left: -7px;
+    margin-top: 7px;
   }
 
   .iconBtn {
@@ -923,7 +930,7 @@
 
   .coinsLine {
     margin-top: 6px;
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1;
     overflow: visible;
     max-width: 100%;
@@ -941,7 +948,7 @@
   }
 
   .coinsValue {
-    font-size: 18px;
+    font-size: 19px;
   }
 
   /* 3) УМЕНЬШАЕМ правый блок (поиск + бургер) */
@@ -1007,16 +1014,9 @@
   }
 
   .avatar {
-    width: 40px;
-    height: 40px;
-  }
-
-  .avatar::before {
-    inset: -16px;
-  }
-
-  .avatar::after {
-    inset: 2px;
+    width: 46px;
+    height: 46px;
+    margin-top: 3px;
   }
 
   .compactActions {
@@ -1043,7 +1043,7 @@
   }
 
   .coinsLine {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .coinsLabel {
@@ -1051,7 +1051,7 @@
   }
 
   .coinsValue {
-    font-size: 16px;
+    font-size: 17px;
   }
 
   .rightCompact {
