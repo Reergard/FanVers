@@ -496,6 +496,7 @@ def create_volume(request, book_slug):
 
 
 @api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
 @permission_classes([IsAuthenticated])
 def create_book(request):
     try:

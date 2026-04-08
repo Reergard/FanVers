@@ -18,6 +18,7 @@
 ### create_book
 
 - `@api_view(['POST'])` — дозволений лише POST.
+- `@parser_classes([MultiPartParser, FormParser])` — явно multipart/form-data (як у `update_book`).
 - `@permission_classes([IsAuthenticated])` — потрібна авторизація.
 
 ### update_book
