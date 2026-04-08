@@ -38,8 +38,25 @@ from django.utils.text import slugify
 import uuid
 # Удаляем импорт старых throttling классов
 from apps.core.smart_throttling import SmartThrottle
+from apps.users.models import Profile
 
 logger = logging.getLogger(__name__)
+
+BOOK_CREATE_READER_FORBIDDEN_MESSAGE_UK = (
+    "Читачі не можуть створювати книги. Щоб отримати це право, змініть тип профілю на сторінці «Профіль»."
+)
+BOOK_TRANSLATOR_AUTHOR_FORBIDDEN_MESSAGE_UK = (
+    "Ми з радістю вітаємо авторські твори на платформі! "
+    "Публікувати твір з типом «Авторський» можуть лише літератори. "
+    "Змініть тип профілю на сторінці «Профіль»."
+)
+
+
+def _user_profile_role(user):
+    try:
+        return user.profile.role
+    except Profile.DoesNotExist:
+        return "Читач"
 
 
 @api_view(['GET'])
@@ -508,6 +525,26 @@ def create_book(request):
             data = processed_data
             print(f"create_book: Обработанные данные FormData: genres={data.get('genres')}, tags={data.get('tags')}, fandoms={data.get('fandoms')}")
         
+        profile_role = _user_profile_role(request.user)
+        if profile_role == "Читач":
+            return Response(
+                {
+                    "error": "Недостатньо прав",
+                    "message": BOOK_CREATE_READER_FORBIDDEN_MESSAGE_UK,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        book_type = data.get("book_type") if isinstance(data, dict) else None
+        if profile_role == "Перекладач" and book_type == "AUTHOR":
+            return Response(
+                {
+                    "error": "Помилка даних",
+                    "message": BOOK_TRANSLATOR_AUTHOR_FORBIDDEN_MESSAGE_UK,
+                    "details": {"book_type": BOOK_TRANSLATOR_AUTHOR_FORBIDDEN_MESSAGE_UK},
+                },
+                status=HTTP_400_BAD_REQUEST,
+            )
+
         serializer = BookCreateSerializer(data=data)
         
         if serializer.is_valid():
@@ -582,6 +619,25 @@ def update_book(request, slug):
                 else:
                     processed_data[key] = request.data.get(key)
             data = processed_data
+
+        profile_role = _user_profile_role(request.user)
+        # Блокуємо лише спробу змінити/задати «Авторський» для перекладача (не legacy-книги, що вже AUTHOR).
+        incoming_book_type = (
+            data.get("book_type") if isinstance(data, dict) and "book_type" in data else None
+        )
+        if (
+            profile_role == "Перекладач"
+            and incoming_book_type == "AUTHOR"
+            and book.book_type != "AUTHOR"
+        ):
+            return Response(
+                {
+                    "error": "Помилка даних",
+                    "message": BOOK_TRANSLATOR_AUTHOR_FORBIDDEN_MESSAGE_UK,
+                    "details": {"book_type": BOOK_TRANSLATOR_AUTHOR_FORBIDDEN_MESSAGE_UK},
+                },
+                status=HTTP_400_BAD_REQUEST,
+            )
 
         serializer = BookCreateSerializer(instance=book, data=data, partial=True)
 

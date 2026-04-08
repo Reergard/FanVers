@@ -320,6 +320,32 @@ class CookieConsentSerializer(serializers.Serializer):
         return data
 
 
+PROFILE_ABOUT_MAX_LENGTH = 2500
+PROFILE_ABOUT_MAX_LINES = 80
+
+
+class ProfileAboutUpdateSerializer(serializers.Serializer):
+    """Оновлення лише поля «Про себе» — без доступу до інших полів профілю."""
+
+    about = serializers.CharField(
+        max_length=PROFILE_ABOUT_MAX_LENGTH,
+        allow_blank=True,
+        trim_whitespace=True,
+        required=True,
+    )
+
+    def validate_about(self, value):
+        if value and "\x00" in value:
+            raise serializers.ValidationError("Текст містить недопустимі символи.")
+        if value:
+            lines = value.splitlines()
+            if len(lines) > PROFILE_ABOUT_MAX_LINES:
+                raise serializers.ValidationError(
+                    f"Забагато рядків (максимум {PROFILE_ABOUT_MAX_LINES})."
+                )
+        return value
+
+
 class ProfileSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     can_withdraw_balance = serializers.SerializerMethodField()

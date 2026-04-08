@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (
     UserProfileView, ProfileDetailView, update_profile_view,
+    update_profile_about_view,
     ProfileImageView, delete_profile_image, UpdateEmailView,
     change_password, update_notification_settings, get_translators_list,
     get_authors_list, get_user_profile, become_translator, become_author,
@@ -17,6 +18,7 @@ urlpatterns = [
     path('profile/', UserProfileView.as_view(), name='user_profile'),
     path('profile/detail/', ProfileDetailView.as_view(), name='profile_detail'),
     path('profile/update/', update_profile_view, name='update_profile'),
+    path('profile/about/', update_profile_about_view, name='update_profile_about'),
     path('profile/upload-image/', ProfileImageView.as_view(), name='upload_profile_image'),
     path('profile/delete-image/', delete_profile_image, name='delete_profile_image'),
     path('profile/update-email/', UpdateEmailView.as_view(), name='update_email'),

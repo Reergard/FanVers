@@ -125,8 +125,9 @@ def del_session_mode_cookie(response):
     )
 
 from apps.users.api.serializers import (
-    ProfileSerializer, 
-    TranslatorListSerializer, 
+    ProfileSerializer,
+    ProfileAboutUpdateSerializer,
+    TranslatorListSerializer,
     AuthorListSerializer,
     UsersProfilesSerializer,
     CreateUserSerializer,
@@ -553,6 +554,42 @@ def update_profile_view(request):
         )
 
 
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_profile_about_view(request):
+    """Оновлення лише тексту «Про себе» (без інших полів профілю)."""
+    try:
+        profile = request.user.profile
+    except Profile.DoesNotExist:
+        return Response(
+            {'error': 'Профіль не знайдено'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    serializer = ProfileAboutUpdateSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            {
+                'error': 'Помилка валідації',
+                'details': serializer.errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    try:
+        text = serializer.validated_data['about']
+        with transaction.atomic():
+            profile = type(profile).objects.select_for_update().get(pk=profile.pk)
+            profile.about = text if text else None
+            profile.save(update_fields=['about'])
+        response_serializer = ProfileSerializer(profile, context={'request': request})
+        return Response(response_serializer.data)
+    except Exception as e:
+        logger.error(f"Помилка оновлення «Про себе»: {str(e)}", exc_info=True)
+        return Response(
+            {'error': 'Помилка при збереженні тексту профілю'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
 class ProfileImageView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
@@ -916,10 +953,12 @@ class AuthStatusView(APIView):
 
     def get(self, request):
         # Если дошли сюда - значит access токен валиден и пользователь аутентифицирован
+        user_role = 'Читач'
         try:
             profile = request.user.profile
             balance = str(profile.balance)
             can_withdraw_balance = profile.can_withdraw_balance()
+            user_role = profile.role
         except (Profile.DoesNotExist, AttributeError):
             balance = '0'
             can_withdraw_balance = False
@@ -930,6 +969,7 @@ class AuthStatusView(APIView):
             'balance': balance,
             'can_withdraw_balance': can_withdraw_balance,
             'role_self_promotion_allowed': is_role_self_promotion_allowed(),
+            'role': user_role,
         })
 
 
