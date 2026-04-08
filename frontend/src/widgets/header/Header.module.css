@@ -174,10 +174,10 @@
   font-family: "Seminaria", sans-serif;
   font-size: 12px;
   line-height: 1;
-  color: #0b0b0b;
+  color: #050D11;
 
-  background: #f3a300; /* как на скрине */
-  box-shadow: 0 0 12px rgba(243, 163, 0, 0.35);
+  background: #05B4C7;
+  box-shadow: 0 0 12px rgba(5, 180, 199, 0.35);
 }
 
 /* ===== SEARCH (desktop) ===== */
@@ -916,8 +916,9 @@
     height: 18px;
     font-size: 12px;
     padding-inline: 5px;
-    background: #F58807;
-    box-shadow: 0 0 12px #f58807;
+    color: #050D11;
+    background: #05B4C7;
+    box-shadow: 0 0 12px rgba(5, 180, 199, 0.35);
   }
 
   .coinsLine {
