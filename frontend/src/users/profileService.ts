@@ -81,20 +81,26 @@ export async function becomeAuthor(): Promise<{ role: string; message?: string }
 }
 
 /** Поповнити баланс */
-export async function depositBalance(amount: number): Promise<{
+export async function depositBalance(
+  amount: number,
+  idempotency_key: string
+): Promise<{
   new_balance: string;
   balance_history?: BalanceHistoryItem[];
 }> {
-  const { data } = await http.post(API.addBalance, { amount });
+  const { data } = await http.post(API.addBalance, { amount, idempotency_key });
   return data;
 }
 
 /** Вивести кошти */
-export async function withdrawBalance(amount: number): Promise<{
+export async function withdrawBalance(
+  amount: number,
+  idempotency_key: string
+): Promise<{
   new_balance: string;
   balance_history?: BalanceHistoryItem[];
 }> {
-  const { data } = await http.post(API.withdrawBalance, { amount });
+  const { data } = await http.post(API.withdrawBalance, { amount, idempotency_key });
   return data;
 }
 

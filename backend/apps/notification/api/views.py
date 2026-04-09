@@ -2,6 +2,8 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+
+from .permissions import IsNotificationOwner
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from ..models import Notification
 from .serializers import NotificationSerializer
@@ -11,7 +13,7 @@ from rest_framework import status
 
 class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsNotificationOwner]
     authentication_classes = [JWTAuthentication]
     
     def get_queryset(self):
@@ -72,12 +74,6 @@ class NotificationViewSet(viewsets.ModelViewSet):
         """Пометить уведомление как прочитанное"""
         try:
             notification = self.get_object()
-            if notification.user != request.user:
-                return Response(
-                    {'error': 'У вас немає прав для зміни цього повідомлення'}, 
-                    status=403
-                )
-            
             notification.is_read = True
             notification.save(update_fields=['is_read'])
             
@@ -94,12 +90,6 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         try:
             notification = self.get_object()
-            if notification.user != request.user:
-                return Response(
-                    {'error': 'У вас немає прав для видалення цього повідомлення'}, 
-                    status=403
-                )
-            
             notification.delete()
             return Response(status=204)
             

@@ -27,10 +27,10 @@ UI **не** є захистом: усі обмеження перевіряют�
 
 ## Дані профілю та кеш
 
-`useQuery` з ключем `["profile"]`, `queryFn: getMyProfile` (`GET /api/users/profile/`).
+`useQuery` з ключем **`profileQueryKey(userId)`** (`shared/queryKeys.ts`), `queryFn: getMyProfile` (`GET /api/users/profile/`).
 
 - Увімкнено **`refetchOnWindowFocus`** та **`refetchOnReconnect`**, щоб після змін ролі/балансу в адмінці оновити `can_withdraw_balance` та інші поля при поверненні на вкладку.
-- Після **deposit/withdraw** — `invalidateQueries({ queryKey: ["profile"] })` і `refreshAuthStatus()` (синхронізація з `auth-status`).
+- Після **deposit/withdraw** — `invalidateQueries({ queryKey: profileQueryKey(userId) })` і `refreshAuthStatus()` (синхронізація з `auth-status`).
 - Після **becomeTranslator / becomeAuthor** — те саме + `refreshAuthStatus()` для `can_withdraw_balance` у store.
 
 ## Глобальний стан (шапка тощо)
@@ -57,5 +57,5 @@ UI **не** є захистом: усі обмеження перевіряют�
 ## Важливо для змін
 
 1. Не прив’язувати показ кнопки виводу лише до `useAuth().canWithdrawBalance` на профілі: основне джерело для блоку балансу — **`profile.can_withdraw_balance`** після `getMyProfile`. **`useAuth()`** наповнюється з `auth-status` і може **застаріти** (наприклад, після зміни ролі в адмінці), доки не виконається bootstrap, `refreshAuthStatus` чи refocus; **`getMyProfile`** при відкритті/оновленні сторінки профілю дає свіжіший прапорець для цього UI.
-2. Будь-яка нова сторінка з операціями балансу має після успіху викликати **`refreshAuthStatus`** і/або інвалідувати `["profile"]`, якщо відображається баланс у шапці або профілі.
+2. Будь-яка нова сторінка з операціями балансу має після успіху викликати **`refreshAuthStatus`** і/або інвалідувати **`profileQueryKey(userId)`**, якщо відображається баланс у шапці або профілі.
 3. Помилки **403** (роль) і валідації сум обробляти з `err.response.data` (текст `error`, за потреби `code`).

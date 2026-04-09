@@ -7,6 +7,11 @@ export function useChat() {
     snapshot.selectedChatId != null ? snapshot.messagesByChatId[snapshot.selectedChatId] ?? [] : [];
   const isLoadingSelectedMessages =
     snapshot.selectedChatId != null ? Boolean(snapshot.loadingMessages[snapshot.selectedChatId]) : false;
+  const selectedOlderCursor =
+    snapshot.selectedChatId != null ? snapshot.messagesOlderCursor[snapshot.selectedChatId] : undefined;
+  const hasOlderMessages = typeof selectedOlderCursor === "number";
+  const isLoadingOlderSelected =
+    snapshot.selectedChatId != null ? Boolean(snapshot.loadingOlderMessages[snapshot.selectedChatId]) : false;
 
   return {
     state: {
@@ -16,6 +21,8 @@ export function useChat() {
       selectedMessages,
       loadingChats: snapshot.loadingChats,
       isLoadingSelectedMessages,
+      hasOlderMessages,
+      isLoadingOlderSelected,
       error: snapshot.error,
       unreadTotal: snapshot.unreadTotal,
     },

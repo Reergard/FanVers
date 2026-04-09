@@ -546,14 +546,14 @@
 
 - **ChatPage** — auth-гейт (`useAuth`), ініціалізація списку чатів, підключення ws конкретного чату, проброс actions/стану в дочірні компоненти.
 - **ChatList** — лівий список діалогів, вибір чату, бейдж непрочитаних (`.unreadBadge`) за `chat.unread_count`, кнопка відкриття модалки створення.
-- **ChatWindow** — рендер повідомлень, відправка (ws -> fallback HTTP), mark-as-read при відкритті чату, confirm-видалення.
-- **CreateChatModal** — форма створення чату (`username` + optional перше повідомлення) через спільний `Modal`.
+- **ChatWindow** — рендер повідомлень, пагінація старіших (`next_before`), відправка (ws → fallback HTTP), mark-as-read при відкритті чату, confirm-видалення.
+- **CreateChatModal** — пошук співрозмовника (`user-search`) + створення чату (`username` / перше повідомлення) через спільний `Modal`.
 
 **Особливості:**
 
 - `chatStore` працює як external store (подібно до auth/adultContent підходу): `subscribe`, `getSnapshot`, `storeVersion`.
 - `counterWs` у `widgets/header/Header.tsx` оновлює `unreadTotal`; є інтервальний `fetchChats` і передача `unread_count` з WS у `applyCounterEvent`.
-- повідомлення "чат уже існує" показується через `useNotification().showWarning(...)`.
+- бекенд зазвичай повертає **200** з уже наявним діалогом; `showWarning` лишається запасним шляхом, якщо в помилці ще трапляється текст про «вже існує» / «already exists».
 - "Видалити чат" має confirm-модалку з кнопками `Так/Ні`.
 
 **Місця використання:**

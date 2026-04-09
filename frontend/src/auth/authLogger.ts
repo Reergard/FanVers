@@ -12,7 +12,6 @@ export type AuthEvent =
   | "REFRESH_START"
   | "REFRESH_OK"
   | "REFRESH_401"
-  | "ROTATION_DETECTED"
   | "401_INTERCEPT"
   | "RETRY_OK"
   | "RETRY_FAIL"

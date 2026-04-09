@@ -10,7 +10,23 @@ export async function bootstrapAuth() {
     console.log("[bootstrap] start (AUTH_DEBUG)");
   }
   try {
-    await fetchCsrfToken();
+    let csrfOk = false;
+    for (let i = 0; i < 3 && !csrfOk; i++) {
+      try {
+        await fetchCsrfToken();
+        csrfOk = true;
+      } catch {
+        if (i < 2) {
+          await new Promise((r) => setTimeout(r, 1000));
+        }
+      }
+    }
+    if (!csrfOk) {
+      if (!getAccess()) {
+        setAuthAnonymous();
+      }
+      return;
+    }
     try {
       await refreshSessionSilent({ fromBootstrap: true });
     } catch (error: any) {

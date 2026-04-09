@@ -27,6 +27,11 @@ let cachedSnapshot: {
 } | null = null;
 let cachedVersion = -1;
 
+export function resetAuthCache() {
+  cachedSnapshot = null;
+  cachedVersion = -1;
+}
+
 function getSnapshot() {
   const v = getStoreVersion();
   if (cachedSnapshot && cachedVersion === v) return cachedSnapshot;

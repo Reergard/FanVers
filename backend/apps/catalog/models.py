@@ -1,10 +1,13 @@
+import html as html_lib
 import os
 from django.db import models
 from django.db.models import Q
+from django.utils.html import strip_tags
 from django.utils.text import slugify
 from django.urls import reverse
 import docx
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
 from django.utils import timezone
 from unidecode import unidecode
@@ -13,7 +16,72 @@ from datetime import timedelta
 import logging
 from decimal import Decimal
 
+import bleach
+
 logger = logging.getLogger(__name__)
+
+
+def _chapter_plain_text_len(html_str: str) -> int:
+    """Довжина видимого тексту без HTML-тегів (для character_count / reading_time)."""
+    if not html_str:
+        return 0
+    text = strip_tags(html_str)
+    text = html_lib.unescape(text)
+    text = text.replace("\xa0", " ")
+    text = re.sub(r"\s+", " ", text).strip()
+    return len(text)
+
+
+CHAPTER_HTML_ALLOWED_TAGS = frozenset(
+    [
+        "p",
+        "br",
+        "b",
+        "i",
+        "em",
+        "strong",
+        "ul",
+        "ol",
+        "li",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "span",
+        "a",
+        "table",
+        "tr",
+        "td",
+        "th",
+        "thead",
+        "tbody",
+        "img",
+        "blockquote",
+        "sup",
+        "sub",
+    ]
+)
+
+CHAPTER_HTML_ALLOWED_ATTRS = {
+    "a": ["href", "title"],
+    "img": ["src", "alt", "title"],
+    "span": ["class"],
+    "td": ["colspan", "rowspan"],
+    "th": ["colspan", "rowspan"],
+    "*": ["class"],
+}
+
+
+def sanitize_chapter_html(html_content: str) -> str:
+    if not html_content:
+        return ""
+    return bleach.clean(
+        html_content,
+        tags=list(CHAPTER_HTML_ALLOWED_TAGS),
+        attributes=CHAPTER_HTML_ALLOWED_ATTRS,
+        strip=True,
+        protocols=["http", "https", "mailto"],
+    )
 
 
 def create_slug(title):
@@ -467,7 +535,11 @@ class Chapter(models.Model):
         max_digits=10,
         decimal_places=2,
         default=Decimal('1.00'),
-        verbose_name='Вартість розділу'
+        verbose_name='Вартість розділу',
+        validators=[
+            MinValueValidator(Decimal("0.00")),
+            MaxValueValidator(Decimal("1000.00")),
+        ],
     )
     reading_time = models.IntegerField(default=0)  # час у секундах
     character_count = models.IntegerField(default=0)
@@ -520,16 +592,13 @@ class Chapter(models.Model):
         if not self.slug:
             self.slug = self.generate_unique_slug()    
         
-        # Оновлення часу (только для новых глав)
-        if not self.pk:
-            self.last_updated = timezone.now()
-            
-        # Підрахунок символів та часу читання
+        # Підрахунок символів та часу читання (по тексту читача, не по сирих HTML-тегах)
         if self.html_content:
-            self.character_count = len(self.html_content)
-            self.characters_count = len(self.html_content)  # Дублируем для совместимости
+            plain_len = _chapter_plain_text_len(self.html_content)
+            self.character_count = plain_len
+            self.characters_count = plain_len
             # 3 хвилини на 1000 символів = 180 секунд на 1000 символів
-            self.reading_time = (self.character_count / 1000) * 180
+            self.reading_time = (plain_len / 1000) * 180
             self.min_reading_time = self.reading_time * 0.75
             
         try:
@@ -545,20 +614,33 @@ class Chapter(models.Model):
         return f'books/{self.book.slug}/chapters/html/{self.slug}.html'
 
     def save_html_content(self, html_content):
+        """Єдине джерело HTML — поле html_content у БД; диск лише для зворотної сумісності при читанні."""
         try:
-            html_dir = os.path.dirname(os.path.join(settings.MEDIA_ROOT, self.generate_html_filename()))
-            os.makedirs(html_dir, exist_ok=True)
-            
-            html_path = os.path.join(settings.MEDIA_ROOT, self.generate_html_filename())
-            with open(html_path, 'w', encoding='utf-8') as f:
-                f.write(html_content)
-            
-            self.html_file_path = self.generate_html_filename()
+            html_content = sanitize_chapter_html(html_content)
+            if self.html_file_path:
+                legacy_path = os.path.join(settings.MEDIA_ROOT, self.html_file_path)
+                if os.path.isfile(legacy_path):
+                    try:
+                        os.remove(legacy_path)
+                    except OSError:
+                        logger.warning("Could not remove legacy chapter html file: %s", legacy_path)
+            plain_len = _chapter_plain_text_len(html_content)
+            self.html_file_path = None
             self.html_content = html_content
-            # Обновляем поля символов
-            self.character_count = len(html_content)
-            self.characters_count = len(html_content)
-            self.save(update_fields=['html_file_path', 'html_content', 'character_count', 'characters_count'])
+            self.character_count = plain_len
+            self.characters_count = plain_len
+            self.reading_time = (plain_len / 1000) * 180 if plain_len else 0
+            self.min_reading_time = self.reading_time * 0.75 if self.reading_time else 0
+            self.save(
+                update_fields=[
+                    "html_file_path",
+                    "html_content",
+                    "character_count",
+                    "characters_count",
+                    "reading_time",
+                    "min_reading_time",
+                ]
+            )
         except Exception as e:
             raise
 

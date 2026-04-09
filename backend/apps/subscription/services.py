@@ -293,8 +293,21 @@ class SubscriptionService:
                 op.save()
                 return False, INSUFFICIENT_BALANCE, 'Insufficient balance'
 
+            # Важливо: спочатку списуємо баланс, потім створюємо підписку.
+            # Усе в одному savepoint/atomic, щоб при помилці не лишалось "безкоштовної" підписки.
             sid = transaction.savepoint()
             try:
+                balance_mixin = BalanceOperationMixin()
+                owner_profile = book.owner.profile
+                commission = owner_profile.calculate_commission_amount(charge_price)
+                owner_amount = charge_price - commission
+
+                balance_before = float(profile.balance)
+                balance_mixin.perform_balance_operation(profile, charge_price, 'purchase')
+                balance_mixin.perform_balance_operation(owner_profile, owner_amount, 'earning')
+                profile.refresh_from_db()
+                balance_after = float(profile.balance)
+
                 sub = UserBookSubscription.objects.create(
                     user=user,
                     book=book,
@@ -313,17 +326,6 @@ class SubscriptionService:
                 op.save()
                 return False, ACTIVE_SUBSCRIPTION_ALREADY_EXISTS, 'Active subscription exists (race)'
             transaction.savepoint_commit(sid)
-
-            balance_mixin = BalanceOperationMixin()
-            owner_profile = book.owner.profile
-            commission = owner_profile.calculate_commission_amount(charge_price)
-            owner_amount = charge_price - commission
-
-            balance_before = float(profile.balance)
-            balance_mixin.perform_balance_operation(profile, charge_price, 'purchase')
-            balance_mixin.perform_balance_operation(owner_profile, owner_amount, 'earning')
-            profile.refresh_from_db()
-            balance_after = float(profile.balance)
 
             audit = {
                 'plan_id': plan.id,

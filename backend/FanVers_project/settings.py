@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from datetime import timedelta
+from urllib.parse import quote
 import environ
 import logging
 
@@ -24,10 +25,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(BASE_DIR / ".env")  # Читаємо .env файл
 
 SECRET_KEY = env("SECRET_KEY")
-SIGNING_KEY = env("SIGNING_KEY", default=SECRET_KEY)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
+
+# У проді JWT signing key має бути окремим секретом у .env (не fallback на SECRET_KEY).
+if DEBUG:
+    SIGNING_KEY = env("SIGNING_KEY", default=SECRET_KEY)
+else:
+    SIGNING_KEY = env("SIGNING_KEY")
+
+# Нестандартний шлях адмінки (Nginx whitelist окремо). Див. DJANGO_ADMIN_PATH у .env
+DJANGO_ADMIN_PATH = (os.getenv("DJANGO_ADMIN_PATH", "admin") or "admin").strip().strip("/") or "admin"
+
+# Окремий ключ для symmetric encryption у channels_redis (не ділити з JWT/session).
+_WS_KEY_RAW = (env("WS_ENCRYPTION_KEY", default="") or "").strip()
+CHANNEL_SYMMETRIC_ENCRYPTION_KEYS = [_WS_KEY_RAW] if _WS_KEY_RAW else [SECRET_KEY]
 
 # Hosts
 if DEBUG:
@@ -70,10 +83,12 @@ INSTALLED_APPS = [
     'channels',
     'django_celery_beat',
     'social_django',
+    'csp',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'csp.middleware.CSPMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',  # Нужен для CSRF (если CSRF_USE_SESSIONS=True)
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -189,7 +204,7 @@ if DEBUG:
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': DEFAULT_AUTH_CLASSES,
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny', 
+        'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.UserRateThrottle',
@@ -211,8 +226,14 @@ REST_FRAMEWORK = {
         'purchase': '10/hour',     # покупки
         'balance': '100/hour',     # баланс (как у вас)
         'profile': '60/min',       # профили (разумный лимит)
+        'profile_write': '10/min',
+        'password_change': '5/min',
+        'role_promotion': '3/min',
+        'auth_status': '120/min',
         'monitoring': '10/min',    # мониторинг статистики
         'thanks': '5/min',         # благодарности авторам
+        'chat_create': '10/min',   # створення чату (анти-спам)
+        'chat_user_search': '30/min',  # підказки ніків (анти-enumeration)
         # Auth endpoints
         'auth_login': '5/min',     # логин
         'auth_refresh': '30/min',  # обновление токенов
@@ -293,18 +314,32 @@ SIMPLE_JWT = {
 # Настройки Redis для разных сервисов (разделение DB)
 REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = os.getenv('REDIS_PORT', '6379')
+REDIS_PASSWORD = (os.getenv('REDIS_PASSWORD', '') or '').strip()
+REDIS_PORT_INT = int(str(REDIS_PORT).strip() or '6379')
 
 # Разные DB для разных сервисов
 REDIS_DB_CACHE = int(os.getenv('REDIS_DB_CACHE', '1'))      # Django Cache (throttling/SmartThrottle)
 REDIS_DB_CELERY = int(os.getenv('REDIS_DB_CELERY', '2'))    # Celery broker/result
 REDIS_DB_CHANNELS = int(os.getenv('REDIS_DB_CHANNELS', '3')) # Channels WebSocket
 
+
+def _redis_url(db_index: int) -> str:
+    if REDIS_PASSWORD:
+        return f'redis://:{quote(REDIS_PASSWORD, safe="")}@{REDIS_HOST}:{REDIS_PORT_INT}/{db_index}'
+    return f'redis://{REDIS_HOST}:{REDIS_PORT_INT}/{db_index}'
+
+
+def _channel_redis_hosts():
+    if REDIS_PASSWORD:
+        return [_redis_url(REDIS_DB_CHANNELS)]
+    return [(REDIS_HOST, REDIS_PORT_INT)]
+
 # Обратная совместимость
 REDIS_DB = os.getenv('REDIS_DB', '0')
 
 # Затем настройки Celery
-CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_CELERY}'
-CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_CELERY}'
+CELERY_BROKER_URL = _redis_url(REDIS_DB_CELERY)
+CELERY_RESULT_BACKEND = _redis_url(REDIS_DB_CELERY)
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -328,6 +363,8 @@ ABANDONED_THRESHOLDS_USE_MINUTES = env.bool('ABANDONED_THRESHOLDS_USE_MINUTES', 
 
 USE_POSTGRES = env.bool('USE_POSTGRES')
 
+CONN_MAX_AGE = int(os.getenv('CONN_MAX_AGE', '60'))
+
 if USE_POSTGRES:
     DATABASES = {
         'default': {
@@ -338,6 +375,7 @@ if USE_POSTGRES:
             'PASSWORD': env.str('DB_PASS'),
             'HOST': env.str('DB_HOST'),
             'PORT': env.int('DB_PORT'),
+            'CONN_MAX_AGE': CONN_MAX_AGE,
         }
     }
 else:
@@ -345,6 +383,7 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
+            'CONN_MAX_AGE': CONN_MAX_AGE,
         }
     }
 
@@ -374,9 +413,9 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": _channel_redis_hosts(),
             "prefix": f"fanvers_channels_{REDIS_DB_CHANNELS}",
-            "symmetric_encryption_keys": [SECRET_KEY],
+            "symmetric_encryption_keys": CHANNEL_SYMMETRIC_ENCRYPTION_KEYS,
             "capacity": 1500,
             # Убираем таймер который закрывает WebSocket!
             # "expiry": 10,
@@ -431,10 +470,9 @@ if not DEBUG:
     SESSION_COOKIE_DOMAIN = ".fan-vers.com"  # Работает для fan-vers.com и www.fan-vers.com
     CSRF_COOKIE_DOMAIN = ".fan-vers.com"    # Работает для fan-vers.com и www.fan-vers.com
     
-    # SameSite для кросс-сайт запросов (если открываете из Telegram/Instagram/WebView)
-    # Используйте "None" если нужен кросс-сайт доступ, "Lax" если только same-site
+    # SameSite: за замовчуванням Lax; None лише якщо явно потрібен cross-site (і Secure=True).
     # Нормализуем значение из env: none/NONE/None -> 'None', остальное -> 'Lax'
-    raw = os.getenv('CSRF_COOKIE_SAMESITE', 'None')
+    raw = os.getenv('CSRF_COOKIE_SAMESITE', 'Lax')
     raw = (raw or '').strip().lower()
     CSRF_COOKIE_SAMESITE = 'None' if raw == 'none' else 'Lax'
     
@@ -558,11 +596,30 @@ MAX_BALANCE_OPERATION_AMOUNT = 100000
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_CACHE}',
+        'LOCATION': _redis_url(REDIS_DB_CACHE),
         'KEY_PREFIX': 'fanvers_cache',
         'TIMEOUT': 300,  # 5 минут по умолчанию
     }
 }
+
+# Content-Security-Policy (спочатку Report-Only; див. CSP_ENABLED у .env)
+from csp.constants import NONE, SELF, UNSAFE_INLINE
+
+CONTENT_SECURITY_POLICY = None
+if env.bool('CSP_ENABLED', default=True):
+    CONTENT_SECURITY_POLICY_REPORT_ONLY = {
+        'EXCLUDE_URL_PREFIXES': (f'/{DJANGO_ADMIN_PATH}/',),
+        'DIRECTIVES': {
+            'default-src': [SELF],
+            'script-src': [SELF],
+            'style-src': [SELF, UNSAFE_INLINE],
+            'img-src': [SELF, 'data:'],
+            'connect-src': [SELF],
+            'frame-ancestors': [NONE],
+        },
+    }
+else:
+    CONTENT_SECURITY_POLICY_REPORT_ONLY = None
 
 # CSRF_TRUSTED_ORIGINS - домены, которым Django доверяет для CSRF
 # Должны включать все домены, с которых могут приходить запросы

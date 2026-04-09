@@ -31,3 +31,15 @@ export type CreateChatPayload = {
 export type SendMessagePayload = {
   content: string;
 };
+
+export type MessagesPage = {
+  results: ChatMessage[];
+  next_before: number | null;
+};
+
+export type ChatUserSearchHit = {
+  id: number;
+  username: string;
+  profile_username: string | null;
+  profile_image: string | null;
+};

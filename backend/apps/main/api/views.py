@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from apps.catalog.models import Book, Chapter
 from .serializers import HomeBookCardSerializer
 from django.utils import timezone
@@ -42,6 +43,7 @@ def home_data(request):
     return JsonResponse(data)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def books_news(request):
     """
     API для получения новых книг (для HomePage2.js).
@@ -90,6 +92,7 @@ def books_news(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def books_recent_updates(request):
     """
     API для блоку «Останні оновлення» (HomePage3).
@@ -178,6 +181,7 @@ def books_recent_updates(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_author_agreement(request):
     """
     API для получения содержимого авторского договора из DOCX файла.
@@ -230,6 +234,7 @@ def get_author_agreement(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_privacy_policy(request):
     """
     API для получения политики конфиденциальности из DOCX файла.
@@ -282,6 +287,7 @@ def get_privacy_policy(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_content_rules(request):
     """
     API для получения правил размещения контента из DOCX файла.
@@ -334,6 +340,7 @@ def get_content_rules(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_translator_agreement(request):
     """
     API для получения договора автор-переводчик из DOCX файла.
@@ -386,6 +393,7 @@ def get_translator_agreement(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_user_agreement(request):
     """
     API для получения угоды пользователя из DOCX файла.
@@ -438,6 +446,7 @@ def get_user_agreement(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_copyright_holders(request):
     """
     API для получения информации для правовладельцев из DOCX файла.

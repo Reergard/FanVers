@@ -25,6 +25,7 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from apps.catalog.utils.errorUtils import get_error_codes
+from apps.catalog.utils import validate_docx_file
 from apps.catalog.api.permissions import (
     IsBookOwner,
     IsNotBookOwner,
@@ -60,6 +61,7 @@ def _user_profile_role(user):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def genres_list(request):
     genres = Genres.objects.all()
     serializer = GenresSerializer(genres, many=True)
@@ -67,6 +69,7 @@ def genres_list(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def tags_list(request):
     tags = Tag.objects.all()
     serializer = TagSerializer(tags, many=True)
@@ -74,6 +77,7 @@ def tags_list(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def countries_list(request):
     countries = Country.objects.all()
     serializer = CountrySerializer(countries, many=True)
@@ -81,6 +85,7 @@ def countries_list(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def fandoms_list(request):
     fandoms = Fandom.objects.all()
     serializer = FandomSerializer(fandoms, many=True)
@@ -88,6 +93,7 @@ def fandoms_list(request):
 
 
 @api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
 def Catalog(request):
     permission_classes = [AllowAny]
     if request.method == 'GET':
@@ -110,6 +116,7 @@ def Catalog(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def chapter_list(request, book_slug):
     try:
         book = Book.objects.get(slug=book_slug)
@@ -160,6 +167,7 @@ def chapter_list(request, book_slug):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def chapter_detail(request, book_slug, chapter_slug):
     try:
         chapter = Chapter.objects.select_related('book').get(
@@ -304,6 +312,10 @@ def add_chapter(request, slug):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        file_error = validate_docx_file(request.FILES.get("file"))
+        if file_error:
+            return Response({"error": file_error}, status=status.HTTP_400_BAD_REQUEST)
+
         vol_id = int(volume_id) if volume_id else None
         if vol_id is not None:
             if not Volume.objects.filter(id=vol_id, book=book).exists():
@@ -398,6 +410,7 @@ class BookReaderViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
 def volume_list(request, book_slug):
     book = get_object_or_404(Book, slug=book_slug)
 
@@ -894,6 +907,7 @@ class BookInfoView(generics.RetrieveAPIView):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def check_book_access(request, slug):
     """
     Перевіряє права доступу користувача до книги
@@ -985,6 +999,7 @@ def update_book_access_rights(request, slug):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def abandoned_translations(request):
     """API для отримання списку покинутих перекладів"""
     try:

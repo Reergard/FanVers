@@ -99,6 +99,7 @@ export const API = {
   chat: {
     list: "/api/chat/",
     create: "/api/chat/create/",
+    userSearch: "/api/chat/user-search/",
     byId: (chatId: number | string) => `/api/chat/${chatId}/`,
     messages: (chatId: number | string) => `/api/chat/${chatId}/messages/`,
     sendMessage: (chatId: number | string) => `/api/chat/${chatId}/send_message/`,

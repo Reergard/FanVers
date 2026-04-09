@@ -63,7 +63,9 @@ export async function authSelfTest(): Promise<{ ok: boolean; steps: string[] }> 
     return { ok: true, steps };
   } catch (err: any) {
     steps.push(`FAIL: ${err?.message ?? String(err)}`);
-    console.error("[authSelfTest]", steps);
+    if (import.meta.env.DEV) {
+      console.error("[authSelfTest]", steps);
+    }
     return { ok: false, steps };
   }
 }

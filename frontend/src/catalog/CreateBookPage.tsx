@@ -13,14 +13,15 @@ import {
 import { BookForm, initialFormData } from "./components/BookForm/BookForm";
 import { useBookFormMeta } from "./hooks/useBookFormMeta";
 import { Breadcrumb } from "../navigation/Breadcrumb";
+import { profileQueryKey } from "../shared/queryKeys";
 import { PageTitle } from "../navigation/PageTitle";
 
 function CreateBookPageInner() {
   const navigate = useNavigate();
   const { showError, showSuccess } = useNotification();
-  const { isAuthenticated, role: authRole } = useAuth();
+  const { isAuthenticated, role: authRole, userId } = useAuth();
   const profileQuery = useQuery({
-    queryKey: ["profile"],
+    queryKey: profileQueryKey(userId),
     queryFn: getMyProfile,
     enabled: isAuthenticated,
   });

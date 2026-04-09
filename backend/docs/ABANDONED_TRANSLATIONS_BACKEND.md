@@ -30,11 +30,11 @@
 
 ## 3) Права доступу до списку
 
-На `abandoned_translations` **немає** власного `@permission_classes`, тому діє глобальне правило DRF:
+На `abandoned_translations` є **явний** `@permission_classes([AllowAny])`, що перевизначає глобальне правило DRF:
 
-- `FanVers_project/settings.py` → `REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES']` зазвичай `AllowAny`.
+- `FanVers_project/settings.py` → `REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES']` = **`IsAuthenticated`**.
 
-**Наслідок:** endpoint доступний анонімним і авторизованим користувачам.
+**Наслідок:** endpoint доступний анонімним і авторизованим користувачам завдяки явному `AllowAny`.
 
 ---
 

@@ -29,6 +29,7 @@ import { AdvertisingCarousel } from "../website_advertising/AdvertisingBooks";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { getMyProfile, updateNotificationSettings } from "../users/profileService";
 import "./search.css";
+import { profileQueryKey } from "../shared/queryKeys";
 
 const SORT_OPTIONS = [
   { value: "-chapter_count", label: "Кількістю розділів (спадання)" },
@@ -93,7 +94,7 @@ export default function SearchPage() {
   const { isAuthenticated, userId, authReady } = useAuth();
   const { showWarning, showError } = useNotification();
   const profileQuery = useQuery({
-    queryKey: ["profile"],
+    queryKey: profileQueryKey(userId),
     queryFn: getMyProfile,
     enabled: authReady && isAuthenticated,
     staleTime: 60_000,
@@ -312,7 +313,7 @@ export default function SearchPage() {
           age_confirmed: false,
         });
       }
-      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
     } catch {
       showError("Не вдалося оновити налаштування 18+.");
       setHideAdultContent(!nextHideAdultContent);

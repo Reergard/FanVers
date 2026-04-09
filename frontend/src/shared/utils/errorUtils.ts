@@ -1,4 +1,11 @@
-import { AxiosError } from "axios";
+import { AxiosError, isAxiosError } from "axios";
+
+/** 401/403 від auth — сесію не відновити; мережеві/5xx помилки не вважаються термінальними для WS. */
+export function isUnrecoverableSessionHttpError(error: unknown): boolean {
+  if (!isAxiosError(error)) return false;
+  const status = error.response?.status;
+  return status === 401 || status === 403;
+}
 
 /**
  * Перевіряє, чи є помилка технічною (JavaScript/Webpack)

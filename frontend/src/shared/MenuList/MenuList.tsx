@@ -4,6 +4,7 @@ import styles from "./MenuList.module.css";
 import { Icon } from "../Icon";
 import type { MenuItem } from "../menu/menuData";
 import { logoutSession } from "../../auth/service";
+import { useQueryClient } from "@tanstack/react-query";
 
 type Props = {
   items: MenuItem[];
@@ -11,15 +12,19 @@ type Props = {
 };
 
 export function MenuList({ items, onSelect }: Props) {
+  const queryClient = useQueryClient();
   const handleClick = async (item: MenuItem, e: React.MouseEvent) => {
     if (item.to === "/logout") {
       e.preventDefault();
       try {
+        queryClient.clear();
         await logoutSession();
         // Перезагружаем страницу для обновления состояния
         window.location.reload();
       } catch (error) {
-        console.error("Logout error:", error);
+        if (import.meta.env.DEV) {
+          console.error("Logout error:", error);
+        }
       }
     }
     onSelect?.();

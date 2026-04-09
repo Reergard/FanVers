@@ -14,6 +14,7 @@ import { Breadcrumb } from "../navigation/Breadcrumb";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import ChapterDetail from "./ChapterDetail";
+import ChapterDetailSkeleton from "./ChapterDetailSkeleton";
 
 const STALE_TIME = 2 * 60_000;
 
@@ -137,7 +138,7 @@ export default function ChapterDetailRouter() {
   );
 
   if (!authReady || chapterQ.isLoading) {
-    return <div>Завантаження розділу...</div>;
+    return <ChapterDetailSkeleton />;
   }
 
   if (chapterQ.isError) {

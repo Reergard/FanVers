@@ -34,6 +34,7 @@ import { resolveAvatarUrl } from "../shared/avatar/resolveAvatarUrl";
 import { UserSubscriptionsSection } from "./UserSubscriptionsSection";
 import type { NotificationSettingsPatch, BalanceHistoryItem } from "./types";
 import backgroundsAvatarsSvgRaw from "./assets/backgrounds/backgrounds_avatars.svg?raw";
+import { profileQueryKey } from "../shared/queryKeys";
 
 /** Strips feGaussianBlur filter from SVG — iOS Safari renders it blurry (like AvatarOrbit in header menu). */
 function stripSvgFilter(svg: string): string {
@@ -178,7 +179,7 @@ function validatePasswords(
 }
 
 export default function Profile() {
-  const { isAuthenticated, authReady } = useAuth();
+  const { isAuthenticated, authReady, userId } = useAuth();
   const { openLoginModal } = useAuthModal();
   const { showSuccess, showError } = useNotification();
   const queryClient = useQueryClient();
@@ -208,7 +209,7 @@ export default function Profile() {
   const avatarBgSvgClean = useMemo(() => stripSvgFilter(backgroundsAvatarsSvgRaw), []);
 
   const profileQuery = useQuery({
-    queryKey: ["profile"],
+    queryKey: profileQueryKey(userId),
     queryFn: getMyProfile,
     enabled: isAuthenticated,
     // Після зміни ролі/балансу в адмінці — оновлення при поверненні на вкладку
@@ -227,7 +228,7 @@ export default function Profile() {
   const updateAboutMutation = useMutation({
     mutationFn: (about: string) => updateProfileAbout(about),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
       setAboutModalOpen(false);
       showSuccess("Блок «Про себе» успішно збережено");
     },
@@ -239,7 +240,7 @@ export default function Profile() {
   const uploadAvatarMutation = useMutation({
     mutationFn: uploadProfileImage,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
       showSuccess("Фото профілю успішно оновлено");
       if (fileInputRef.current) fileInputRef.current.value = "";
     },
@@ -256,7 +257,7 @@ export default function Profile() {
   const updateEmailMutation = useMutation({
     mutationFn: updateEmail,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
       setNewEmail("");
       showSuccess("Email успішно оновлено");
     },
@@ -280,7 +281,7 @@ export default function Profile() {
   const becomeTranslatorMutation = useMutation({
     mutationFn: becomeTranslator,
     onSuccess: async (data) => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
       await refreshAuthStatus();
       showSuccess(data?.message ?? "Роль оновлено");
     },
@@ -292,7 +293,7 @@ export default function Profile() {
   const becomeAuthorMutation = useMutation({
     mutationFn: becomeAuthor,
     onSuccess: async (data) => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
       await refreshAuthStatus();
       showSuccess(data?.message ?? "Роль оновлено");
     },
@@ -302,9 +303,9 @@ export default function Profile() {
   });
 
   const depositMutation = useMutation({
-    mutationFn: (amt: number) => depositBalance(amt),
+    mutationFn: (amt: number) => depositBalance(amt, crypto.randomUUID()),
     onSuccess: async (data) => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
       await refreshAuthStatus();
       setBalanceHistory(data?.balance_history ?? []);
       setDepositModalOpen(false);
@@ -317,9 +318,9 @@ export default function Profile() {
   });
 
   const withdrawMutation = useMutation({
-    mutationFn: (amt: number) => withdrawBalance(amt),
+    mutationFn: (amt: number) => withdrawBalance(amt, crypto.randomUUID()),
     onSuccess: async (data) => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
       await refreshAuthStatus();
       setBalanceHistory(data?.balance_history ?? []);
       setWithdrawModalOpen(false);
@@ -402,7 +403,7 @@ export default function Profile() {
     const patch = { [key]: value };
     try {
       await updateNotificationSettings(patch);
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
       showSuccess("Налаштування оновлено");
     } catch (err: any) {
       showError(err?.response?.data?.error ?? "Помилка при оновленні");
@@ -415,7 +416,7 @@ export default function Profile() {
   ) => {
     try {
       await updateNotificationSettings(patch);
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
       if (typeof localHideAdultContent === "boolean") {
         setHideAdultContent(localHideAdultContent);
       }

@@ -6,12 +6,14 @@ from rest_framework.views import APIView
 from django.core.exceptions import ValidationError
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.throttling import ScopedRateThrottle
+from django.db import transaction, IntegrityError
 
 from .serializers import (
     UpdateBalanceSerializer,
     BalanceOperationSerializer
 )
 from .mixins import BalanceOperationMixin
+from apps.users.models import BalanceIdempotencyRecord
 from apps.users.balance_access import (
     API_WITHDRAW_ROLE_FORBIDDEN_CODE,
     API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE,
@@ -32,13 +34,36 @@ class AddBalanceView(APIView):
         serializer = UpdateBalanceSerializer(data=request.data)
         if serializer.is_valid():
             try:
+                idempotency_key = (request.data or {}).get("idempotency_key") or ""
+                if not str(idempotency_key).strip():
+                    return Response(
+                        {"error": "idempotency_key обов'язковий для захисту від дублювання"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
                 amount = serializer.validated_data['amount']
                 balance_mixin = BalanceOperationMixin()
-                new_balance = balance_mixin.perform_balance_operation(
-                    request.user.profile,
-                    amount,
-                    'deposit'
-                )
+                with transaction.atomic():
+                    try:
+                        BalanceIdempotencyRecord.objects.create(
+                            user=request.user,
+                            key=str(idempotency_key).strip(),
+                            operation_type=BalanceIdempotencyRecord.OP_DEPOSIT,
+                        )
+                    except IntegrityError:
+                        # Already processed - return current balance.
+                        return Response(
+                            {
+                                "already_processed": True,
+                                "new_balance": str(request.user.profile.balance),
+                            },
+                            status=status.HTTP_200_OK,
+                        )
+
+                    new_balance = balance_mixin.perform_balance_operation(
+                        request.user.profile,
+                        amount,
+                        'deposit'
+                    )
                 # Alias URL update-balance/ — та сама логіка, інше повідомлення для сумісності.
                 path = (request.path or "").rstrip("/")
                 ok_message = (
@@ -120,13 +145,35 @@ class WithdrawBalanceView(APIView):
 
         if serializer.is_valid():
             try:
+                idempotency_key = (request.data or {}).get("idempotency_key") or ""
+                if not str(idempotency_key).strip():
+                    return Response(
+                        {"error": "idempotency_key обов'язковий для захисту від дублювання"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
                 amount = serializer.validated_data['amount']
                 balance_mixin = BalanceOperationMixin()
-                new_balance = balance_mixin.perform_balance_operation(
-                    profile,
-                    amount,
-                    'withdraw'
-                )
+                with transaction.atomic():
+                    try:
+                        BalanceIdempotencyRecord.objects.create(
+                            user=request.user,
+                            key=str(idempotency_key).strip(),
+                            operation_type=BalanceIdempotencyRecord.OP_WITHDRAW,
+                        )
+                    except IntegrityError:
+                        return Response(
+                            {
+                                "already_processed": True,
+                                "new_balance": str(profile.balance),
+                            },
+                            status=status.HTTP_200_OK,
+                        )
+
+                    new_balance = balance_mixin.perform_balance_operation(
+                        profile,
+                        amount,
+                        'withdraw'
+                    )
                 return Response({
                     'message': 'Кошти успішно виведені',
                     'new_balance': new_balance

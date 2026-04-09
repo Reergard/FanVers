@@ -69,6 +69,8 @@ const { isAuthenticated, userId, username, balance, role, canWithdrawBalance, ro
 
 Полный профиль (баланс, аватар, about и т.д.) — через `GET /api/users/profile/` (UserProfileView). Для хедера достаточно `auth-status`. После deposit/withdraw на странице Profile вызывается `refreshAuthStatus()` для обновления баланса в store и Header.
 
+Кеш React Query для «мого» профілю: **`profileQueryKey(userId)`** з **`shared/queryKeys.ts`** (кореневий рядок **`"profile"`** + `userId`), а не голий літерал без id — той самий ключ на `Profile`, `Header`, `NotificationsPage`, `ChatPage`, `search`, `CreateBookPage`, `UserTranslations` тощо.
+
 ## Страница "Покинуті переклади" и auth
 
 - Страница: `catalog/AbandonedTranslations.tsx`
@@ -152,7 +154,8 @@ const { isAuthenticated, userId, username, balance, role, canWithdrawBalance, ro
 1. Після авторизації `ChatPage` викликає `chatStore.fetchChats()`.
 2. Вибраний чат (`selectedChatId`) синхронізується через external store.
 3. При відкритті чату:
-   - `fetchMessages(chatId)`,
+   - **`fetchMessages(chatId)`** — перша сторінка через `GET .../messages/` (`results` + `next_before` у відповіді);
+   - при скролі вгору — **`fetchOlderMessages(chatId)`** з курсором `before` зі store;
    - `markReadLocal(chatId)` + `markChatAsRead(chatId)`.
 4. Надсилання повідомлення:
    - спочатку через `chatWs.sendMessage`,
@@ -161,7 +164,9 @@ const { isAuthenticated, userId, username, balance, role, canWithdrawBalance, ro
 
 Header і unread:
 
-- у `widgets/header/Header.tsx` підключений `counterWs` (з автореконектом), періодичний **`fetchChats` ~30 с** як запасний варіант;
+- у `widgets/header/Header.tsx` підключений `counterWs` (автореконект з експоненційним backoff і перевіркою **`authStatus()`**; мережеві збої не вимикають реконнект, на відміну від **401/403**);
+- після **logout** бекенд шле **`force.disconnect`** у групу **`user_{id}`** — сокети чату та counter закриваються з кодом **4401**, фронт не намагається реконектити;
+- періодичний **`fetchChats` ~30 с** як запасний варіант;
 - бейдж повідомлень у хедері: **`useChat().state.unreadTotal`**.
 
 Список чатів:

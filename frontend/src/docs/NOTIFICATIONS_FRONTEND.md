@@ -38,6 +38,8 @@ frontend/src/
 ├── users/
 │   ├── profileService.ts
 │   └── types.ts
+├── shared/
+│   └── queryKeys.ts          # profileQueryKey(userId) для інвалідації кешу профілю після зміни налаштувань сповіщень
 ├── widgets/header/
 │   └── Header.tsx            # useNotifications → бейдж непрочитаних
 └── shared/NotificationModal/
@@ -169,7 +171,7 @@ frontend/src/
 
 Поля `NOTIFICATION_FILTERS` / ключі `NotificationSettingsPatch` без змін (див. код `NotificationsPage.tsx`).
 
-Після збереження: `invalidateQueries({ queryKey: ["profile"] })`.
+Після збереження: `invalidateQueries({ queryKey: profileQueryKey(userId) })` — див. `shared/queryKeys.ts` (`PROFILE_QUERY_ROOT` + id користувача; спільний ключ із `Profile.tsx`, `Header.tsx` тощо).
 
 ---
 
@@ -237,4 +239,4 @@ NotificationsPage.tsx          Header.tsx
 
 ---
 
-**Останнє оновлення:** узгоджено з `useNotifications.ts` (merge), `NotificationsPage.tsx` (PAGE_SIZE 10, pending по id), `Header.tsx` (бейдж), `notificationsService.ts` (умовний `version`), **`backend/docs/NOTIFICATIONS_BACKEND.md`**.
+**Останнє оновлення:** узгоджено з `useNotifications.ts` (merge), `NotificationsPage.tsx` (PAGE_SIZE 10, pending по id, інвалідація **`profileQueryKey(userId)`**), `Header.tsx` (бейдж), `notificationsService.ts` (умовний `version`), **`shared/queryKeys.ts`**, **`backend/docs/NOTIFICATIONS_BACKEND.md`** (`IsNotificationOwner`).

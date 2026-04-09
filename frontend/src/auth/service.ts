@@ -68,7 +68,9 @@ export async function loginSession(payload: {
     }
     return data;
   } catch (error: any) {
-    console.error("[service] login error", error.message, "status:", error.response?.status);
+    if (import.meta.env.DEV) {
+      console.error("[service] login error", error.message, "status:", error.response?.status);
+    }
     throw error;
   }
 }
@@ -114,7 +116,9 @@ export async function registerSession(payload: {
     }
     return data;
   } catch (error: any) {
-    console.error("[service] register error", error.message, "status:", error.response?.status);
+    if (import.meta.env.DEV) {
+      console.error("[service] register error", error.message, "status:", error.response?.status);
+    }
     throw error;
   }
 }

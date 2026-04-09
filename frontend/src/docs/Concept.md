@@ -371,14 +371,15 @@ Container увеличивает max-width до 1680px
 - store: `src/chat/store/chatStore.ts` + `useChat.ts` (`useSyncExternalStore`);
 - API: `src/chat/api/chatApi.ts` через `api/http.ts` і `API.chat` у `api/endpoints.ts`;
 - realtime (WebSocket без токена в URL — cookies / сесія):
-  - `src/chat/ws/chatWs.ts` → `ws/chat/{chatId}/` (з автореконектом),
-  - `src/chat/ws/counterWs.ts` → `ws/counter/` (з автореконектом; payload з `unread_count`).
+  - `src/chat/ws/chatWs.ts` → `ws/chat/{chatId}/` (автореконект з експоненційним backoff; перед reopen — `authStatus()`, без вічного відключення на мережевій помилці),
+  - `src/chat/ws/counterWs.ts` → `ws/counter/` (аналогічно; зовнішній JSON-подія часто з `type: "message"` та `unread_count`).
 
 Як працює:
 
 - `ChatPage` перевіряє `useAuth()` (`authReady`, `isAuthenticated`): для гостя редірект на `/login`.
 - Після авторизації викликається `fetchChats()`.
-- При виборі чату `ChatWindow` завантажує повідомлення і викликає `mark_as_read`.
+- При виборі чату `ChatWindow` завантажує повідомлення сторінками (`next_before`) і викликає `mark_as_read`.
+- `CreateChatModal` — пошук користувачів через `GET .../user-search/`.
 - Відправка повідомлення:
   - пріоритетно через `chatWs.sendMessage(...)`,
   - fallback через HTTP `sendMessage`.

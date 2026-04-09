@@ -1,4 +1,7 @@
 import type { ChatMessage } from "../api/types";
+import { authStatus } from "../../auth/service";
+import { isUnrecoverableSessionHttpError } from "../../shared/utils/errorUtils";
+import type { ChatWsConnectionStatus } from "./chatWs";
 
 export type CounterWsPayload = {
   chatId: number;
@@ -13,12 +16,16 @@ type CounterWireMessage = {
   id?: number | null;
   chat_id?: number;
   message?: string;
+  preview?: string;
   sender?: { id?: number; username?: string };
   timestamp?: string;
   created_at?: string;
   unread_count?: number;
   unreadCount?: number;
 };
+
+/** Після logout сервер шле закриття з цим кодом — не реконектити. */
+const WS_SESSION_ENDED_CODE = 4401;
 
 /** WebSocket base URL. Cookie-based auth — токен в URL не передається (OWASP). */
 function resolveWsBaseUrl(): string {
@@ -52,7 +59,12 @@ function toCounterPayload(raw: CounterWireMessage): CounterWsPayload | null {
   const unreadCount = parseUnreadCount(raw);
   const idRaw = raw.id;
   const id = idRaw != null ? Number(idRaw) : NaN;
-  const content = typeof raw.message === "string" ? raw.message : "";
+  const content =
+    typeof raw.preview === "string"
+      ? raw.preview
+      : typeof raw.message === "string"
+        ? raw.message
+        : "";
   const hasMessage = !Number.isNaN(id) && content.length > 0;
 
   if (hasMessage) {
@@ -83,6 +95,24 @@ class CounterWsService {
   private handlers = new Set<CounterHandler>();
   private shouldReconnect = false;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private retryCount = 0;
+  private pingInterval: ReturnType<typeof setInterval> | null = null;
+  private statusHandlers = new Set<(s: ChatWsConnectionStatus) => void>();
+  private lastStatus: ChatWsConnectionStatus = "disconnected";
+
+  subscribeConnectionStatus(cb: (s: ChatWsConnectionStatus) => void): () => void {
+    this.statusHandlers.add(cb);
+    cb(this.lastStatus);
+    return () => this.statusHandlers.delete(cb);
+  }
+
+  private notifyStatus(s: ChatWsConnectionStatus): void {
+    if (this.lastStatus === s) return;
+    this.lastStatus = s;
+    for (const h of this.statusHandlers) {
+      h(s);
+    }
+  }
 
   connect(): boolean {
     this.shouldReconnect = true;
@@ -109,29 +139,64 @@ class CounterWsService {
         for (const handler of this.handlers) {
           handler(payload);
         }
-      } catch {
-        // Ignore malformed frame and keep connection alive.
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.warn("[counterWs] malformed frame", err, event.data);
+        }
       }
     };
 
     socket.onopen = () => {
+      this.retryCount = 0;
+      this.notifyStatus("connected");
       socket.send(JSON.stringify({ type: "ping" }));
+      if (this.pingInterval) clearInterval(this.pingInterval);
+      this.pingInterval = setInterval(() => {
+        if (this.socket?.readyState === WebSocket.OPEN) {
+          this.socket.send(JSON.stringify({ type: "ping" }));
+        }
+      }, 30_000);
     };
 
-    socket.onclose = () => {
+    socket.onclose = (event) => {
+      if (event.code === WS_SESSION_ENDED_CODE) {
+        this.shouldReconnect = false;
+      }
       if (this.socket === socket) {
         this.socket = null;
+      }
+      if (this.pingInterval) {
+        clearInterval(this.pingInterval);
+        this.pingInterval = null;
       }
       if (this.shouldReconnect) {
         if (this.reconnectTimer) {
           clearTimeout(this.reconnectTimer);
         }
+        const baseDelay = Math.min(1000 * 2 ** this.retryCount, 60_000);
+        const jitter = Math.random() * 1000;
+        const delay = baseDelay + jitter;
+        this.retryCount += 1;
         this.reconnectTimer = setTimeout(() => {
           this.reconnectTimer = null;
-          if (this.shouldReconnect) {
-            this.openSocket();
-          }
-        }, 3_000);
+          if (!this.shouldReconnect) return;
+          void (async () => {
+            try {
+              await authStatus();
+            } catch (e) {
+              if (isUnrecoverableSessionHttpError(e)) {
+                this.shouldReconnect = false;
+                this.notifyStatus("disconnected");
+                return;
+              }
+            }
+            if (this.shouldReconnect) {
+              this.openSocket();
+            }
+          })();
+        }, delay);
+      } else {
+        this.notifyStatus("disconnected");
       }
     };
 
@@ -142,9 +207,14 @@ class CounterWsService {
 
   disconnect(): void {
     this.shouldReconnect = false;
+    this.notifyStatus("disconnected");
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
+    }
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
     }
     this.socket?.close();
     this.socket = null;

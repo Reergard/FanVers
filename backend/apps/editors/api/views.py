@@ -13,6 +13,11 @@ from rest_framework import mixins, viewsets
 from django.db.models import Q
 from ..models import ErrorReport
 from .serializers import ErrorReportSerializer
+import mammoth
+import logging
+from apps.catalog.utils import validate_docx_file
+
+logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -39,6 +44,7 @@ def update_chapter(request, chapter_id):
     
     try:
         old_file = chapter.file if chapter.file else None
+        new_uploaded_file = request.FILES.get("file")
         
         if 'title' in request.data:
             chapter.title = request.data['title']
@@ -71,13 +77,31 @@ def update_chapter(request, chapter_id):
             else:
                 chapter.volume = None
 
-        if 'file' in request.FILES:
-            if old_file:
-                if os.path.isfile(old_file.path):
-                    os.remove(old_file.path)
-            chapter.file = request.FILES['file']
+        if new_uploaded_file is not None:
+            file_error = validate_docx_file(new_uploaded_file)
+            if file_error:
+                return Response({"error": file_error}, status=status.HTTP_400_BAD_REQUEST)
+            chapter.file = new_uploaded_file
 
         chapter.save()
+
+        # If file changed - regenerate HTML content to avoid stale reader content.
+        if new_uploaded_file is not None and chapter.file and os.path.exists(chapter.file.path):
+            try:
+                with open(chapter.file.path, "rb") as docx_file:
+                    result = mammoth.convert_to_html(docx_file)
+                    chapter.save_html_content(result.value)
+            except Exception as e:
+                logger.error("Ошибка при генерации HTML контента для главы %s: %s", chapter.id, str(e))
+
+            # Remove old file only after new one is safely saved.
+            if old_file and getattr(old_file, "path", None):
+                try:
+                    if os.path.isfile(old_file.path):
+                        os.remove(old_file.path)
+                except Exception:
+                    pass
+
         Book.mark_translation_owner_activity(chapter.book)
 
         serializer = ChapterSerializer(chapter, context={'request': request})

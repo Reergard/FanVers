@@ -5,6 +5,7 @@ import { setAccess } from "./token";
 import { fetchCsrfToken } from "./csrf";
 import { authLog } from "./authLogger";
 import { runSingleFlight } from "./refreshMutex";
+import { resetAuthCache } from "./useAuth";
 
 // Внутренние функции refresh/logout без mutex (используются в service.ts с mutex)
 // Используют httpRaw чтобы избежать попадания в интерцепторы http.ts
@@ -33,7 +34,7 @@ export async function doRefresh(): Promise<string> {
   } catch (error: any) {
     const status = error.response?.status;
     if (status === 401) authLog("REFRESH_401");
-    if (status !== 401) {
+    if (status !== 401 && import.meta.env.DEV) {
       console.error("[refreshCore] refresh error", error.message, "status:", status);
     }
     throw error;
@@ -55,5 +56,6 @@ export async function doLogout() {
     authLog("LOGOUT_OK");
   } finally {
     clearAuth();
+    resetAuthCache();
   }
 }

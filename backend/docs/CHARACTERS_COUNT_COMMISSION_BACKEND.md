@@ -51,11 +51,14 @@
 3. Mammoth конвертує `.docx` у HTML.
 4. Викликається `chapter.save_html_content(html_content)`.
 5. Усередині `save_html_content`:
-   ```python
-   self.character_count = len(html_content)
-   self.characters_count = len(html_content)
-   self.save(update_fields=['html_file_path', 'html_content', 'character_count', 'characters_count'])
-   ```
+   - HTML спочатку проходить через **`sanitize_chapter_html`** (bleach — дозволені теги, без атрибутів/стилів).
+   - Підрахунок символів через **`_chapter_plain_text_len(html_content)`**:
+     ```python
+     plain_len = _chapter_plain_text_len(html_content)
+     self.character_count = plain_len
+     self.characters_count = plain_len
+     ```
+   - `save(update_fields=[...])` зберігає поля.
 6. `save(update_fields=[...])` запускає сигнали Django (`pre_save` → `post_save`).
 7. Сигнал атомарно оновлює `Profile.total_characters` і перераховує комісію.
 
@@ -68,11 +71,15 @@
 ### Формула підрахунку (поточна)
 
 ```python
-characters_count = len(html_content)
+def _chapter_plain_text_len(html_str: str) -> int:
+    text = strip_tags(html_str)
+    text = html.unescape(text)
+    text = text.replace("\xa0", " ")
+    text = re.sub(r"\s+", " ", text).strip()
+    return len(text)
 ```
 
-> ⚠ Рахується довжина **HTML-рядка включно з тегами** (`<p>`, `</p>`, `<strong>` тощо).
-> Це на ~10-12% більше за "чистий текст". Відкрите питання — `frontend/src/docs/fixes/CHARACTERS_COUNT_HTML_VS_TEXT.md`.
+> Рахується довжина **чистого тексту** після видалення HTML-тегів (`strip_tags`), декодування HTML-сутностей (`html.unescape`) та нормалізації пробілів. Попередня проблема з підрахунком HTML-довжини (включно з тегами) **виправлена**.
 
 ---
 
@@ -176,5 +183,5 @@ python manage.py sync_total_characters      # фінальна перевірк�
 ## 9. Пов'язана документація
 
 - Frontend: `frontend/src/docs/CHARACTERS_COUNT_COMMISSION_FRONTEND.md`
-- Відкрите питання (HTML vs текст): `frontend/src/docs/fixes/CHARACTERS_COUNT_HTML_VS_TEXT.md`
+- ~~Відкрите питання (HTML vs текст)~~: вирішено — підрахунок тепер через `_chapter_plain_text_len()` (чистий текст, без тегів)
 - Завантаження глав: `backend/docs/ADD_CHAPTER_BACKEND.md`

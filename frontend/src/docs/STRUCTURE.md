@@ -429,9 +429,9 @@ export function AppRoutes() {
 - `Chat.tsx` — thin re-export на `ChatPage`.
 - `ChatPage.tsx` — page orchestration: auth-gate, завантаження чатів, підключення ws конкретного чату.
 - `components/ChatList.tsx` — лівий список чатів + кнопка створення.
-- `components/ChatWindow.tsx` — повідомлення, відправка, confirm delete.
-- `components/CreateChatModal.tsx` — модалка створення через `shared/Modal/Modal`.
-- `api/chatApi.ts`, `api/types.ts` — HTTP-контракти.
+- `components/ChatWindow.tsx` — повідомлення, підвантаження старіших (cursor), відправка, confirm delete.
+- `components/CreateChatModal.tsx` — пошук (`user-search`) + створення через `shared/Modal/Modal`.
+- `api/chatApi.ts`, `api/types.ts` — HTTP-контракти (`getChatMessagesPage`, `searchChatUsers`, …).
 - `store/chatStore.ts`, `store/useChat.ts` — external store (`useSyncExternalStore`).
 - `ws/chatWs.ts`, `ws/counterWs.ts` — realtime-шар.
 
@@ -505,7 +505,10 @@ export function AppRoutes() {
 **Що це:** обмеження частоти запитів (throttling) для рейтингів: мінімальний інтервал 100 ms, до 30 запитів/хв по ключу, single-flight (один активний запит на ключ). Використовується в `BookRatingStars` при відправці оцінки. Експорт: `requestThrottle`, `createRequestKey(bookSlug, ratingType, action)`.
 
 ### `shared/utils/errorUtils.ts`
-**Що це:** утиліти для обробки помилок.
+**Що це:** утиліти для обробки помилок (у т.ч. **`isUnrecoverableSessionHttpError`** для WS-реконнекту після `authStatus()`).
+
+### `shared/queryKeys.ts`
+**Що це:** спільні ключі React Query — **`profileQueryKey(userId)`** (`["profile", userId|null]`) для кешу `GET /api/users/profile/` на різних екранах.
 
 ### `shared/hooks/`
 **useMedia.ts** — хук для відстеження медіа-запитів (наприклад, для визначення mobile/desktop).

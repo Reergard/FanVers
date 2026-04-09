@@ -36,8 +36,11 @@
    - Якщо `is_paid`: з `request.data.get('price', '1.00')` формується `Decimal`; при помилці — `Decimal('1.00')`. Якщо `price <= 0` або `price > 1000` → 400 з текстом «Некоректна ціна розділу».
    - Якщо не платна глава — `price = Decimal('0.00')`.
 
-5. **Файл:**  
+5. **Файл:**
    Якщо `'file' not in request.FILES` → 400 з текстом «Файл розділу обов'язковий».
+
+5a. **Валідація .docx файлу:**
+   `validate_docx_file(request.FILES["file"])` (`apps/catalog/utils/docx_validation.py`) — перевіряє розширення (`.docx`), MIME-тип (`application/vnd.openxmlformats-officedocument.wordprocessingml.document`), magic bytes (ZIP signature `PK\x03\x04`) та розмір (≤ 10 МБ). При помилці → 400.
 
 6. **Створення глави:**  
    `Chapter.objects.create(book=book, title=title, file=request.FILES['file'], volume_id=volume_id or None, is_paid=is_paid, price=price)`.
@@ -45,8 +48,8 @@
 7. **Оновлення книги:**  
    `book.last_updated = timezone.now()`, `book.save(update_fields=['last_updated'])`.
 
-8. **HTML з .docx:**  
-   У try/except відкривається `chapter.file.path`, через `mammoth.convert_to_html` генерується HTML, зберігається через `chapter.save_html_content(html_content)`. При винятку лише лог (logger.error), створення глави не відміняється.
+8. **HTML з .docx:**
+   У try/except відкривається `chapter.file.path`, через `mammoth.convert_to_html` генерується HTML. HTML проходить **bleach-санітизацію** (`sanitize_chapter_html` — дозволені теги: `p, br, b, i, em, strong, ul, ol, li, h1–h4, span`; без атрибутів, без стилів). Підрахунок символів — через `_chapter_plain_text_len()` (чистий текст без тегів). Зберігається через `chapter.save_html_content(html_content)`. При винятку лише лог (logger.error), створення глави не відміняється.
 
 9. **Відповідь:**  
    `ChapterSerializer(chapter)` → `Response(serializer.data, status=201)`.
@@ -77,7 +80,8 @@
 | `apps/catalog/api/urls.py` | Маршрут `books/<slug:slug>/add_chapter/` → `add_chapter`. |
 | `apps/catalog/api/views.py` | Функція `add_chapter`: перевірка власника, читання даних, створення Chapter, генерація HTML, відповідь через ChapterSerializer. |
 | `apps/catalog/api/permissions.py` | Клас `IsBookOwner` (has_object_permission); для FBV додатково перевірка власника всередині в’ю. |
-| `apps/catalog/models.py` | Модель Chapter (book, title, file, volume, is_paid, price тощо). |
+| `apps/catalog/models.py` | Модель Chapter (book, title, file, volume, is_paid, price тощо). `save_html_content` — bleach + plain text character count. |
+| `apps/catalog/utils/docx_validation.py` | `validate_docx_file` — перевірка розширення, MIME, magic bytes, розміру. |
 
 ---
 

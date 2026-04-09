@@ -1,0 +1,46 @@
+@keyframes chapterSkPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.wrap {
+  padding: clamp(16px, 2vw, 28px) 0;
+  display: grid;
+  gap: clamp(14px, 1.5vw, 22px);
+}
+
+.titleBar {
+  height: clamp(28px, 3.5vw, 40px);
+  max-width: min(72%, 420px);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  animation: chapterSkPulse 1.4s ease-in-out infinite;
+}
+
+.block {
+  height: 14px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  animation: chapterSkPulse 1.4s ease-in-out infinite;
+}
+
+.block:nth-child(odd) {
+  animation-delay: 0.15s;
+}
+
+.blockWide {
+  width: 100%;
+}
+
+.blockMid {
+  width: min(92%, 640px);
+}
+
+.blockShort {
+  width: min(55%, 380px);
+}

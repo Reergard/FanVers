@@ -7,6 +7,13 @@ class Chat(models.Model):
         settings.AUTH_USER_MODEL,
         related_name='chats'
     )
+    last_message = models.ForeignKey(
+        "Message",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -27,7 +34,7 @@ class Message(models.Model):
         on_delete=models.CASCADE,
         related_name='sent_messages'
     )
-    content = models.TextField()
+    content = models.TextField(max_length=5000)
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:

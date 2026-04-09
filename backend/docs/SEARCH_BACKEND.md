@@ -64,6 +64,16 @@
   - `Q(title__icontains=value) | Q(title_en__icontains=value)`
 - `min_chapters` / `max_chapters` працюють по анотованому полю `chapter_count`.
 
+### Server-side enforcement (adult content)
+
+У `get_queryset()` **до** фільтрації застосовується серверна логіка:
+
+- **Анонімний користувач** → завжди `queryset.filter(adult_content=False)`.
+- **Авторизований з `profile.hide_adult_content=True`** → те саме.
+- **Помилка доступу до профілю** → fail-closed: `queryset.filter(adult_content=False)`.
+
+Це означає, що навіть з `adult_content=true` у query-параметрі, сервер відфільтрує дорослий контент для анонімів і користувачів з увімкненим прихованням.
+
 Додатково у відповіді serializer повертає:
 
 - `bookmark_status`

@@ -15,7 +15,10 @@ type Props = {
   currentUserAvatarUrl?: string | null;
   messages: ChatMessage[];
   loadingMessages: boolean;
+  hasOlderMessages: boolean;
+  loadingOlderMessages: boolean;
   onLoadMessages: (chatId: number) => Promise<void> | void;
+  onLoadOlderMessages: (chatId: number) => Promise<void> | void;
   onMarkRead: (chatId: number) => Promise<void> | void;
   onDeleteChat: (chatId: number) => Promise<void> | void;
   onFallbackSend: (chatId: number, text: string, currentUsername: string | null) => Promise<void> | void;
@@ -54,7 +57,10 @@ export function ChatWindow({
   currentUserAvatarUrl,
   messages,
   loadingMessages,
+  hasOlderMessages,
+  loadingOlderMessages,
   onLoadMessages,
+  onLoadOlderMessages,
   onMarkRead,
   onDeleteChat,
   onFallbackSend,
@@ -64,6 +70,8 @@ export function ChatWindow({
   const [deleting, setDeleting] = useState(false);
   const messagesRef = useRef<HTMLUListElement | null>(null);
   const initializedChatRef = useRef<number | null>(null);
+  const scrollAnchorRef = useRef<{ height: number; top: number } | null>(null);
+  const lastOlderTriggerRef = useRef(0);
 
   const chatId = selectedChat?.id ?? null;
   const otherUsername = useMemo(
@@ -95,10 +103,39 @@ export function ChatWindow({
   }, [chatId, onLoadMessages, onMarkRead]);
 
   useEffect(() => {
-    if (messagesRef.current) {
-      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    if (loadingMessages) return;
+    const el = messagesRef.current;
+    if (!el) return;
+    if (loadingOlderMessages) return;
+
+    const anchor = scrollAnchorRef.current;
+    if (anchor) {
+      const newH = el.scrollHeight;
+      el.scrollTop = anchor.top + (newH - anchor.height);
+      scrollAnchorRef.current = null;
+      return;
     }
-  }, [messages.length, chatId]);
+    el.scrollTop = el.scrollHeight;
+  }, [messages.length, chatId, loadingMessages, loadingOlderMessages]);
+
+  const onScrollMessages = () => {
+    const el = messagesRef.current;
+    if (!el || chatId == null || loadingOlderMessages || !hasOlderMessages) return;
+    if (Date.now() - lastOlderTriggerRef.current < 900) return;
+    if (el.scrollTop > 72) return;
+    lastOlderTriggerRef.current = Date.now();
+    scrollAnchorRef.current = { height: el.scrollHeight, top: el.scrollTop };
+    void onLoadOlderMessages(chatId);
+  };
+
+  const loadOlderClick = () => {
+    if (chatId == null || loadingOlderMessages || !hasOlderMessages) return;
+    const el = messagesRef.current;
+    if (el) {
+      scrollAnchorRef.current = { height: el.scrollHeight, top: el.scrollTop };
+    }
+    void onLoadOlderMessages(chatId);
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -158,7 +195,26 @@ export function ChatWindow({
         </div>
       </header>
 
-      <ul ref={messagesRef} className={styles.messages} role="log" aria-label="Повідомлення">
+      <ul
+        ref={messagesRef}
+        className={styles.messages}
+        role="log"
+        aria-label="Повідомлення"
+        onScroll={onScrollMessages}
+      >
+        {hasOlderMessages ? (
+          <li className={styles.loadOlderWrap}>
+            <button
+              type="button"
+              className={styles.loadOlderBtn}
+              onClick={loadOlderClick}
+              disabled={loadingOlderMessages || loadingMessages}
+            >
+              {loadingOlderMessages ? "Завантаження…" : "Завантажити ранішні повідомлення"}
+            </button>
+          </li>
+        ) : null}
+
         {loadingMessages ? <li className={styles.systemHint}>Завантаження повідомлень…</li> : null}
         {!loadingMessages && messages.length === 0 ? (
           <li className={styles.systemHint}>Повідомлень поки немає.</li>

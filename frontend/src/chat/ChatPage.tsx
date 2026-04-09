@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import type { ChatWsConnectionStatus } from "./ws/chatWs";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/useAuth";
 import { useAuthModal } from "../auth/AuthModalContext";
@@ -15,6 +16,7 @@ import { Container } from "../shared/Container";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { getMyProfile } from "../users/profileService";
 import { Breadcrumb } from "../navigation/Breadcrumb";
+import { profileQueryKey } from "../shared/queryKeys";
 
 export default function ChatPage() {
   const { isAuthenticated, authReady, username, userId } = useAuth();
@@ -22,8 +24,13 @@ export default function ChatPage() {
   const { state, actions } = useChat();
   const { showWarning, showError } = useNotification();
   const [createOpen, setCreateOpen] = useState(false);
+  const [chatWsStatus, setChatWsStatus] = useState<ChatWsConnectionStatus>("disconnected");
+
+  useEffect(() => {
+    return chatWs.subscribeConnectionStatus(setChatWsStatus);
+  }, []);
   const profileQuery = useQuery({
-    queryKey: ["profile"],
+    queryKey: profileQueryKey(userId),
     queryFn: getMyProfile,
     enabled: authReady && isAuthenticated,
     staleTime: 60_000,
@@ -75,7 +82,11 @@ export default function ChatPage() {
       if (!created) {
         const latestError = getChatStoreSnapshot().error;
         const err = (latestError ?? "").toLowerCase();
-        if (err.includes("уже существует") || err.includes("already exists")) {
+        if (
+          err.includes("уже существует") ||
+          err.includes("already exists") ||
+          err.includes("вже існує")
+        ) {
           showWarning("Чат з цим користувачем вже створено.");
         } else {
           showError(latestError ?? "Не вдалося створити чат");
@@ -89,6 +100,11 @@ export default function ChatPage() {
 
   const onLoadMessages = useCallback(
     (chatId: number) => actions.fetchMessages(chatId),
+    [actions]
+  );
+
+  const onLoadOlderMessages = useCallback(
+    (chatId: number) => actions.fetchOlderMessages(chatId),
     [actions]
   );
 
@@ -142,10 +158,31 @@ export default function ChatPage() {
   }
 
   return (
-    <section className={styles.page}>
-      <Container>
-        <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Чат" }]} />
-      </Container>
+      <section className={styles.page}>
+        <Container>
+          <div className={styles.chatTopBar}>
+            <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Чат" }]} />
+            {state.selectedChatId != null ? (
+              <span
+                className={styles.wsBadge}
+                data-status={chatWsStatus}
+                title={
+                  chatWsStatus === "connected"
+                    ? "З'єднання з чатом активне"
+                    : chatWsStatus === "reconnecting"
+                      ? "Відновлюємо з'єднання…"
+                      : "Немає з'єднання з чатом"
+                }
+              >
+                {chatWsStatus === "connected"
+                  ? "Чат онлайн"
+                  : chatWsStatus === "reconnecting"
+                    ? "Підключення…"
+                    : "Чат офлайн"}
+              </span>
+            ) : null}
+          </div>
+        </Container>
       <div className={styles.layout}>
         <ChatList
           chats={state.chats}
@@ -169,7 +206,10 @@ export default function ChatPage() {
           }
           messages={state.selectedMessages}
           loadingMessages={state.isLoadingSelectedMessages}
+          hasOlderMessages={state.hasOlderMessages}
+          loadingOlderMessages={state.isLoadingOlderSelected}
           onLoadMessages={onLoadMessages}
+          onLoadOlderMessages={onLoadOlderMessages}
           onMarkRead={onMarkRead}
           onDeleteChat={onDeleteChat}
           onFallbackSend={onFallbackSend}

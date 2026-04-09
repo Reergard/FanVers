@@ -7,6 +7,7 @@ import HomePage from "./main/HomePage";
 const Profile = lazy(() => import("./users/Profile"));
 import { bootstrapAuth, attachAuthAutoRefresh } from "./auth/bootstrap";
 import { AuthModalProvider } from "./auth/AuthModalContext";
+import { RequireAuth } from "./auth/RequireAuth";
 import { NotificationProvider } from "./shared/NotificationModal/NotificationProvider";
 import BookDetailSkeleton from "./catalog/BookDetailSkeleton";
 import { CookieConsentSyncRoot } from "./settings/CookieConsentSyncRoot";
@@ -111,33 +112,41 @@ export default function App() {
               <Route
                 path="/create-book"
                 element={
-                  <Suspense fallback={<div />}>
-                    <CreateBookPage />
-                  </Suspense>
+                  <RequireAuth>
+                    <Suspense fallback={<div />}>
+                      <CreateBookPage />
+                    </Suspense>
+                  </RequireAuth>
                 }
               />
               <Route
                 path="/profile"
                 element={
-                  <Suspense fallback={<div />}>
-                    <Profile />
-                  </Suspense>
+                  <RequireAuth>
+                    <Suspense fallback={<div />}>
+                      <Profile />
+                    </Suspense>
+                  </RequireAuth>
                 }
               />
               <Route
                 path="/bookmarks"
                 element={
-                  <Suspense fallback={<div />}>
-                    <BookmarksPage />
-                  </Suspense>
+                  <RequireAuth>
+                    <Suspense fallback={<div />}>
+                      <BookmarksPage />
+                    </Suspense>
+                  </RequireAuth>
                 }
               />
               <Route
                 path="/my-translations"
                 element={
-                  <Suspense fallback={<div />}>
-                    <UserTranslations />
-                  </Suspense>
+                  <RequireAuth>
+                    <Suspense fallback={<div />}>
+                      <UserTranslations />
+                    </Suspense>
+                  </RequireAuth>
                 }
               />
               <Route
@@ -159,9 +168,11 @@ export default function App() {
               <Route
                 path="/messages"
                 element={
-                  <Suspense fallback={<div />}>
-                    <NotificationsPage />
-                  </Suspense>
+                  <RequireAuth>
+                    <Suspense fallback={<div />}>
+                      <NotificationsPage />
+                    </Suspense>
+                  </RequireAuth>
                 }
               />
               <Route
@@ -199,9 +210,11 @@ export default function App() {
               <Route
                 path="/chat"
                 element={
-                  <Suspense fallback={<div />}>
-                    <ChatPage />
-                  </Suspense>
+                  <RequireAuth>
+                    <Suspense fallback={<div />}>
+                      <ChatPage />
+                    </Suspense>
+                  </RequireAuth>
                 }
               />
               <Route
@@ -319,25 +332,31 @@ export default function App() {
               <Route
                 path="/books/:slug/settings"
                 element={
-                  <Suspense fallback={<div />}>
-                    <SettingsBook />
-                  </Suspense>
+                  <RequireAuth>
+                    <Suspense fallback={<div />}>
+                      <SettingsBook />
+                    </Suspense>
+                  </RequireAuth>
                 }
               />
               <Route
                 path="/books/:slug/add-chapter"
                 element={
-                  <Suspense fallback={<div />}>
-                    <AddChapter />
-                  </Suspense>
+                  <RequireAuth>
+                    <Suspense fallback={<div />}>
+                      <AddChapter />
+                    </Suspense>
+                  </RequireAuth>
                 }
               />
               <Route
                 path="/books/:bookSlug/edit-chapter/:chapterId"
                 element={
-                  <Suspense fallback={<div />}>
-                    <EditChapter />
-                  </Suspense>
+                  <RequireAuth>
+                    <Suspense fallback={<div />}>
+                      <EditChapter />
+                    </Suspense>
+                  </RequireAuth>
                 }
               />
               <Route

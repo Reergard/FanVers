@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import DOMPurify from "dompurify";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Container } from "../shared/Container";
 import { Icon } from "../shared/Icon";
@@ -13,6 +14,39 @@ import styles from "./ChapterDetail.module.css";
 
 const prevLabel = "Попередній розділ";
 const nextLabel = "Наступний розділ";
+
+const READER_HTML_PURIFY = {
+  ALLOWED_TAGS: [
+    "p",
+    "br",
+    "b",
+    "i",
+    "em",
+    "strong",
+    "ul",
+    "ol",
+    "li",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "span",
+    "a",
+    "table",
+    "tr",
+    "td",
+    "th",
+    "thead",
+    "tbody",
+    "img",
+    "blockquote",
+    "sup",
+    "sub",
+  ],
+  ALLOWED_ATTR: ["class", "href", "src", "alt", "title", "colspan", "rowspan"],
+  FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover"],
+  FORBID_TAGS: ["script", "iframe", "object", "embed", "form", "input"],
+};
 
 /** Метадані розділу для репорту помилки (узгоджено з завантаженими даними каталогу). */
 export type ChapterReaderMeta = {
@@ -42,7 +76,11 @@ function selectionInsideReader(readerEl: HTMLElement | null): boolean {
   return readerEl.contains(range.commonAncestorContainer);
 }
 
-export default function ChapterDetail({
+export default function ChapterDetail(props: ChapterDetailProps) {
+  return <ChapterDetailImpl key={props.chapterSlug} {...props} />;
+}
+
+function ChapterDetailImpl({
   bookSlug,
   chapterSlug,
   chapterTitle,
@@ -59,17 +97,12 @@ export default function ChapterDetail({
   const { showError } = useNotification();
 
   const readerRef = useRef<HTMLDivElement>(null);
-  const onMouseUpSelectionRef = useRef<() => void>(() => {});
 
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [selectedText, setSelectedText] = useState("");
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   const stableMouseUp = useCallback(() => {
-    onMouseUpSelectionRef.current();
-  }, []);
-
-  onMouseUpSelectionRef.current = () => {
     const readerEl = readerRef.current;
     if (!readerEl) return;
     const sel = window.getSelection();
@@ -77,7 +110,7 @@ export default function ChapterDetail({
     if (!text) return;
     if (!selectionInsideReader(readerEl)) return;
     setSelectedText(text);
-  };
+  }, []);
 
   const cancelSelectionMode = useCallback((): void => {
     setIsSelectionMode(false);
@@ -89,13 +122,6 @@ export default function ChapterDetail({
       document.removeEventListener("mouseup", stableMouseUp);
     };
   }, [stableMouseUp]);
-
-  useEffect(() => {
-    setSelectedText("");
-    setIsSelectionMode(false);
-    setShowErrorModal(false);
-    document.removeEventListener("mouseup", stableMouseUp);
-  }, [chapterSlug, stableMouseUp]);
 
   useEffect(() => {
     if (!isSelectionMode) return;
@@ -143,6 +169,12 @@ export default function ChapterDetail({
   const nextTo = nextChapterSlug
     ? `/books/${bookSlug}/chapters/${nextChapterSlug}`
     : `/books/${bookSlug}`;
+
+  const readerHtml = useMemo(() => {
+    const fallback = `<p class="${styles.p}">Зміст глави відсутній.</p>`;
+    const raw = chapterContentHtml?.trim() ? chapterContentHtml : fallback;
+    return DOMPurify.sanitize(raw, READER_HTML_PURIFY);
+  }, [chapterContentHtml]);
 
   return (
     <article className={styles.page}>
@@ -195,9 +227,7 @@ export default function ChapterDetail({
         <div
           ref={readerRef}
           className={styles.reader__inner}
-          dangerouslySetInnerHTML={{
-            __html: chapterContentHtml || `<p class="${styles.p}">Зміст глави відсутній.</p>`,
-          }}
+          dangerouslySetInnerHTML={{ __html: readerHtml }}
         />
       </section>
 

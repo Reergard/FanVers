@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import { chatApi } from "../api/chatApi";
 import type { ChatListItem, ChatMessage } from "../api/types";
 
@@ -6,9 +7,12 @@ type Listener = () => void;
 type ChatStoreState = {
   chats: ChatListItem[];
   messagesByChatId: Record<number, ChatMessage[]>;
+  /** Наступний курсор для підвантаження старіших (id повідомлення для ?before=); null — більше немає */
+  messagesOlderCursor: Record<number, number | null>;
   selectedChatId: number | null;
   loadingChats: boolean;
   loadingMessages: Record<number, boolean>;
+  loadingOlderMessages: Record<number, boolean>;
   error: string | null;
   unreadTotal: number;
 };
@@ -21,9 +25,11 @@ let cachedSnapshot: ChatStoreState | null = null;
 const state: ChatStoreState = {
   chats: [],
   messagesByChatId: {},
+  messagesOlderCursor: {},
   selectedChatId: null,
   loadingChats: false,
   loadingMessages: {},
+  loadingOlderMessages: {},
   error: null,
   unreadTotal: 0,
 };
@@ -72,26 +78,43 @@ function upsertChatFromMessage(
   recalcUnreadTotalInternal(draft);
 }
 
+function mergeMessagesById(a: ChatMessage[], b: ChatMessage[]): ChatMessage[] {
+  const m = new Map<number, ChatMessage>();
+  for (const x of a) m.set(x.id, x);
+  for (const x of b) m.set(x.id, x);
+  return [...m.values()].sort((x, y) => x.id - y.id);
+}
+
 function appendMessageInternal(draft: ChatStoreState, chatId: number, message: ChatMessage): void {
   const current = draft.messagesByChatId[chatId] ?? [];
   if (current.some((item) => item.id === message.id)) return;
   draft.messagesByChatId = {
     ...draft.messagesByChatId,
-    [chatId]: [...current, message],
+    [chatId]: mergeMessagesById(current, [message]),
   };
 }
 
-function resolveErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message) {
-    const maybeAxios = error as Error & {
-      response?: { data?: { error?: unknown; detail?: unknown } };
-    };
-    const apiError = maybeAxios.response?.data?.error;
-    if (typeof apiError === "string" && apiError.trim()) return apiError;
-    const apiDetail = maybeAxios.response?.data?.detail;
-    if (typeof apiDetail === "string" && apiDetail.trim()) return apiDetail;
-    return error.message;
+function firstStringFromDrfField(value: unknown): string | null {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (Array.isArray(value) && value.length > 0 && typeof value[0] === "string" && value[0].trim()) {
+    return value[0].trim();
   }
+  return null;
+}
+
+function resolveErrorMessage(error: unknown, fallback: string): string {
+  if (isAxiosError(error)) {
+    const data = error.response?.data;
+    if (data != null && typeof data === "object") {
+      const rec = data as Record<string, unknown>;
+      const fromError = firstStringFromDrfField(rec.error);
+      if (fromError) return fromError;
+      const fromDetail = firstStringFromDrfField(rec.detail);
+      if (fromDetail) return fromDetail;
+    }
+    if (error.message) return error.message;
+  }
+  if (error instanceof Error && error.message) return error.message;
   return fallback;
 }
 
@@ -109,9 +132,11 @@ export function getChatStoreSnapshot(): ChatStoreState {
   cachedSnapshot = {
     chats: [...state.chats],
     messagesByChatId: { ...state.messagesByChatId },
+    messagesOlderCursor: { ...state.messagesOlderCursor },
     selectedChatId: state.selectedChatId,
     loadingChats: state.loadingChats,
     loadingMessages: { ...state.loadingMessages },
+    loadingOlderMessages: { ...state.loadingOlderMessages },
     error: state.error,
     unreadTotal: state.unreadTotal,
   };
@@ -142,7 +167,7 @@ export const chatStore = {
     } catch (error) {
       setState((draft) => {
         draft.loadingChats = false;
-        draft.error = error instanceof Error ? error.message : "Не вдалося завантажити чати";
+        draft.error = resolveErrorMessage(error, "Не вдалося завантажити чати");
       });
     }
   },
@@ -161,15 +186,43 @@ export const chatStore = {
       draft.error = null;
     });
     try {
-      const messages = await chatApi.getChatMessages(chatId);
+      const page = await chatApi.getChatMessagesPage(chatId);
       setState((draft) => {
-        draft.messagesByChatId = { ...draft.messagesByChatId, [chatId]: messages };
+        draft.messagesByChatId = { ...draft.messagesByChatId, [chatId]: page.results };
+        draft.messagesOlderCursor = {
+          ...draft.messagesOlderCursor,
+          [chatId]: page.next_before,
+        };
         draft.loadingMessages = { ...draft.loadingMessages, [chatId]: false };
       });
     } catch (error) {
       setState((draft) => {
         draft.loadingMessages = { ...draft.loadingMessages, [chatId]: false };
-        draft.error = error instanceof Error ? error.message : "Не вдалося завантажити повідомлення";
+        draft.error = resolveErrorMessage(error, "Не вдалося завантажити повідомлення");
+      });
+    }
+  },
+
+  async fetchOlderMessages(chatId: number): Promise<void> {
+    const cursor = state.messagesOlderCursor[chatId];
+    if (typeof cursor !== "number") return;
+    if (state.loadingOlderMessages[chatId] || state.loadingMessages[chatId]) return;
+    setState((draft) => {
+      draft.loadingOlderMessages = { ...draft.loadingOlderMessages, [chatId]: true };
+      draft.error = null;
+    });
+    try {
+      const page = await chatApi.getChatMessagesPage(chatId, { before: cursor });
+      setState((draft) => {
+        const cur = draft.messagesByChatId[chatId] ?? [];
+        draft.messagesByChatId[chatId] = mergeMessagesById(page.results, cur);
+        draft.messagesOlderCursor[chatId] = page.next_before;
+        draft.loadingOlderMessages = { ...draft.loadingOlderMessages, [chatId]: false };
+      });
+    } catch (error) {
+      setState((draft) => {
+        draft.loadingOlderMessages = { ...draft.loadingOlderMessages, [chatId]: false };
+        draft.error = resolveErrorMessage(error, "Не вдалося завантажити старіші повідомлення");
       });
     }
   },
@@ -186,6 +239,35 @@ export const chatStore = {
       });
       return chat;
     } catch (error) {
+      if (isAxiosError(error) && error.response?.status === 400) {
+        const data = error.response.data;
+        if (data != null && typeof data === "object") {
+          const cid = Number((data as Record<string, unknown>).chat_id);
+          if (!Number.isNaN(cid)) {
+            try {
+              let existing = await chatApi.getChat(cid);
+              if (!existing) {
+                await chatStore.fetchChats();
+                existing = getChatStoreSnapshot().chats.find((c) => c.id === cid) ?? null;
+              }
+              if (existing) {
+                setState((draft) => {
+                  draft.chats = sortChatsByLastMessage([
+                    existing,
+                    ...draft.chats.filter((item) => item.id !== existing.id),
+                  ]);
+                  draft.selectedChatId = existing.id;
+                  recalcUnreadTotalInternal(draft);
+                  draft.error = null;
+                });
+                return existing;
+              }
+            } catch {
+              /* fall through */
+            }
+          }
+        }
+      }
       setState((draft) => {
         draft.error = resolveErrorMessage(error, "Не вдалося створити чат");
       });
@@ -201,6 +283,12 @@ export const chatStore = {
         const nextMessages = { ...draft.messagesByChatId };
         delete nextMessages[chatId];
         draft.messagesByChatId = nextMessages;
+        const nextCursor = { ...draft.messagesOlderCursor };
+        delete nextCursor[chatId];
+        draft.messagesOlderCursor = nextCursor;
+        const nextOlder = { ...draft.loadingOlderMessages };
+        delete nextOlder[chatId];
+        draft.loadingOlderMessages = nextOlder;
         if (draft.selectedChatId === chatId) {
           draft.selectedChatId = draft.chats[0]?.id ?? null;
         }

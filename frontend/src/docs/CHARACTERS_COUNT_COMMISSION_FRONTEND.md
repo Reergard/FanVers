@@ -43,7 +43,7 @@ Backend обчислює обидва значення на основі хра�
 </span>
 ```
 
-Дані приходять через `useQuery(["profile"], getMyProfile)` — той самий кеш що і сторінка профілю.
+Дані приходять через `useQuery({ queryKey: profileQueryKey(userId), queryFn: getMyProfile, ... })` (`shared/queryKeys.ts`) — той самий кеш, що й сторінка профілю та інші екрани з `userId`.
 
 ### Сторінка профілю — `users/Profile.tsx`
 
@@ -55,9 +55,9 @@ Backend обчислює обидва значення на основі хра�
 
 Дані `total_characters` і `commission` оновлюються на бекенді **автоматично** при збереженні/видаленні глав (через сигнали Django).
 
-На фронтенді React Query кешує відповідь `["profile"]`. Щоб побачити актуальні цифри після завантаження нової глави:
+На фронтенді React Query кешує відповідь за ключем **`profileQueryKey(userId)`**. Щоб побачити актуальні цифри після завантаження нової глави:
 - Перезавантажити сторінку, або
-- Виконати `queryClient.invalidateQueries({ queryKey: ["profile"] })` після успішного завантаження глави.
+- Виконати `queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) })` після успішного завантаження глави.
 
 Поточна реалізація `UserTranslations.tsx` не інвалідує кеш автоматично після дій з главами — числа оновляться при наступному завантаженні сторінки або через `refetchOnWindowFocus`.
 

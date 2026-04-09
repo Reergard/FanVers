@@ -107,7 +107,7 @@ class Profile(models.Model):
         default=Decimal('15.00'),
         verbose_name='Комісія (%)'
     )
-    
+
     # Настройки сповіщений
     notifications_enabled = models.BooleanField(
         default=True,
@@ -366,6 +366,29 @@ class BalanceLog(models.Model):
     
     class Meta:
         ordering = ['-created_at']
+
+
+class BalanceIdempotencyRecord(models.Model):
+    """
+    Prevents double-apply of deposit/withdraw operations on network retries.
+    """
+
+    OP_DEPOSIT = "deposit"
+    OP_WITHDRAW = "withdraw"
+    OP_CHOICES = [
+        (OP_DEPOSIT, "deposit"),
+        (OP_WITHDRAW, "withdraw"),
+    ]
+
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="balance_idempotency_records")
+    key = models.CharField(max_length=64)
+    operation_type = models.CharField(max_length=16, choices=OP_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "key"], name="uniq_balance_idempotency_user_key"),
+        ]
 
 
 @receiver(post_save, sender=User)

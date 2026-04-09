@@ -13,6 +13,7 @@
 | Підключення в проєкт | `apps/api/urls.py` → `path('notification/', include('apps.notification.api.urls'))` |
 | Маршрути застосунку | `apps/notification/api/urls.py` — `DefaultRouter`, ресурс `notifications` |
 | ViewSet | `apps/notification/api/views.py` — `NotificationViewSet` |
+| Права на об'єкт | `apps/notification/api/permissions.py` — `IsNotificationOwner` (`obj.user_id == request.user.id`) |
 | Серіалізатор | `apps/notification/api/serializers.py` — `NotificationSerializer` |
 | Модель | `apps/notification/models.py` — `Notification` |
 | Події → записи | `apps/notification/signals.py` |
@@ -36,8 +37,10 @@
 
 `NotificationViewSet`:
 
-- `permission_classes = [IsAuthenticated]`
+- `permission_classes = [IsAuthenticated, IsNotificationOwner]`
 - `authentication_classes = [JWTAuthentication]`
+
+`IsNotificationOwner` застосовується до **об’єктних** дій (`retrieve`, `update`, `partial_update`, `destroy`, кастомний `mark_as_read`): доступ лише до сповіщень поточного користувача. Для **`list`** / **`create`** достатньо автентифікації та фільтрації queryset по `request.user`.
 
 Без валідного JWT запити до цих endpoint-ів не обслуговуються як автентифіковані користувачі (очікуйте 401).
 
@@ -134,4 +137,4 @@
 
 ---
 
-**Останнє оновлення:** узгоджено з `NotificationViewSet`, `NotificationSerializer`, `signals.py` (bulk для закладок), явними `IsAuthenticated` / `JWTAuthentication` на ViewSet.
+**Останнє оновлення:** узгоджено з `NotificationViewSet`, `IsNotificationOwner`, `NotificationSerializer`, `signals.py` (bulk для закладок), `IsAuthenticated` / `JWTAuthentication` на ViewSet.

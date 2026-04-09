@@ -13,7 +13,7 @@ def build_counter_message_event(
     return {
         "type": "counter_update",
         "id": message_id,
-        "message": message_text,
+        "preview": (message_text or "")[:50],
         "sender": {"username": sender_username},
         "timestamp": timestamp_iso,
         "chat_id": chat_id,

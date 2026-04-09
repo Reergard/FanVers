@@ -17,6 +17,7 @@ import { getMyProfile, updateNotificationSettings } from "../users/profileServic
 import type { AppNotification } from "./types";
 import type { NotificationSettingsPatch } from "../users/types";
 import { Breadcrumb } from "../navigation/Breadcrumb";
+import { profileQueryKey } from "../shared/queryKeys";
 import { PageTitle } from "../navigation/PageTitle";
 import { FiltersSidebar } from "../navigation/FiltersSidebar";
 
@@ -53,7 +54,7 @@ function formatDate(createdAt: string): string {
 }
 
 export function NotificationsPage() {
-  const { isAuthenticated, authReady } = useAuth();
+  const { isAuthenticated, authReady, userId } = useAuth();
   const { openLoginModal } = useAuthModal();
   const { showSuccess, showError } = useNotification();
   const queryClient = useQueryClient();
@@ -68,7 +69,7 @@ export function NotificationsPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState<number | string | null>(null);
 
   const profileQuery = useQuery({
-    queryKey: ["profile"],
+    queryKey: profileQueryKey(userId),
     queryFn: getMyProfile,
     enabled: isAuthenticated,
   });
@@ -89,7 +90,7 @@ export function NotificationsPage() {
   const saveFiltersMutation = useMutation({
     mutationFn: (patch: NotificationSettingsPatch) => updateNotificationSettings(patch),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
       showSuccess("Налаштування збережено");
     },
     onError: (err: unknown) => {

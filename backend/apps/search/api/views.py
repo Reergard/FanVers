@@ -17,5 +17,20 @@ class BookSearchView(generics.ListAPIView):
     def get_queryset(self):
         # Базовый queryset с аннотацией количества глав.
         # Фильтрация применяется стандартно через filter_backends в ListAPIView.
-        return Book.objects.annotate(chapter_count=Count('chapters'))
+        queryset = Book.objects.annotate(chapter_count=Count('chapters'))
+
+        user = getattr(self.request, "user", None)
+        if not user or user.is_anonymous:
+            return queryset.filter(adult_content=False)
+
+        # Server-side enforcement: users who chose to hide adult content
+        # must never receive adult_content=True regardless of filter params.
+        try:
+            if user.profile.hide_adult_content:
+                return queryset.filter(adult_content=False)
+        except Exception:
+            # If profile is missing/unavailable, fail closed for safety.
+            return queryset.filter(adult_content=False)
+
+        return queryset
 

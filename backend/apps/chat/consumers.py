@@ -1,10 +1,13 @@
 import json
 import logging
-from channels.generic.websocket import AsyncWebsocketConsumer
+import time
+from collections import deque
+
 from channels.db import database_sync_to_async
-from .counter_broadcast import build_counter_message_event
-from .models import Chat, Message
-from .unread_utils import unread_message_count_for_participant
+from channels.generic.websocket import AsyncWebsocketConsumer
+
+from .models import Chat
+from .message_service import create_chat_message
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +16,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.chat_id = int(self.scope["url_route"]["kwargs"]["chat_id"])
         self.chat_group_name = f"chat_{self.chat_id}"
+        self.message_timestamps = deque(maxlen=10)
         
         # AuthMiddlewareStack завжди підставляє user (у т.ч. AnonymousUser — truthy)
         self.user = self.scope.get('user')
@@ -30,7 +34,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.chat_group_name,
             self.channel_name
         )
-        
+
+        self.user_ws_group = f"user_{self.user.id}"
+        await self.channel_layer.group_add(self.user_ws_group, self.channel_name)
+
         await self.accept()
         logger.info(f"User {self.user.username} connected to chat {self.chat_id}")
 
@@ -38,6 +45,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         group_name = getattr(self, "chat_group_name", None)
         if group_name:
             await self.channel_layer.group_discard(group_name, self.channel_name)
+        user_ws = getattr(self, "user_ws_group", None)
+        if user_ws:
+            await self.channel_layer.group_discard(user_ws, self.channel_name)
         user = getattr(self, "user", None)
         if user is not None and getattr(user, "is_authenticated", False):
             logger.info(f"User {user.username} disconnected from chat {self.chat_id}")
@@ -45,28 +55,37 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
+            if data.get("type") == "ping":
+                await self.send(text_data=json.dumps({"type": "pong"}))
+                return
+
             message = data.get('message', '').strip()
-            
+
+            # Max 10 messages / 60 sec per user (per connection)
+            now = time.time()
+            self.message_timestamps.append(now)
+            if (
+                len(self.message_timestamps) == self.message_timestamps.maxlen
+                and (now - self.message_timestamps[0]) < 60
+            ):
+                await self.close(code=4429)
+                return
+
             if message:
-                # Сохраняем сообщение в базу данных
-                message_obj = await self.save_message(self.chat_id, self.user, message)
-                
-                # Отправляем сообщение всем участникам чата
-                await self.channel_layer.group_send(
-                    self.chat_group_name,
-                    {
-                        'type': 'chat_message',
-                        'message': message_obj['content'],
-                        'sender': {
-                            'username': self.user.username,
-                        },
-                        'timestamp': message_obj['created_at'],
-                        'id': message_obj['id']
-                    }
-                )
-                
-                # Отправляем уведомление о счетчике всем участникам чата
-                await self.send_counter_updates(self.chat_id, message_obj, self.user)
+                if len(message) > 5000:
+                    await self.send(text_data=json.dumps({"error": "Message too long"}))
+                    return
+                try:
+                    await self.save_message(self.chat_id, self.user, message)
+                except ValueError as e:
+                    if str(e) == "Chat not found":
+                        await self.close(code=4404)
+                    else:
+                        await self.send(
+                            text_data=json.dumps({"error": "Invalid message"})
+                        )
+                except PermissionError:
+                    await self.close(code=4403)
         except json.JSONDecodeError:
             await self.send(text_data=json.dumps({'error': 'Invalid JSON'}))
         except Exception as e:
@@ -82,6 +101,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'timestamp': event['timestamp']
         }))
 
+    async def force_disconnect(self, _event):
+        await self.close(code=4401)
+
+    async def chat_deleted(self, _event):
+        await self.send(text_data=json.dumps({"type": "chat_deleted"}))
+        await self.close()
+
     @database_sync_to_async
     def is_chat_participant(self, chat_id, user):
         try:
@@ -93,62 +119,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def save_message(self, chat_id, user, content):
         try:
-            chat = Chat.objects.get(id=chat_id)
-            message = Message.objects.create(
-                chat=chat,
-                sender=user,
-                content=content
-            )
-            return {
-                'id': message.id,
-                'content': message.content,
-                'created_at': message.created_at.isoformat()
-            }
+            create_chat_message(chat_id=chat_id, sender=user, content=content)
         except Chat.DoesNotExist:
-            raise Exception("Chat not found")
-
-    async def send_counter_updates(self, chat_id, message_obj, sender):
-        """Уведомления счётчика: реальный unread_count с БД для каждого получателя."""
-        try:
-            chat = await self.get_chat(chat_id)
-            if not chat:
-                return
-            participants = await self.get_chat_participants(chat)
-
-            for participant in participants:
-                if participant.id == sender.id:
-                    continue
-                unread_count = await self.compute_unread_for_participant(chat_id, participant.id)
-                await self.channel_layer.group_send(
-                    f"counter_{participant.id}",
-                    build_counter_message_event(
-                        chat_id=chat_id,
-                        message_id=message_obj["id"],
-                        message_text=message_obj["content"],
-                        sender_username=sender.username,
-                        timestamp_iso=message_obj["created_at"],
-                        unread_count=unread_count,
-                    ),
-                )
-        except Exception as e:
-            logger.error(f"Error sending counter updates: {e}")
-
-    @database_sync_to_async
-    def compute_unread_for_participant(self, chat_id, user_id):
-        return unread_message_count_for_participant(chat_id, user_id)
-
-    @database_sync_to_async
-    def get_chat(self, chat_id):
-        try:
-            return Chat.objects.get(id=chat_id)
-        except Chat.DoesNotExist:
-            return None
-
-    @database_sync_to_async
-    def get_chat_participants(self, chat):
-        if chat:
-            return list(chat.participants.all())
-        return []
+            raise ValueError("Chat not found") from None
 
 
 class CounterConsumer(AsyncWebsocketConsumer):
@@ -164,7 +137,10 @@ class CounterConsumer(AsyncWebsocketConsumer):
             self.counter_group_name,
             self.channel_name
         )
-        
+
+        self.user_ws_group = f"user_{self.user.id}"
+        await self.channel_layer.group_add(self.user_ws_group, self.channel_name)
+
         await self.accept()
         logger.info(f"User {self.user.username} connected to counter WebSocket")
 
@@ -172,6 +148,9 @@ class CounterConsumer(AsyncWebsocketConsumer):
         group_name = getattr(self, "counter_group_name", None)
         if group_name:
             await self.channel_layer.group_discard(group_name, self.channel_name)
+        user_ws = getattr(self, "user_ws_group", None)
+        if user_ws:
+            await self.channel_layer.group_discard(user_ws, self.channel_name)
         user = getattr(self, "user", None)
         if user is not None and getattr(user, "is_authenticated", False):
             logger.info(f"User {user.username} disconnected from counter WebSocket")
@@ -188,7 +167,7 @@ class CounterConsumer(AsyncWebsocketConsumer):
         payload = {
             "type": "message",
             "id": event.get("id"),
-            "message": event.get("message", ""),
+            "preview": event.get("preview", ""),
             "sender": event["sender"],
             "timestamp": event["timestamp"],
             "chat_id": event["chat_id"],
@@ -196,3 +175,6 @@ class CounterConsumer(AsyncWebsocketConsumer):
         if event.get("unread_count") is not None:
             payload["unread_count"] = event["unread_count"]
         await self.send(text_data=json.dumps(payload))
+
+    async def force_disconnect(self, _event):
+        await self.close(code=4401)

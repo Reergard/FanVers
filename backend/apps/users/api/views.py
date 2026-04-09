@@ -24,6 +24,7 @@ from django.shortcuts import redirect
 from django.conf import settings
 
 from apps.users.role_self_promotion import is_role_self_promotion_allowed
+from apps.users.ws_disconnect import broadcast_user_ws_disconnect
 import os
 import secrets
 import time
@@ -82,7 +83,6 @@ def set_refresh_cookie(response, refresh_str: str, remember_me: bool = False):
         logger.info(f"🍪 [set_refresh_cookie] Устанавливаем refresh cookie...")
         logger.info(f"🍪 [set_refresh_cookie] Cookie name: {REFRESH_COOKIE_NAME}")
         logger.info(f"🍪 [set_refresh_cookie] Cookie params: {params}")
-        logger.info(f"🍪 [set_refresh_cookie] Refresh token length: {len(refresh_str)}")
     response.set_cookie(REFRESH_COOKIE_NAME, refresh_str, **params)
     if settings.DEBUG:
         logger.info(f"🍪 [set_refresh_cookie] Refresh cookie установлена")
@@ -162,18 +162,18 @@ def get_csrf_token(request):
     - Отправляет токен в заголовке X-CSRFToken для всех POST/PUT/PATCH/DELETE запросов
     """
     if settings.DEBUG:
-        logger.info(f"🛡️ [get_csrf_token] === START ===")
-        logger.info(f"🛡️ [get_csrf_token] Method: {request.method}")
-        logger.info(f"🛡️ [get_csrf_token] Path: {request.path}")
-        logger.info(f"🛡️ [get_csrf_token] CSRF cookie в запросе: {request.COOKIES.get('csrftoken', 'NOT SET')[:50] if request.COOKIES.get('csrftoken') else 'NOT SET'}")
-    
+        logger.info(
+            "[get_csrf_token] %s %s (csrftoken cookie: %s)",
+            request.method,
+            request.path,
+            "present" if request.COOKIES.get("csrftoken") else "absent",
+        )
+
     from django.middleware.csrf import get_token
     csrf_token = get_token(request)
-    
+
     if settings.DEBUG:
-        logger.info(f"🛡️ [get_csrf_token] CSRF token получен: {csrf_token[:50] if csrf_token else 'NULL'}...")
-        logger.info(f"🛡️ [get_csrf_token] CSRF token length: {len(csrf_token) if csrf_token else 0}")
-        logger.info(f"🛡️ [get_csrf_token] === SUCCESS ===")
+        logger.info("[get_csrf_token] CSRF token issued")
     
     return Response({"csrfToken": csrf_token})
 
@@ -257,7 +257,6 @@ class RegisterView(APIView):
         if settings.DEBUG:
             logger.info(f"📝 [RegisterView] === START REGISTER ===")
             logger.info(f"📝 [RegisterView] Method: {request.method}, Path: {request.path}")
-            logger.info(f"📝 [RegisterView] Data: username={request.data.get('username', 'N/A')}, email={request.data.get('email', 'N/A')}")
         
         serializer = CreateUserSerializer(data=request.data)
         if serializer.is_valid():
@@ -265,7 +264,7 @@ class RegisterView(APIView):
                 logger.info(f"📝 [RegisterView] Шаг 1: Serializer валиден, создаем пользователя...")
             user = serializer.save()
             if settings.DEBUG:
-                logger.info(f"📝 [RegisterView] Шаг 1: Пользователь создан: {user.username} (ID: {user.id})")
+                logger.info(f"📝 [RegisterView] Шаг 1: Пользователь создан (user id={user.id})")
                 logger.info(f"📝 [RegisterView] Шаг 2: Генерируем токены...")
 
             # Если включен activation flow и пользователь ещё не активирован —
@@ -321,30 +320,27 @@ class LoginView(APIView):
         username = request.data.get('username')
         password = request.data.get('password')
         
-        if settings.DEBUG:
-            logger.info(f"🔐 [LoginView] Username received: {username}")
-        
         try:
             if settings.DEBUG:
                 logger.info(f"🔐 [LoginView] Шаг 1: Аутентификация пользователя...")
             user = authenticate(request, username=username, password=password)
             if settings.DEBUG:
-                logger.info(f"🔐 [LoginView] Шаг 1: Authenticate result: {user.username if user else 'FAILED'}")
+                logger.info(f"🔐 [LoginView] Шаг 1: Authenticate result: {'ok' if user else 'FAILED'}")
             
             if not user:
-                logger.warning(f"🔐 [LoginView] Шаг 1: Authentication failed for username: {username}")
+                logger.warning("🔐 [LoginView] Шаг 1: Authentication failed (invalid credentials)")
                 raise AuthenticationFailed("Невірні облікові дані")
 
             # Проверка активации аккаунта (критично для email-регистрации)
             if not user.is_active:
-                logger.warning(f"🔐 [LoginView] Шаг 1: Account not activated for username: {username}")
+                logger.warning("🔐 [LoginView] Шаг 1: Account not activated")
                 return Response(
                     {"detail": "Аккаунт не активирован. Пожалуйста, подтвердите email."},
                     status=status.HTTP_403_FORBIDDEN
                 )
 
             if settings.DEBUG:
-                logger.info(f"🔐 [LoginView] Шаг 1: User authenticated: {user.username} (ID: {user.id})")
+                logger.info(f"🔐 [LoginView] Шаг 1: User authenticated (id={user.id})")
                 logger.info(f"🔐 [LoginView] Шаг 2: Генерируем токены...")
             refresh = RefreshToken.for_user(user)
             access = str(refresh.access_token)
@@ -387,15 +383,23 @@ class LogoutView(APIView):
     def post(self, request):
         if settings.DEBUG:
             logger.info(f"🚪 [LogoutView] === START LOGOUT ===")
-        
+
         refresh_cookie = request.COOKIES.get(REFRESH_COOKIE_NAME)
-        
+        user_id_for_ws = None
+        if refresh_cookie:
+            try:
+                user_id_for_ws = RefreshToken(refresh_cookie).get("user_id")
+            except Exception:
+                pass
+        if user_id_for_ws is None and request.user.is_authenticated:
+            user_id_for_ws = request.user.pk
+
         if refresh_cookie:
             try:
                 token = RefreshToken(refresh_cookie)
                 token.blacklist()
             except Exception as e:
-                logger.warning(f"🚪 [LogoutView] Не удалось добавить в blacklist: {e}")
+                logger.error("🚪 [LogoutView] Не удалось добавить в blacklist: %s", e, exc_info=True)
 
         resp = Response(status=status.HTTP_205_RESET_CONTENT)
         # Симметрично завершаем Django-сессию (login() вызывается для WS cookie-based auth)
@@ -403,6 +407,8 @@ class LogoutView(APIView):
             django_logout(request)
         except Exception:
             pass
+        if user_id_for_ws:
+            broadcast_user_ws_disconnect(int(user_id_for_ws))
         del_refresh_cookie(resp)
         del_session_mode_cookie(resp)
         if settings.DEBUG:
@@ -433,11 +439,19 @@ class CookieTokenRefreshView(APIView):
 
         try:
             old = RefreshToken(refresh_cookie)
-            
+
             try:
                 old.blacklist()
             except Exception as e:
-                logger.warning(f"🔐 [CookieTokenRefreshView] Не удалось добавить в blacklist: {e}")
+                logger.error(
+                    "🔐 [CookieTokenRefreshView] Blacklist failed, refusing new tokens: %s",
+                    e,
+                    exc_info=True,
+                )
+                return Response(
+                    {"detail": "Token refresh failed"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
 
             user_id = old.get("user_id")
             User = get_user_model()
@@ -472,39 +486,29 @@ class UserProfileView(APIView):
     throttle_scope = 'profile'
 
     def get(self, request):
-        logger.info(f"👤 [UserProfileView] === START GET PROFILE ===")
-        logger.info(f"👤 [UserProfileView] User: {request.user.username if request.user.is_authenticated else 'NOT AUTHENTICATED'}")
-        logger.info(f"👤 [UserProfileView] User ID: {request.user.id if request.user.is_authenticated else 'N/A'}")
         if settings.DEBUG:
-            logger.info(f"👤 [UserProfileView] Headers: Authorization={request.headers.get('Authorization', 'NOT SET')[:50] if request.headers.get('Authorization') else 'NOT SET'}")
-        logger.info(f"👤 [UserProfileView] Query params: {dict(request.query_params)}")
-        
+            uid = request.user.id if request.user.is_authenticated else None
+            logger.info("[UserProfileView] profile requested (user_id=%s)", uid)
+
         try:
             requested_username = request.query_params.get('username')
             if requested_username:
-                logger.info(f"👤 [UserProfileView] Шаг 1: Запрос профиля для username: {requested_username}")
                 profile = Profile.objects.select_related('user').get(
                     user__username=requested_username
                 )
             else:
-                logger.info(f"👤 [UserProfileView] Шаг 1: Запрос собственного профиля")
                 profile = request.user.profile
-            
+
             is_owner = not requested_username or requested_username == request.user.username
-            
-            logger.info(f"👤 [UserProfileView] Шаг 2: Profile found: ID={profile.id}, username={profile.user.username}")
-            logger.info(f"👤 [UserProfileView] Шаг 2: Is owner: {is_owner}")
-            
-            logger.info(f"👤 [UserProfileView] Шаг 3: Сериализуем профиль...")
+
             serializer = ProfileSerializer(
-                profile, 
+                profile,
                 context={
                     'is_owner': is_owner,
                     'request': request
                 }
             )
-            
-            logger.info(f"👤 [UserProfileView] === PROFILE SUCCESS ===")
+
             return Response(serializer.data)
             
         except Profile.DoesNotExist:
@@ -524,7 +528,8 @@ class UserProfileView(APIView):
 class ProfileDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
-    # throttle_classes = [ProfileThrottle]  # Розкоментувати на продакшені
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "profile"
 
     def get_object(self):
         return self.request.user.profile
@@ -532,7 +537,7 @@ class ProfileDetailView(generics.RetrieveUpdateAPIView):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-# @throttle_classes([ProfileThrottle])  # Розкоментувати на продакшені
+@throttle_classes([ScopedRateThrottle])
 def update_profile_view(request):
     try:
         profile = request.user.profile
@@ -552,6 +557,9 @@ def update_profile_view(request):
             {'error': 'Помилка при оновленні профілю'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+update_profile_view.throttle_scope = "profile_write"
 
 
 @api_view(['PUT'])
@@ -588,6 +596,10 @@ def update_profile_about_view(request):
             {'error': 'Помилка при збереженні тексту профілю'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+update_profile_about_view = throttle_classes([ScopedRateThrottle])(update_profile_about_view)
+update_profile_about_view.throttle_scope = "profile_write"
 
 
 class ProfileImageView(APIView):
@@ -656,36 +668,30 @@ class UpdateEmailView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
     http_method_names = ['post', 'options']
-    # throttle_classes = [ProfileThrottle]  # Розкоментувати на продакшені
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "profile_write"
 
     def post(self, request):
-        logger.info(f"📧 [UpdateEmailView] === START EMAIL UPDATE ===")
-        logger.info(f"📧 [UpdateEmailView] Time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-        logger.info(f"📧 [UpdateEmailView] User: {request.user.username} (ID: {request.user.id})")
-        logger.info(f"📧 [UpdateEmailView] Current email: {request.user.email}")
+        if settings.DEBUG:
+            logger.info(
+                "[UpdateEmailView] email update attempt (user_id=%s)",
+                request.user.id,
+            )
         
         try:
             serializer = EmailUpdateSerializer(data=request.data, context={'request': request})
             
             if serializer.is_valid():
-                logger.info(f"📧 [UpdateEmailView] Шаг 1: Serializer валиден")
                 user = request.user
                 new_email = serializer.validated_data['new_email']
-                logger.info(f"📧 [UpdateEmailView] Шаг 1: Новый email: {new_email}")
-                
+
                 # Оновлюємо email в User - Profile.email оновиться автоматично через сигнал
-                old_email = user.email
-                logger.info(f"📧 [UpdateEmailView] Шаг 2: Старый email: {old_email}")
                 user.email = new_email
-                
+
                 # Сохраняем с указанием конкретного поля для избежания конфликтов
-                logger.info(f"📧 [UpdateEmailView] Шаг 3: Сохраняем новый email...")
                 user.save(update_fields=['email'])
-                logger.info(f"📧 [UpdateEmailView] Шаг 3: Email сохранен")
-                
-                # Djoser может отправить confirmation email если USERNAME_CHANGED_EMAIL_CONFIRMATION=True
-                logger.info(f"📧 [UpdateEmailView] Шаг 4: Djoser может отправить confirmation email (если USERNAME_CHANGED_EMAIL_CONFIRMATION=True)")
-                logger.info(f"📧 [UpdateEmailView] === EMAIL UPDATE SUCCESS ===")
+                if settings.DEBUG:
+                    logger.info("[UpdateEmailView] email updated (user_id=%s)", user.id)
                 
                 response_data = {
                     'message': 'Email успішно оновлено',
@@ -706,6 +712,7 @@ class UpdateEmailView(APIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([ScopedRateThrottle])
 def change_password(request):
     """Зміна пароля користувача"""
     try:
@@ -731,6 +738,9 @@ def change_password(request):
             {'error': 'Помилка при зміні пароля'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+change_password.throttle_scope = "password_change"
 
 
 @api_view(['PUT'])
@@ -760,6 +770,10 @@ def update_notification_settings(request):
             {'error': 'Помилка при оновленні налаштувань'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+update_notification_settings = throttle_classes([ScopedRateThrottle])(update_notification_settings)
+update_notification_settings.throttle_scope = "profile_write"
 
 
 class CookieConsentView(APIView):
@@ -803,7 +817,7 @@ class CookieConsentView(APIView):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([AllowAny])  # Публічний каталог перекладачів; обмеження — throttling на рівні DRF
 def get_translators_list(request):
     try:
         translators = Profile.objects.filter(
@@ -889,7 +903,7 @@ get_user_profile = api_view(['GET'])(permission_classes([AllowAny])(
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-# @throttle_classes([ProfileThrottle])  # Розкоментувати на продакшені
+@throttle_classes([ScopedRateThrottle])
 def become_translator(request):
     try:
         with transaction.atomic():
@@ -914,9 +928,12 @@ def become_translator(request):
         )
 
 
+become_translator.throttle_scope = "role_promotion"
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-# @throttle_classes([ProfileThrottle])  # Розкоментувати на продакшені
+@throttle_classes([ScopedRateThrottle])
 def become_author(request):
     try:
         with transaction.atomic():
@@ -941,6 +958,9 @@ def become_author(request):
         )
 
 
+become_author.throttle_scope = "role_promotion"
+
+
 class AuthStatusView(APIView):
     """
     Проверка статуса аутентификации.
@@ -949,7 +969,8 @@ class AuthStatusView(APIView):
     """
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
-    # throttle_classes = [ProfileThrottle]  # Розкоментувати на продакшені
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth_status"
 
     def get(self, request):
         # Если дошли сюда - значит access токен валиден и пользователь аутентифицирован

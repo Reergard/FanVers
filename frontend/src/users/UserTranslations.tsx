@@ -10,6 +10,7 @@ import { getUserTranslations, catalogKeys, type UserTranslationBook } from "../a
 import { getMyProfile } from "./profileService";
 import styles from "./UserTranslations.module.css";
 import { Breadcrumb } from "../navigation/Breadcrumb";
+import { profileQueryKey } from "../shared/queryKeys";
 import { PageTitle } from "../navigation/PageTitle";
 
 const PAGE_SIZE = 10;
@@ -33,7 +34,7 @@ export default function UserTranslations() {
   });
 
   const { data: profile } = useQuery({
-    queryKey: ["profile"],
+    queryKey: profileQueryKey(userId),
     queryFn: getMyProfile,
     enabled: isAuthenticated && !!userId && authReady,
   });

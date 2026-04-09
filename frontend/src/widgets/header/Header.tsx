@@ -21,6 +21,7 @@ import type { ChatMessage } from "../../chat/api/types";
 import { getMyProfile } from "../../users/profileService";
 import { resolveAvatarUrl } from "../../shared/avatar/resolveAvatarUrl";
 import { useNotifications } from "../../notification/useNotifications";
+import { profileQueryKey } from "../../shared/queryKeys";
 
 // Single source of truth (Desktop)
 const NAV_MENU_OLD = [
@@ -116,7 +117,7 @@ const SearchIcon = ({ className }: { className?: string }) => {
 export function Header() {
   const { pathname } = useLocation();
   const isHome = pathname === "/";
-  const { isAuthenticated, username, balance, role: authRole } = useAuth();
+  const { isAuthenticated, username, balance, role: authRole, userId } = useAuth();
   const { state: chatState, actions: chatActions } = useChat();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -128,7 +129,7 @@ export function Header() {
   }, [queryFromUrl]);
 
   const profileQuery = useQuery({
-    queryKey: ["profile"],
+    queryKey: profileQueryKey(userId),
     queryFn: getMyProfile,
     enabled: isAuthenticated,
     staleTime: 60_000,
