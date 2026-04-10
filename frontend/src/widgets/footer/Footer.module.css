@@ -9,6 +9,14 @@
   background: #050d11;
 }
 
+.desktopOnly {
+  display: block;
+}
+
+.mobileOnly {
+  display: none;
+}
+
 /* ===== Верхняя строка (4 колонки) ===== */
 .topGrid {
   display: grid;
@@ -115,6 +123,15 @@
   display: flex;
   gap: 10px;
   justify-content: center;
+  align-items: center;
+}
+
+.footerSocialGlyphLink {
+  display: block;
+  line-height: 0;
+  flex-shrink: 0;
+  text-decoration: none;
+  color: inherit;
 }
 
 .socialBtn {
@@ -183,114 +200,262 @@
   }
 }
 
-/* ===== Tablet/Mobile ===== */
+/* ===== Tablet / Mobile: макет як на екрані ~390px ===== */
 @media (max-width: 1024px) {
-  .topGrid {
-    grid-template-columns: 1fr 140px 1fr;
-    gap: 18px;
-    align-items: start;
-  }
-
-  .vLine {
+  .desktopOnly {
     display: none;
   }
 
-  .centerLogo {
-    padding-top: 0;
+  .mobileOnly {
+    display: block;
   }
 
-  .logo {
-    width: 110px;
-    height: 110px;
+  .mobileLinkStack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    max-width: 390px;
+    margin-inline: auto;
   }
 
-  .logoImg {
-    width: 90px;
-    height: 90px;
+  .mobileRow,
+  .mobileRowFull {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 9px;
+    width: 100%;
+    min-width: 0;
   }
 
-  .side {
-    grid-column: 1 / -1;
-    justify-items: center;
+  .mobileRow {
+    overflow-x: auto;
+    scrollbar-width: none;
   }
 
-  .age {
+  .mobileRow::-webkit-scrollbar {
+    height: 0;
+  }
+
+  /* Figma: Drop shadow 0 / 0 / blur 10 / #05B4C7 @ 25% */
+  .mobileTile,
+  .mobileTileStretch,
+  .mobileSpacer {
+    box-sizing: border-box;
+    min-height: 40px;
+    border-radius: 9px;
+    border: 1px solid rgba(5, 180, 199, 0.22);
+    box-shadow: 0 0 10px 0 rgba(5, 180, 199, 0.25);
+  }
+
+  /* Порожні плитки забирають залишок ширини й стискаються, коли текстові ширшають ряд */
+  .mobileSpacer {
+    flex: 1 2 0;
+    min-width: 0;
+    padding: 0;
+    background: #050d11;
+  }
+
+  /* Пусті клітинки з градієнтом */
+  .mobileSpacerGrad {
+    background: linear-gradient(
+      90deg,
+      rgba(5, 13, 17, 0.2) 0%,
+      rgba(5, 180, 199, 0.2) 100%
+    );
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+
+  /* Оболонка без горизонтального padding — відступ тільки всередині .mobileTileLabel (надійно з flex + italic) */
+  .mobileTile,
+  .mobileTileStretch {
+    padding: 0;
+  }
+
+  .mobileTileLabel {
+    box-sizing: border-box;
+    display: block;
+    padding-inline: 5px;
+    padding-block: 0;
+    margin: 0;
     text-align: center;
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    font-size: inherit;
+    line-height: inherit;
+    font-style: inherit;
+    font-weight: inherit;
+    color: inherit;
+  }
+
+  .mobileTileLabel::-webkit-scrollbar {
+    height: 0;
+  }
+
+  /* Ширина рядка = текст + padding усередині label; без width:max-content на flex (уникає з’їдання відступів) */
+  .mobileTile {
+    flex: 0 0 auto;
     max-width: 100%;
-    width: min(520px, 90%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.92);
+    background: #050d11;
+    font-size: 14px;
+    line-height: 1.25;
+    font-style: italic;
+    font-weight: 400;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  }
+
+  .mobileTile .mobileTileLabel {
+    max-width: 100%;
+  }
+
+  /* Повна ширина рядка */
+  .mobileTileStretch {
+    flex: 1 0 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.92);
+    background: #050d11;
+    font-size: 14px;
+    line-height: 1.25;
+    font-style: italic;
+    font-weight: 400;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  }
+
+  .mobileTileStretch .mobileTileLabel {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  @media (hover: hover) {
+    .mobileTile:hover,
+    .mobileTileStretch:hover {
+      border-color: rgba(5, 180, 199, 0.45);
+      box-shadow:
+        0 0 10px 0 rgba(5, 180, 199, 0.25),
+        0 0 14px rgba(5, 180, 199, 0.35);
+    }
+  }
+
+  .mobileBrandRow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(14px, 5vw, 28px);
+    margin-top: 18px;
+    max-width: 390px;
+    margin-inline: auto;
+  }
+
+  .mobileLogosGroup {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .mobileBrandRow .footerSocialGlyphLink {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobileLogoWrap {
+    width: 60px;
+    height: 60px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    text-decoration: none;
+    border: 1px solid rgba(5, 180, 199, 0.25);
+    background: rgba(5, 13, 17, 0.6);
+    box-shadow: 0 0 10px 0 rgba(5, 180, 199, 0.25);
+  }
+
+  .mobileLogoImg {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 0 10px rgba(5, 180, 199, 0.25));
+  }
+
+  .mobileAge {
+    margin: 16px 0 0;
+    padding: 0;
+    font-size: 12px;
+    line-height: 1.4;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.88);
+    opacity: 0.9;
+    text-align: center;
+    max-width: 390px;
+    margin-inline: auto;
   }
 
   .bottomBar {
     flex-direction: column;
     align-items: flex-start;
-  }
-}
-
-/* ===== TABLET (768-1024): увеличенные размеры ===== */
-@media (min-width: 768px) and (max-width: 1024px) {
-  .topGrid {
-    gap: 24px;
-  }
-
-  .logo {
-    width: 140px;
-    height: 140px;
-  }
-
-  .logoImg {
-    width: 115px;
-    height: 115px;
-  }
-  
-  .age {
-    font-size: 15px;
-  }
-}
-
-/* ===== MOBILE (до 480px): компактные размеры ===== */
-@media (max-width: 480px) {
-  .topGrid {
-    grid-template-columns: 1fr 100px 1fr;
-    gap: 12px;
-  }
-
-  .logo {
-    width: 85px;
-    height: 85px;
-  }
-
-  .logoImg {
-    width: 70px;
-    height: 70px;
-  }
-  
-  .age {
-    font-size: 13px;
-    width: min(400px, 95%);
-  }
-
-  .bottomBar {
     margin-top: 20px;
   }
 }
 
-/* ===== MOBILE SMALL (до 360px) ===== */
-@media (max-width: 360px) {
-  .topGrid {
+@media (min-width: 768px) and (max-width: 1024px) {
+  .mobileLinkStack {
+    gap: 16px;
+    max-width: min(390px, 100%);
+  }
+
+  .mobileRow,
+  .mobileRowFull {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobileLinkStack {
+    gap: 12px;
+    max-width: 100%;
+  }
+
+  .mobileRow,
+  .mobileRowFull {
     gap: 8px;
   }
 
-  .logo {
-    width: 75px;
-    height: 75px;
+  .mobileAge {
+    font-size: 14px;
+    line-height: 1.4;
   }
 
-  .logoImg {
-    width: 62px;
-    height: 62px;
+  .bottomBar {
+    margin-top: 18px;
   }
-  
-  .age {
-    font-size: 12px;
+}
+
+@media (max-width: 360px) {
+  .mobileLinkStack {
+    gap: 10px;
+  }
+
+  .mobileRow,
+  .mobileRowFull {
+    gap: 6px;
   }
 }
