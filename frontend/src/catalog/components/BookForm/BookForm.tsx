@@ -11,6 +11,7 @@ import {
   normalizeBookPayload,
   validateBookForm,
 } from "./bookForm.utils";
+import { PillDropdownSelect } from "../../../shared/PillDropdownSelect/PillDropdownSelect";
 import styles from "./BookForm.module.css";
 
 export const BOOK_TYPES = [
@@ -601,20 +602,15 @@ function PillSelect<T extends string>({
   return (
     <div className={styles.pillSelect}>
       <div className={styles.pillLabel}>{label}</div>
-      <div className={styles.pillFrame}>
-        <select
-          className={styles.pillSelectNative}
+      <div className={`${styles.pillFrame} ${styles.pillFrameWithDropdown}`}>
+        <PillDropdownSelect
+          variant="form"
           value={value}
-          onChange={(e) => onChange(e.target.value as T)}
-          aria-label={label}
-        >
-          <option value="">Оберіть</option>
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+          options={options.map((o) => ({ value: o.value, label: o.label }))}
+          onChange={(v) => onChange(v as T)}
+          ariaLabel={label}
+          placeholder="Оберіть"
+        />
       </div>
     </div>
   );

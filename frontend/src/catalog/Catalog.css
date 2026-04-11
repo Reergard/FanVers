@@ -9,32 +9,7 @@
 }
 
 .catalog-page__sort {
-  --sort-label-display: none;
   position: relative;
-}
-
-.catalog-page__sort-value {
-  font-size: clamp(12px, 1vw, 13px);
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.catalog-page__sort-native {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.catalog-page__sort-caret {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  width: 8px;
-  height: 8px;
-  border-right: 1.5px solid #f58807;
-  border-bottom: 1.5px solid #f58807;
-  transform: translateY(-60%) rotate(45deg);
 }
 
 .catalog-page__grid {
@@ -65,6 +40,21 @@
 .catalog-page__cell > * {
   position: relative;
   z-index: 1;
+}
+
+/* Однакова висота карток у рядку: ланцюг до .bookCard для flex-розмітки з описом */
+.catalog-page__cell > .bookCard-link,
+.catalog-page__cell > .bookCard-no-link {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.catalog-page__cell > .bookCard-link .bookCard,
+.catalog-page__cell > .bookCard-no-link .bookCard {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .catalog-page__footer {
@@ -99,7 +89,7 @@
   }
 
   .catalog-page__sort span,
-  .catalog-page__sort label {
+  .catalog-page__sort button {
     font-size: inherit;
   }
 

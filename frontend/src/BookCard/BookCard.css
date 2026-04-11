@@ -194,11 +194,84 @@
   width: 100%;
 }
 
+/* Каталог: опис замість рядків статистики (`showBookDescription`) */
+.bookCard__catalogDescription {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0 clamp(2px, 0.35vw, 6px);
+  text-align: center;
+  font-family: "SofiaSansSemiCondensed", system-ui, -apple-system, Segoe UI, Roboto, Arial,
+    sans-serif;
+  font-size: clamp(12px, 1.05vw, 14px);
+  line-height: 1.45;
+  font-weight: 400;
+  font-style: normal;
+  color: rgba(255, 255, 255, 0.82);
+  overflow: hidden;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 7;
+  line-clamp: 7;
+  box-sizing: border-box;
+}
+
+.bookCard__catalogDescription--empty {
+  font-family: "BadScript", cursive;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.55);
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+
+/* Каталог з описом: картка на всю висоту комірки сітки, «Статус» знизу мета-блоку */
+.catalog-page .bookCard.bookCard--catalogWithDescription {
+  height: 100%;
+  min-height: 0;
+}
+
+.catalog-page .bookCard.bookCard--catalogWithDescription .bookCard__cover {
+  flex-shrink: 0;
+}
+
+.catalog-page .bookCard.bookCard--catalogWithDescription .bookCard__content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.catalog-page .bookCard.bookCard--catalogWithDescription .bookCard__title {
+  flex-shrink: 0;
+}
+
+.catalog-page .bookCard.bookCard--catalogWithDescription .bookCard__meta {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 0.8vw, 10px);
+}
+
+.catalog-page .bookCard.bookCard--catalogWithDescription .bookCard__catalogDescription {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 /* Каталог (default): рядок «Статус» лише для покинутих перекладів */
 .bookCard__defaultAbandonedStatus {
   width: 100%;
   margin-top: clamp(6px, 0.8vw, 10px);
   text-align: center;
+}
+
+.bookCard__defaultAbandonedStatus--inMeta {
+  margin-top: 0;
+  flex-shrink: 0;
 }
 
 .bookCard__row {
@@ -910,7 +983,7 @@
 
 /* ========== Mobile grid для Catalog і Власні переклади (default card) ========== */
 /* Ряд 1: [пусто] | Назва
-   Ряд 2: [Обкладинка] | Мета (дати, перегляди, дохід) */
+   Ряд 2: [Обкладинка] | Мета (каталог — опис; власні переклади — дати та статистика) */
 /* Тільки default-картка каталогу; ad/bookmark/withTags не чіпати — інакше зламається карусель реклами */
 @media (max-width: 768px) {
   .catalog-page .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark),
@@ -981,6 +1054,15 @@
     overflow: visible;
   }
 
+  .catalog-page .bookCard.bookCard--catalogWithDescription .bookCard__meta {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    min-height: 0;
+    height: 100%;
+    gap: clamp(6px, 1.2vw, 10px);
+  }
+
   .catalog-page .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__row,
   .bookCard-mobile-grid .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark) .bookCard__row {
     align-items: flex-start;
@@ -1000,6 +1082,15 @@
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .catalog-page .bookCard:not(.bookCard--withTags):not(.bookCard--ad):not(.bookCard--bookmark)
+    .bookCard__catalogDescription {
+    text-align: left;
+    padding: 0;
+    font-size: clamp(13px, 2.4vw, 15px);
+    -webkit-line-clamp: 8;
+    line-clamp: 8;
   }
 }
 

@@ -1,0 +1,148 @@
+.root {
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.rootForm {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
+
+.trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-width: min(100%, 200px);
+  min-height: 36px;
+  margin: 0;
+  padding: 8px 34px 8px 14px;
+  border: 1px solid #f58807;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.2);
+  color: #f58807;
+  font-size: clamp(12px, 1.1vw, 13px);
+  line-height: 1.2;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  box-sizing: border-box;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+
+.trigger:hover:not(:disabled) {
+  border-color: rgba(245, 136, 7, 0.95);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid rgba(245, 136, 7, 0.65);
+  outline-offset: 2px;
+}
+
+.trigger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Усередині рамки BookForm (без дубля обводки з SortByNavigation) */
+.triggerForm {
+  min-width: 0;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #f58807;
+  font-size: 18px;
+  padding: 4px 40px 4px 4px;
+}
+
+.triggerForm:hover:not(:disabled) {
+  border-color: transparent;
+}
+
+.triggerForm:focus-visible {
+  outline: 2px solid rgba(245, 136, 7, 0.45);
+  outline-offset: 1px;
+}
+
+.triggerForm .caret {
+  border-top-color: #f58807;
+}
+
+.triggerLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caret {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #f58807;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.trigger[aria-expanded="true"] .caret {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* Портал: контейнер списку */
+.listboxWrap {
+  /* Нижче за модалки (2000+), вище за контент сторінки */
+  z-index: 1800;
+  box-sizing: border-box;
+}
+
+.listbox {
+  margin: 0;
+  padding: clamp(8px, 1vw, 12px) 0;
+  list-style: none;
+  border: 1px solid #f58807;
+  border-radius: clamp(10px, 1.1vw, 14px);
+  background: rgba(12, 20, 26, 0.97);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  max-height: min(52vh, 420px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.option {
+  margin: 0;
+  padding: clamp(8px, 0.9vw, 11px) clamp(14px, 1.4vw, 18px);
+  color: #f58807;
+  font-size: clamp(12px, 1.1vw, 13px);
+  line-height: 1.35;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.optionLowercase {
+  text-transform: lowercase;
+}
+
+.option:hover,
+.optionHighlight {
+  background: rgba(245, 136, 7, 0.12);
+}
+
+.optionSelected {
+  background: rgba(245, 136, 7, 0.18);
+}
+
+.option[aria-selected="true"]:not(.optionHighlight) {
+  font-weight: 500;
+}

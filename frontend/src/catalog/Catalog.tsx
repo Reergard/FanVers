@@ -96,13 +96,14 @@ export default function Catalog() {
             onChange={(nextValue) => setSortBy(nextValue as SortKey)}
             ariaLabel="Сортування каталогу"
             labelText="Сортувати за"
+            showLabel={false}
           />
         </div>
 
         <div className="catalog-page__grid">
           {visibleBooks.map((book) => (
             <div key={book.id} className="catalog-page__cell">
-              <BookCard book={book} />
+              <BookCard book={book} showBookDescription />
             </div>
           ))}
         </div>

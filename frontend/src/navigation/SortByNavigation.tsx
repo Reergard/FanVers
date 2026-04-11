@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { PillDropdownSelect } from "../shared/PillDropdownSelect/PillDropdownSelect";
 import styles from "./SortByNavigation.module.css";
 
 type SortOption = {
@@ -12,6 +12,10 @@ type SortByNavigationProps = {
   onChange: (nextValue: string) => void;
   ariaLabel: string;
   labelText?: string;
+  /** Показати текст зліва від пігулки (наприклад «Сортувати за») */
+  showLabel?: boolean;
+  /** Підписи в списку — стилем як на макеті (lowercase) */
+  optionsLowercase?: boolean;
   className?: string;
 };
 
@@ -21,34 +25,22 @@ export function SortByNavigation({
   onChange,
   ariaLabel,
   labelText = "Сортувати",
+  showLabel = true,
+  optionsLowercase = false,
   className,
 }: SortByNavigationProps) {
-  const currentLabel = useMemo(
-    () => options.find((option) => option.value === value)?.label ?? "",
-    [options, value]
-  );
-
   const rootClassName = [styles.root, className].filter(Boolean).join(" ");
 
   return (
     <div className={rootClassName}>
-      <span className={styles.sortLabel}>{labelText}</span>
-      <label className={styles.sortPill}>
-        <span className={styles.sortPillText}>{currentLabel}</span>
-        <select
-          className={styles.sortSelect}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          aria-label={ariaLabel}
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <span className={styles.sortCaret} aria-hidden="true" />
-      </label>
+      {showLabel ? <span className={styles.sortLabel}>{labelText}</span> : null}
+      <PillDropdownSelect
+        value={value}
+        options={options}
+        onChange={onChange}
+        ariaLabel={ariaLabel}
+        optionsLowercase={optionsLowercase}
+      />
     </div>
   );
 }

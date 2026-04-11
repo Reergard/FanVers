@@ -28,6 +28,12 @@ function formatStat(value: number | string | undefined): string {
   return String(value);
 }
 
+function bookDescriptionPlain(text: string | null | undefined): string {
+  if (text == null) return "";
+  const stripped = String(text).replace(/<[^>]*>/g, " ");
+  return stripped.replace(/\s+/g, " ").trim();
+}
+
 function formatDateOnly(value: string | null | undefined): string {
   if (!value) return "—";
   if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
@@ -70,6 +76,8 @@ export type BookCardBase = {
   daily_views?: number | string;
   daily_income?: number | string;
   monthly_income?: number | string;
+  /** Короткий опис твору (з API); для картки каталогу за `showBookDescription` */
+  description?: string | null;
 };
 
 export type BookCardBook = BookCardBase;
@@ -80,6 +88,8 @@ type Props = {
   variant?: "default" | "withTags" | "bookmark" | "ad";
   /** Для variant=ad: опис книги */
   description?: string;
+  /** default: замість рядків статистики показати `book.description` (каталог) */
+  showBookDescription?: boolean;
 };
 
 type ExpandModal = "fandoms" | "tags" | "genres" | null;
@@ -135,7 +145,12 @@ function renderCoverOverlays(options: {
   );
 }
 
-export function BookCard({ book, variant = "default", description = "" }: Props) {
+export function BookCard({
+  book,
+  variant = "default",
+  description = "",
+  showBookDescription = false,
+}: Props) {
   const navigate = useNavigate();
   const slug = book.slug;
   const imageUrl = resolveBookCoverUrl(book.image);
@@ -155,6 +170,7 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
   }, [isAd, description, adMax480, adMax768, adMax1024]);
 
   const userBook = book as UserTranslationBook;
+  const catalogDescriptionText = bookDescriptionPlain(userBook.description ?? undefined);
   const allFandoms = getTagNames(book.fandoms);
   const allTags = getTagNames(book.tags);
   const allGenres = getTagNames(book.genres);
@@ -290,7 +306,7 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
     <article
       className={`bookCard ${withTags ? "bookCard--withTags" : ""}${
         withTags && !isAbandonedTranslation ? " bookCard--noTranslationStatus" : ""
-      }`}
+      }${!withTags && showBookDescription ? " bookCard--catalogWithDescription" : ""}`}
       data-variant={variant}
     >
       <div className="bookCard__cover">
@@ -408,6 +424,23 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
                 </div>
               </div>
             </>
+          ) : showBookDescription ? (
+            <>
+              <p
+                className={
+                  catalogDescriptionText
+                    ? "bookCard__catalogDescription"
+                    : "bookCard__catalogDescription bookCard__catalogDescription--empty"
+                }
+              >
+                {catalogDescriptionText || "—"}
+              </p>
+              {isAbandonedTranslation && (
+                <div className="bookCard__defaultAbandonedStatus bookCard__defaultAbandonedStatus--inMeta">
+                  <span className="bookCard__status">Статус: {abandonedStatusText}</span>
+                </div>
+              )}
+            </>
           ) : (
             <>
               <div className="bookCard__row">
@@ -434,7 +467,7 @@ export function BookCard({ book, variant = "default", description = "" }: Props)
           )}
         </div>
 
-        {!withTags && isAbandonedTranslation && (
+        {!withTags && isAbandonedTranslation && !showBookDescription && (
           <div className="bookCard__defaultAbandonedStatus">
             <span className="bookCard__status">Статус: {abandonedStatusText}</span>
           </div>
