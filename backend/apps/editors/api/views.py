@@ -1,21 +1,34 @@
+import uuid
+
 from rest_framework import status
-from rest_framework.decorators import api_view, parser_classes, permission_classes
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import (
+    api_view,
+    parser_classes,
+    permission_classes,
+    throttle_classes,
+)
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.conf import settings
 from apps.catalog.models import Chapter, Volume, Book, ChapterOrderContainer
 from apps.catalog.api.serializers import ChapterSerializer
-from .serializers import ChapterEditSerializer
 import os
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import mixins, viewsets
 from django.db.models import Q
 from ..models import ErrorReport
 from .serializers import ErrorReportSerializer
-import mammoth
 import logging
 from apps.catalog.utils import validate_docx_file
+from apps.editors.image_upload import (
+    ALLOWED_EDITOR_IMAGE_TYPES,
+    MAX_EDITOR_IMAGE_BYTES,
+    check_temp_editor_upload_rate,
+    validate_editor_image_raw,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -41,77 +54,351 @@ def update_chapter(request, chapter_id):
             {'error': 'У вас немає прав для редагування цього розділу'},
             status=status.HTTP_403_FORBIDDEN
         )
-    
+
+    new_uploaded_file = request.FILES.get("file")
+    old_file = chapter.file if chapter.file else None
+
     try:
-        old_file = chapter.file if chapter.file else None
-        new_uploaded_file = request.FILES.get("file")
-        
-        if 'title' in request.data:
-            chapter.title = request.data['title']
-            
-        if 'is_paid' in request.data:
-            chapter.is_paid = request.data.get('is_paid') == 'true'
-            if chapter.is_paid and 'price' in request.data:
+        with transaction.atomic():
+            chapter = Chapter.objects.select_for_update().select_related("book").get(id=chapter_id)
+            if request.user != chapter.book.owner:
+                return Response(
+                    {'error': 'У вас немає прав для редагування цього розділу'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            if "title" in request.data:
+                new_title = request.data["title"]
+                if not new_title or not str(new_title).strip():
+                    return Response(
+                        {"error": "Назва розділу не може бути порожньою"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                new_title = str(new_title).strip()
+                if len(new_title) > 255:
+                    return Response(
+                        {"error": "Назва розділу занадто довга (макс. 255 символів)"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                chapter.title = new_title
+
+            if "is_paid" in request.data:
+                chapter.is_paid = request.data.get("is_paid") == "true"
+                if chapter.is_paid and "price" in request.data:
+                    try:
+                        price = float(request.data["price"])
+                        if price > 0 and price <= 1000:
+                            chapter.price = price
+                    except (ValueError, TypeError):
+                        return Response(
+                            {"error": "Некоректна ціна"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                elif not chapter.is_paid:
+                    chapter.price = 1.00
+
+            if "volume" in request.data:
+                volume_id = request.data.get("volume")
+                if volume_id:
+                    vol = Volume.objects.filter(id=volume_id, book=chapter.book).first()
+                    if not vol:
+                        return Response(
+                            {"error": "Обраний том не належить цій книзі"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    chapter.volume = vol
+                else:
+                    chapter.volume = None
+
+            if new_uploaded_file is not None:
+                file_error = validate_docx_file(new_uploaded_file)
+                if file_error:
+                    return Response({"error": file_error}, status=status.HTTP_400_BAD_REQUEST)
+
+                ev_raw = request.data.get("expected_version")
+                if ev_raw is not None and ev_raw != "":
+                    try:
+                        ev = int(ev_raw)
+                    except (TypeError, ValueError):
+                        return Response(
+                            {"error": "expected_version має бути цілим числом"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    if chapter.content_version != ev:
+                        return Response(
+                            {
+                                "error": "conflict",
+                                "detail": "Контент змінено в іншій вкладці. Оновіть сторінку перед завантаженням .docx.",
+                                "server_version": chapter.content_version,
+                            },
+                            status=status.HTTP_409_CONFLICT,
+                        )
+
+                chapter.original_file_type = "docx"
+                chapter.file = new_uploaded_file
+
+            chapter.save()
+
+            if new_uploaded_file is not None and chapter.file:
+                chapter.original_file = chapter.file
+                chapter.save(update_fields=["original_file"])
+
+            if new_uploaded_file is not None and chapter.file and os.path.exists(chapter.file.path):
                 try:
-                    price = float(request.data['price'])
-                    if price > 0 and price <= 1000:
-                        chapter.price = price
-                except (ValueError, TypeError):
-                    return Response(
-                        {'error': 'Некоректна ціна'},
-                        status=status.HTTP_400_BAD_REQUEST
+                    from apps.catalog.services.docx_to_json import docx_to_content_json
+
+                    content_json = docx_to_content_json(
+                        docx_path=chapter.file.path,
+                        media_dir=settings.MEDIA_ROOT,
+                        book_slug=chapter.book.slug,
+                        chapter_slug=chapter.slug,
                     )
-            elif not chapter.is_paid:
-                chapter.price = 1.00
-            
-        if 'volume' in request.data:
-            volume_id = request.data.get('volume')
-            if volume_id:
-                vol = Volume.objects.filter(id=volume_id, book=chapter.book).first()
-                if not vol:
-                    return Response(
-                        {'error': 'Обраний том не належить цій книзі'},
-                        status=status.HTTP_400_BAD_REQUEST
+                    chapter.save_content(content_json)
+                except Exception as e:
+                    logger.error(
+                        "Помилка конвертації .docx для глави %s: %s",
+                        chapter.id,
+                        str(e),
                     )
-                chapter.volume = vol
-            else:
-                chapter.volume = None
 
-        if new_uploaded_file is not None:
-            file_error = validate_docx_file(new_uploaded_file)
-            if file_error:
-                return Response({"error": file_error}, status=status.HTTP_400_BAD_REQUEST)
-            chapter.file = new_uploaded_file
+            Book.mark_translation_owner_activity(chapter.book)
 
-        chapter.save()
-
-        # If file changed - regenerate HTML content to avoid stale reader content.
-        if new_uploaded_file is not None and chapter.file and os.path.exists(chapter.file.path):
+        if new_uploaded_file is not None and old_file and getattr(old_file, "path", None):
             try:
-                with open(chapter.file.path, "rb") as docx_file:
-                    result = mammoth.convert_to_html(docx_file)
-                    chapter.save_html_content(result.value)
-            except Exception as e:
-                logger.error("Ошибка при генерации HTML контента для главы %s: %s", chapter.id, str(e))
+                if os.path.isfile(old_file.path):
+                    os.remove(old_file.path)
+            except OSError:
+                pass
 
-            # Remove old file only after new one is safely saved.
-            if old_file and getattr(old_file, "path", None):
-                try:
-                    if os.path.isfile(old_file.path):
-                        os.remove(old_file.path)
-                except Exception:
-                    pass
-
-        Book.mark_translation_owner_activity(chapter.book)
-
-        serializer = ChapterSerializer(chapter, context={'request': request})
+        chapter.refresh_from_db()
+        serializer = ChapterSerializer(chapter, context={"request": request})
         return Response(serializer.data)
-        
+
     except Exception as e:
         return Response(
-            {'error': str(e)},
-            status=status.HTTP_400_BAD_REQUEST
+            {"error": str(e)},
+            status=status.HTTP_400_BAD_REQUEST,
         )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_chapter_content_json(request, chapter_id):
+    try:
+        chapter = Chapter.objects.select_related("book").get(id=chapter_id)
+    except Chapter.DoesNotExist:
+        return Response({"error": "Главу не знайдено"}, status=404)
+
+    if request.user != chapter.book.owner:
+        return Response({"error": "Доступ заборонено"}, status=403)
+
+    with transaction.atomic():
+        chapter = Chapter.objects.select_for_update().select_related("book").get(id=chapter_id)
+        if request.user != chapter.book.owner:
+            return Response({"error": "Доступ заборонено"}, status=403)
+
+        if not chapter.content_json:
+            if chapter.file and os.path.exists(chapter.file.path):
+                from apps.catalog.services.docx_to_json import docx_to_content_json
+
+                content_json = docx_to_content_json(
+                    docx_path=chapter.file.path,
+                    media_dir=settings.MEDIA_ROOT,
+                    book_slug=chapter.book.slug,
+                    chapter_slug=chapter.slug,
+                )
+                chapter.save_content(content_json)
+            elif chapter.html_content:
+                from apps.catalog.services.html_to_json import html_to_content_json
+
+                content_json = html_to_content_json(chapter.html_content)
+                chapter.save_content(content_json)
+            else:
+                return Response(
+                    {
+                        "content_json": {"type": "doc", "content": [{"type": "paragraph"}]},
+                        "content_version": chapter.content_version,
+                    }
+                )
+
+    chapter.refresh_from_db()
+    return Response(
+        {
+            "content_json": chapter.content_json,
+            "content_version": chapter.content_version,
+        }
+    )
+
+
+@api_view(["PUT", "POST"])
+@parser_classes([JSONParser])
+@permission_classes([IsAuthenticated])
+def save_chapter_content(request, chapter_id):
+    try:
+        chapter = Chapter.objects.select_related("book").get(id=chapter_id)
+    except Chapter.DoesNotExist:
+        return Response({"error": "Главу не знайдено"}, status=404)
+
+    if request.user != chapter.book.owner:
+        return Response({"error": "Доступ заборонено"}, status=403)
+
+    content_json = request.data.get("content")
+    if not content_json:
+        return Response({"error": "Поле content обов'язкове"}, status=400)
+
+    if not isinstance(content_json, dict):
+        return Response({"error": "content повинен бути JSON-об'єктом"}, status=400)
+
+    from apps.catalog.services.content_utils import (
+        validate_content_json,
+        content_json_byte_size,
+        MAX_CONTENT_JSON_SIZE,
+        relocate_temp_images,
+    )
+
+    if content_json_byte_size(content_json) > MAX_CONTENT_JSON_SIZE:
+        return Response({"error": "Контент занадто великий (макс. 5 МБ)"}, status=413)
+
+    if not validate_content_json(content_json):
+        return Response({"error": "Невалідна структура контенту"}, status=400)
+
+    expected_version = request.data.get("expected_version")
+    try:
+        with transaction.atomic():
+            chapter = Chapter.objects.select_for_update().select_related("book").get(id=chapter_id)
+            if request.user != chapter.book.owner:
+                return Response({"error": "Доступ заборонено"}, status=403)
+
+            if expected_version is not None:
+                try:
+                    ev = int(expected_version)
+                except (TypeError, ValueError):
+                    return Response(
+                        {"error": "expected_version має бути цілим числом"},
+                        status=400,
+                    )
+                if chapter.content_version != ev:
+                    return Response(
+                        {
+                            "error": "conflict",
+                            "detail": "Версію контенту змінено в іншій вкладці. Перезавантажте редактор.",
+                            "server_version": chapter.content_version,
+                        },
+                        status=status.HTTP_409_CONFLICT,
+                    )
+
+            content_json = relocate_temp_images(
+                content_json,
+                request.user.id,
+                chapter.book.slug,
+                chapter.slug,
+                settings.MEDIA_ROOT,
+                settings.MEDIA_URL,
+            )
+            chapter.save_content(content_json)
+    except ValueError as e:
+        return Response({"error": str(e)}, status=400)
+    except Exception as e:
+        return Response({"error": f"Помилка збереження: {str(e)}"}, status=500)
+
+    return Response(
+        {
+            "status": "ok",
+            "content_version": chapter.content_version,
+            "characters_count": chapter.plain_text_length,
+        }
+    )
+
+
+@api_view(["POST"])
+@parser_classes([MultiPartParser])
+@permission_classes([IsAuthenticated])
+@throttle_classes([ScopedRateThrottle])
+def upload_editor_image(request, chapter_id):
+    """Завантаження зображення для вставки в редактор (власник глави)."""
+    try:
+        chapter = Chapter.objects.select_related("book").get(id=chapter_id)
+    except Chapter.DoesNotExist:
+        return Response({"error": "Главу не знайдено"}, status=404)
+
+    if request.user != chapter.book.owner:
+        return Response({"error": "Доступ заборонено"}, status=403)
+
+    image_file = request.FILES.get("image")
+    if not image_file:
+        return Response({"error": "Файл зображення обов'язковий"}, status=400)
+
+    ctype = (image_file.content_type or "").lower()
+    if ctype not in ALLOWED_EDITOR_IMAGE_TYPES:
+        return Response(
+            {"error": "Дозволені формати: JPEG, PNG, GIF, WebP"},
+            status=400,
+        )
+
+    if image_file.size > MAX_EDITOR_IMAGE_BYTES:
+        return Response({"error": "Макс. розмір зображення — 5 МБ"}, status=400)
+
+    raw = image_file.read()
+    ext, verr = validate_editor_image_raw(raw)
+    if verr or not ext:
+        return Response({"error": verr or "Невалідне зображення"}, status=400)
+
+    filename = f"{chapter.slug}_{uuid.uuid4().hex[:10]}.{ext}"
+    rel_path = os.path.join("books", chapter.book.slug, "chapters", "images", filename)
+    rel_path = rel_path.replace("\\", "/")
+    abs_path = os.path.join(settings.MEDIA_ROOT, rel_path)
+    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+    with open(abs_path, "wb") as out:
+        out.write(raw)
+
+    url = f"{settings.MEDIA_URL.rstrip('/')}/{rel_path}"
+    return Response({"url": url}, status=status.HTTP_201_CREATED)
+
+
+upload_editor_image.throttle_scope = "editor_chapter_image"
+
+
+@api_view(["POST"])
+@parser_classes([MultiPartParser])
+@permission_classes([IsAuthenticated])
+def upload_temp_image(request):
+    """Тимчасове зображення до створення глави (лише для поточного користувача)."""
+    if not check_temp_editor_upload_rate(request.user.id):
+        return Response(
+            {"error": "Забагато завантажень. Спробуйте через кілька хвилин."},
+            status=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
+
+    image_file = request.FILES.get("image")
+    if not image_file:
+        return Response({"error": "Файл зображення обов'язковий"}, status=400)
+
+    ctype = (image_file.content_type or "").lower()
+    if ctype not in ALLOWED_EDITOR_IMAGE_TYPES:
+        return Response(
+            {"error": "Дозволені формати: JPEG, PNG, GIF, WebP"},
+            status=400,
+        )
+
+    if image_file.size > MAX_EDITOR_IMAGE_BYTES:
+        return Response({"error": "Макс. розмір зображення — 5 МБ"}, status=400)
+
+    raw = image_file.read()
+    ext, verr = validate_editor_image_raw(raw)
+    if verr or not ext:
+        return Response({"error": verr or "Невалідне зображення"}, status=400)
+
+    uid = int(request.user.id)
+    fname = f"{uuid.uuid4().hex[:12]}.{ext}"
+    rel_path = os.path.join("tmp", "editor-images", str(uid), fname)
+    rel_path = rel_path.replace("\\", "/")
+    abs_path = os.path.join(settings.MEDIA_ROOT, rel_path.replace("/", os.sep))
+    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+    with open(abs_path, "wb") as out:
+        out.write(raw)
+
+    url = f"{settings.MEDIA_URL.rstrip('/')}/{rel_path}"
+    return Response({"url": url}, status=status.HTTP_201_CREATED)
 
 
 def _normalize_container_order(book_id, volume_id):

@@ -11,7 +11,6 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR
 from rest_framework import status
 import os
-import mammoth
 import logging
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
@@ -219,36 +218,59 @@ def chapter_detail(request, book_slug, chapter_slug):
                         status=status.HTTP_403_FORBIDDEN
                     )
         
-        html_content = chapter.get_html_content()
-        
-        if html_content is None:
-            if not chapter.file or not os.path.exists(chapter.file.path):
-                return Response(
-                    {"error": "Файл розділу не знайдено"}, 
-                    status=status.HTTP_404_NOT_FOUND
+        html_content = chapter.rendered_html
+
+        if not html_content:
+            if chapter.content_json:
+                chapter.rebuild_derived()
+                chapter.save(
+                    update_fields=[
+                        "rendered_html",
+                        "html_content",
+                        "plain_text",
+                        "plain_text_length",
+                        "toc_json",
+                        "reading_time",
+                        "min_reading_time",
+                        "character_count",
+                        "characters_count",
+                    ]
                 )
-                
-            try:
-                with open(chapter.file.path, "rb") as docx_file:
-                    result = mammoth.convert_to_html(docx_file)
-                    html_content = result.value
-                    chapter.save_html_content(html_content)
-            except Exception:
-                return Response(
-                    {"error": "Помилка при конвертації файлу розділу"}, 
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-                
+                html_content = chapter.rendered_html
+            elif chapter.file and os.path.exists(chapter.file.path):
+                try:
+                    from apps.catalog.services.docx_to_json import docx_to_content_json
+
+                    content_json = docx_to_content_json(
+                        docx_path=chapter.file.path,
+                        media_dir=settings.MEDIA_ROOT,
+                        book_slug=chapter.book.slug,
+                        chapter_slug=chapter.slug,
+                    )
+                    chapter.save_content(content_json)
+                    html_content = chapter.rendered_html
+                except Exception:
+                    return Response(
+                        {"error": "Помилка при конвертації файлу розділу"},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    )
+            else:
+                html_content = chapter.html_content or chapter.get_html_content()
+
         if not html_content:
             return Response(
                 {"error": "Контент розділ недступний"}, 
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Отладочная информация
         book_owner_id = chapter.book.owner.id if chapter.book.owner else None
-        print(f"ChapterDetail API: book_id={chapter.book.id}, owner={chapter.book.owner}, book_owner_id={book_owner_id}")
-        
+        logger.debug(
+            "ChapterDetail API: book_id=%s chapter_id=%s book_owner_id=%s",
+            chapter.book.id,
+            chapter.id,
+            book_owner_id,
+        )
+
         return Response({
             'title': chapter.title,
             'content': html_content,
@@ -288,8 +310,19 @@ def add_chapter(request, slug):
             
         volume_id = request.data.get('volume')
         is_paid = request.data.get('is_paid', '').lower() == 'true'
-        title = request.data.get('title')
-        
+        title = request.data.get("title")
+        if not title or not str(title).strip():
+            return Response(
+                {"error": "Назва розділу обов'язкова"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        title = str(title).strip()
+        if len(title) > 255:
+            return Response(
+                {"error": "Назва розділу занадто довга (макс. 255 символів)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # Для бесплатных глав устанавливаем цену 0, для платных - берем из запроса
         if is_paid:
             try:
@@ -306,15 +339,50 @@ def add_chapter(request, slug):
             # Для бесплатных глав всегда устанавливаем цену 0
             price = Decimal('0.00')
             
-        if 'file' not in request.FILES:
-            return Response(
-                {'error': 'Файл розділу обов\'язковий'}, 
-                status=status.HTTP_400_BAD_REQUEST
+        uploaded = request.FILES.get("file")
+        editor_content_raw = request.data.get("editor_content")
+        editor_content_parsed = None
+
+        if uploaded is not None:
+            file_error = validate_docx_file(uploaded)
+            if file_error:
+                return Response({"error": file_error}, status=status.HTTP_400_BAD_REQUEST)
+        elif editor_content_raw:
+            try:
+                import json as _json
+
+                editor_content = (
+                    _json.loads(editor_content_raw)
+                    if isinstance(editor_content_raw, str)
+                    else editor_content_raw
+                )
+            except (_json.JSONDecodeError, TypeError, ValueError):
+                return Response(
+                    {"error": "Некоректний JSON у полі editor_content"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not isinstance(editor_content, dict):
+                return Response(
+                    {"error": "editor_content має бути об'єктом JSON"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            from apps.catalog.services.content_utils import (
+                validate_content_json,
+                content_json_byte_size,
+                MAX_CONTENT_JSON_SIZE,
             )
 
-        file_error = validate_docx_file(request.FILES.get("file"))
-        if file_error:
-            return Response({"error": file_error}, status=status.HTTP_400_BAD_REQUEST)
+            if content_json_byte_size(editor_content) > MAX_CONTENT_JSON_SIZE:
+                return Response(
+                    {"error": "Контент занадто великий (макс. 5 МБ)"},
+                    status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                )
+            if not validate_content_json(editor_content):
+                return Response(
+                    {"error": "Невалідна структура контенту"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            editor_content_parsed = editor_content
 
         vol_id = int(volume_id) if volume_id else None
         if vol_id is not None:
@@ -327,37 +395,63 @@ def add_chapter(request, slug):
             Book.objects.select_for_update().get(id=book.id)
             agg = Chapter.objects.filter(book=book, volume_id=vol_id).aggregate(Max('order'))
             next_order = (agg['order__max'] or 0) + 1
+            orig_type = ""
+            if uploaded is not None:
+                orig_type = "docx"
+            elif editor_content_parsed is not None:
+                orig_type = "editor"
             chapter = Chapter.objects.create(
                 book=book,
                 title=title,
-                file=request.FILES['file'],
+                file=uploaded if uploaded is not None else None,
+                original_file_type=orig_type,
                 volume_id=vol_id,
                 is_paid=is_paid,
                 price=price,
                 order=next_order,
             )
-        
-        # Обновляем last_updated книги при создании главы
-        book.last_updated = timezone.now()
-        book.save(update_fields=['last_updated'])
-        Book.mark_translation_owner_activity(book)
 
-        # Генерируем HTML контент сразу при создании главы
-        try:
-            with open(chapter.file.path, "rb") as docx_file:
-                result = mammoth.convert_to_html(docx_file)
-                html_content = result.value
-                chapter.save_html_content(html_content)
-        except Exception as e:
-            logger.error(f"Ошибка при генерации HTML контента для главы {chapter.id}: {str(e)}")
-            # Не прерываем создание главы, просто логируем ошибку
+            if uploaded is not None and chapter.file:
+                chapter.original_file = chapter.file
+                chapter.save(update_fields=["original_file"])
+
+            if uploaded is not None and chapter.file and os.path.exists(chapter.file.path):
+                try:
+                    from apps.catalog.services.docx_to_json import docx_to_content_json
+
+                    content_json = docx_to_content_json(
+                        docx_path=chapter.file.path,
+                        media_dir=settings.MEDIA_ROOT,
+                        book_slug=book.slug,
+                        chapter_slug=chapter.slug,
+                    )
+                    chapter.save_content(content_json)
+                except Exception as e:
+                    logger.error("Помилка конвертації .docx для глави %s: %s", chapter.id, str(e))
+            elif editor_content_parsed is not None:
+                from apps.catalog.services.content_utils import relocate_temp_images
+
+                relocated = relocate_temp_images(
+                    editor_content_parsed,
+                    request.user.id,
+                    book.slug,
+                    chapter.slug,
+                    settings.MEDIA_ROOT,
+                    settings.MEDIA_URL,
+                )
+                chapter.save_content(relocated)
+
+            book.last_updated = timezone.now()
+            book.save(update_fields=['last_updated'])
+        Book.mark_translation_owner_activity(book)
         
         serializer = ChapterSerializer(chapter)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
             
     except Exception as e:
+        logger.exception("add_chapter error for book=%s: %s", slug, e)
         return Response(
-            {'error': str(e)}, 
+            {'error': str(e)},
             status=status.HTTP_400_BAD_REQUEST
         )
 

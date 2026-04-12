@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(find D:WebsitedesingFan-versbackend -name *.py -path *chat* -type f)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

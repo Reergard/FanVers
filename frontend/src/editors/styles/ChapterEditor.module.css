@@ -1,0 +1,142 @@
+.editorWrapper {
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #1a1a2e;
+  overflow: hidden;
+  /* Не розширювати батьківський grid/flex довгим текстом без пробілів */
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.editorLoading {
+  padding: 2rem;
+  text-align: center;
+  color: #888;
+}
+
+.savingIndicator {
+  padding: 4px 12px;
+  background: #2a2a4a;
+  color: #f58807;
+  font-size: 0.8rem;
+  text-align: right;
+  border-bottom: 1px solid #333;
+}
+
+.editorContent {
+  padding: 1rem 1.5rem;
+  min-height: 400px;
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  color: #e0e0e0;
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.editorContent :global(.tiptap) {
+  outline: none;
+  min-height: 350px;
+  max-width: 100%;
+  min-width: 0;
+  /* Як у Word: довгі рядки без пробілів переносяться, а не розтягують верстку */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: normal;
+}
+
+.editorContent :global(.tiptap) p {
+  margin: 0.5em 0;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.editorContent :global(.tiptap) h1,
+.editorContent :global(.tiptap) h2,
+.editorContent :global(.tiptap) h3,
+.editorContent :global(.tiptap) h4 {
+  color: #f58807;
+  margin: 1em 0 0.5em;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.editorContent :global(.tiptap) blockquote {
+  border-left: 3px solid #f58807;
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  color: #aaa;
+  background: rgba(245, 136, 7, 0.05);
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.editorContent :global(.tiptap) img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 1em 0;
+}
+
+.editorContent :global(.tiptap) table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 100%;
+  margin: 1em 0;
+  table-layout: fixed;
+}
+
+.editorContent :global(.tiptap) td,
+.editorContent :global(.tiptap) th {
+  border: 1px solid #444;
+  padding: 8px;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  vertical-align: top;
+}
+
+.editorContent :global(.tiptap) th {
+  background: #2a2a4a;
+  font-weight: bold;
+}
+
+.editorContent :global(.tiptap) hr {
+  border: none;
+  border-top: 1px solid #444;
+  margin: 1.5em 0;
+}
+
+.editorContent :global(.tiptap) ul,
+.editorContent :global(.tiptap) ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.editorContent :global(.tiptap) li {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.editorContent :global(.tiptap) a {
+  color: #05b4c7;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.editorContent :global(.tiptap) p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #666;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+.editorContent :global(.tiptap) .ProseMirror-selectednode {
+  outline: 2px solid #f58807;
+}

@@ -648,6 +648,56 @@ export async function uploadChapter(
   return normalizeChapter(data);
 }
 
+/** Створити розділ без .docx (контент додається через редактор). */
+export async function createChapterWithoutFile(
+  slug: string,
+  title: string,
+  isPaid: boolean,
+  volumeId: number | null,
+  price: number
+): Promise<Chapter> {
+  const form = new FormData();
+  form.append("title", title.trim());
+  form.append("is_paid", isPaid ? "true" : "false");
+  if (volumeId != null) {
+    form.append("volume", String(volumeId));
+  }
+  form.append("price", String(price));
+
+  const { data } = await http.post<Record<string, unknown>>(
+    `${CATALOG}/books/${encodeURIComponent(slug)}/add_chapter/`,
+    form,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+  return normalizeChapter(data);
+}
+
+/** Одна транзакція: глава + content_json (без вікна «порожньої» глави). */
+export async function createChapterWithEditorContent(
+  slug: string,
+  title: string,
+  isPaid: boolean,
+  volumeId: number | null,
+  price: number,
+  editorContent: Record<string, unknown>
+): Promise<Chapter> {
+  const form = new FormData();
+  form.append("title", title.trim());
+  form.append("is_paid", isPaid ? "true" : "false");
+  if (volumeId != null) {
+    form.append("volume", String(volumeId));
+  }
+  form.append("price", String(price));
+  form.append("editor_content", JSON.stringify(editorContent));
+
+  const { data } = await http.post<Record<string, unknown>>(
+    `${CATALOG}/books/${encodeURIComponent(slug)}/add_chapter/`,
+    form,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+  return normalizeChapter(data);
+}
+
 /** Книги користувача (власні переклади та авторські твори) */
 export async function getUserTranslations(): Promise<UserTranslationBook[]> {
   const { data } = await http.get<Record<string, unknown>[]>(
@@ -808,6 +858,8 @@ export const catalogApi = {
   reorderChapters,
   moveChapter,
   uploadChapter,
+  createChapterWithoutFile,
+  createChapterWithEditorContent,
   getAllCatalogBooks,
   getUserTranslations,
   getAbandonedTranslations,

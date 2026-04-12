@@ -2,6 +2,9 @@ import { useState, useLayoutEffect, useEffect, useCallback, useRef } from "react
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { editorsApi, type ChapterForEdit } from "../api/editorsApi";
+import { getAccess } from "../auth/token";
+import { authStore } from "../auth/store";
+import { ChapterEditor } from "./components/ChapterEditor";
 import { catalogApi, catalogKeys } from "../api/catalogApi";
 import type { Volume } from "../api/catalogApi";
 import { useAuth } from "../auth/useAuth";
@@ -99,6 +102,16 @@ export default function EditChapter() {
   const [price, setPrice] = useState("1.00");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [editorMode, setEditorMode] = useState<"file" | "editor">("editor");
+  const [contentJson, setContentJson] = useState<Record<string, unknown> | null>(null);
+  const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const [isSavingContent, setIsSavingContent] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestContentRef = useRef<Record<string, unknown> | null>(null);
+  const contentVersionRef = useRef<number | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useLayoutEffect(() => {
@@ -158,6 +171,125 @@ export default function EditChapter() {
 
     return () => { cancelled = true; };
   }, [authReady, isAuthenticated, originalData?.book_slug]);
+
+  useEffect(() => {
+    if (editorMode !== "editor" || !chapterIdNum) return;
+    if (contentJson !== null) return;
+
+    let cancelled = false;
+    setIsLoadingContent(true);
+    editorsApi
+      .getChapterContent(chapterIdNum)
+      .then((data) => {
+        if (!cancelled) {
+          setContentJson(data.content_json);
+          contentVersionRef.current = data.content_version;
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          showError("Не вдалося завантажити контент для редактора");
+          setEditorMode("file");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingContent(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editorMode, contentJson, chapterIdNum, showError]);
+
+  const saveContent = useCallback(
+    async (json?: Record<string, unknown>): Promise<boolean> => {
+      const contentToSave = json ?? latestContentRef.current;
+      if (!contentToSave || !chapterIdNum) return false;
+
+      setIsSavingContent(true);
+      try {
+        const result = await editorsApi.saveChapterContent(chapterIdNum, contentToSave, {
+          expectedVersion: contentVersionRef.current,
+        });
+        contentVersionRef.current = result.content_version;
+        setHasUnsavedChanges(false);
+        return true;
+      } catch (err: unknown) {
+        if (err instanceof Error && err.message === "content_version_conflict") {
+          const ex = err as Error & { detail?: string };
+          showError(
+            typeof ex.detail === "string" && ex.detail
+              ? ex.detail
+              : "Версію контенту змінено в іншій вкладці."
+          );
+          try {
+            const fresh = await editorsApi.getChapterContent(chapterIdNum);
+            setContentJson(fresh.content_json);
+            contentVersionRef.current = fresh.content_version;
+          } catch {
+            showError("Не вдалося оновити контент після конфлікту");
+          }
+        } else {
+          showError("Помилка збереження контенту");
+        }
+        return false;
+      } finally {
+        setIsSavingContent(false);
+      }
+    },
+    [chapterIdNum, showError]
+  );
+
+  const handleContentChange = useCallback(
+    (json: Record<string, unknown>) => {
+      latestContentRef.current = json;
+      setHasUnsavedChanges(true);
+
+      if (autoSaveRef.current) {
+        clearTimeout(autoSaveRef.current);
+      }
+      autoSaveRef.current = setTimeout(() => {
+        void saveContent(json);
+      }, 3000);
+    },
+    [saveContent]
+  );
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!hasUnsavedChanges || !chapterIdNum || !latestContentRef.current) return;
+      const payload = JSON.stringify({
+        content: latestContentRef.current,
+        expected_version: contentVersionRef.current,
+      });
+      const payloadBytes = new Blob([payload]).size;
+      if (payloadBytes > 60_000) {
+        e.preventDefault();
+        return;
+      }
+      e.preventDefault();
+      const token = getAccess();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      if (authStore.csrfToken) headers["X-CSRFToken"] = authStore.csrfToken;
+      const url = `/api/editors/chapters/${chapterIdNum}/content/save/`;
+      void fetch(url, {
+        method: "POST",
+        credentials: "include",
+        headers,
+        body: payload,
+        keepalive: true,
+      });
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (autoSaveRef.current) {
+        clearTimeout(autoSaveRef.current);
+      }
+    };
+  }, [hasUnsavedChanges, chapterIdNum]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -225,8 +357,11 @@ export default function EditChapter() {
           formData.append("volume", selectedVolume || "");
         }
 
-        if (isFileChanged && file) {
+        if (editorMode === "file" && isFileChanged && file) {
           formData.append("file", file);
+          if (contentVersionRef.current != null) {
+            formData.append("expected_version", String(contentVersionRef.current));
+          }
         }
 
         await editorsApi.updateChapter(chapterIdNum, formData);
@@ -243,7 +378,19 @@ export default function EditChapter() {
         setIsSubmitting(false);
       }
     },
-    [title, isPaid, price, selectedVolume, file, isFileChanged, originalData, chapterIdNum, navigate, queryClient]
+    [
+      title,
+      isPaid,
+      price,
+      selectedVolume,
+      file,
+      isFileChanged,
+      editorMode,
+      originalData,
+      chapterIdNum,
+      navigate,
+      queryClient,
+    ]
   );
 
   if (!authReady) return <EditChapterLoader bookSlug={bookSlug} />;
@@ -283,35 +430,110 @@ export default function EditChapter() {
         </div>
 
         <div className={styles.field} style={{ marginTop: 8 }}>
-          <span className={styles.fieldPill}>Файл .docx (опційно)</span>
+          <span className={styles.fieldPill}>Контент розділу</span>
           <div className={styles.fieldBody}>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              onChange={handleFileChange}
-              className={styles.hiddenInput}
-              aria-label="Вибрати новий файл .docx"
-            />
-            <button
-              type="button"
-              className={styles.mainImageDrop}
-              onClick={() => fileInputRef.current?.click()}
-              style={{ maxWidth: 320 }}
-            >
-              {file ? (
-                <span className={styles.uploadText}>{file.name}</span>
-              ) : (
-                <>
-                  <div className={styles.uploadCircle}>
-                    <UploadCloudIcon className={styles.uploadIconMain} size={51} />
+            <p className={styles.modeHint}>
+              Це форма <strong>«Редагувати розділ»</strong> (інша сторінка, ніж додавання нового). Типово відкрито
+              редактор; новий .docx — режим «Файл .docx».
+            </p>
+            <div className={styles.modeSwitch} role="group" aria-label="Редактор або файл .docx">
+              <button
+                type="button"
+                className={`${styles.modeBtn} ${editorMode === "editor" ? styles.modeBtnActive : ""}`}
+                onClick={() => setEditorMode("editor")}
+                aria-pressed={editorMode === "editor"}
+              >
+                Редактор на сайті
+              </button>
+              <button
+                type="button"
+                className={`${styles.modeBtn} ${editorMode === "file" ? styles.modeBtnActive : ""}`}
+                onClick={() => {
+                  void (async () => {
+                    if (hasUnsavedChanges) {
+                      if (
+                        !window.confirm(
+                          "Є незбережені зміни в редакторі. Зберегти перед перемиканням на завантаження файлу?"
+                        )
+                      ) {
+                        return;
+                      }
+                      if (autoSaveRef.current) {
+                        clearTimeout(autoSaveRef.current);
+                        autoSaveRef.current = null;
+                      }
+                      const ok = await saveContent();
+                      if (!ok) return;
+                    }
+                    setContentJson(null);
+                    latestContentRef.current = null;
+                    setHasUnsavedChanges(false);
+                    setEditorMode("file");
+                  })();
+                }}
+                aria-pressed={editorMode === "file"}
+              >
+                Файл .docx
+              </button>
+            </div>
+
+            {editorMode === "file" ? (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={handleFileChange}
+                  className={styles.hiddenInput}
+                  aria-label="Вибрати новий файл .docx"
+                />
+                <button
+                  type="button"
+                  className={styles.mainImageDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{ maxWidth: 320, marginTop: 12 }}
+                >
+                  {file ? (
+                    <span className={styles.uploadText}>{file.name}</span>
+                  ) : (
+                    <>
+                      <div className={styles.uploadCircle}>
+                        <UploadCloudIcon className={styles.uploadIconMain} size={51} />
+                      </div>
+                      <span className={styles.uploadText}>
+                        {isFileChanged ? "Новий файл обрано" : "Вибрати новий файл .docx"}
+                      </span>
+                    </>
+                  )}
+                </button>
+              </>
+            ) : (
+              <>
+                {isLoadingContent ? (
+                  <div className={styles.editorPlaceholder}>Завантаження контенту…</div>
+                ) : (
+                  <ChapterEditor
+                    initialContent={contentJson}
+                    onContentChange={handleContentChange}
+                    isSaving={isSavingContent}
+                    onImageUpload={(file) => editorsApi.uploadEditorImage(chapterIdNum, file)}
+                  />
+                )}
+                {hasUnsavedChanges && (
+                  <div className={styles.unsavedHint}>
+                    Є незбережені зміни (автозбереження через 3 сек)
                   </div>
-                  <span className={styles.uploadText}>
-                    {isFileChanged ? "Новий файл обрано" : "Вибрати новий файл .docx"}
-                  </span>
-                </>
-              )}
-            </button>
+                )}
+                <button
+                  type="button"
+                  className={styles.saveContentBtn}
+                  onClick={() => void saveContent()}
+                  disabled={!hasUnsavedChanges || isSavingContent}
+                >
+                  {isSavingContent ? "Збереження…" : "Зберегти контент зараз"}
+                </button>
+              </>
+            )}
           </div>
         </div>
 

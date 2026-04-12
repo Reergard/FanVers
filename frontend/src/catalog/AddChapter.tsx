@@ -3,7 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Breadcrumb } from "../navigation/Breadcrumb";
 import { PageTitle } from "../navigation/PageTitle";
 import { useQueryClient } from "@tanstack/react-query";
-import { catalogApi, catalogKeys, type Book, type Volume } from "../api/catalogApi";
+import {
+  catalogApi,
+  catalogKeys,
+  type Book,
+  type Volume,
+} from "../api/catalogApi";
+import { editorsApi } from "../api/editorsApi";
+import { ChapterEditor } from "../editors/components/ChapterEditor";
 import { useAuth } from "../auth/useAuth";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { Container } from "../shared/Container";
@@ -12,6 +19,11 @@ import { FilterCheckbox } from "../shared/FilterCheckbox/FilterCheckbox";
 import styles from "./styles/AddChapter.module.css";
 
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+const EMPTY_EDITOR_DOC: Record<string, unknown> = {
+  type: "doc",
+  content: [{ type: "paragraph" }],
+};
 
 function isDocxFile(file: File): boolean {
   const type = file.type?.toLowerCase() || "";
@@ -101,6 +113,8 @@ export default function AddChapter() {
   const [selectedVolume, setSelectedVolume] = useState("");
   const [price, setPrice] = useState("1.00");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageUploadsInFlight, setImageUploadsInFlight] = useState(0);
+  const latestContentRef = useRef<Record<string, unknown> | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -192,13 +206,31 @@ export default function AddChapter() {
     setFile(selectedFile);
   }, []);
 
+  const handleContentDraftChange = useCallback((json: Record<string, unknown>) => {
+    latestContentRef.current = json;
+  }, []);
+
+  const handleEditorImageUpload = useCallback(async (file: File) => {
+    setImageUploadsInFlight((n) => n + 1);
+    try {
+      return await editorsApi.uploadTempImage(file);
+    } finally {
+      setImageUploadsInFlight((n) => Math.max(0, n - 1));
+    }
+  }, []);
+
   const handleUploadChapter = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       setError("");
 
-      if (!title?.trim() || !file) {
-        setError("Заповніть усі обов'язкові поля");
+      if (!title?.trim()) {
+        setError("Вкажіть назву розділу");
+        return;
+      }
+
+      if (imageUploadsInFlight > 0) {
+        setError("Зачекайте завершення завантаження зображень");
         return;
       }
 
@@ -218,19 +250,32 @@ export default function AddChapter() {
 
       setIsSubmitting(true);
       try {
-        await catalogApi.uploadChapter(
-          slug,
-          title.trim(),
-          file,
-          isPaid,
-          volumeId,
-          isPaid ? parseFloat(price) : 0
-        );
+        if (file) {
+          await catalogApi.uploadChapter(
+            slug,
+            title.trim(),
+            file,
+            isPaid,
+            volumeId,
+            isPaid ? parseFloat(price) : 0
+          );
+        } else {
+          await catalogApi.createChapterWithEditorContent(
+            slug,
+            title.trim(),
+            isPaid,
+            volumeId,
+            isPaid ? parseFloat(price) : 0,
+            latestContentRef.current ?? EMPTY_EDITOR_DOC
+          );
+        }
+
         setTitle("");
         setFile(null);
         setIsPaid(false);
         setSelectedVolume("");
         setPrice("1.00");
+        latestContentRef.current = null;
         if (fileInputRef.current) fileInputRef.current.value = "";
         await queryClient.invalidateQueries({ queryKey: catalogKeys.chapters(slug) });
         await queryClient.invalidateQueries({ queryKey: catalogKeys.book(slug) });
@@ -245,7 +290,7 @@ export default function AddChapter() {
         setIsSubmitting(false);
       }
     },
-    [slug, title, file, isPaid, price, selectedVolume, navigate, queryClient]
+    [slug, title, file, isPaid, price, selectedVolume, imageUploadsInFlight, navigate, queryClient]
   );
 
   if (!authReady) return <AddChapterLoader slug={slug} />;
@@ -285,33 +330,65 @@ export default function AddChapter() {
         </div>
 
         <div className={styles.field} style={{ marginTop: 8 }}>
-          <span className={styles.fieldPill}>Файл .docx</span>
+          <span className={styles.fieldPill}>Контент розділу</span>
           <div className={styles.fieldBody}>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              onChange={handleFileChange}
-              className={styles.hiddenInput}
-              aria-label="Вибрати файл .docx"
-            />
-            <button
-              type="button"
-              className={styles.mainImageDrop}
-              onClick={() => fileInputRef.current?.click()}
-              style={{ maxWidth: 320 }}
-            >
-              {file ? (
-                <span className={styles.uploadText}>{file.name}</span>
-              ) : (
-                <>
-                  <div className={styles.uploadCircle}>
-                    <UploadCloudIcon className={styles.uploadIconMain} size={51} />
-                  </div>
-                  <span className={styles.uploadText}>Вибрати файл .docx</span>
-                </>
-              )}
-            </button>
+            <p className={styles.modeHint}>
+              Це форма <strong>«Додати розділ»</strong> (кнопка зі сторінки вашої книги). Редактор завжди нижче.
+              Файл .docx не обов’язковий — якщо його обрати, при збереженні використається він замість тексту з
+              редактора.
+            </p>
+            <div className={styles.editorBlock}>
+              <ChapterEditor
+                initialContent={null}
+                onContentChange={handleContentDraftChange}
+                contentChangeDebounceMs={0}
+                onImageUpload={handleEditorImageUpload}
+              />
+            </div>
+
+            <div className={styles.docxOptional}>
+              <p className={styles.docxOptionalTitle}>Або завантажте готовий .docx</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={handleFileChange}
+                className={styles.hiddenInput}
+                aria-label="Вибрати файл .docx"
+              />
+              <div className={styles.docxRow}>
+                <button
+                  type="button"
+                  className={styles.mainImageDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{ maxWidth: 320 }}
+                >
+                  {file ? (
+                    <span className={styles.uploadText}>{file.name}</span>
+                  ) : (
+                    <>
+                      <div className={styles.uploadCircle}>
+                        <UploadCloudIcon className={styles.uploadIconMain} size={51} />
+                      </div>
+                      <span className={styles.uploadText}>Вибрати файл .docx</span>
+                    </>
+                  )}
+                </button>
+                {file ? (
+                  <button
+                    type="button"
+                    className={styles.clearFileBtn}
+                    onClick={() => {
+                      setFile(null);
+                      setError("");
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                  >
+                    Прибрати файл
+                  </button>
+                ) : null}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -372,7 +449,7 @@ export default function AddChapter() {
           <ActionButton
             type="submit"
             variant="primary"
-            disabled={isSubmitting}
+            disabled={isSubmitting || imageUploadsInFlight > 0}
             loading={isSubmitting}
             ariaLabel="Додати розділ"
           >

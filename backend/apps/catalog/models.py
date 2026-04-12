@@ -47,6 +47,10 @@ CHAPTER_HTML_ALLOWED_TAGS = frozenset(
         "h2",
         "h3",
         "h4",
+        "h5",
+        "h6",
+        "mark",
+        "hr",
         "span",
         "a",
         "table",
@@ -59,15 +63,26 @@ CHAPTER_HTML_ALLOWED_TAGS = frozenset(
         "blockquote",
         "sup",
         "sub",
+        "s",
+        "del",
     ]
 )
 
 CHAPTER_HTML_ALLOWED_ATTRS = {
-    "a": ["href", "title"],
-    "img": ["src", "alt", "title"],
-    "span": ["class"],
+    "a": ["href", "title", "target", "rel"],
+    "img": ["src", "alt", "title", "width", "height"],
+    "span": ["class", "style"],
+    "mark": ["style"],
     "td": ["colspan", "rowspan"],
     "th": ["colspan", "rowspan"],
+    "p": ["style"],
+    "h1": ["style"],
+    "h2": ["style"],
+    "h3": ["style"],
+    "h4": ["style"],
+    "h5": ["style"],
+    "h6": ["style"],
+    "s": [],
     "*": ["class"],
 }
 
@@ -93,12 +108,6 @@ def book_image_path(instance, filename):
     filename = clean_filename(filename)
     path = os.path.join('books', book_name)
     return os.path.join(path, filename)
-    # Отримуємо розширення файлу
-    ext = filename.split('.')[-1]
-    # Формуємо нове ім'я файлу
-    new_filename = f"{instance.slug}.{ext}"
-    # Повертаємо шлях для збереження
-    return f'books/images/{new_filename}'
 
 
 def book_directory_path(instance, filename):
@@ -528,7 +537,11 @@ class Chapter(models.Model):
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
     is_paid = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=1, db_index=True)
-    characters_count = models.IntegerField(default=0, verbose_name='Кількість символів')
+    characters_count = models.IntegerField(
+        default=0,
+        verbose_name='Кількість символів',
+        help_text='Застаріле ім’я поля; синхронізується з character_count автоматично.',
+    )
     html_content = models.TextField(blank=True, null=True)
     html_file_path = models.CharField(max_length=255, blank=True, null=True)
     price = models.DecimalField(
@@ -542,8 +555,39 @@ class Chapter(models.Model):
         ],
     )
     reading_time = models.IntegerField(default=0)  # час у секундах
-    character_count = models.IntegerField(default=0)
+    character_count = models.IntegerField(
+        default=0,
+        help_text="Канонічна кількість символів (plain text); characters_count дублює для сумісності.",
+    )
     min_reading_time = models.IntegerField(default=0)  # мінімальний час для зарахування прочитання
+
+    content_json = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name="Структурований контент (ProseMirror JSON)",
+        help_text="Основне джерело контенту глави",
+    )
+    content_version = models.PositiveIntegerField(default=1, verbose_name="Версія контенту")
+    rendered_html = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="HTML для відображення (генерується автоматично)",
+    )
+    plain_text = models.TextField(blank=True, null=True, verbose_name="Чистий текст для пошуку")
+    plain_text_length = models.IntegerField(default=0, verbose_name="Кількість символів чистого тексту")
+    toc_json = models.JSONField(null=True, blank=True, verbose_name="Зміст (заголовки глави)")
+    original_file = models.FileField(
+        upload_to=chapter_directory_path,
+        blank=True,
+        null=True,
+        verbose_name="Оригінальний завантажений файл",
+    )
+    original_file_type = models.CharField(
+        max_length=20,
+        blank=True,
+        default="",
+        verbose_name="Тип оригінального файлу (docx, editor)",
+    )
 
     class Meta:
         ordering = ['order']
@@ -592,15 +636,14 @@ class Chapter(models.Model):
         if not self.slug:
             self.slug = self.generate_unique_slug()    
         
-        # Підрахунок символів та часу читання (по тексту читача, не по сирих HTML-тегах)
-        if self.html_content:
+        # Якщо є content_json — похідні поля задає save_content / rebuild_derived
+        if not self.content_json and self.html_content:
             plain_len = _chapter_plain_text_len(self.html_content)
             self.character_count = plain_len
             self.characters_count = plain_len
-            # 3 хвилини на 1000 символів = 180 секунд на 1000 символів
-            self.reading_time = (plain_len / 1000) * 180
-            self.min_reading_time = self.reading_time * 0.75
-            
+            self.reading_time = int((plain_len / 1000) * 180) if plain_len else 0
+            self.min_reading_time = int(self.reading_time * 0.75) if self.reading_time else 0
+
         try:
             super().save(*args, **kwargs)
         except Exception as e:
@@ -629,8 +672,8 @@ class Chapter(models.Model):
             self.html_content = html_content
             self.character_count = plain_len
             self.characters_count = plain_len
-            self.reading_time = (plain_len / 1000) * 180 if plain_len else 0
-            self.min_reading_time = self.reading_time * 0.75 if self.reading_time else 0
+            self.reading_time = int((plain_len / 1000) * 180) if plain_len else 0
+            self.min_reading_time = int(self.reading_time * 0.75) if self.reading_time else 0
             self.save(
                 update_fields=[
                     "html_file_path",
@@ -643,6 +686,60 @@ class Chapter(models.Model):
             )
         except Exception as e:
             raise
+
+    def rebuild_derived(self):
+        """Перегенерує всі похідні поля з content_json."""
+        if not self.content_json:
+            self.rendered_html = None
+            self.plain_text = None
+            self.plain_text_length = 0
+            self.toc_json = None
+            self.reading_time = 0
+            self.min_reading_time = 0
+            return
+
+        from apps.catalog.services.json_to_html import render_content_json
+        from apps.catalog.services.content_utils import extract_plain_text, extract_toc
+
+        self.rendered_html = render_content_json(self.content_json)
+        self.plain_text = extract_plain_text(self.content_json)
+        self.plain_text_length = len(self.plain_text)
+        self.toc_json = extract_toc(self.content_json)
+
+        chars = self.plain_text_length
+        # Узгоджено з легасі save() / save_html_content: 180 с на 1000 символів (3 хв/1000)
+        self.reading_time = int((chars / 1000) * 180) if chars else 0
+        self.min_reading_time = int(self.reading_time * 0.75) if self.reading_time else 0
+
+        self.character_count = self.plain_text_length
+        self.characters_count = self.plain_text_length
+        self.html_content = self.rendered_html
+
+    def save_content(self, content_json: dict):
+        """Зберігає content_json, перегенерує похідні, інкрементує версію."""
+        from apps.catalog.services.content_utils import validate_content_json
+
+        if not validate_content_json(content_json):
+            raise ValueError("Невалідна структура content_json")
+
+        self.content_json = content_json
+        self.content_version += 1
+        self.rebuild_derived()
+
+        update_fields = [
+            "content_json",
+            "content_version",
+            "rendered_html",
+            "html_content",
+            "plain_text",
+            "plain_text_length",
+            "toc_json",
+            "reading_time",
+            "min_reading_time",
+            "character_count",
+            "characters_count",
+        ]
+        self.save(update_fields=update_fields)
 
     def get_html_content(self):
         try:

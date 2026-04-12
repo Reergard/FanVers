@@ -40,6 +40,16 @@ app.conf.beat_schedule = {
         'task': 'apps.analytics_books.tasks.repair_analytics_from_sources',
         'schedule': crontab(hour=2, minute=30),
     },
+
+    'cleanup-temp-editor-images': {
+        'task': 'apps.catalog.tasks.cleanup_old_temp_editor_images',
+        'schedule': crontab(minute=0),  # щогодини
+    },
+
+    'cleanup-orphan-chapter-images': {
+        'task': 'apps.catalog.tasks.cleanup_orphan_chapter_embedded_images',
+        'schedule': crontab(hour=4, minute=15),
+    },
 }
 
 # Пул воркера задається лише CLI: `celery worker -P solo` (Windows).

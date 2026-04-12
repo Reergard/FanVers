@@ -15,6 +15,26 @@ import styles from "./ChapterDetail.module.css";
 const prevLabel = "Попередній розділ";
 const nextLabel = "Наступний розділ";
 
+const STYLE_DECL_RE =
+  /^\s*(color|font-size|font-family|text-align|text-decoration|background-color)\s*:/i;
+
+let readerPurifyStyleHookInstalled = false;
+function ensureReaderPurifyStyleHook() {
+  if (readerPurifyStyleHookInstalled) return;
+  readerPurifyStyleHookInstalled = true;
+  DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+    if (!(node instanceof HTMLElement) || !node.hasAttribute("style")) return;
+    const style = node.getAttribute("style") || "";
+    const parts = style.split(";").filter((p) => {
+      const t = p.trim();
+      return t && STYLE_DECL_RE.test(t);
+    });
+    if (parts.length) node.setAttribute("style", parts.join(";"));
+    else node.removeAttribute("style");
+  });
+}
+ensureReaderPurifyStyleHook();
+
 const READER_HTML_PURIFY = {
   ALLOWED_TAGS: [
     "p",
@@ -30,6 +50,10 @@ const READER_HTML_PURIFY = {
     "h2",
     "h3",
     "h4",
+    "h5",
+    "h6",
+    "mark",
+    "hr",
     "span",
     "a",
     "table",
@@ -42,8 +66,24 @@ const READER_HTML_PURIFY = {
     "blockquote",
     "sup",
     "sub",
+    "s",
+    "del",
   ],
-  ALLOWED_ATTR: ["class", "href", "src", "alt", "title", "colspan", "rowspan"],
+  ALLOWED_ATTR: [
+    "class",
+    "href",
+    "src",
+    "alt",
+    "title",
+    "colspan",
+    "rowspan",
+    "style",
+    "target",
+    "rel",
+    "width",
+    "height",
+  ],
+  ALLOW_DATA_ATTR: false,
   FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover"],
   FORBID_TAGS: ["script", "iframe", "object", "embed", "form", "input"],
 };

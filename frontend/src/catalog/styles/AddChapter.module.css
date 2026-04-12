@@ -9,6 +9,8 @@
   display: grid;
   gap: clamp(18px, calc(2.2 * var(--vwu)), 34px);
   padding-bottom: clamp(28px, calc(3.5 * var(--vwu)), 64px);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .top {
@@ -51,6 +53,8 @@
 .field {
   position: relative;
   display: block;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .fieldPill {
@@ -76,6 +80,8 @@
   background: linear-gradient(180deg, var(--panelBg), var(--panelBg2));
   padding: 18px 16px 14px;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15) inset;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .field:focus-within .fieldBody {
@@ -188,6 +194,63 @@
   display: grid;
   place-items: center;
   padding-top: 8px;
+}
+
+.modeHint {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.modeHint strong {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.editorBlock {
+  margin-top: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.docxOptional {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px dashed rgba(245, 136, 7, 0.35);
+}
+
+.docxOptionalTitle {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.docxRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.clearFileBtn {
+  margin-top: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.clearFileBtn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
 }
 
 @media (max-width: 1024px) {

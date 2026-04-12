@@ -1,0 +1,94 @@
+.toolbar {
+  background: #16162a;
+  border-bottom: 1px solid #333;
+  padding: 6px 8px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.toolbarRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.toolbarRow:last-child {
+  margin-bottom: 0;
+}
+
+.toolbarGroup {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 8px;
+  border-right: 1px solid #333;
+  margin-right: 4px;
+}
+
+.toolbarGroup:last-child {
+  border-right: none;
+  padding-right: 0;
+  margin-right: 0;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 4px 6px;
+  background: transparent;
+  color: #ccc;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: inherit;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.btn:hover {
+  background: rgba(245, 136, 7, 0.15);
+  border-color: #f58807;
+}
+
+.btn.active {
+  background: rgba(245, 136, 7, 0.25);
+  border-color: #f58807;
+  color: #f58807;
+}
+
+.btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.select {
+  height: 32px;
+  padding: 4px 8px;
+  background: #1a1a2e;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  min-width: 80px;
+}
+
+.select:hover {
+  border-color: #f58807;
+}
+
+.hiddenInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}

@@ -1,6 +1,9 @@
 /* ===== PAGE ===== */
 .page {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* ===== NAV (top / bottom) ===== */
@@ -100,12 +103,24 @@
 /* ===== READER ===== */
 .reader {
   padding-bottom: clamp(18px, calc(3 * var(--vwu)), 30px);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .reader__inner {
+  box-sizing: border-box;
+  width: 100%;
   max-width: 980px;
   margin-inline: auto;
   padding-inline: var(--gutter);
+  min-width: 0;
+  overflow-x: hidden;
+  /* Як у редакторі / Word: довгі рядки без пробілів не розтягують блок */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: normal;
 }
 
 .reader__inner p,
@@ -115,6 +130,53 @@
   font-size: clamp(14px, calc(1.4 * var(--vwu)), 16px);
   line-height: 1.72;
   font-family: "Inter", sans-serif;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.reader__inner h1,
+.reader__inner h2,
+.reader__inner h3,
+.reader__inner h4,
+.reader__inner h5,
+.reader__inner h6 {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.reader__inner blockquote {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.reader__inner li {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.reader__inner a {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.reader__inner img {
+  max-width: 100%;
+  height: auto;
+}
+
+.reader__inner table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+}
+
+.reader__inner td,
+.reader__inner th {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  vertical-align: top;
 }
 
 .reader__inner p + p,

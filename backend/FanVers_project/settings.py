@@ -239,6 +239,7 @@ REST_FRAMEWORK = {
         'auth_refresh': '30/min',  # обновление токенов
         'auth_logout': '20/min',   # логаут
         'support_ticket': '10/hour',  # звернення в підтримку (на IP / user id)
+        'editor_chapter_image': '120/hour',  # зображення в редакторі (прив’язка до глави)
     }
 }
 
