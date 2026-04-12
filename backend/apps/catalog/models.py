@@ -104,10 +104,9 @@ def create_slug(title):
 
 
 def book_image_path(instance, filename):
-    book_name = slugify(instance.title)
+    slug = instance.slug or slugify(instance.title)
     filename = clean_filename(filename)
-    path = os.path.join('books', book_name)
-    return os.path.join(path, filename)
+    return os.path.join('books', slug, filename)
 
 
 def book_directory_path(instance, filename):

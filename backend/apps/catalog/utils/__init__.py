@@ -1,2 +1,3 @@
+from .docx_temp import clear_chapter_docx_filefields, delete_files_on_disk, write_uploaded_docx_to_temp
 from .docx_validation import validate_docx_file
 

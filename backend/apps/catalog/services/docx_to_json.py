@@ -73,7 +73,10 @@ def docx_to_content_json(
 
 
 def _has_num_pr(para) -> bool:
-    return para._element.find(qn("w:pPr/w:numPr")) is not None
+    pPr = para._element.find(qn("w:pPr"))
+    if pPr is None:
+        return False
+    return pPr.find(qn("w:numPr")) is not None
 
 
 def _paragraph_nodes(para, image_map: dict) -> list:

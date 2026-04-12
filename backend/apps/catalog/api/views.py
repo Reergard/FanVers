@@ -24,7 +24,7 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from apps.catalog.utils.errorUtils import get_error_codes
-from apps.catalog.utils import validate_docx_file
+from apps.catalog.utils import validate_docx_file, write_uploaded_docx_to_temp
 from apps.catalog.api.permissions import (
     IsBookOwner,
     IsNotBookOwner,
@@ -395,39 +395,33 @@ def add_chapter(request, slug):
             Book.objects.select_for_update().get(id=book.id)
             agg = Chapter.objects.filter(book=book, volume_id=vol_id).aggregate(Max('order'))
             next_order = (agg['order__max'] or 0) + 1
-            orig_type = ""
-            if uploaded is not None:
-                orig_type = "docx"
-            elif editor_content_parsed is not None:
-                orig_type = "editor"
             chapter = Chapter.objects.create(
                 book=book,
                 title=title,
-                file=uploaded if uploaded is not None else None,
-                original_file_type=orig_type,
+                file=None,
                 volume_id=vol_id,
                 is_paid=is_paid,
                 price=price,
                 order=next_order,
             )
 
-            if uploaded is not None and chapter.file:
-                chapter.original_file = chapter.file
-                chapter.save(update_fields=["original_file"])
-
-            if uploaded is not None and chapter.file and os.path.exists(chapter.file.path):
+            if uploaded is not None:
+                tmp_path = write_uploaded_docx_to_temp(uploaded)
                 try:
                     from apps.catalog.services.docx_to_json import docx_to_content_json
 
                     content_json = docx_to_content_json(
-                        docx_path=chapter.file.path,
+                        docx_path=tmp_path,
                         media_dir=settings.MEDIA_ROOT,
                         book_slug=book.slug,
                         chapter_slug=chapter.slug,
                     )
                     chapter.save_content(content_json)
-                except Exception as e:
-                    logger.error("Помилка конвертації .docx для глави %s: %s", chapter.id, str(e))
+                finally:
+                    try:
+                        os.unlink(tmp_path)
+                    except OSError:
+                        pass
             elif editor_content_parsed is not None:
                 from apps.catalog.services.content_utils import relocate_temp_images
 

@@ -22,7 +22,12 @@ from django.db.models import Q
 from ..models import ErrorReport
 from .serializers import ErrorReportSerializer
 import logging
-from apps.catalog.utils import validate_docx_file
+from apps.catalog.utils import (
+    validate_docx_file,
+    write_uploaded_docx_to_temp,
+    clear_chapter_docx_filefields,
+    delete_files_on_disk,
+)
 from apps.editors.image_upload import (
     ALLOWED_EDITOR_IMAGE_TYPES,
     MAX_EDITOR_IMAGE_BYTES,
@@ -56,7 +61,7 @@ def update_chapter(request, chapter_id):
         )
 
     new_uploaded_file = request.FILES.get("file")
-    old_file = chapter.file if chapter.file else None
+    files_to_delete: list[str] = []
 
     try:
         with transaction.atomic():
@@ -134,41 +139,31 @@ def update_chapter(request, chapter_id):
                             status=status.HTTP_409_CONFLICT,
                         )
 
-                chapter.original_file_type = "docx"
-                chapter.file = new_uploaded_file
-
             chapter.save()
 
-            if new_uploaded_file is not None and chapter.file:
-                chapter.original_file = chapter.file
-                chapter.save(update_fields=["original_file"])
-
-            if new_uploaded_file is not None and chapter.file and os.path.exists(chapter.file.path):
+            if new_uploaded_file is not None:
+                tmp_path = write_uploaded_docx_to_temp(new_uploaded_file)
                 try:
                     from apps.catalog.services.docx_to_json import docx_to_content_json
 
                     content_json = docx_to_content_json(
-                        docx_path=chapter.file.path,
+                        docx_path=tmp_path,
                         media_dir=settings.MEDIA_ROOT,
                         book_slug=chapter.book.slug,
                         chapter_slug=chapter.slug,
                     )
                     chapter.save_content(content_json)
-                except Exception as e:
-                    logger.error(
-                        "Помилка конвертації .docx для глави %s: %s",
-                        chapter.id,
-                        str(e),
-                    )
+                    files_to_delete = clear_chapter_docx_filefields(chapter)
+                finally:
+                    try:
+                        os.unlink(tmp_path)
+                    except OSError:
+                        pass
 
             Book.mark_translation_owner_activity(chapter.book)
 
-        if new_uploaded_file is not None and old_file and getattr(old_file, "path", None):
-            try:
-                if os.path.isfile(old_file.path):
-                    os.remove(old_file.path)
-            except OSError:
-                pass
+        # Транзакція закомічена — тепер безпечно видаляємо файли з диску
+        delete_files_on_disk(files_to_delete)
 
         chapter.refresh_from_db()
         serializer = ChapterSerializer(chapter, context={"request": request})
