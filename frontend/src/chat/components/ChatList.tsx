@@ -1,5 +1,5 @@
 import ghostIcon from "../../assets/icons/Ghost.svg";
-import chatFrameIcon from "../../assets/icons/рамкаsvg.svg";
+import chatFrameIcon from "../../assets/icons/framesvg.svg";
 import styles from "../Chat.module.css";
 import type { ChatListItem } from "../api/types";
 import { resolveAvatarUrl } from "../../shared/avatar/resolveAvatarUrl";

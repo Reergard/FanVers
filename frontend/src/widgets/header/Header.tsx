@@ -8,7 +8,6 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from "react"
 import type { CreateBookCtaMode } from "../../shared/MenuPanel/MenuPanel";
 import { useQuery } from "@tanstack/react-query";
 import logo from "../../assets/logos/logo.png";
-import mobileHomeBg from "../../assets/backgrounds/mobile_home_bg.svg";
 import mobileHeaderBg from "../../assets/backgrounds/mobile_header_bg.svg";
 import { UserMenuOverlay } from "./UserMenuOverlay/UserMenuOverlay";
 import { CreateBookReaderModal } from "./CreateBookReaderModal";
@@ -497,10 +496,7 @@ export function Header() {
         <>
           {/* Слой 1 (нижний): книга */}
           <div className={styles.heroBookZone} aria-hidden="true">
-            <div
-              className={styles.heroBook}
-              style={{ backgroundImage: `url(${mobileHomeBg})` }}
-            />
+            <div className={styles.heroBook} />
           </div>
           {/* Слой 3: лого поверх тучок */}
           <div className={styles.heroLogoZone} aria-hidden="true">

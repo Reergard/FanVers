@@ -52,16 +52,12 @@
     0 0 18px rgba(0, 0, 0, 0.35);
 }
 
-:global(.mg2-section .book-card) {
+:global(.mg2-section .bookCard) {
   --cover-w: clamp(126px, 9.5vw, 158px);
   width: 100%;
 }
 
-:global(.mg2-section .book-card-meta-block) {
-  display: none;
-}
-
-:global(.mg2-section .book-card-title) {
+:global(.mg2-section .bookCard__title) {
   margin-bottom: clamp(6px, 0.8vw, 10px);
 }
 
@@ -83,6 +79,21 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 6;
   line-clamp: 6;
+}
+
+/* Секція «Рекомендації» без карток (до API) */
+:global(.mg2-description.mg2-recommendationsPlaceholder) {
+  width: 100%;
+  max-width: 40rem;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: clamp(8px, 1vw, 12px);
+  padding: clamp(12px, 1.5vw, 20px) clamp(8px, 1vw, 16px) 0;
+  border-top: none;
+  text-align: center;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  display: block;
 }
 
 :global(.mg2-readBtn) {
@@ -151,29 +162,30 @@
 
   :global(.mg2-cardShell) {
     width: 273px;
-    height: 476px;
+    min-height: 476px;
+    height: auto;
     box-sizing: border-box;
     padding: 12px 10px 18px;
     border-radius: 18px;
   }
 
-  :global(.mg2-section .book-card) {
+  :global(.mg2-section .bookCard) {
     --cover-w: 152px;
   }
 
-  :global(.mg2-section .book-card-badge-18) {
+  :global(.mg2-section .bookCard__badge-18) {
     width: 30px;
     top: 8px;
     right: 8px;
   }
 
-  :global(.mg2-section .book-card-badge-new) {
+  :global(.mg2-section .bookCard__badge-new) {
     width: 76px;
     top: -8px;
     left: -16px;
   }
 
-  :global(.mg2-section .book-card-corner-a) {
+  :global(.mg2-section .bookCard__corner-a) {
     width: 52px;
     height: 38px;
     right: 8px;
@@ -181,7 +193,7 @@
     font-size: 38px;
   }
 
-  :global(.mg2-section .book-card-title) {
+  :global(.mg2-section .bookCard__title) {
     width: 248px;
     margin-bottom: 8px;
     padding: 0;
@@ -199,6 +211,18 @@
     line-height: 1.25;
     -webkit-line-clamp: 6;
     line-clamp: 6;
+  }
+
+  :global(.mg2-description.mg2-recommendationsPlaceholder) {
+    width: 100%;
+    max-width: 40rem;
+    min-height: 0;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 14px;
+    padding-top: 12px;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
   }
 
   :global(.mg2-readBtn) {

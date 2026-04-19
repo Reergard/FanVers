@@ -13,7 +13,11 @@ import bookDetailStyles from "../catalog/styles/BookDetail.module.css";
 import "./HomePage.module.css";
 
 import newsFrame from "./assets/backgrounds/news_section.svg";
-import newBookBg from "./assets/backgrounds/NewBook.svg";
+import newBook2084Avif from "./assets/backgrounds/NewBook-2084.avif";
+import newBook3126Avif from "./assets/backgrounds/NewBook-3126.avif";
+import newBook2084Webp from "./assets/backgrounds/NewBook-2084.webp";
+import newBook3126Webp from "./assets/backgrounds/NewBook-3126.webp";
+import newBook2084Png from "./assets/backgrounds/NewBook-2084.png";
 import bookDecorRaw from "./assets/backgrounds/book.svg?raw";
 import starIcon from "../assets/backgrounds/star_navigation_books.svg";
 import leftArrow from "../assets/backgrounds/left_arrow.svg";
@@ -270,14 +274,27 @@ function DesktopNewsBanner({
               </div>
             </div>
 
-            <img
-              src={newBookBg}
-              alt=""
-              aria-hidden="true"
-              className="mg2-desktopScene"
-              width={1042}
-              height={698}
-            />
+            <picture>
+              <source
+                type="image/avif"
+                srcSet={`${newBook2084Avif} 2084w, ${newBook3126Avif} 3126w`}
+                sizes="1042px"
+              />
+              <source
+                type="image/webp"
+                srcSet={`${newBook2084Webp} 2084w, ${newBook3126Webp} 3126w`}
+                sizes="1042px"
+              />
+              <img
+                src={newBook2084Png}
+                alt=""
+                aria-hidden="true"
+                className="mg2-desktopScene"
+                width={1042}
+                height={698}
+                decoding="async"
+              />
+            </picture>
 
             <div className="mg2-desktopSceneBadges" aria-hidden="true">
               <NewsCarouselSceneBadges book={book} />

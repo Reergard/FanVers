@@ -383,6 +383,29 @@
   /* bottom -Npx: нижний край фона ниже низа зоны — больше |N| = картинка ниже */
   background-position: center bottom -85px;
   pointer-events: none;
+
+  /* Phone: 1x = 1216px, 2x/3x = 1824px (для retina-телефонов).
+     Fallback для совсем старых браузеров — PNG 1216px. */
+  background-image: url('../../assets/backgrounds/mobile_home_bg-1216.png');
+  background-image: image-set(
+    url('../../assets/backgrounds/mobile_home_bg-1216.avif') type("image/avif") 1x,
+    url('../../assets/backgrounds/mobile_home_bg-1824.avif') type("image/avif") 2x,
+    url('../../assets/backgrounds/mobile_home_bg-1216.webp') type("image/webp") 1x,
+    url('../../assets/backgrounds/mobile_home_bg-1824.webp') type("image/webp") 2x
+  );
+}
+
+/* Tablets и крупные экраны: нужны более детальные варианты */
+@media (min-width: 600px) {
+  .heroBook {
+    background-image: url('../../assets/backgrounds/mobile_home_bg-1824.png');
+    background-image: image-set(
+      url('../../assets/backgrounds/mobile_home_bg-1824.avif') type("image/avif") 1x,
+      url('../../assets/backgrounds/mobile_home_bg-2432.avif') type("image/avif") 2x,
+      url('../../assets/backgrounds/mobile_home_bg-1824.webp') type("image/webp") 1x,
+      url('../../assets/backgrounds/mobile_home_bg-2432.webp') type("image/webp") 2x
+    );
+  }
 }
 
 .heroLogoZone {
