@@ -21,6 +21,7 @@ import editIcon from "../assets/icons/Edit.svg";
 import readIcon from "../assets/icons/read.svg";
 import downIcon from "../assets/icons/down.svg";
 import upIcon from "../assets/icons/up.svg";
+import { prefetchChapterEditor } from "../../editors/components/LazyChapterEditor";
 
 /** Витягує числовий id тому (захист від volume як об'єкта з API) */
 function toVolumeId(ch: Chapter): number | null {
@@ -393,7 +394,13 @@ export function BookChapters({
           <>
             <div className={styles.chapterActions}>
               {addChapterTo ? (
-                <ActionButton variant="primary" to={addChapterTo}>Додати розділ</ActionButton>
+                <ActionButton
+                  variant="primary"
+                  to={addChapterTo}
+                  onNavigateIntent={prefetchChapterEditor}
+                >
+                  Додати розділ
+                </ActionButton>
               ) : (
                 <ActionButton variant="primary" onClick={onAddChapter}>Додати розділ</ActionButton>
               )}

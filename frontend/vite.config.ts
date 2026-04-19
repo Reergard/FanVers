@@ -1,9 +1,20 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import type { PluginOption } from 'vite'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    visualizer({
+      filename: 'stats.html',
+      template: 'treemap',
+      gzipSize: true,
+      brotliSize: true,
+      open: false,
+    }) as PluginOption,
+  ],
   server: {
     host: true,
     port: 5173,
@@ -57,6 +68,39 @@ export default defineConfig({
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
+      },
+    },
+  },
+  build: {
+    chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/scheduler/')
+          ) {
+            return 'vendor-react';
+          }
+
+          if (id.includes('node_modules/react-router')) {
+            return 'vendor-router';
+          }
+
+          if (id.includes('node_modules/@tanstack/')) {
+            return 'vendor-query';
+          }
+
+          if (
+            id.includes('node_modules/@tiptap/') ||
+            id.includes('node_modules/prosemirror-')
+          ) {
+            return 'vendor-tiptap';
+          }
+        },
       },
     },
   },

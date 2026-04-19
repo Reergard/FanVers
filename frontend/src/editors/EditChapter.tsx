@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { editorsApi, type ChapterForEdit } from "../api/editorsApi";
 import { getAccess } from "../auth/token";
 import { authStore } from "../auth/store";
-import { ChapterEditor } from "./components/ChapterEditor";
+import { LazyChapterEditor } from "./components/LazyChapterEditor";
 import { catalogApi, catalogKeys } from "../api/catalogApi";
 import type { Volume } from "../api/catalogApi";
 import { useAuth } from "../auth/useAuth";
@@ -512,7 +512,7 @@ export default function EditChapter() {
                 {isLoadingContent ? (
                   <div className={styles.editorPlaceholder}>Завантаження контенту…</div>
                 ) : (
-                  <ChapterEditor
+                  <LazyChapterEditor
                     initialContent={contentJson}
                     onContentChange={handleContentChange}
                     isSaving={isSavingContent}

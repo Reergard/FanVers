@@ -35,6 +35,8 @@ type Props = {
   leftIcon?: React.ReactNode;
   /** Іконка справа від тексту */
   rightIcon?: React.ReactNode;
+  /** Для Link: викликати перед переходом (наприклад prefetch важкого чанку). */
+  onNavigateIntent?: () => void;
 };
 
 export function ActionButton({
@@ -53,6 +55,7 @@ export function ActionButton({
   loading = false,
   leftIcon,
   rightIcon,
+  onNavigateIntent,
 }: Props) {
   const isDisabled = disabled || loading;
   const cls = [
@@ -76,7 +79,14 @@ export function ActionButton({
   );
 
   const inner = to != null ? (
-    <Link to={to} className={cls} aria-label={ariaLabel} aria-busy={loading}>
+    <Link
+      to={to}
+      className={cls}
+      aria-label={ariaLabel}
+      aria-busy={loading}
+      onMouseEnter={onNavigateIntent}
+      onTouchStart={onNavigateIntent}
+    >
       {content}
     </Link>
   ) : as === "a" ? (

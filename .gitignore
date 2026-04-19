@@ -29,6 +29,9 @@ htmlcov/
 .env.development
 .env.production
 
+# Bundle analysis (rollup-plugin-visualizer)
+frontend/stats.html
+
 # Node/React
 node_modules/
 **/node_modules/

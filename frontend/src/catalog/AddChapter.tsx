@@ -10,7 +10,7 @@ import {
   type Volume,
 } from "../api/catalogApi";
 import { editorsApi } from "../api/editorsApi";
-import { ChapterEditor } from "../editors/components/ChapterEditor";
+import { LazyChapterEditor } from "../editors/components/LazyChapterEditor";
 import { useAuth } from "../auth/useAuth";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { Container } from "../shared/Container";
@@ -338,7 +338,7 @@ export default function AddChapter() {
               редактора.
             </p>
             <div className={styles.editorBlock}>
-              <ChapterEditor
+              <LazyChapterEditor
                 initialContent={null}
                 onContentChange={handleContentDraftChange}
                 contentChangeDebounceMs={0}
