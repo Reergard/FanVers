@@ -482,7 +482,7 @@
   display: none;
 }
 
-/* Кнопка "Змінити фото профілю" — овальная рамка + иконка */
+/* Кнопка "Змінити фото профілю" — овальная рамка + иконка (у розмітці — <label for="…">) */
 .btnPhotoChange {
   display: inline-flex;
   align-items: center;
@@ -490,6 +490,21 @@
   gap: clamp(6px, 0.8vw, 10px);
   border-radius: 9999px;
   padding: clamp(8px, 1vw, 10px);
+  cursor: pointer;
+  touch-action: manipulation;
+  /* Уся площа рамки + текст + SVG — одна ціль для кліку (нативна поведінка label↔input) */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.avatarWithBtnWrap .btnPhotoChange {
+  position: relative;
+  z-index: 2;
+}
+
+.btnPhotoChangeDisabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  pointer-events: none;
 }
 
 .btnPhotoChange .iconPhotoChange {

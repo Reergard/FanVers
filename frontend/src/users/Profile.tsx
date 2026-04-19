@@ -45,6 +45,7 @@ function stripSvgFilter(svg: string): string {
 
 const AVATAR_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const PROFILE_AVATAR_FILE_INPUT_ID = "profile-avatar-file-input";
 
 /** Узгоджено з бекендом `ProfileAboutUpdateSerializer` */
 const PROFILE_ABOUT_MAX_LEN = 2500;
@@ -605,26 +606,28 @@ export default function Profile() {
                 </div>
               </div>
               <input
+                id={PROFILE_AVATAR_FILE_INPUT_ID}
                 ref={fileInputRef}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={handleAvatarChange}
                 style={{ display: "none" }}
-                aria-hidden="true"
-              />
-              <button
-                type="button"
-                className={`${styles.btnOutlineGold} ${styles.btnPhotoChange}`}
-                onClick={() => fileInputRef.current?.click()}
+                tabIndex={-1}
                 disabled={uploadAvatarMutation.isPending}
+              />
+              <label
+                htmlFor={PROFILE_AVATAR_FILE_INPUT_ID}
+                className={`${styles.btnOutlineGold} ${styles.btnPhotoChange} ${
+                  uploadAvatarMutation.isPending ? styles.btnPhotoChangeDisabled : ""
+                }`}
               >
-              <span className={styles.btnTextDesktop}>
-                {uploadAvatarMutation.isPending ? "Завантаження..." : "Змінити фото профілю"}
-              </span>
-              <svg className={styles.iconPhotoChange} viewBox="0 0 21 21" aria-hidden="true">
-                <use href="#photo-change" />
-              </svg>
-            </button>
+                <span className={styles.btnTextDesktop}>
+                  {uploadAvatarMutation.isPending ? "Завантаження..." : "Змінити фото профілю"}
+                </span>
+                <svg className={styles.iconPhotoChange} viewBox="0 0 21 21" aria-hidden="true">
+                  <use href="#photo-change" />
+                </svg>
+              </label>
             </div>
           </aside>
 
