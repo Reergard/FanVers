@@ -33,14 +33,21 @@ export function RegisterForm({ onSuccess }: Props) {
     setLoading(true);
 
     try {
-      await registerSession({
+      const result = await registerSession({
         username,
         email,
         password,
         re_password: rePassword,
         remember_me: rememberMe,
       });
-      notification.showSuccess("Реєстрація успішна! Ви увійшли в систему.");
+      if (result?.access) {
+        notification.showSuccess("Реєстрація успішна! Ви увійшли в систему.");
+      } else {
+        notification.showSuccess(
+          result?.detail ||
+            "Реєстрація успішна! Для завершення реєстрації перевірте пошту та підтвердіть email."
+        );
+      }
       onSuccess?.();
     } catch (error: unknown) {
       logDeveloperError("RegisterForm", error);

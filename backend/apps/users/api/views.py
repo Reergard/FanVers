@@ -270,6 +270,21 @@ class RegisterView(APIView):
             # Если включен activation flow и пользователь ещё не активирован —
             # не логиним и не выдаём токены (согласовано с LoginView).
             if not getattr(user, "is_active", True):
+                # Отправляем письмо активации (djoser ActivationEmail).
+                # RegisterView кастомный, поэтому djoser.perform_create не вызывается —
+                # письмо нужно отправлять здесь вручную.
+                try:
+                    from djoser.email import ActivationEmail
+                    ActivationEmail(request, {"user": user}).send(to=[user.email])
+                    if settings.DEBUG:
+                        logger.info(
+                            f"📝 [RegisterView] Activation email отправлен на {user.email}"
+                        )
+                except Exception as e:
+                    logger.error(
+                        f"📝 [RegisterView] Ошибка отправки activation email: {str(e)}",
+                        exc_info=True,
+                    )
                 return Response(
                     {"detail": "Реєстрація успішна. Підтвердіть email для входу."},
                     status=status.HTTP_201_CREATED,
