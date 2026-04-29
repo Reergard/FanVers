@@ -19,7 +19,6 @@ from django.conf import settings
 from decimal import Decimal
 from django.contrib.auth.password_validation import validate_password
 import uuid
-import time
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
@@ -46,26 +45,26 @@ class CreateUserSerializer(UserCreateSerializer):
         return attrs
     
     def save(self, **kwargs):
-        logger.info(f"📧 [CreateUserSerializer] === START USER CREATION ===")
-        logger.info(f"📧 [CreateUserSerializer] Time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-        logger.info(f"📧 [CreateUserSerializer] Username: {self.validated_data.get('username', 'N/A')}")
-        logger.info(f"📧 [CreateUserSerializer] Email: {self.validated_data.get('email', 'N/A')}")
-        
+        logger.info(
+            "[CreateUserSerializer] Creating user: username=%s, email=%s",
+            self.validated_data.get("username"),
+            self.validated_data.get("email"),
+        )
         try:
-            logger.info(f"📧 [CreateUserSerializer] Шаг 1: Вызываем родительский save() (Djoser отправит activation email)...")
             user = super().save(**kwargs)
-            logger.info(f"📧 [CreateUserSerializer] Шаг 1: Пользователь создан: {user.username} (ID: {user.id})")
-            logger.info(f"📧 [CreateUserSerializer] Шаг 1: Email пользователя: {user.email}")
-            logger.info(f"📧 [CreateUserSerializer] Шаг 1: is_active: {user.is_active}")
-            
-            # Djoser автоматически отправляет activation email если SEND_ACTIVATION_EMAIL=True
-            # Логирование отправки будет в email backend
-            logger.info(f"📧 [CreateUserSerializer] Шаг 2: Djoser должен отправить activation email (если SEND_ACTIVATION_EMAIL=True)")
-            logger.info(f"📧 [CreateUserSerializer] === USER CREATION COMPLETE ===")
-            
+            logger.info(
+                "[CreateUserSerializer] User created: id=%s, is_active=%s. "
+                "Activation email is sent from RegisterView, not here.",
+                user.id,
+                user.is_active,
+            )
             return user
         except Exception as e:
-            logger.error(f"📧 [CreateUserSerializer] Ошибка при создании пользователя: {str(e)}", exc_info=True)
+            logger.error(
+                "[CreateUserSerializer] User creation failed: %s",
+                str(e),
+                exc_info=True,
+            )
             raise
 
 

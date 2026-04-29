@@ -6,6 +6,14 @@ export const API = {
   logout: "/api/users/logout/",
   authStatus: "/api/users/auth-status/",
   oauthExchange: "/api/users/oauth-exchange/",
+  // Djoser email activation endpoints
+  activateAccount: "/api/auth/users/activation/",
+  resendActivation: "/api/auth/users/resend_activation/",
+  // Djoser password / username reset
+  resetPassword: "/api/auth/users/reset_password/",
+  resetPasswordConfirm: "/api/auth/users/reset_password_confirm/",
+  resetUsername: "/api/auth/users/reset_username/",
+  resetUsernameConfirm: "/api/auth/users/reset_username_confirm/",
   // social_django default routes: /api/auth/login/<backend>/
   // (backend names: "google-oauth2", "facebook", etc.)
   oauthBegin: (provider: "google-oauth2" | "facebook") => `/api/auth/login/${provider}/`,

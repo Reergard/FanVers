@@ -69,18 +69,45 @@ DJOSER = {
 
 Модель `User.is_active = False` по умолчанию — новые юзеры неактивны до подтверждения email.
 
-**⚠️ Текущее ограничение:** регистрация идёт через кастомный `RegisterView` (`apps/users/api/views.py`), а не через djoser (`POST /api/auth/users/`). Djoser отправляет activation email в `UserViewSet.perform_create()`, который в кастомном потоке не вызывается. **Письмо активации сейчас не отправляется**, хотя SMTP-инфраструктура готова.
+### Активация email — реализация
 
-Для включения активации email нужно в `RegisterView.post()` после `user = serializer.save()` добавить:
+Регистрация идёт через кастомный `RegisterView` (`apps/users/api/views.py`). Djoser-овский
+`UserViewSet.perform_create` в этом flow не вызывается, поэтому письмо активации
+отправляется **вручную** внутри `RegisterView.post()` сразу после `serializer.save()`:
 
 ```python
-from djoser.email import ActivationEmail
-ActivationEmail(request, {'user': user}).send(to=[user.email])
+if not getattr(user, "is_active", True):
+    from djoser.email import ActivationEmail
+    ActivationEmail(request, {"user": user}).send(to=[user.email])
+    return Response(
+        {"detail": "Реєстрація успішна. Підтвердіть email для входу."},
+        status=status.HTTP_201_CREATED,
+    )
 ```
 
-или эмит сигнала `djoser.signals.user_registered.send(...)`.
+Шаблон письма — `backend/templates/email/activation.html` (кастомный с брендингом FanVers, ссылки с `https://`).
 
-Также требуется фронтенд-страница `/activate/:uid/:token`, которая POST-ит `{uid, token}` на `/api/auth/users/activation/` (djoser-эндпоинт).
+Эндпоинты djoser на `/api/auth/`:
+
+- `POST /api/auth/users/activation/` — тело `{uid, token}` (фронт: страница `/activate/:uid/:token`).
+- `POST /api/auth/users/resend_activation/` — тело `{email}` для повторной отправки.
+
+### Production: переменная `DOMAIN` в `.env`
+
+В `FanVers_project/settings.py` задаётся `DOMAIN = env("DOMAIN")` — djoser подставляет это значение в ссылки писем. На сервере проверьте:
+
+```bash
+cd /path/to/backend
+grep "^DOMAIN=" .env
+grep "^FRONTEND_URL=" .env
+```
+
+Ожидаемо для продакшена:
+
+- `DOMAIN=fan-vers.com` (без `http://`, без завершающего `/`)
+- `FRONTEND_URL=https://fan-vers.com` (если используется в других местах проекта)
+
+После изменения `.env` перезапустите gunicorn (или ваш процесс приложения).
 
 ## OAuth (Google/Facebook)
 
@@ -134,11 +161,12 @@ send_mail(
 ## Файлы и ответственность
 
 - `apps/users/email_backend.py` — `LoggingEmailBackend` (SMTP + логирование).
-- `apps/users/api/views.py` — `RegisterView` (создание юзера; отправка activation email **пока не добавлена**).
-- `apps/users/api/serializers.py` — `CreateUserSerializer` (наследует `djoser.serializers.UserCreateSerializer`).
+- `apps/users/api/views.py` — `RegisterView` (создание юзера; отправка activation email из `RegisterView` для неактивных пользователей).
+- `apps/users/api/serializers.py` — `CreateUserSerializer` (создание пользователя; письмо активации **не** из сериализатора).
+- `templates/email/*.html` — кастомные шаблоны писем djoser (активация, сброс пароля/логина, подтверждения).
 - `apps/users/social_pipeline.py` — `activate_social_user` для OAuth.
-- `apps/api/urls.py` — подключение `djoser.urls` на `/api/auth/` (активация, сброс пароля работают из коробки при вызове напрямую).
-- `FanVers_project/settings.py` — DJOSER, EMAIL_*, SOCIAL_AUTH_*.
+- `apps/api/urls.py` — подключение `djoser.urls` на `/api/auth/` (активация, сброс пароля и т.д.).
+- `FanVers_project/settings.py` — DJOSER, EMAIL_*, `DOMAIN`, SOCIAL_AUTH_*.
 
 ## Безопасность
 

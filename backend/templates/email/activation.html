@@ -1,0 +1,58 @@
+{% load i18n %}
+
+{% block subject %}
+Підтвердження реєстрації на FanVers
+{% endblock subject %}
+
+{% block text_body %}
+Вітаємо, {{ user.username }}!
+
+Дякуємо за реєстрацію на FanVers. Для завершення реєстрації перейдіть за посиланням:
+
+https://{{ domain }}/{{ url|safe }}
+
+Посилання дійсне протягом 3 днів.
+
+Якщо ви не реєструвались — просто проігноруйте цей лист.
+
+З повагою,
+Команда FanVers
+{% endblock text_body %}
+
+{% block html_body %}
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#1a1a2e;font-family:Arial,sans-serif;color:#fff;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a2e;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#2a2a4a;border-radius:12px;padding:32px;">
+          <tr><td style="text-align:center;padding-bottom:24px;">
+            <h1 style="color:#fff;margin:0;">FanVers</h1>
+          </td></tr>
+          <tr><td style="color:#e0e0e0;font-size:16px;line-height:1.6;">
+            <p>Вітаємо, <strong>{{ user.username }}</strong>!</p>
+            <p>Дякуємо за реєстрацію. Щоб завершити реєстрацію, натисніть кнопку нижче:</p>
+            <p style="text-align:center;padding:24px 0;">
+              <a href="https://{{ domain }}/{{ url|safe }}"
+                 style="display:inline-block;padding:14px 32px;background:#6a4ed3;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;">
+                Підтвердити email
+              </a>
+            </p>
+            <p style="font-size:13px;color:#999;">
+              Якщо кнопка не працює, скопіюйте посилання в браузер:<br>
+              <a href="https://{{ domain }}/{{ url|safe }}" style="color:#9b8cff;word-break:break-all;">
+                https://{{ domain }}/{{ url|safe }}
+              </a>
+            </p>
+            <p style="font-size:13px;color:#999;">Посилання дійсне протягом 3 днів.</p>
+            <p style="font-size:13px;color:#999;">Якщо ви не реєструвались — проігноруйте цей лист.</p>
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+{% endblock html_body %}

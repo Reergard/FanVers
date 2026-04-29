@@ -66,6 +66,18 @@ const UserAgreementPage = lazy(() => import("./info/legal/user-agreement"));
 const OAuthCallbackPage = lazy(() =>
   import("./auth/OAuthCallbackPage").then((m) => ({ default: m.OAuthCallbackPage }))
 );
+const ActivateAccountPage = lazy(() =>
+  import("./auth/ActivateAccountPage").then((m) => ({ default: m.ActivateAccountPage }))
+);
+const RequestPasswordResetPage = lazy(() =>
+  import("./auth/RequestPasswordResetPage").then((m) => ({ default: m.RequestPasswordResetPage }))
+);
+const PasswordResetConfirmPage = lazy(() =>
+  import("./auth/PasswordResetConfirmPage").then((m) => ({ default: m.PasswordResetConfirmPage }))
+);
+const UsernameResetConfirmPage = lazy(() =>
+  import("./auth/UsernameResetConfirmPage").then((m) => ({ default: m.UsernameResetConfirmPage }))
+);
 
 const queryClient = new QueryClient();
 
@@ -106,6 +118,38 @@ export default function App() {
                 element={
                   <Suspense fallback={<div style={{ padding: 48, textAlign: "center", color: "rgba(255,255,255,0.8)" }}>Завантаження…</div>}>
                     <OAuthCallbackPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/activate/:uid/:token"
+                element={
+                  <Suspense fallback={<div style={{ padding: 48, textAlign: "center", color: "rgba(255,255,255,0.8)" }}>Завантаження…</div>}>
+                    <ActivateAccountPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/password/reset"
+                element={
+                  <Suspense fallback={<div style={{ padding: 48, textAlign: "center", color: "rgba(255,255,255,0.8)" }}>Завантаження…</div>}>
+                    <RequestPasswordResetPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/password/reset/confirm/:uid/:token"
+                element={
+                  <Suspense fallback={<div style={{ padding: 48, textAlign: "center", color: "rgba(255,255,255,0.8)" }}>Завантаження…</div>}>
+                    <PasswordResetConfirmPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/username/reset/confirm/:uid/:token"
+                element={
+                  <Suspense fallback={<div style={{ padding: 48, textAlign: "center", color: "rgba(255,255,255,0.8)" }}>Завантаження…</div>}>
+                    <UsernameResetConfirmPage />
                   </Suspense>
                 }
               />

@@ -7,6 +7,7 @@ import { SocialLoginButton } from "./SocialLoginButton";
 import { registerSession } from "./service";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { extractUserMessage, logDeveloperError } from "../shared/utils/errorUtils";
+import { PasswordInput } from "./PasswordInput";
 import styles from "./AuthForms.module.css";
 
 type Props = {
@@ -99,15 +100,13 @@ export function RegisterForm({ onSuccess }: Props) {
         <label htmlFor="register-password" className={styles.label}>
           Пароль
         </label>
-        <input
+        <PasswordInput
           id="register-password"
           name="password"
-          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="new-password"
-          className={styles.input}
           disabled={loading}
         />
       </div>
@@ -116,15 +115,13 @@ export function RegisterForm({ onSuccess }: Props) {
         <label htmlFor="register-re-password" className={styles.label}>
           Підтвердження пароля
         </label>
-        <input
+        <PasswordInput
           id="register-re-password"
           name="password_confirm"
-          type="password"
           value={rePassword}
           onChange={(e) => setRePassword(e.target.value)}
           required
           autoComplete="new-password"
-          className={styles.input}
           disabled={loading}
         />
       </div>

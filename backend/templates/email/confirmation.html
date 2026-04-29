@@ -1,0 +1,19 @@
+{% load i18n %}
+
+{% block subject %}
+FanVers — акаунт активовано
+{% endblock subject %}
+
+{% block text_body %}
+Вітаємо, {{ user.username }}!
+
+Ваш акаунт на FanVers підтверджено і готовий до використання.
+
+З повагою,
+Команда FanVers
+{% endblock text_body %}
+
+{% block html_body %}
+<p style="font-family:Arial,sans-serif;color:#333;">Вітаємо, <strong>{{ user.username }}</strong>!</p>
+<p style="font-family:Arial,sans-serif;color:#333;">Акаунт активовано. Приємного читання на FanVers.</p>
+{% endblock html_body %}
