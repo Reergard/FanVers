@@ -5,19 +5,19 @@ import { AutoCloseNotificationModal } from "./AutoCloseNotificationModal";
 type NotificationType = "error" | "success" | "info" | "warning";
 
 type NotificationContextType = {
-  showError: (message: string) => void;
-  showSuccess: (message: string) => void;
+  showError: (message: React.ReactNode) => void;
+  showSuccess: (message: React.ReactNode) => void;
   /** Успіх без кнопок: зникає через 3 с (для сторінки створення глави) */
-  showSuccessAutoClose: (message: string) => void;
-  showInfo: (message: string) => void;
-  showWarning: (message: string) => void;
+  showSuccessAutoClose: (message: React.ReactNode) => void;
+  showInfo: (message: React.ReactNode) => void;
+  showWarning: (message: React.ReactNode) => void;
 };
 
 const NotificationContext = React.createContext<NotificationContextType | null>(null);
 
 type NotificationState = {
   open: boolean;
-  message: string;
+  message: React.ReactNode;
   type: NotificationType;
   variant: "default" | "autoClose";
 };
@@ -32,11 +32,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     variant: "default",
   });
 
-  const showNotification = useCallback((message: string, type: NotificationType) => {
+  const showNotification = useCallback((message: React.ReactNode, type: NotificationType) => {
     setNotification({ open: true, message, type, variant: "default" });
   }, []);
 
-  const showSuccessAutoClose = useCallback((message: string) => {
+  const showSuccessAutoClose = useCallback((message: React.ReactNode) => {
     setNotification({ open: true, message, type: "success", variant: "autoClose" });
   }, []);
 

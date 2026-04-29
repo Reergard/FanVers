@@ -5,7 +5,7 @@ import styles from "./NotificationModal.module.css";
 type Props = {
   open: boolean;
   onClose: () => void;
-  message: string;
+  message: React.ReactNode;
   /** Час у мілісекундах, після якого вікно закривається */
   autoCloseMs: number;
 };
@@ -42,7 +42,7 @@ export function AutoCloseNotificationModal({
   return (
     <Modal open={open} onClose={onClose} title="Успіх" showCloseButton={false}>
       <div className={`${styles.content} ${styles.success}`}>
-        <p className={styles.message}>{message}</p>
+        <div className={styles.message}>{message}</div>
       </div>
     </Modal>
   );

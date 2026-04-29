@@ -7,7 +7,7 @@ type NotificationType = "error" | "success" | "info" | "warning";
 type Props = {
   open: boolean;
   onClose: () => void;
-  message: string;
+  message: React.ReactNode;
   type?: NotificationType;
 };
 
@@ -30,7 +30,7 @@ export function NotificationModal({ open, onClose, message, type = "error" }: Pr
   return (
     <Modal open={open} onClose={onClose} title={getTitle()}>
       <div className={`${styles.content} ${styles[type]}`}>
-        <p className={styles.message}>{message}</p>
+        <div className={styles.message}>{message}</div>
         <div className={styles.actions}>
           <ActionButton onClick={onClose} ariaLabel="Закрити">
             Зрозуміло

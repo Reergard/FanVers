@@ -16,6 +16,20 @@
   word-wrap: break-word;
 }
 
+.message strong {
+  display: inline-block;
+  margin-top: clamp(8px, calc(1.5 * var(--vwu)), 12px);
+  padding: clamp(6px, calc(1.2 * var(--vwu)), 10px) clamp(10px, calc(1.8 * var(--vwu)), 14px);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.98);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  background: rgba(255, 165, 0, 0.14);
+  border: 1px solid rgba(255, 165, 0, 0.22);
+}
+
 .actions {
   display: flex;
   justify-content: center;
