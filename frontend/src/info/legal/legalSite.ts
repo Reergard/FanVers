@@ -6,6 +6,6 @@ export const LEGAL_SITE = {
   LEGAL_NAME: "Fan-Vers",
   /** IČO — замініть на фактичний номер */
   ICO: "[IČO]",
-  ADDRESS_FULL: "Plzen Tylova",
-  SUPPORT_EMAIL: "fan.vers.ua@gmail.com",
+  ADDRESS_FULL: "Plzen, Tylova",
+  SUPPORT_EMAIL: "info@fan-vers.com",
 } as const;
