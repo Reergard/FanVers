@@ -52,6 +52,9 @@ const SettingsBook = lazy(() =>
 );
 const ContactsPage = lazy(() => import("./info/help/contacts"));
 const PaymentPage = lazy(() => import("./info/help/payment"));
+const PaymentSuccessPage = lazy(() =>
+  import("./payments/PaymentSuccess").then((m) => ({ default: m.PaymentSuccess }))
+);
 const SayThanksPage = lazy(() => import("./info/help/say-thanks"));
 const SupportPage = lazy(() => import("./info/help/support"));
 const BalanceHelpPage = lazy(() => import("./info/help/faq/balance-help"));
@@ -275,6 +278,16 @@ export default function App() {
                   <Suspense fallback={<div />}>
                     <PaymentPage />
                   </Suspense>
+                }
+              />
+              <Route
+                path="/payment/success"
+                element={
+                  <RequireAuth>
+                    <Suspense fallback={<div />}>
+                      <PaymentSuccessPage />
+                    </Suspense>
+                  </RequireAuth>
                 }
               />
               <Route

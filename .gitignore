@@ -75,3 +75,5 @@ dump.rdb
 /backend/_beat_err.txt
 /backend/_beat_out.txt
 .cursor/
+.claude/worktrees/
+.claude/settings.local.json

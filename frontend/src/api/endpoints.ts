@@ -36,6 +36,10 @@ export const API = {
   addBalance: "/api/users/add-balance/",
   withdrawBalance: "/api/users/withdraw-balance/",
 
+  // Payments (Stripe Checkout)
+  createCheckoutSession: "/api/payments/create-checkout-session/",
+  paymentSessionStatus: "/api/payments/session-status/",
+
   // Bookmarks (navigation)
   bookmarkStatus: (bookId: number) => `/api/navigation/bookmarks/status/${bookId}/`,
   bookmarks: "/api/navigation/bookmarks/",

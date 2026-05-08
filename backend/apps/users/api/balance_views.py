@@ -1,6 +1,6 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.core.exceptions import ValidationError
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class AddBalanceView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
     authentication_classes = [JWTAuthentication]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'balance'

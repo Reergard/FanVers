@@ -22,9 +22,9 @@ import {
   updateNotificationSettings,
   becomeTranslator,
   becomeAuthor,
-  depositBalance,
   withdrawBalance,
 } from "./profileService";
+import { createCheckoutSession } from "../payments/paymentApi";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { Modal } from "../shared/Modal/Modal";
 import { useAdultContent } from "../settings/useAdultContent";
@@ -304,17 +304,12 @@ export default function Profile() {
   });
 
   const depositMutation = useMutation({
-    mutationFn: (amt: number) => depositBalance(amt, crypto.randomUUID()),
-    onSuccess: async (data) => {
-      queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
-      await refreshAuthStatus();
-      setBalanceHistory(data?.balance_history ?? []);
-      setDepositModalOpen(false);
-      setAmount("");
-      showSuccess("Баланс успішно поповнено");
+    mutationFn: (amt: number) => createCheckoutSession(amt),
+    onSuccess: (data) => {
+      window.location.href = data.checkout_url;
     },
     onError: (err: any) => {
-      showError(err?.response?.data?.error ?? "Помилка при поповненні балансу");
+      showError(err?.response?.data?.error ?? "Помилка створення платежу");
     },
   });
 
@@ -1046,7 +1041,7 @@ export default function Profile() {
             onClick={handleDeposit}
             disabled={depositMutation.isPending || !amount}
           >
-            {depositMutation.isPending ? "Завантаження..." : "Купити coins"}
+            {depositMutation.isPending ? "Завантаження..." : "Перейти до оплати"}
           </button>
         </div>
       </Modal>

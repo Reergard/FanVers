@@ -28,3 +28,6 @@ celerybeat-schedule.*
 _beat_err.txt
 _beat_out.txt
 .cursor/
+
+# Claude / agents (local)
+.claude/

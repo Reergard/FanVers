@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'apps.analytics_books.apps.AnalyticsBooksConfig',
     'apps.subscription.apps.SubscriptionConfig',
     'apps.support.apps.SupportConfig',
+    'apps.payments.apps.PaymentsConfig',
 
     'rest_framework',
     'rest_framework.authtoken',
@@ -593,6 +594,19 @@ LOGGING = {
 
 # Максимальная сумма операции с балансом
 MAX_BALANCE_OPERATION_AMOUNT = 100000
+
+# --- Stripe (Checkout Session) ---
+STRIPE_SECRET_KEY = env.str("STRIPE_SECRET_KEY", default="")
+STRIPE_WEBHOOK_SECRET = env.str("STRIPE_WEBHOOK_SECRET", default="")
+STRIPE_API_VERSION = env.str("STRIPE_API_VERSION", default="2024-12-18.acacia")
+STRIPE_SUCCESS_URL = env.str(
+    "STRIPE_SUCCESS_URL",
+    default=("http://127.0.0.1:5173/payment/success" if DEBUG else "https://fan-vers.com/payment/success"),
+)
+STRIPE_CANCEL_URL = env.str(
+    "STRIPE_CANCEL_URL",
+    default=("http://127.0.0.1:5173/profile" if DEBUG else "https://fan-vers.com/profile"),
+)
 
 CACHES = {
     'default': {

@@ -50,6 +50,11 @@ app.conf.beat_schedule = {
         'task': 'apps.catalog.tasks.cleanup_orphan_chapter_embedded_images',
         'schedule': crontab(hour=4, minute=15),
     },
+
+    'expire-stale-payments': {
+        'task': 'apps.payments.tasks.expire_stale_payment_sessions',
+        'schedule': crontab(minute='*/30'),
+    },
 }
 
 # Пул воркера задається лише CLI: `celery worker -P solo` (Windows).
