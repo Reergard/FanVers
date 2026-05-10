@@ -84,7 +84,7 @@ export function Footer() {
                 <li><Link to="/translator-agreement" className={styles.link}>Приклад договору: автор і перекладач</Link></li>
                 <li><Link to="/say-thanks" className={styles.link}>Сказати дякую!</Link></li>
                 <li><Link to="/contacts" className={styles.link}>Контакти</Link></li>
-                <li><Link to="/payment" className={styles.link}>Не поповнився баланс?</Link></li>
+                <li><Link to="/balance-not-credited" className={styles.link}>Не поповнився баланс?</Link></li>
                 <li><Link to="/support" className={styles.link}>Написати у підтримку</Link></li>
                 <li><Link to="/payment" className={styles.link}>Оплата</Link></li>
               </ul>
@@ -169,7 +169,7 @@ export function Footer() {
                 <span className={styles.mobileTileLabel}>Оплата</span>
               </Link>
               <div className={`${styles.mobileSpacer} ${styles.mobileSpacerGrad}`} aria-hidden="true" />
-              <Link to="/payment" className={styles.mobileTile}>
+              <Link to="/balance-not-credited" className={styles.mobileTile}>
                 <span className={styles.mobileTileLabel}>Не поповнився баланс?</span>
               </Link>
             </div>

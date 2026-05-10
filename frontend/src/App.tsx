@@ -52,6 +52,7 @@ const SettingsBook = lazy(() =>
 );
 const ContactsPage = lazy(() => import("./info/help/contacts"));
 const PaymentPage = lazy(() => import("./info/help/payment"));
+const BalanceNotCreditedPage = lazy(() => import("./info/help/balance-not-credited"));
 const PaymentSuccessPage = lazy(() =>
   import("./payments/PaymentSuccess").then((m) => ({ default: m.PaymentSuccess }))
 );
@@ -277,6 +278,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <PaymentPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/balance-not-credited"
+                element={
+                  <Suspense fallback={<div />}>
+                    <BalanceNotCreditedPage />
                   </Suspense>
                 }
               />
