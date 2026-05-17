@@ -55,6 +55,11 @@ app.conf.beat_schedule = {
         'task': 'apps.payments.tasks.expire_stale_payment_sessions',
         'schedule': crontab(minute='*/30'),
     },
+
+    'check-payout-deadlines': {
+        'task': 'apps.payouts.tasks.check_payout_deadlines',
+        'schedule': crontab(hour=9, minute=0),
+    },
 }
 
 # Пул воркера задається лише CLI: `celery worker -P solo` (Windows).

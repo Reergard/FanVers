@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from datetime import timedelta
+from decimal import Decimal
 from urllib.parse import quote
 import environ
 import logging
@@ -73,6 +74,7 @@ INSTALLED_APPS = [
     'apps.subscription.apps.SubscriptionConfig',
     'apps.support.apps.SupportConfig',
     'apps.payments.apps.PaymentsConfig',
+    'apps.payouts.apps.PayoutsConfig',
 
     'rest_framework',
     'rest_framework.authtoken',
@@ -226,6 +228,7 @@ REST_FRAMEWORK = {
         'upload': '20/hour',       # загрузки
         'purchase': '10/hour',     # покупки
         'balance': '100/hour',     # баланс (как у вас)
+        'payout': '5/hour',        # запити на виплату
         'profile': '60/min',       # профили (разумный лимит)
         'profile_write': '10/min',
         'password_change': '5/min',
@@ -594,6 +597,14 @@ LOGGING = {
 
 # Максимальная сумма операции с балансом
 MAX_BALANCE_OPERATION_AMOUNT = 100000
+
+# === Payouts ===
+PAYOUTS_MIN_AMOUNT_COINS = Decimal("1000.00")
+PAYOUTS_AUTO_APPROVE_THRESHOLD_COINS = Decimal("50000.00")
+PAYOUT_DEADLINE_DAYS = 14
+PAYOUT_IBAN_COOLDOWN_DAYS = 7
+WISE_WEBHOOK_ENABLED = env.bool("WISE_WEBHOOK_ENABLED", default=False)
+PAYOUT_ADMIN_EMAIL = env.str("PAYOUT_ADMIN_EMAIL", default="")
 
 # --- Stripe (Checkout Session) ---
 STRIPE_SECRET_KEY = env.str("STRIPE_SECRET_KEY", default="")

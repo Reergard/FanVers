@@ -990,11 +990,13 @@ class AuthStatusView(APIView):
     def get(self, request):
         # Если дошли сюда - значит access токен валиден и пользователь аутентифицирован
         user_role = 'Читач'
+        has_active_payout_profile = False
         try:
             profile = request.user.profile
             balance = str(profile.balance)
             can_withdraw_balance = profile.can_withdraw_balance()
             user_role = profile.role
+            has_active_payout_profile = profile.has_active_payout_profile
         except (Profile.DoesNotExist, AttributeError):
             balance = '0'
             can_withdraw_balance = False
@@ -1004,6 +1006,7 @@ class AuthStatusView(APIView):
             'username': request.user.username,
             'balance': balance,
             'can_withdraw_balance': can_withdraw_balance,
+            'has_active_payout_profile': has_active_payout_profile,
             'role_self_promotion_allowed': is_role_self_promotion_allowed(),
             'role': user_role,
         })

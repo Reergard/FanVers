@@ -36,6 +36,14 @@ export const API = {
   addBalance: "/api/users/add-balance/",
   withdrawBalance: "/api/users/withdraw-balance/",
 
+  // Payouts
+  payoutProfile: "/api/payouts/profile/",
+  payoutProfileSubmit: "/api/payouts/profile/submit/",
+  payoutMethods: "/api/payouts/methods/",
+  createPayoutRequest: "/api/payouts/request/",
+  payoutRequests: "/api/payouts/requests/",
+  cancelPayoutRequest: (id: number) => `/api/payouts/request/${id}/cancel/`,
+
   // Payments (Stripe Checkout)
   createCheckoutSession: "/api/payments/create-checkout-session/",
   paymentSessionStatus: "/api/payments/session-status/",

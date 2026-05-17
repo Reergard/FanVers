@@ -55,7 +55,7 @@ class BalanceOperationMixin:
                 
                 profile.balance = new_balance
                 
-            elif operation_type in ['deposit', 'earning', 'thanks_received']:
+            elif operation_type in ['deposit', 'earning', 'thanks_received', 'refund']:
                 # Проверяем максимальный баланс
                 new_balance = profile.balance + amount
                 if new_balance > 1000000:  # Максимум 1 млн

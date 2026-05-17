@@ -65,7 +65,8 @@ class BalanceOperationLog(models.Model):
         max_length=20,
         choices=[
             ('deposit', 'Поповнення'),
-            ('withdraw', 'Виведення')
+            ('withdraw', 'Виведення'),
+            ('refund', 'Повернення'),
         ]
     )
     status = models.CharField(

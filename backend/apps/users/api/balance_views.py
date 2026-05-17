@@ -100,10 +100,14 @@ class AddBalanceView(APIView):
 
 
 class WithdrawBalanceView(APIView):
+    """
+    Створення запиту на виплату (PayoutRequest) замість прямого списання.
+    Потребує method_id та idempotency_key.
+    """
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
     throttle_classes = [ScopedRateThrottle]
-    throttle_scope = 'balance'
+    throttle_scope = 'payout'
 
     def post(self, request):
         try:
@@ -114,16 +118,6 @@ class WithdrawBalanceView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        try:
-            return self._post_withdraw(request, profile)
-        except Exception as e:
-            logger.error("Неочікувана помилка при виведенні коштів: %s", e, exc_info=True)
-            return Response(
-                {'error': 'Неочікувана помилка при виведенні коштів'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-    def _post_withdraw(self, request, profile):
         if not profile_can_request_balance_withdraw(profile):
             return Response(
                 {
@@ -133,77 +127,62 @@ class WithdrawBalanceView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        logger.info("Запит на виведення коштів: %s", request.data)
+        from apps.payouts.api.serializers import CreatePayoutRequestSerializer
+        from apps.payouts.models import PayoutMethod
+        from apps.payouts.services.payout_create import create_payout_request
+        from apps.payouts.api.serializers import PayoutRequestSerializer
 
-        serializer = BalanceOperationSerializer(
-            data={
-                'amount': request.data.get('amount'),
-                'operation_type': 'withdraw',
-            },
-            context={'request': request},
-        )
+        serializer = CreatePayoutRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {'error': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        if serializer.is_valid():
-            try:
-                idempotency_key = (request.data or {}).get("idempotency_key") or ""
-                if not str(idempotency_key).strip():
-                    return Response(
-                        {"error": "idempotency_key обов'язковий для захисту від дублювання"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                amount = serializer.validated_data['amount']
-                balance_mixin = BalanceOperationMixin()
-                with transaction.atomic():
-                    try:
-                        BalanceIdempotencyRecord.objects.create(
-                            user=request.user,
-                            key=str(idempotency_key).strip(),
-                            operation_type=BalanceIdempotencyRecord.OP_WITHDRAW,
-                        )
-                    except IntegrityError:
-                        return Response(
-                            {
-                                "already_processed": True,
-                                "new_balance": str(profile.balance),
-                            },
-                            status=status.HTTP_200_OK,
-                        )
+        try:
+            method = PayoutMethod.objects.get(
+                id=serializer.validated_data['method_id'],
+                profile=request.user.payout_profile,
+                is_active=True,
+            )
+        except PayoutMethod.DoesNotExist:
+            return Response(
+                {'error': 'Метод виплати не знайдено'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception:
+            return Response(
+                {'error': 'Профіль виплат не налаштовано'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-                    new_balance = balance_mixin.perform_balance_operation(
-                        profile,
-                        amount,
-                        'withdraw'
-                    )
-                return Response({
-                    'message': 'Кошти успішно виведені',
-                    'new_balance': new_balance
-                })
-            except ValidationError as e:
-                logger.error(f"Помилка валідації: {str(e)}")
-                error_message = str(e)
-                if "Недостатньо коштів" in error_message:
-                    error_message = "Вибачте, але на вашому балансі недостатньо коштів для виведення"
-                elif "Максимальний баланс" in error_message:
-                    error_message = "Максимальний баланс перевищено"
-                elif "Невірна сума операції" in error_message:
-                    error_message = "Невірна сума операції"
-                elif "Сума повинна бути більше нуля" in error_message:
-                    error_message = "Сума повинна бути більше нуля"
-                elif "Мінімальна сума виведення" in error_message:
-                    error_message = "Мінімальна сума виведення: 1,000 FanCoins"
-                elif API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE in error_message:
-                    error_message = API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE
-
-                return Response(
-                    {'error': error_message},
-                    status=status.HTTP_400_BAD_REQUEST
+        try:
+            payout_request = create_payout_request(
+                user=request.user,
+                coins_amount=serializer.validated_data['amount'],
+                method=method,
+                idempotency_key=serializer.validated_data['idempotency_key'],
+            )
+        except ValidationError as e:
+            error_message = str(e)
+            if 'Недостатньо коштів' in error_message:
+                error_message = (
+                    'Вибачте, але на вашому балансі недостатньо коштів для виведення'
                 )
+            return Response(
+                {'error': error_message},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            logger.error("Неочікувана помилка при виведенні коштів: %s", e, exc_info=True)
+            return Response(
+                {'error': 'Неочікувана помилка при виведенні коштів'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        logger.error(f"Помилки серіалізатора: {serializer.errors}")
-        return Response(
-            {'error': serializer.errors},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        data = PayoutRequestSerializer(payout_request).data
+        data['new_balance'] = str(request.user.profile.balance)
+        return Response(data, status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])

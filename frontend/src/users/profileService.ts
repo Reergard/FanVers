@@ -5,6 +5,7 @@ import type {
   NotificationSettingsPatch,
   BalanceHistoryItem,
   PublicUserListItem,
+  PayoutRequestResponse,
 } from "./types";
 
 /** Отримати повний профіль поточного користувача */
@@ -92,15 +93,17 @@ export async function depositBalance(
   return data;
 }
 
-/** Вивести кошти */
+/** Запросити виплату (створює PayoutRequest) */
 export async function withdrawBalance(
   amount: number,
+  method_id: number,
   idempotency_key: string
-): Promise<{
-  new_balance: string;
-  balance_history?: BalanceHistoryItem[];
-}> {
-  const { data } = await http.post(API.withdrawBalance, { amount, idempotency_key });
+): Promise<PayoutRequestResponse> {
+  const { data } = await http.post<PayoutRequestResponse>(API.withdrawBalance, {
+    amount,
+    method_id,
+    idempotency_key,
+  });
   return data;
 }
 

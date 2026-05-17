@@ -24,6 +24,10 @@ import {
   becomeAuthor,
   withdrawBalance,
 } from "./profileService";
+import { getPayoutMethods } from "./payoutService";
+import { PayoutSetupModal } from "./PayoutSetupModal";
+import { PayoutRequestsList } from "./PayoutRequestsList";
+import { AddPayoutMethodModal } from "./AddPayoutMethodModal";
 import { createCheckoutSession } from "../payments/paymentApi";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { Modal } from "../shared/Modal/Modal";
@@ -44,6 +48,7 @@ function stripSvgFilter(svg: string): string {
 }
 
 const AVATAR_MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const MIN_PAYOUT_COINS = 1000;
 const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const PROFILE_AVATAR_FILE_INPUT_ID = "profile-avatar-file-input";
 
@@ -199,7 +204,11 @@ export default function Profile() {
 
   const [depositModalOpen, setDepositModalOpen] = useState(false);
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
+  const [payoutSetupOpen, setPayoutSetupOpen] = useState(false);
+  const [selectedMethodId, setSelectedMethodId] = useState<number | null>(null);
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+  const [payoutRequestsOpen, setPayoutRequestsOpen] = useState(false);
+  const [addMethodOpen, setAddMethodOpen] = useState(false);
   const [adultConfirmModalOpen, setAdultConfirmModalOpen] = useState(false);
   const [aboutModalOpen, setAboutModalOpen] = useState(false);
   const [aboutDraft, setAboutDraft] = useState("");
@@ -313,15 +322,25 @@ export default function Profile() {
     },
   });
 
+  const payoutMethodsQuery = useQuery({
+    queryKey: ["payoutMethods", userId],
+    queryFn: getPayoutMethods,
+    enabled:
+      withdrawModalOpen && profile?.has_active_payout_profile === true,
+  });
+
+  const payoutMethods = payoutMethodsQuery.data ?? [];
+
   const withdrawMutation = useMutation({
-    mutationFn: (amt: number) => withdrawBalance(amt, crypto.randomUUID()),
-    onSuccess: async (data) => {
+    mutationFn: (amt: number) =>
+      withdrawBalance(amt, selectedMethodId!, crypto.randomUUID()),
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
       await refreshAuthStatus();
-      setBalanceHistory(data?.balance_history ?? []);
       setWithdrawModalOpen(false);
       setAmount("");
-      showSuccess("Кошти успішно виведені");
+      setSelectedMethodId(null);
+      showSuccess("Запит на виплату створено");
     },
     onError: (err: any) => {
       showError(err?.response?.data?.error ?? "Помилка при виведенні коштів");
@@ -433,12 +452,20 @@ export default function Profile() {
 
   const handleWithdraw = () => {
     const num = Number(amount);
-    const balanceNum = profile ? parseBalance(profile.balance) : 0;
+    const balanceNumLocal = profile ? parseBalance(profile.balance) : 0;
+    if (!selectedMethodId) {
+      showError("Оберіть метод виплати");
+      return;
+    }
     if (!Number.isFinite(num) || num <= 0) {
       showError("Введіть коректну суму");
       return;
     }
-    if (num > balanceNum) {
+    if (num < MIN_PAYOUT_COINS) {
+      showError(`Мінімальна сума виведення: ${MIN_PAYOUT_COINS} FanCoins`);
+      return;
+    }
+    if (num > balanceNumLocal) {
       showError("Недостатньо коштів");
       return;
     }
@@ -446,6 +473,7 @@ export default function Profile() {
   };
 
   const handleTransactionHistory = () => {
+    setBalanceHistory(profile?.balance_history ?? []);
     setTransactionModalOpen(true);
   };
 
@@ -525,6 +553,10 @@ export default function Profile() {
   );
   const balanceNum = parseBalance(profile.balance);
   const mayWithdrawBalance = profile.can_withdraw_balance === true;
+  const hasPayoutProfile = profile.has_active_payout_profile === true;
+  const canRequestPayout =
+    mayWithdrawBalance && hasPayoutProfile && balanceNum >= MIN_PAYOUT_COINS;
+  const needsPayoutSetup = mayWithdrawBalance && !hasPayoutProfile;
 
   const renderProfileTypeRow = () => (
     <div className={styles.profileTypeRow}>
@@ -733,17 +765,33 @@ export default function Profile() {
                   <span className={styles.balanceCommissionValue}>{profile.commission ?? 15}%</span>
                 </div>
                 {mayWithdrawBalance ? (
-                  <button
-                    type="button"
-                    className={`${styles.btnRed} ${styles.balanceBtnWithdraw}`}
-                    onClick={() => setWithdrawModalOpen(true)}
-                    disabled={withdrawMutation.isPending || balanceNum <= 0}
-                  >
-                    <img src={cashWithdrawalIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
-                    <span className={styles.btnBalanceText}>
-                      {withdrawMutation.isPending ? "Завантаження..." : <>Запросити<br />виплату</>}
-                    </span>
-                  </button>
+                  needsPayoutSetup ? (
+                    <button
+                      type="button"
+                      className={`${styles.btnRed} ${styles.balanceBtnWithdraw}`}
+                      onClick={() => setPayoutSetupOpen(true)}
+                    >
+                      <img src={cashWithdrawalIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
+                      <span className={styles.btnBalanceText}>
+                        Налаштувати<br />профіль виплат
+                      </span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`${styles.btnRed} ${styles.balanceBtnWithdraw}`}
+                      onClick={() => setWithdrawModalOpen(true)}
+                      disabled={
+                        withdrawMutation.isPending ||
+                        balanceNum < MIN_PAYOUT_COINS
+                      }
+                    >
+                      <img src={cashWithdrawalIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
+                      <span className={styles.btnBalanceText}>
+                        {withdrawMutation.isPending ? "Завантаження..." : <>Запросити<br />виплату</>}
+                      </span>
+                    </button>
+                  )
                 ) : null}
               </div>
               <div className={styles.balanceRow}>
@@ -772,6 +820,18 @@ export default function Profile() {
                 <span className={styles.historyBtnTextDesktop}>Історія транзакцій</span>
                 <span className={styles.historyBtnTextMobile}>Історія<br />транзакцій</span>
               </button>
+              {hasPayoutProfile && (
+                <button
+                  type="button"
+                  className={`${styles.btnOutlineGold} ${styles.balanceHistoryBtn}`}
+                  onClick={() => setPayoutRequestsOpen(true)}
+                  style={{ marginTop: "6px" }}
+                >
+                  <img src={cashWithdrawalIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
+                  <span className={styles.historyBtnTextDesktop}>Запити на виплату</span>
+                  <span className={styles.historyBtnTextMobile}>Запити<br />виплат</span>
+                </button>
+              )}
           </div>
         </div>
 
@@ -1047,19 +1107,54 @@ export default function Profile() {
       </Modal>
 
       <Modal
-        open={withdrawModalOpen && mayWithdrawBalance}
+        open={withdrawModalOpen && canRequestPayout}
         onClose={() => setWithdrawModalOpen(false)}
         title="Запросити виплату"
       >
         <div className={styles.modalForm}>
-          <p className={styles.modalHint}>Доступно: {profile.balance}</p>
+          <p className={styles.modalHint}>
+            Доступно: {profile.balance} (мін. {MIN_PAYOUT_COINS} FanCoins)
+          </p>
+          <label className={styles.field}>
+            <span className={styles.fieldLabel}>Метод виплати</span>
+            <span className={styles.fieldBox}>
+              <select
+                className={styles.input}
+                value={selectedMethodId ?? ""}
+                onChange={(e) =>
+                  setSelectedMethodId(
+                    e.target.value ? Number(e.target.value) : null
+                  )
+                }
+              >
+                <option value="" disabled>
+                  {payoutMethods.length === 0
+                    ? "Немає методів — додайте IBAN"
+                    : "Оберіть метод виплати"}
+                </option>
+                {payoutMethods.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.iban_masked}
+                  </option>
+                ))}
+              </select>
+            </span>
+          </label>
+          <button
+            type="button"
+            className={styles.linkCyan}
+            style={{ fontSize: "0.85em", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: "8px" }}
+            onClick={() => setAddMethodOpen(true)}
+          >
+            + Додати новий IBAN
+          </button>
           <label className={styles.field}>
             <span className={styles.fieldLabel}>Сума</span>
             <span className={styles.fieldBox}>
               <input
                 className={styles.input}
                 type="number"
-                min="1"
+                min={MIN_PAYOUT_COINS}
                 max={balanceNum}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -1071,12 +1166,38 @@ export default function Profile() {
             type="button"
             className={styles.btnRed}
             onClick={handleWithdraw}
-            disabled={withdrawMutation.isPending || !amount || balanceNum <= 0}
+            disabled={
+              withdrawMutation.isPending ||
+              !amount ||
+              !selectedMethodId ||
+              balanceNum < MIN_PAYOUT_COINS
+            }
           >
             {withdrawMutation.isPending ? "Завантаження..." : "Запросити виплату"}
           </button>
         </div>
       </Modal>
+
+      <PayoutSetupModal
+        open={payoutSetupOpen}
+        onClose={() => setPayoutSetupOpen(false)}
+        onSuccess={async () => {
+          queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
+          await refreshAuthStatus();
+        }}
+      />
+
+      <PayoutRequestsList
+        open={payoutRequestsOpen}
+        onClose={() => setPayoutRequestsOpen(false)}
+        userId={userId}
+      />
+
+      <AddPayoutMethodModal
+        open={addMethodOpen}
+        onClose={() => setAddMethodOpen(false)}
+        userId={userId}
+      />
 
       <Modal
         open={transactionModalOpen}

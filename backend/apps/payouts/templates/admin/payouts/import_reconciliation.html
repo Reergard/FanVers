@@ -1,0 +1,9 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h2>Імпорт reconciliation CSV (Batch #{{ batch_id }})</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <p><input type="file" name="csv_file" accept=".csv" required></p>
+    <p><input type="submit" value="Імпортувати"></p>
+</form>
+{% endblock %}

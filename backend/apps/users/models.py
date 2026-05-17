@@ -222,7 +222,15 @@ class Profile(models.Model):
     def can_withdraw_balance(self):
         """Чи дозволено користувачу ініціювати виведення через API (лише за роллю)."""
         return profile_can_request_balance_withdraw(self)
-    
+
+    @property
+    def has_active_payout_profile(self) -> bool:
+        """Чи має користувач схвалений профіль виплат."""
+        try:
+            return self.user.payout_profile.can_request_payout
+        except Exception:
+            return False
+
     @property
     def is_owner(self):
         request = get_current_request()
@@ -350,7 +358,8 @@ class BalanceLog(models.Model):
             ('withdraw', 'Виведення'),
             ('purchase', 'Покупка'),
             ('earning', 'Заробіток'),
-            ('advertising', 'Реклама')
+            ('advertising', 'Реклама'),
+            ('refund', 'Повернення'),
         ]
     )
     created_at = models.DateTimeField(auto_now_add=True)

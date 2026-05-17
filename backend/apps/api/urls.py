@@ -5,6 +5,7 @@ urlpatterns = [
     path('auth/', include('social_django.urls', namespace='social')),
     path('users/', include('apps.users.api.urls')),
     path('payments/', include('apps.payments.api.urls')),
+    path('payouts/', include('apps.payouts.api.urls')),
     path('main/', include('apps.main.api.urls')),
     path('catalog/', include('apps.catalog.api.urls')),
     path('chat/', include('apps.chat.api.urls')),

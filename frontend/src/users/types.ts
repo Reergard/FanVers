@@ -35,6 +35,8 @@ export type UserProfile = {
   is_owner?: boolean;
   /** Право на виведення балансу; для чужого профілю з API приходить null */
   can_withdraw_balance?: boolean | null;
+  /** Схвалений профіль виплат (KYC + метод); для чужого профілю — null */
+  has_active_payout_profile?: boolean | null;
   /** Завжди true у поточній версії API (сумісність); самозміна ролі без глобального вимикача в settings */
   role_self_promotion_allowed?: boolean;
   /** Історія BalanceLog для власника профілю */
@@ -63,6 +65,59 @@ export type NotificationSettingsPatch = Partial<{
   chapter_subscription_notifications: boolean;
   chapter_comment_notifications: boolean;
 }>;
+
+export type PayoutProfile = {
+  id: number;
+  legal_status: string;
+  country: string;
+  tax_residency_country: string;
+  tax_id?: string;
+  full_name_legal: string;
+  full_name_latin: string;
+  address_line: string;
+  city: string;
+  postal_code: string;
+  verification_status: string;
+  payout_approved: boolean;
+  can_request_payout?: boolean;
+};
+
+export type PayoutProfilePayload = Omit<
+  PayoutProfile,
+  "id" | "verification_status" | "payout_approved" | "can_request_payout"
+>;
+
+export type PayoutMethod = {
+  id: number;
+  method_type: string;
+  iban_masked?: string;
+  recipient_full_name: string;
+  currency: string;
+  is_active: boolean;
+  is_default: boolean;
+  is_iban_cooldown_active?: boolean;
+};
+
+export type PayoutRequestItem = {
+  id: number;
+  coins_amount: string;
+  commission_percent: string;
+  commission_coins: string;
+  coins_after_commission: string;
+  payout_currency: string;
+  exchange_rate: string;
+  amount_gross: string;
+  amount_net: string;
+  status: string;
+  created_at: string;
+  deadline_at: string;
+  completed_at?: string | null;
+  invoice_number?: string | null;
+};
+
+export type PayoutRequestResponse = PayoutRequestItem & {
+  new_balance: string;
+};
 
 export type PublicUserListItem = {
   id: number;
