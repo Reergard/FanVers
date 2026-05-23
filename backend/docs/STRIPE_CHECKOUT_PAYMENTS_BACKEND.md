@@ -21,7 +21,7 @@
 | Розклад beat (разом з іншими задачами) | `backend/FanVers_project/celery.py` |
 | Налаштування Stripe | `backend/FanVers_project/settings.py` (блок `STRIPE_*`) |
 | Ручне поповнення балансу (не Stripe) | `backend/apps/users/api/balance_views.py` → `AddBalanceView` |
-| Зміна балансу в операціях | `backend/apps/users/api/mixins.py` → `BalanceOperationMixin` |
+| Зміна балансу в операціях | `backend/apps/users/models.py` → `Profile.balance_operation()` |
 | Запис ідемпотентності для deposit/withdraw | `backend/apps/users/models.py` → `BalanceIdempotencyRecord` |
 
 ---
@@ -73,7 +73,7 @@
 | `user` | FK → `users.User` | Хто ініціював оплату. `related_name="payment_sessions"`. |
 | `stripe_session_id` | `CharField(128)`, `unique`, індекс, **`null=True`, `blank=True`** | Ідентифікатор `cs_...` від Stripe. Спочатку **`None`**: запис створюється до виклику Stripe, після успішного `Session.create` оновлюється через `update()`. |
 | `stripe_payment_intent_id` | `CharField`, опційно | Payment Intent з об’єкта сесії у webhook. |
-| `amount_coins` | `Decimal(10,2)` | Скільки FanCoins зарахувати; саме це значення потім передається в `perform_balance_operation` (не сума з metadata webhook). |
+| `amount_coins` | `Decimal(10,2)` | Скільки FanCoins зарахувати; саме це значення потім передається в `balance_operation` (не сума з metadata webhook). |
 | `amount_kopecks` | `PositiveInteger` | Сума для Stripe: `int(amount_coins * 100)` (мінімальні одиниці валюти для `unit_amount`). |
 | `currency` | `CharField(3)`, default `uah` | Валюта Checkout. |
 | `status` | choices | `pending`, `paid`, `expired`, `failed`. За замовчуванням `pending`. |
@@ -112,7 +112,7 @@
 
 - `amount_coins` обов’язковий, `> 0`.
 - Не більше двох знаків після коми (порівняння з `quantize(Decimal("0.01"))`).
-- **Мінімум поповнення:** `BalanceOperationMixin.MIN_DEPOSIT_AMOUNT` (у `mixins.py` це **100**).
+- **Мінімум поповнення:** `Profile.MIN_DEPOSIT_AMOUNT` (у `models.py` це **100**).
 - **Максимум однієї операції:** `settings.MAX_BALANCE_OPERATION_AMOUNT` (за замовчуванням **100000**).
 
 Серіалізатор **`CreateCheckoutSessionSerializer`** дозволяє `Decimal` від **0.01**; жорсткі межі **100 / 100000** накладаються вже в `services.py`. Тому суми між 0.01 і 99.99 на рівні HTTP можуть пройти DRF, але дадуть помилку всередині `create_checkout_session` → view поверне **400** з загальним текстом українською.
@@ -196,10 +196,10 @@ View: **`stripe_webhook`** у `apps/payments/api/views.py` — звичайни�
 
 - **Крок 1 — `WebhookEvent`:** вкладений `transaction.atomic()` + `create`. При **`IntegrityError`** (дублікат `evt_...`) — **повний виход** з функції (зовнішня транзакція не «ламається» на PostgreSQL).
 - **Крок 2 — `BalanceIdempotencyRecord`:** так само вкладений atomic + `create` з `key=str(payment_session.id)`, `operation_type=OP_DEPOSIT`. При **`IntegrityError`**: оновлюється сесія до `paid` (якщо ще `pending`), виставляються `paid_at`, `stripe_payment_intent_id`, **повернення** (зарахування не повторюється).
-- **Крок 3:** `Profile.objects.get(user_id=user.id)` і **`BalanceOperationMixin().perform_balance_operation(profile, payment_session.amount_coins, "deposit")`** — сума **з БД**, не з webhook.
+- **Крок 3:** `Profile.objects.get(user_id=user.id)` і **`profile.balance_operation(payment_session.amount_coins, "deposit")`** — сума **з БД**, не з webhook.
 - **Крок 4:** `PaymentSession` оновлюється до `paid` з `paid_at` та `stripe_payment_intent_id`.
 
-**Наслідок для балансу:** міксин оновлює `Profile.balance` і для `deposit` створює запис **`BalanceOperationLog`** (див. `mixins.py`).
+**Наслідок для балансу:** `balance_operation()` оновлює `Profile.balance`, створює `BalanceLog`, і для `deposit` додатково створює запис **`BalanceOperationLog`** (див. `models.py`).
 
 ### 6.4. `handle_checkout_session_expired`
 

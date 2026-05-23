@@ -40,6 +40,7 @@ export const API = {
   payoutProfile: "/api/payouts/profile/",
   payoutProfileSubmit: "/api/payouts/profile/submit/",
   payoutMethods: "/api/payouts/methods/",
+  payoutMethod: (id: number) => `/api/payouts/methods/${id}/`,
   createPayoutRequest: "/api/payouts/request/",
   payoutRequests: "/api/payouts/requests/",
   cancelPayoutRequest: (id: number) => `/api/payouts/request/${id}/cancel/`,

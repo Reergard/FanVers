@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal
 
 from django.conf import settings
@@ -7,16 +8,28 @@ from django.db import IntegrityError, transaction
 from apps.payouts.models import PayoutRequest
 from apps.users.models import BalanceIdempotencyRecord
 
-# 1 FanCoin = 1 UAH, фіксований курс, не змінюється.
-PAYOUT_CURRENCY = "UAH"
+logger = logging.getLogger(__name__)
+
+# 1 FanCoin = 1 UAH, фіксований курс.
+# Для виплат в інших валютах конвертація відбувається на стороні Wise.
 EXCHANGE_RATE = Decimal("1.000000")
 
 
 @transaction.atomic
-def create_payout_request(user, coins_amount, method, idempotency_key):
+def create_payout_request(
+    user, coins_amount, method, idempotency_key,
+    skip_profile_approval_check=False,
+    is_urgent=False,
+):
     """
     Створення запиту на виплату: ідемпотентність, перевірки, списання FanCoins,
-    розрахунки, знімки реквізитів, async автоперевірка.
+    розрахунки, знімки реквізитів.
+
+    Усі заявки створюються зі статусом AWAITING_REVIEW —
+    одобрення відбувається лише вручну адміністратором.
+
+    skip_profile_approval_check=True — при першій подачі заявки (PayoutProfileSubmitView),
+    коли профіль ще у статусі DRAFT/REJECTED і не пройшов верифікацію.
     """
     try:
         BalanceIdempotencyRecord.objects.create(
@@ -36,7 +49,7 @@ def create_payout_request(user, coins_amount, method, idempotency_key):
     profile = user.profile
     payout_profile = user.payout_profile
 
-    if not payout_profile.can_request_payout:
+    if not skip_profile_approval_check and not payout_profile.can_request_payout:
         raise ValidationError("Профіль виплат не схвалено або немає активного методу")
 
     if coins_amount < settings.PAYOUTS_MIN_AMOUNT_COINS:
@@ -44,13 +57,29 @@ def create_payout_request(user, coins_amount, method, idempotency_key):
             f"Мінімальна сума виведення: {settings.PAYOUTS_MIN_AMOUNT_COINS} FanCoins"
         )
 
-    if method.is_iban_cooldown_active:
-        raise ValidationError("IBAN нещодавно змінено. Зачекайте 7 днів.")
+    if coins_amount > settings.PAYOUTS_MAX_AMOUNT_COINS:
+        raise ValidationError(
+            f"Максимальна сума виведення: {settings.PAYOUTS_MAX_AMOUNT_COINS} FanCoins"
+        )
 
-    balance_log = profile.update_balance(coins_amount, "withdraw")
+    # Перевірка: IBAN має бути розшифрований коректно
+    iban_value = method.iban
+    if not iban_value or iban_value.startswith("["):
+        raise ValidationError(
+            "Помилка зчитування реквізитів. Зверніться до підтримки."
+        )
 
-    commission_pct = profile.commission
-    commission_coins = coins_amount * commission_pct / Decimal("100")
+    balance_log = profile.balance_operation(coins_amount, "withdraw")
+
+    # Комісія: 0% за звичайний вивід, 10% за терміновий
+    if is_urgent:
+        commission_pct = settings.PAYOUT_URGENT_COMMISSION_PERCENT
+        commission_coins = (coins_amount * commission_pct / Decimal("100")).quantize(
+            Decimal("0.01")
+        )
+    else:
+        commission_pct = Decimal("0.00")
+        commission_coins = Decimal("0.00")
     coins_after = coins_amount - commission_coins
 
     # 1 FanCoin = 1 UAH → amount_gross = coins_after_commission
@@ -61,22 +90,34 @@ def create_payout_request(user, coins_amount, method, idempotency_key):
         method=method,
         balance_log=balance_log,
         idempotency_key=idempotency_key,
+        is_urgent=is_urgent,
         coins_amount=coins_amount,
         commission_percent=commission_pct,
         commission_coins=commission_coins,
         coins_after_commission=coins_after,
-        payout_currency=PAYOUT_CURRENCY,
+        payout_currency=method.currency,
         exchange_rate=EXCHANGE_RATE,
         amount_gross=amount_gross,
         amount_net=amount_gross,
+        status=PayoutRequest.Status.AWAITING_REVIEW,
+        # KYC snapshot
+        snapshot_country=payout_profile.country,
+        snapshot_full_name_legal=payout_profile.full_name_legal,
+        snapshot_full_name_latin=payout_profile.full_name_latin,
+        snapshot_address_line=payout_profile.address_line,
+        snapshot_city=payout_profile.city,
+        snapshot_postal_code=payout_profile.postal_code,
+        # Реквізити snapshot
         snapshot_recipient_name=method.recipient_full_name,
-        snapshot_iban=method.iban,
+        snapshot_iban=iban_value,
         snapshot_bic_swift=method.bic_swift or "",
         snapshot_method_type=method.method_type,
     )
 
-    from apps.payouts.tasks import auto_check_payout_request
-
-    auto_check_payout_request.delay(payout_request.id)
+    logger.info(
+        "Payout request #%s created: %s %s, user=%s, status=AWAITING_REVIEW, urgent=%s, commission=%s%%",
+        payout_request.id, amount_gross, method.currency, user.username,
+        is_urgent, commission_pct,
+    )
 
     return payout_request

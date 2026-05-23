@@ -19,30 +19,33 @@
 |----|------|----------|
 | Поле балансу | `apps/users/models.py` → `Profile.balance` | `DecimalField`; адмінка може редагувати як раніше. |
 | `Profile.can_withdraw_balance()` | там же | Делегує `profile_can_request_balance_withdraw(self)`. |
-| `Profile.update_balance(amount, operation_type)` | там же | **Транзакція + `select_for_update()`** на рядок профілю. Для `withdraw`: спочатку роль (`API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE`), потім `balance < amount`. Для `purchase`/`advertising` — перевірка достатності балансу. Пише `BalanceLog`. Викликається безпосередньо з реклами та інших сервісів; **основний withdraw-view** іде через `BalanceOperationMixin.perform_balance_operation`, а не через цей метод (обидва шляхи мають `select_for_update`). |
-| `BalanceLog` | `models.py` | Історія з типами `deposit`, `withdraw`, `purchase`, `earning`, `advertising`. |
-| `BalanceOperationLog` | `apps/monitoring/models.py` | Аудит лише для **deposit/withdraw** у `BalanceOperationMixin`. |
+| `Profile.balance_operation(amount, operation_type)` | там же | **Єдиний метод зміни балансу.** Транзакція + `select_for_update()` на рядок профілю. Перевірки: роль (для `withdraw`), достатність коштів (для дебетових операцій), максимальний баланс 1 000 000 (для кредитових), мінімальні суми (deposit ≥ 100, withdraw ≥ 1000), максимальна сума операції (1 000 000). Створює `BalanceLog`. Для deposit/withdraw/refund додатково створює `BalanceOperationLog`. |
+| `BalanceLog` | `models.py` | Історія з типами `deposit`, `withdraw`, `purchase`, `earning`, `advertising`, `refund`, `thanks_given`, `thanks_received`. |
+| `BalanceOperationLog` | `apps/monitoring/models.py` | Аудит для **deposit/withdraw/refund** (створюється з `balance_operation()`). |
 
 ## Зміна балансу з HTTP (основний шлях)
 
 | Клас / view | URL | Дія |
 |-------------|-----|-----|
-| `AddBalanceView` | `POST /api/users/add-balance/` | `perform_balance_operation(..., 'deposit')`. |
+| `AddBalanceView` | `POST /api/users/add-balance/` | `profile.balance_operation(amount, 'deposit')`. |
 | Той самий `AddBalanceView` | `POST /api/users/update-balance/` | Alias: та сама логіка; у відповіді текст «Баланс успішно оновлено» (перевірка `request.path`). |
-| `WithdrawBalanceView` | `POST /api/users/withdraw-balance/` | Спочатку `profile_can_request_balance_withdraw`; тіло: `amount` передається в серіалізатор **як є** (без `float`). Потім `perform_balance_operation(..., 'withdraw')`. |
+| `WithdrawBalanceView` | `POST /api/users/withdraw-balance/` | Спочатку `profile_can_request_balance_withdraw`; далі делегує `create_payout_request()` з `apps.payouts`. |
 
 Файл: `apps/users/api/balance_views.py`.  
 Маршрути: `apps/users/api/urls.py` (префікс API: `apps/api/urls.py` → `users/`).
 
-## Міксин операцій
+## Метод balance_operation()
 
-`apps/users/api/mixins.py` → `BalanceOperationMixin.perform_balance_operation`:
+`apps/users/models.py` → `Profile.balance_operation(amount, operation_type)`:
 
-- `transaction.atomic()`, `Profile.objects.select_for_update().get(id=profile.id)`.
-- Мінімальні суми: поповнення **100**, виведення **1000** (у текстах помилок на view часто FanCoins; у частині `ValidationError` міксина зустрічається формулювання «грн» — звертати увагу при уніфікації копірайту).
-- Верхня межа операції: `settings.MAX_BALANCE_OPERATION_AMOUNT`.
-- Типи операцій: списання — `withdraw`, `purchase`, `thanks_given`; зарахування — `deposit`, `earning`, `thanks_received`.
-- **Withdraw по ролі** в міксині **не** дублюється навмисно — перевірка є у **view**, у **серіалізаторі** (UX-шар) і в **`Profile.update_balance()`** (третій шар для викликів поза основним withdraw-view, наприклад майбутніх management-команд чи сервісів, що підуть через модель).
+- `transaction.atomic()`, `Profile.objects.select_for_update().get(pk=self.pk)`.
+- Мінімальні суми: поповнення **100**, виведення **1000**.
+- Верхня межа однієї операції: **1 000 000**. Максимальний баланс: **1 000 000**.
+- Дебетові операції (списання): `withdraw`, `purchase`, `advertising`, `thanks_given`.
+- Кредитові операції (зарахування): `deposit`, `earning`, `thanks_received`, `refund`.
+- Для `withdraw` додатково перевіряється роль через `profile_can_request_balance_withdraw`.
+- Завжди створює `BalanceLog`; для `deposit`/`withdraw`/`refund` додатково `BalanceOperationLog` (мониторинг).
+- Повертає створений `BalanceLog` запис.
 
 ## Серіалізатори
 
@@ -70,7 +73,7 @@
 
 ## Що не є частиною «поповнити/вивести», але змінює баланс
 
-- Покупки глав, підписки, подяки авторам, реклама — окремі сервіси/views; використовують `BalanceOperationMixin` або `Profile.update_balance` з іншими `operation_type`.
+- Покупки глав, підписки, подяки авторам, реклама — окремі сервіси/views; використовують `Profile.balance_operation()` з відповідними `operation_type`.
 - Публічний **withdraw** — лише `POST .../withdraw-balance/`.
 
 ## Контрольний чеклист для розробника

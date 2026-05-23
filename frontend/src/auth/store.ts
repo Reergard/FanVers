@@ -12,6 +12,8 @@ export type AuthUser = {
   canWithdrawBalance: boolean | null;
   /** Схвалений профіль виплат; null — ще не завантажено */
   hasActivePayoutProfile: boolean | null;
+  /** Статус верифікації профілю виплат: null (немає), "draft", "pending", "approved", "rejected", "requires_more_info" */
+  payoutProfileStatus: string | null;
   /** Чи дозволена самостійна зміна ролі через API (зазвичай false у проді) */
   roleSelfPromotionAllowed: boolean | null;
 };
@@ -34,6 +36,7 @@ export const authStore: AuthStore = {
     role: null,
     canWithdrawBalance: null,
     hasActivePayoutProfile: null,
+    payoutProfileStatus: null,
     roleSelfPromotionAllowed: null,
   },
 };
@@ -74,6 +77,7 @@ export function setAuthAnonymous() {
     role: null,
     canWithdrawBalance: null,
     hasActivePayoutProfile: null,
+    payoutProfileStatus: null,
     roleSelfPromotionAllowed: null,
   };
   emit();
@@ -93,6 +97,10 @@ export function setAuthAuthenticated(user: Partial<AuthUser>) {
       user.hasActivePayoutProfile !== undefined
         ? user.hasActivePayoutProfile
         : prev.hasActivePayoutProfile,
+    payoutProfileStatus:
+      user.payoutProfileStatus !== undefined
+        ? user.payoutProfileStatus
+        : prev.payoutProfileStatus,
     roleSelfPromotionAllowed:
       user.roleSelfPromotionAllowed !== undefined
         ? user.roleSelfPromotionAllowed
@@ -112,6 +120,7 @@ export function clearAuth() {
     role: null,
     canWithdrawBalance: null,
     hasActivePayoutProfile: null,
+    payoutProfileStatus: null,
     roleSelfPromotionAllowed: null,
   };
   emit();

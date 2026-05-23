@@ -30,13 +30,31 @@ export async function updatePayoutProfile(
   return data;
 }
 
-export async function submitPayoutProfile(): Promise<PayoutProfile> {
-  const { data } = await http.post<PayoutProfile>(API.payoutProfileSubmit);
+export async function submitPayoutProfile(
+  coinsAmount: number,
+  idempotencyKey: string,
+  isUrgent = false,
+): Promise<PayoutProfile> {
+  const { data } = await http.post<PayoutProfile>(API.payoutProfileSubmit, {
+    coins_amount: coinsAmount,
+    idempotency_key: idempotencyKey,
+    is_urgent: isUrgent,
+  });
+  return data;
+}
+
+export async function cancelPayoutProfile(): Promise<{ status: string }> {
+  const { data } = await http.delete<{ status: string }>(API.payoutProfile);
   return data;
 }
 
 export async function getPayoutMethods(): Promise<PayoutMethod[]> {
   const { data } = await http.get<PayoutMethod[]>(API.payoutMethods);
+  return data;
+}
+
+export async function getPayoutMethod(id: number): Promise<PayoutMethod> {
+  const { data } = await http.get<PayoutMethod>(API.payoutMethod(id));
   return data;
 }
 

@@ -37,6 +37,8 @@ export type UserProfile = {
   can_withdraw_balance?: boolean | null;
   /** Схвалений профіль виплат (KYC + метод); для чужого профілю — null */
   has_active_payout_profile?: boolean | null;
+  /** Статус верифікації профілю виплат: null (немає), "draft", "pending", "approved", "rejected", "requires_more_info" */
+  payout_profile_status?: string | null;
   /** Завжди true у поточній версії API (сумісність); самозміна ролі без глобального вимикача в settings */
   role_self_promotion_allowed?: boolean;
   /** Історія BalanceLog для власника профілю */
@@ -68,10 +70,7 @@ export type NotificationSettingsPatch = Partial<{
 
 export type PayoutProfile = {
   id: number;
-  legal_status: string;
   country: string;
-  tax_residency_country: string;
-  tax_id?: string;
   full_name_legal: string;
   full_name_latin: string;
   address_line: string;
@@ -90,16 +89,22 @@ export type PayoutProfilePayload = Omit<
 export type PayoutMethod = {
   id: number;
   method_type: string;
+  /** Повний IBAN (GET /api/payouts/methods/, поле iban_full) */
+  iban_full?: string;
+  /** Застаріле / write-only на POST; інколи в кеші */
+  iban?: string;
   iban_masked?: string;
+  bic_swift_display?: string;
   recipient_full_name: string;
   currency: string;
   is_active: boolean;
   is_default: boolean;
-  is_iban_cooldown_active?: boolean;
+  used_in_payouts?: boolean;
 };
 
 export type PayoutRequestItem = {
   id: number;
+  is_urgent: boolean;
   coins_amount: string;
   commission_percent: string;
   commission_coins: string;

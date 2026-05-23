@@ -563,6 +563,21 @@
   box-shadow: 0 0 0 1px rgba(255, 0, 0, 0.2) inset;
 }
 
+.btnGray {
+  border: 1px solid #888;
+  background: rgba(136, 136, 136, 0.1);
+  color: #aaa;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.btnGray:hover {
+  border-color: #aaa;
+  box-shadow: 0 0 0 1px rgba(136, 136, 136, 0.2) inset;
+}
+
 /* ----------------------------------------
    Row 4: Email block
    ---------------------------------------- */
@@ -730,6 +745,11 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
+.input option {
+  background: #1a1f2e;
+  color: rgba(255, 255, 255, 0.92);
+}
+
 .input[readonly] {
   cursor: default;
   color: #05B4C7;
@@ -762,6 +782,71 @@
   margin: 0;
   color: rgba(255, 255, 255, 0.75);
   font-size: clamp(12px, 1.05vw, 14px);
+}
+
+.payoutMethodBtn {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.4vw, 16px);
+  width: 100%;
+  padding: clamp(12px, 1.6vw, 18px);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.payoutMethodBtn:hover {
+  border-color: rgba(5, 255, 0, 0.5);
+  background: rgba(5, 255, 0, 0.05);
+}
+
+.payoutMethodLogo {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.payoutMethodInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.payoutMethodDesc {
+  font-size: clamp(11px, 1vw, 13px);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.currencyAutoDetect {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  font-size: clamp(12px, 1.05vw, 14px);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.currencyChangeLink {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: clamp(11px, 1vw, 13px);
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.currencyChangeLink:hover {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .balanceActions {

@@ -243,7 +243,11 @@ REST_FRAMEWORK = {
         'auth_refresh': '30/min',  # обновление токенов
         'auth_logout': '20/min',   # логаут
         'support_ticket': '10/hour',  # звернення в підтримку (на IP / user id)
-        'editor_chapter_image': '120/hour',  # зображення в редакторі (прив’язка до глави)
+        'editor_chapter_image': '120/hour',  # зображення в редакторі (прив'язка до глави)
+        'payout_submit': '5/hour',   # подача заявки на виплату (дебет балансу)
+        'payout_method': '10/hour',  # додавання методів виплати
+        'payout_cancel': '10/hour',  # скасування запитів на виплату
+        'payout_profile': '10/hour',  # створення/редагування/видалення профілю виплат
     }
 }
 
@@ -596,15 +600,22 @@ LOGGING = {
 }
 
 # Максимальная сумма операции с балансом
-MAX_BALANCE_OPERATION_AMOUNT = 100000
+MAX_BALANCE_OPERATION_AMOUNT = 100000  # макс поповнення за раз
 
 # === Payouts ===
 PAYOUTS_MIN_AMOUNT_COINS = Decimal("1000.00")
-PAYOUTS_AUTO_APPROVE_THRESHOLD_COINS = Decimal("50000.00")
+PAYOUTS_MAX_AMOUNT_COINS = Decimal("50000.00")
 PAYOUT_DEADLINE_DAYS = 14
-PAYOUT_IBAN_COOLDOWN_DAYS = 7
+PAYOUT_URGENT_DEADLINE_DAYS = 3
+PAYOUT_URGENT_COMMISSION_PERCENT = Decimal("10.00")
 WISE_WEBHOOK_ENABLED = env.bool("WISE_WEBHOOK_ENABLED", default=False)
 PAYOUT_ADMIN_EMAIL = env.str("PAYOUT_ADMIN_EMAIL", default="")
+PAYOUT_ENCRYPTION_KEY = env.str("PAYOUT_ENCRYPTION_KEY", default="")
+PAYOUT_ENCRYPTION_KEY_OLD = env.str("PAYOUT_ENCRYPTION_KEY_OLD", default="")
+
+if not DEBUG and not PAYOUT_ENCRYPTION_KEY:
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured("PAYOUT_ENCRYPTION_KEY must be set in production")
 
 # --- Stripe (Checkout Session) ---
 STRIPE_SECRET_KEY = env.str("STRIPE_SECRET_KEY", default="")

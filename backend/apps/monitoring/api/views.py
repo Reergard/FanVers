@@ -14,7 +14,6 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.db import models
 from apps.navigation.models import Bookmark
-from apps.users.api.mixins import BalanceOperationMixin
 from apps.users.models import Profile
 import logging
 
@@ -173,7 +172,6 @@ class AuthorThanksView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            balance_mixin = BalanceOperationMixin()
             duplicate_payload = None
             success_payload = None
 
@@ -197,17 +195,11 @@ class AuthorThanksView(APIView):
                             'duplicate': True,
                         }
                     else:
-                        giver_result = balance_mixin.perform_balance_operation(
-                            giver_profile,
-                            amount,
-                            'thanks_given'
-                        )
+                        giver_profile.balance_operation(amount, 'thanks_given')
+                        giver_profile.refresh_from_db()
+                        giver_result = float(giver_profile.balance)
 
-                        balance_mixin.perform_balance_operation(
-                            receiver_profile,
-                            amount,
-                            'thanks_received'
-                        )
+                        receiver_profile.balance_operation(amount, 'thanks_received')
 
                         thanks = AuthorThanks.objects.create(
                             giver=request.user,
@@ -228,7 +220,7 @@ class AuthorThanksView(APIView):
 
                         success_payload = {
                             'message': 'Подяку успішно відправлено',
-                            'new_balance': float(giver_result),
+                            'new_balance': giver_result,
                             'thanks_id': thanks.id,
                             'amount': float(amount),
                         }

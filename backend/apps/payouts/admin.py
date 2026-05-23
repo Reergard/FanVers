@@ -1,9 +1,11 @@
 import io
+from decimal import Decimal
 
 from django.contrib import admin
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
+from django.db import transaction
 from django.utils import timezone
 from django.utils.html import format_html
 
@@ -12,63 +14,58 @@ from .services.csv_export import generate_wise_csv
 from .services.csv_import import import_wise_reconciliation_csv
 
 
-class PayoutMethodInline(admin.TabularInline):
-    model = PayoutMethod
-    extra = 0
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-        "last_used_at",
-        "successful_payouts_count",
-    )
-
-
-@admin.register(PayoutProfile)
-class PayoutProfileAdmin(admin.ModelAdmin):
-    list_display = (
-        "user",
-        "legal_status",
-        "country",
-        "verification_status",
-        "payout_approved",
-    )
-    list_filter = ("verification_status", "payout_approved", "legal_status", "country")
-    search_fields = ("user__username", "user__email", "full_name_latin")
-    readonly_fields = ("created_at", "updated_at", "submitted_at", "verified_at")
-    inlines = [PayoutMethodInline]
-    actions = ["approve_profiles", "reject_profiles"]
-
-    @admin.action(description="Схвалити вибрані профілі")
-    def approve_profiles(self, request, queryset):
-        queryset.update(
-            verification_status=PayoutProfile.VerificationStatus.APPROVED,
-            payout_approved=True,
-            verified_at=timezone.now(),
-        )
-
-    @admin.action(description="Відхилити вибрані профілі")
-    def reject_profiles(self, request, queryset):
-        queryset.update(
-            verification_status=PayoutProfile.VerificationStatus.REJECTED,
-            payout_approved=False,
-        )
-
-
 @admin.register(PayoutRequest)
 class PayoutRequestAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "get_username",
+        "urgent_badge",
         "coins_amount",
         "amount_net",
+        "commission_percent",
+        "commission_coins",
+        "payout_currency",
         "status",
         "created_at",
         "deadline_at",
         "deadline_status",
     )
-    list_filter = ("status", "created_at")
-    search_fields = ("profile__user__username", "wise_transfer_id", "invoice_number")
+    list_display_links = (
+        "id",
+        "get_username",
+        "coins_amount",
+        "amount_net",
+        "payout_currency",
+        "status",
+        "created_at",
+        "deadline_at",
+    )
+    list_filter = ("status", "is_urgent", "created_at", "payout_currency")
+    ordering = ("-is_urgent", "-created_at")
+    search_fields = (
+        "profile__user__username",
+        "profile__user__email",
+        "snapshot_full_name_latin",
+        "wise_transfer_id",
+        "invoice_number",
+    )
     readonly_fields = (
+        "get_username",
+        "get_user_email",
+        "is_urgent",
+        # KYC snapshot
+        "snapshot_country",
+        "snapshot_full_name_legal",
+        "snapshot_full_name_latin",
+        "snapshot_address_line",
+        "snapshot_city",
+        "snapshot_postal_code",
+        # Реквізити
+        "snapshot_recipient_name",
+        "snapshot_iban_masked",
+        "snapshot_bic_swift",
+        "snapshot_method_type",
+        # Фінанси
         "coins_amount",
         "commission_percent",
         "commission_coins",
@@ -78,29 +75,113 @@ class PayoutRequestAdmin(admin.ModelAdmin):
         "withholding_tax_rate",
         "withholding_tax_amount",
         "amount_net",
-        "snapshot_recipient_name",
-        "snapshot_iban",
-        "snapshot_bic_swift",
-        "snapshot_method_type",
-        "auto_check_result",
+        "payout_currency",
+        # Системне
         "idempotency_key",
         "created_at",
-        "auto_checked_at",
         "approved_at",
+        "approved_by",
         "processed_at",
         "completed_at",
         "balance_log",
     )
+    fieldsets = (
+        ("Користувач", {
+            "fields": ("get_username", "get_user_email"),
+        }),
+        ("KYC-дані (на момент заявки)", {
+            "fields": (
+                "snapshot_country",
+                "snapshot_full_name_legal",
+                "snapshot_full_name_latin",
+                "snapshot_address_line",
+                "snapshot_city",
+                "snapshot_postal_code",
+            ),
+        }),
+        ("Реквізити (на момент заявки)", {
+            "fields": (
+                "snapshot_recipient_name",
+                "snapshot_iban_masked",
+                "snapshot_bic_swift",
+                "snapshot_method_type",
+            ),
+        }),
+        ("Фінанси", {
+            "fields": (
+                "coins_amount",
+                "commission_percent",
+                "commission_coins",
+                "coins_after_commission",
+                "payout_currency",
+                "exchange_rate",
+                "amount_gross",
+                "withholding_tax_rate",
+                "withholding_tax_amount",
+                "amount_net",
+            ),
+        }),
+        ("Статус і обробка", {
+            "fields": (
+                "is_urgent",
+                "status",
+                "approved_by",
+                "wise_transfer_id",
+                "failure_reason",
+                "admin_notes",
+                "invoice_number",
+                "invoice_pdf",
+            ),
+        }),
+        ("Дати", {
+            "fields": (
+                "created_at",
+                "approved_at",
+                "processed_at",
+                "completed_at",
+                "deadline_at",
+            ),
+        }),
+        ("Системне", {
+            "classes": ("collapse",),
+            "fields": (
+                "idempotency_key",
+                "balance_log",
+            ),
+        }),
+    )
     actions = [
+        "approve_requests",
         "create_wise_batch",
         "mark_batch_sent",
-        "approve_requests",
         "cancel_requests",
     ]
 
-    @admin.display(description="Автор")
+    @admin.display(description="Користувач")
     def get_username(self, obj):
         return obj.profile.user.username
+
+    @admin.display(description="Email")
+    def get_user_email(self, obj):
+        return obj.profile.user.email
+
+    @admin.display(description="IBAN (маскований)")
+    def snapshot_iban_masked(self, obj):
+        iban = obj.snapshot_iban
+        if iban and not iban.startswith("["):
+            visible = max(4, len(iban) // 4)
+            return iban[:visible] + "****" + iban[-2:]
+        return iban or "-"
+
+    @admin.display(description="⚡", boolean=False)
+    def urgent_badge(self, obj):
+        if obj.is_urgent:
+            return format_html(
+                '<span style="color:#fff;background:#e74c3c;padding:2px 8px;'
+                'border-radius:4px;font-weight:bold;font-size:0.85em">'
+                '⚡ ТЕРМІНОВО</span>'
+            )
+        return ""
 
     @admin.display(description="Дедлайн")
     def deadline_status(self, obj):
@@ -118,60 +199,93 @@ class PayoutRequestAdmin(admin.ModelAdmin):
 
     @admin.action(description="Схвалити вибрані запити")
     def approve_requests(self, request, queryset):
-        queryset.filter(status__in=["pending", "awaiting_review"]).update(
-            status="approved",
-            approved_at=timezone.now(),
-        )
+        with transaction.atomic():
+            eligible = queryset.filter(status__in=["pending", "awaiting_review"])
+            profile_ids = list(eligible.values_list("profile_id", flat=True).distinct())
+            updated = eligible.update(
+                status="approved",
+                approved_at=timezone.now(),
+                approved_by=request.user,
+            )
+            PayoutProfile.objects.filter(
+                id__in=profile_ids,
+                verification_status=PayoutProfile.VerificationStatus.PENDING,
+            ).update(
+                verification_status=PayoutProfile.VerificationStatus.APPROVED,
+                payout_approved=True,
+                verified_at=timezone.now(),
+            )
+        self.message_user(request, f"Схвалено {updated} запитів.")
 
     @admin.action(description="Скасувати вибрані запити (повернення коштів)")
     def cancel_requests(self, request, queryset):
+        import logging
+
         from .services.payout_cancel import cancel_payout_request
 
+        logger = logging.getLogger(__name__)
         cancelled = 0
+        errors = []
         for req in queryset.filter(
             status__in=["pending", "awaiting_review", "approved"]
         ):
             try:
                 cancel_payout_request(req, "Скасовано адміністратором")
                 cancelled += 1
-            except Exception:
-                pass
-        self.message_user(request, f"Скасовано {cancelled} запитів, кошти повернуто.")
+            except Exception as e:
+                logger.error("Помилка скасування запиту #%s: %s", req.id, e)
+                errors.append(f"#{req.id}: {e}")
+        msg = f"Скасовано {cancelled} запитів, кошти повернуто."
+        if errors:
+            msg += f" Помилки ({len(errors)}): {'; '.join(errors)}"
+            self.message_user(request, msg, level="warning")
+        else:
+            self.message_user(request, msg)
 
     @admin.action(description="Створити batch для Wise (CSV)")
     def create_wise_batch(self, request, queryset):
-        approved = queryset.filter(status="approved")
-        if not approved.exists():
-            self.message_user(
-                request,
-                "Немає схвалених запитів для batch.",
-                level="warning",
+        with transaction.atomic():
+            approved = (
+                queryset.filter(status="approved")
+                .select_for_update()
             )
-            return
+            request_ids = list(approved.values_list("id", flat=True))
+            if not request_ids:
+                self.message_user(
+                    request,
+                    "Немає схвалених запитів для batch.",
+                    level="warning",
+                )
+                return
 
-        request_ids = list(approved.values_list("id", flat=True))
+            batch = PayoutBatch.objects.create(
+                name=f"{timezone.now().strftime('%Y-%m-%d')} batch",
+                total_count=len(request_ids),
+                created_by=request.user,
+            )
 
-        batch = PayoutBatch.objects.create(
-            name=f"{timezone.now().strftime('%Y-%m-%d')} batch",
-            total_count=len(request_ids),
-            created_by=request.user,
-        )
+            approved_qs = PayoutRequest.objects.filter(id__in=request_ids)
+            totals_by_currency = {}
+            for req in approved_qs:
+                cur = req.payout_currency
+                totals_by_currency[cur] = totals_by_currency.get(cur, Decimal("0")) + req.amount_net
+            batch.total_amount_by_currency = {
+                cur: str(amt) for cur, amt in totals_by_currency.items()
+            }
 
-        total = sum(req.amount_net for req in approved)
-        batch.total_amount_by_currency = {"UAH": str(total)}
+            approved_qs.update(batch=batch, status="in_batch")
 
-        approved.update(batch=batch, status="in_batch")
+            csv_content = generate_wise_csv(
+                PayoutRequest.objects.filter(id__in=request_ids)
+            )
 
-        requests_for_csv = PayoutRequest.objects.filter(id__in=request_ids)
-        csv_content = generate_wise_csv(requests_for_csv)
-
-        batch.csv_file.save(
-            f"wise_batch_{batch.id}.csv",
-            io.BytesIO(csv_content.encode("utf-8")),
-        )
-        batch.status = PayoutBatch.Status.CSV_GENERATED
-        batch.csv_generated_at = timezone.now()
-        batch.save()
+            batch.csv_file.save(
+                f"wise_batch_{batch.id}.csv",
+                io.BytesIO(csv_content.encode("utf-8")),
+            )
+            batch.status = PayoutBatch.Status.CSV_GENERATED
+            batch.csv_generated_at = timezone.now()
+            batch.save()
 
         response = HttpResponse(csv_content, content_type="text/csv")
         response["Content-Disposition"] = (
@@ -181,18 +295,29 @@ class PayoutRequestAdmin(admin.ModelAdmin):
 
     @admin.action(description="Позначити batch як відправлений у Wise")
     def mark_batch_sent(self, request, queryset):
-        in_batch = queryset.filter(status="in_batch")
-        batch_ids = list(
-            in_batch.values_list("batch_id", flat=True).distinct()
-        )
-        updated = in_batch.update(
-            status="processing",
-            processed_at=timezone.now(),
-        )
-        PayoutBatch.objects.filter(id__in=batch_ids).update(
-            status=PayoutBatch.Status.SENT_TO_WISE,
-            sent_at=timezone.now(),
-        )
+        with transaction.atomic():
+            in_batch = queryset.filter(status="in_batch")
+            batch_ids = list(
+                in_batch.values_list("batch_id", flat=True).distinct()
+            )
+            updated = in_batch.update(
+                status="processing",
+                processed_at=timezone.now(),
+            )
+            batches = PayoutBatch.objects.filter(id__in=batch_ids)
+            # Видаляємо CSV-файли з диску (містять розшифровані IBAN)
+            for b in batches:
+                if b.csv_file:
+                    try:
+                        b.csv_file.storage.delete(b.csv_file.name)
+                    except Exception:
+                        pass
+                    b.csv_file = None
+            PayoutBatch.objects.filter(id__in=batch_ids).update(
+                status=PayoutBatch.Status.SENT_TO_WISE,
+                sent_at=timezone.now(),
+                csv_file="",
+            )
         self.message_user(request, f"{updated} запитів позначено як processing.")
 
 
@@ -246,7 +371,7 @@ class PayoutBatchAdmin(admin.ModelAdmin):
         if request.method == "POST" and request.FILES.get("csv_file"):
             csv_file = request.FILES["csv_file"]
             content = csv_file.read().decode("utf-8")
-            results = import_wise_reconciliation_csv(content)
+            results = import_wise_reconciliation_csv(content, batch_id=batch_id)
             self.message_user(
                 request,
                 f"Оновлено: {results['updated']}, помилки: {results['failed']}, "

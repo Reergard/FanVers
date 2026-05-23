@@ -12,8 +12,7 @@ from .serializers import (
     UpdateBalanceSerializer,
     BalanceOperationSerializer
 )
-from .mixins import BalanceOperationMixin
-from apps.users.models import BalanceIdempotencyRecord
+from apps.users.models import BalanceIdempotencyRecord, Profile
 from apps.users.balance_access import (
     API_WITHDRAW_ROLE_FORBIDDEN_CODE,
     API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE,
@@ -41,7 +40,6 @@ class AddBalanceView(APIView):
                         status=status.HTTP_400_BAD_REQUEST,
                     )
                 amount = serializer.validated_data['amount']
-                balance_mixin = BalanceOperationMixin()
                 with transaction.atomic():
                     try:
                         BalanceIdempotencyRecord.objects.create(
@@ -50,7 +48,6 @@ class AddBalanceView(APIView):
                             operation_type=BalanceIdempotencyRecord.OP_DEPOSIT,
                         )
                     except IntegrityError:
-                        # Already processed - return current balance.
                         return Response(
                             {
                                 "already_processed": True,
@@ -59,11 +56,10 @@ class AddBalanceView(APIView):
                             status=status.HTTP_200_OK,
                         )
 
-                    new_balance = balance_mixin.perform_balance_operation(
-                        request.user.profile,
-                        amount,
-                        'deposit'
-                    )
+                    profile = request.user.profile
+                    profile.balance_operation(amount, 'deposit')
+                    profile.refresh_from_db()
+                    new_balance = profile.balance
                 # Alias URL update-balance/ — та сама логіка, інше повідомлення для сумісності.
                 path = (request.path or "").rstrip("/")
                 ok_message = (
@@ -127,10 +123,9 @@ class WithdrawBalanceView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        from apps.payouts.api.serializers import CreatePayoutRequestSerializer
-        from apps.payouts.models import PayoutMethod
+        from apps.payouts.api.serializers import CreatePayoutRequestSerializer, PayoutRequestSerializer
+        from apps.payouts.models import PayoutMethod, PayoutProfile
         from apps.payouts.services.payout_create import create_payout_request
-        from apps.payouts.api.serializers import PayoutRequestSerializer
 
         serializer = CreatePayoutRequestSerializer(data=request.data)
         if not serializer.is_valid():
@@ -150,7 +145,7 @@ class WithdrawBalanceView(APIView):
                 {'error': 'Метод виплати не знайдено'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except Exception:
+        except PayoutProfile.DoesNotExist:
             return Response(
                 {'error': 'Профіль виплат не налаштовано'},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -162,6 +157,7 @@ class WithdrawBalanceView(APIView):
                 coins_amount=serializer.validated_data['amount'],
                 method=method,
                 idempotency_key=serializer.validated_data['idempotency_key'],
+                is_urgent=serializer.validated_data.get('is_urgent', False),
             )
         except ValidationError as e:
             error_message = str(e)
@@ -180,6 +176,7 @@ class WithdrawBalanceView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        request.user.profile.refresh_from_db(fields=['balance'])
         data = PayoutRequestSerializer(payout_request).data
         data['new_balance'] = str(request.user.profile.balance)
         return Response(data, status=status.HTTP_201_CREATED)

@@ -11,7 +11,6 @@ from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from apps.users.api.mixins import BalanceOperationMixin
 from apps.users.models import BalanceIdempotencyRecord, Profile
 
 from .models import PaymentSession, WebhookEvent
@@ -40,18 +39,17 @@ def _validate_amount(amount_coins: Decimal) -> None:
     if quant != amount_coins:
         raise ValueError("amount must have at most 2 decimal places")
 
-    min_dep = Decimal(str(BalanceOperationMixin.MIN_DEPOSIT_AMOUNT))
+    min_dep = Decimal(str(Profile.MIN_DEPOSIT_AMOUNT))
     if amount_coins < min_dep:
-        raise ValueError(f"min deposit is {BalanceOperationMixin.MIN_DEPOSIT_AMOUNT}")
+        raise ValueError(f"min deposit is {Profile.MIN_DEPOSIT_AMOUNT}")
 
-    max_op = Decimal(str(getattr(settings, "MAX_BALANCE_OPERATION_AMOUNT", 100000)))
-    if amount_coins > max_op:
-        raise ValueError(f"max operation amount is {max_op}")
+    max_dep = Decimal(str(Profile.MAX_DEPOSIT_AMOUNT))
+    if amount_coins > max_dep:
+        raise ValueError(f"max deposit amount is {max_dep}")
 
 
 def _validate_balance_limit(profile: Profile, amount_coins: Decimal) -> None:
-    max_balance = Decimal("1000000")
-    if profile.balance + amount_coins > max_balance:
+    if profile.balance + amount_coins > Profile.MAX_BALANCE:
         raise ValueError("max balance exceeded")
 
 
@@ -188,9 +186,9 @@ def handle_checkout_session_completed(*, event: dict) -> None:
             )
             return
 
-        # 3) Apply balance using existing atomic mixin (includes select_for_update)
+        # 3) Apply balance (includes select_for_update)
         profile = Profile.objects.get(user_id=user.id)
-        BalanceOperationMixin().perform_balance_operation(profile, payment_session.amount_coins, "deposit")
+        profile.balance_operation(payment_session.amount_coins, "deposit")
 
         # 4) Mark session paid
         PaymentSession.objects.filter(id=payment_session.id, status=PaymentSession.STATUS_PENDING).update(

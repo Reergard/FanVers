@@ -3,7 +3,27 @@
     "allow": [
       "Bash(find D:WebsitedesingFan-versbackend -name *.py -path *chat* -type f)",
       "Bash(done)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(python -c \"import py_compile; files=['backend/apps/users/models.py','backend/apps/users/api/mixins.py','backend/apps/users/api/balance_views.py','backend/apps/payments/services.py','backend/apps/subscription/services.py','backend/apps/monitoring/api/views.py','backend/apps/payouts/services/payout_create.py','backend/apps/payouts/services/payout_cancel.py','backend/apps/payouts/api/views.py','backend/apps/website_advertising/api/views.py']; [py_compile.compile\\(f, doraise=True\\) for f in files]; print\\('All files compile OK'\\)\")",
+      "Bash(python -c ' *)",
+      "Bash(tasklist /FI \"IMAGENAME eq daphne.exe\")",
+      "Bash(findstr /I \"daphne\")",
+      "Bash(tasklist /FI \"IMAGENAME eq python.exe\")",
+      "Bash(findstr /I \"python\")",
+      "Bash(..\\\\venv\\\\Scripts\\\\python.exe manage.py migrate --check)",
+      "PowerShell(D:\\\\Website\\\\desing\\\\Fan-vers\\\\venv\\\\Scripts\\\\python.exe -c \"import sys; print\\('\\\\n'.join\\(sys.path\\)\\)\")",
+      "PowerShell($conn = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | Where-Object State -eq Listen | Select-Object -First 1; if \\($conn\\) { Stop-Process -Id $conn.OwningProcess -Force; \"Killed PID $\\($conn.OwningProcess\\)\" } else { \"Port 8000 is free\" })",
+      "Bash(npm run *)",
+      "WebSearch",
+      "WebFetch(domain:wise.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docs.wise.com)",
+      "Bash(python manage.py makemigrations payouts --name add_is_urgent)",
+      "Bash(python manage.py migrate payouts)",
+      "Bash(python manage.py check)",
+      "Bash(python manage.py shell -c ' *)",
+      "Bash(python manage.py shell -c \"from django.core.cache import cache; cache.clear\\(\\); print\\('Cache cleared'\\)\")",
+      "Bash(npx tsc *)"
     ]
   }
 }

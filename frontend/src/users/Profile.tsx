@@ -24,8 +24,17 @@ import {
   becomeAuthor,
   withdrawBalance,
 } from "./profileService";
-import { getPayoutMethods } from "./payoutService";
+import {
+  getPayoutMethod,
+  getPayoutMethods,
+  getPayoutProfile,
+  getPayoutRequests,
+} from "./payoutService";
+import { PAYOUT_PREVIOUSLY_USED_STATUSES } from "./payoutLabels";
+import { payoutMethodBic, payoutMethodFullIban } from "./payoutMethodDisplay";
 import { PayoutSetupModal } from "./PayoutSetupModal";
+import { PayoutMethodSelectModal } from "./PayoutMethodSelectModal";
+import { extractApiError } from "./payoutErrors";
 import { PayoutRequestsList } from "./PayoutRequestsList";
 import { AddPayoutMethodModal } from "./AddPayoutMethodModal";
 import { createCheckoutSession } from "../payments/paymentApi";
@@ -36,7 +45,11 @@ import { Breadcrumb } from "../navigation/Breadcrumb";
 import { PageTitle } from "../navigation/PageTitle";
 import { resolveAvatarUrl } from "../shared/avatar/resolveAvatarUrl";
 import { UserSubscriptionsSection } from "./UserSubscriptionsSection";
-import type { NotificationSettingsPatch, BalanceHistoryItem } from "./types";
+import type {
+  NotificationSettingsPatch,
+  BalanceHistoryItem,
+  PayoutMethod,
+} from "./types";
 import backgroundsAvatarsSvgRaw from "./assets/backgrounds/backgrounds_avatars.svg?raw";
 import { profileQueryKey } from "../shared/queryKeys";
 
@@ -204,15 +217,23 @@ export default function Profile() {
 
   const [depositModalOpen, setDepositModalOpen] = useState(false);
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
+  const [withdrawIdempotencyKey, setWithdrawIdempotencyKey] = useState(() => crypto.randomUUID());
+  const [payoutMethodSelectOpen, setPayoutMethodSelectOpen] = useState(false);
   const [payoutSetupOpen, setPayoutSetupOpen] = useState(false);
   const [selectedMethodId, setSelectedMethodId] = useState<number | null>(null);
+  const [selectedPayoutMethod, setSelectedPayoutMethod] =
+    useState<PayoutMethod | null>(null);
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
   const [payoutRequestsOpen, setPayoutRequestsOpen] = useState(false);
   const [addMethodOpen, setAddMethodOpen] = useState(false);
+  const [addMethodFromSelect, setAddMethodFromSelect] = useState(false);
   const [adultConfirmModalOpen, setAdultConfirmModalOpen] = useState(false);
   const [aboutModalOpen, setAboutModalOpen] = useState(false);
   const [aboutDraft, setAboutDraft] = useState("");
-  const [amount, setAmount] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawUrgent, setWithdrawUrgent] = useState(false);
+  const [withdrawConfirmOpen, setWithdrawConfirmOpen] = useState(false);
   const [balanceHistory, setBalanceHistory] = useState<BalanceHistoryItem[]>([]);
   const { hideAdultContent, setHideAdultContent } = useAdultContent();
 
@@ -229,6 +250,11 @@ export default function Profile() {
 
   const profile = profileQuery.data;
   const isLoading = profileQuery.isLoading;
+
+  const hasPayoutProfile = profile?.has_active_payout_profile === true;
+  const payoutStatus = profile?.payout_profile_status ?? null;
+  const hasAnyPayoutProfile =
+    payoutStatus !== null && payoutStatus !== "cancelled";
 
   useEffect(() => {
     if (profile?.hide_adult_content == null) return;
@@ -326,24 +352,92 @@ export default function Profile() {
     queryKey: ["payoutMethods", userId],
     queryFn: getPayoutMethods,
     enabled:
-      withdrawModalOpen && profile?.has_active_payout_profile === true,
+      (withdrawModalOpen || payoutMethodSelectOpen) &&
+      (profile?.has_active_payout_profile === true || hasAnyPayoutProfile),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const payoutMethods = payoutMethodsQuery.data ?? [];
 
+  const payoutRequestsForSelectQuery = useQuery({
+    queryKey: ["payoutRequests", userId],
+    queryFn: getPayoutRequests,
+    enabled: payoutMethodSelectOpen,
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+
+  const showPreviouslyUsedPayouts = (payoutRequestsForSelectQuery.data ?? []).some(
+    (r) => PAYOUT_PREVIOUSLY_USED_STATUSES.has(r.status)
+  );
+
+  const payoutProfileQuery = useQuery({
+    queryKey: ["payoutProfile", userId],
+    queryFn: getPayoutProfile,
+    enabled:
+      (payoutSetupOpen && hasAnyPayoutProfile && !hasPayoutProfile) ||
+      (payoutMethodSelectOpen && hasAnyPayoutProfile),
+  });
+
+  const existingPayoutProfile = payoutProfileQuery.data && "id" in payoutProfileQuery.data
+    ? payoutProfileQuery.data
+    : null;
+
+  const payoutProfileForSelect =
+    payoutMethodSelectOpen && showPreviouslyUsedPayouts
+      ? existingPayoutProfile
+      : null;
+
+  const withdrawMethodDetailQuery = useQuery({
+    queryKey: ["payoutMethodDetail", userId, selectedMethodId],
+    queryFn: () => getPayoutMethod(selectedMethodId!),
+    enabled: withdrawModalOpen && selectedMethodId != null,
+    staleTime: 0,
+    retry: 2,
+  });
+
+  const withdrawPayoutMethod = useMemo(() => {
+    if (withdrawMethodDetailQuery.data) {
+      return withdrawMethodDetailQuery.data;
+    }
+    if (selectedMethodId != null) {
+      const fromList = payoutMethods.find(
+        (m) => Number(m.id) === Number(selectedMethodId)
+      );
+      if (fromList && payoutMethodFullIban(fromList)) return fromList;
+    }
+    return selectedPayoutMethod;
+  }, [
+    withdrawMethodDetailQuery.data,
+    selectedMethodId,
+    payoutMethods,
+    selectedPayoutMethod,
+  ]);
+
+  const withdrawIbanLoading =
+    withdrawModalOpen &&
+    selectedMethodId != null &&
+    (withdrawMethodDetailQuery.isLoading ||
+      (withdrawMethodDetailQuery.isFetching && !withdrawPayoutMethod));
+
   const withdrawMutation = useMutation({
-    mutationFn: (amt: number) =>
-      withdrawBalance(amt, selectedMethodId!, crypto.randomUUID()),
+    mutationFn: ({ amt, idempotencyKey, isUrgent }: { amt: number; idempotencyKey: string; isUrgent: boolean }) =>
+      withdrawBalance(amt, selectedMethodId!, idempotencyKey, isUrgent),
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
+      queryClient.invalidateQueries({ queryKey: ["payoutRequests", userId] });
       await refreshAuthStatus();
       setWithdrawModalOpen(false);
-      setAmount("");
+      setWithdrawAmount("");
+      setWithdrawUrgent(false);
       setSelectedMethodId(null);
+      setSelectedPayoutMethod(null);
+      setWithdrawIdempotencyKey(crypto.randomUUID());
       showSuccess("Запит на виплату створено");
     },
-    onError: (err: any) => {
-      showError(err?.response?.data?.error ?? "Помилка при виведенні коштів");
+    onError: (err: unknown) => {
+      showError(extractApiError(err, "Помилка при виведенні коштів"));
     },
   });
 
@@ -442,7 +536,7 @@ export default function Profile() {
   };
 
   const handleDeposit = () => {
-    const num = Number(amount);
+    const num = Number(depositAmount);
     if (!Number.isFinite(num) || num <= 0) {
       showError("Введіть коректну суму");
       return;
@@ -450,15 +544,15 @@ export default function Profile() {
     depositMutation.mutate(num);
   };
 
-  const handleWithdraw = () => {
-    const num = Number(amount);
+  const handleWithdrawValidate = () => {
+    const num = Number(withdrawAmount);
     const balanceNumLocal = profile ? parseBalance(profile.balance) : 0;
     if (!selectedMethodId) {
       showError("Оберіть метод виплати");
       return;
     }
-    if (!Number.isFinite(num) || num <= 0) {
-      showError("Введіть коректну суму");
+    if (!Number.isFinite(num) || num <= 0 || !Number.isInteger(num)) {
+      showError("Введіть коректну цілу суму");
       return;
     }
     if (num < MIN_PAYOUT_COINS) {
@@ -469,7 +563,13 @@ export default function Profile() {
       showError("Недостатньо коштів");
       return;
     }
-    withdrawMutation.mutate(num);
+    setWithdrawConfirmOpen(true);
+  };
+
+  const handleWithdrawConfirm = () => {
+    const num = Number(withdrawAmount);
+    setWithdrawConfirmOpen(false);
+    withdrawMutation.mutate({ amt: num, idempotencyKey: withdrawIdempotencyKey, isUrgent: withdrawUrgent });
   };
 
   const handleTransactionHistory = () => {
@@ -553,10 +653,9 @@ export default function Profile() {
   );
   const balanceNum = parseBalance(profile.balance);
   const mayWithdrawBalance = profile.can_withdraw_balance === true;
-  const hasPayoutProfile = profile.has_active_payout_profile === true;
   const canRequestPayout =
     mayWithdrawBalance && hasPayoutProfile && balanceNum >= MIN_PAYOUT_COINS;
-  const needsPayoutSetup = mayWithdrawBalance && !hasPayoutProfile;
+  const payoutPending = payoutStatus === "pending";
 
   const renderProfileTypeRow = () => (
     <div className={styles.profileTypeRow}>
@@ -765,30 +864,34 @@ export default function Profile() {
                   <span className={styles.balanceCommissionValue}>{profile.commission ?? 15}%</span>
                 </div>
                 {mayWithdrawBalance ? (
-                  needsPayoutSetup ? (
+                  payoutPending ? (
                     <button
                       type="button"
-                      className={`${styles.btnRed} ${styles.balanceBtnWithdraw}`}
-                      onClick={() => setPayoutSetupOpen(true)}
+                      className={`${styles.btnOutlineGold} ${styles.balanceBtnWithdraw}`}
+                      onClick={() => setPayoutRequestsOpen(true)}
                     >
                       <img src={cashWithdrawalIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
                       <span className={styles.btnBalanceText}>
-                        Налаштувати<br />профіль виплат
+                        Заявка<br />на перевірці
                       </span>
                     </button>
                   ) : (
                     <button
                       type="button"
                       className={`${styles.btnRed} ${styles.balanceBtnWithdraw}`}
-                      onClick={() => setWithdrawModalOpen(true)}
+                      onClick={() => setPayoutMethodSelectOpen(true)}
                       disabled={
                         withdrawMutation.isPending ||
-                        balanceNum < MIN_PAYOUT_COINS
+                        (hasPayoutProfile && balanceNum < MIN_PAYOUT_COINS)
                       }
                     >
                       <img src={cashWithdrawalIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
                       <span className={styles.btnBalanceText}>
-                        {withdrawMutation.isPending ? "Завантаження..." : <>Запросити<br />виплату</>}
+                        {withdrawMutation.isPending
+                          ? "Завантаження..."
+                          : hasPayoutProfile
+                            ? <>Запросити<br />виплату</>
+                            : <>Заповнити заявку<br />на виплати</>}
                       </span>
                     </button>
                   )
@@ -820,7 +923,7 @@ export default function Profile() {
                 <span className={styles.historyBtnTextDesktop}>Історія транзакцій</span>
                 <span className={styles.historyBtnTextMobile}>Історія<br />транзакцій</span>
               </button>
-              {hasPayoutProfile && (
+              {hasAnyPayoutProfile && (
                 <button
                   type="button"
                   className={`${styles.btnOutlineGold} ${styles.balanceHistoryBtn}`}
@@ -1089,8 +1192,8 @@ export default function Profile() {
                 className={styles.input}
                 type="number"
                 min="1"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(e.target.value)}
                 placeholder="0"
               />
             </span>
@@ -1099,7 +1202,7 @@ export default function Profile() {
             type="button"
             className={styles.btnGreen}
             onClick={handleDeposit}
-            disabled={depositMutation.isPending || !amount}
+            disabled={depositMutation.isPending || !depositAmount}
           >
             {depositMutation.isPending ? "Завантаження..." : "Перейти до оплати"}
           </button>
@@ -1108,68 +1211,184 @@ export default function Profile() {
 
       <Modal
         open={withdrawModalOpen && canRequestPayout}
-        onClose={() => setWithdrawModalOpen(false)}
+        onClose={() => {
+          setWithdrawModalOpen(false);
+          setWithdrawAmount("");
+          setWithdrawUrgent(false);
+          setWithdrawConfirmOpen(false);
+          setSelectedMethodId(null);
+          setSelectedPayoutMethod(null);
+        }}
         title="Запросити виплату"
       >
         <div className={styles.modalForm}>
           <p className={styles.modalHint}>
             Доступно: {profile.balance} (мін. {MIN_PAYOUT_COINS} FanCoins)
           </p>
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>Метод виплати</span>
-            <span className={styles.fieldBox}>
-              <select
-                className={styles.input}
-                value={selectedMethodId ?? ""}
-                onChange={(e) =>
-                  setSelectedMethodId(
-                    e.target.value ? Number(e.target.value) : null
-                  )
-                }
+          {(() => {
+            const method = withdrawPayoutMethod;
+            if (!method) {
+              return (
+                <p className={styles.modalHint} style={{ color: "#d9534f" }}>
+                  Метод виплати не обрано. Поверніться та оберіть спосіб у списку.
+                </p>
+              );
+            }
+            return (
+              <div
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: "8px",
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  marginBottom: "12px",
+                }}
               >
-                <option value="" disabled>
-                  {payoutMethods.length === 0
-                    ? "Немає методів — додайте IBAN"
-                    : "Оберіть метод виплати"}
-                </option>
-                {payoutMethods.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.iban_masked}
-                  </option>
-                ))}
-              </select>
-            </span>
-          </label>
-          <button
-            type="button"
-            className={styles.linkCyan}
-            style={{ fontSize: "0.85em", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: "8px" }}
-            onClick={() => setAddMethodOpen(true)}
-          >
-            + Додати новий IBAN
-          </button>
+                <p
+                  className={styles.fieldLabel}
+                  style={{ margin: "0 0 10px", opacity: 0.85 }}
+                >
+                  Метод виплати (Wise)
+                </p>
+                <div style={{ fontSize: "0.92em", lineHeight: 1.55 }}>
+                  <div>
+                    <span style={{ opacity: 0.65 }}>IBAN: </span>
+                    <span style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
+                      {withdrawIbanLoading
+                        ? "Завантаження реквізитів…"
+                        : payoutMethodFullIban(method) ||
+                          "Не вдалося завантажити IBAN"}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ opacity: 0.65 }}>Ім&apos;я отримувача: </span>
+                    <span>{method.recipient_full_name}</span>
+                  </div>
+                  {payoutMethodBic(method) ? (
+                    <div>
+                      <span style={{ opacity: 0.65 }}>BIC/SWIFT: </span>
+                      <span style={{ fontFamily: "monospace" }}>
+                        {payoutMethodBic(method)}
+                      </span>
+                    </div>
+                  ) : null}
+                  <div>
+                    <span style={{ opacity: 0.65 }}>Валюта: </span>
+                    <span>{method.currency}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
           <label className={styles.field}>
-            <span className={styles.fieldLabel}>Сума</span>
+            <span className={styles.fieldLabel}>Сума (FanCoins)</span>
             <span className={styles.fieldBox}>
               <input
                 className={styles.input}
                 type="number"
                 min={MIN_PAYOUT_COINS}
                 max={balanceNum}
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
                 placeholder="0"
               />
             </span>
           </label>
+
+          <p
+            className={styles.modalHint}
+            style={{ fontSize: "0.82em", opacity: 0.7, marginTop: 0, marginBottom: "10px" }}
+          >
+            Конвертація у валюту вашого рахунку відбувається за курсом Wise на момент
+            відправлення коштів, а не подачі заявки.
+          </p>
+
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              cursor: "pointer",
+              padding: "10px 12px",
+              borderRadius: "8px",
+              background: withdrawUrgent ? "rgba(240, 173, 78, 0.12)" : "rgba(255,255,255,0.04)",
+              border: withdrawUrgent ? "1px solid rgba(240, 173, 78, 0.4)" : "1px solid rgba(255,255,255,0.1)",
+              marginBottom: "8px",
+              transition: "all 0.2s",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={withdrawUrgent}
+              onChange={(e) => setWithdrawUrgent(e.target.checked)}
+              style={{ width: "18px", height: "18px", accentColor: "#f0ad4e", cursor: "pointer" }}
+            />
+            <span style={{ flex: 1 }}>
+              <strong style={{ color: withdrawUrgent ? "#f0ad4e" : "inherit" }}>
+                ⚡ Терміновий вивід
+              </strong>
+              <br />
+              <span style={{ fontSize: "0.82em", opacity: 0.7 }}>
+                Комісія 10% · обробка 1–3 дні
+              </span>
+            </span>
+          </label>
+
+          {withdrawAmount && Number(withdrawAmount) > 0 && (
+            <div
+              style={{
+                padding: "8px 12px",
+                borderRadius: "6px",
+                background: "rgba(255,255,255,0.04)",
+                fontSize: "0.88em",
+                marginBottom: "8px",
+              }}
+            >
+              {withdrawUrgent ? (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ opacity: 0.7 }}>Сума:</span>
+                    <span>{withdrawAmount} FanCoins</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", color: "#f0ad4e" }}>
+                    <span>Комісія (10%):</span>
+                    <span>−{Math.floor(Number(withdrawAmount) * 0.1)} FanCoins</span>
+                  </div>
+                  <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.1)", margin: "4px 0" }} />
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}>
+                    <span>До виплати:</span>
+                    <span>{Math.floor(Number(withdrawAmount) - Number(withdrawAmount) * 0.1)} FanCoins</span>
+                  </div>
+                </>
+              ) : (
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ opacity: 0.7 }}>До виплати:</span>
+                  <span style={{ fontWeight: 600 }}>{withdrawAmount} FanCoins (без комісії)</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <p
+            className={styles.modalHint}
+            style={{ fontSize: "0.82em", opacity: 0.7, marginTop: 0, marginBottom: "12px" }}
+          >
+            {withdrawUrgent
+              ? "Термінова заявка буде оброблена протягом 1–3 робочих днів."
+              : "Після схвалення заявки кошти надходять протягом 1–14 робочих днів залежно від банку та країни отримувача."}
+          </p>
+
           <button
             type="button"
             className={styles.btnRed}
-            onClick={handleWithdraw}
+            onClick={handleWithdrawValidate}
             disabled={
               withdrawMutation.isPending ||
-              !amount ||
+              !withdrawAmount ||
               !selectedMethodId ||
+              withdrawIbanLoading ||
+              !withdrawPayoutMethod ||
+              !payoutMethodFullIban(withdrawPayoutMethod) ||
               balanceNum < MIN_PAYOUT_COINS
             }
           >
@@ -1178,13 +1397,84 @@ export default function Profile() {
         </div>
       </Modal>
 
+      <Modal
+        open={withdrawConfirmOpen}
+        onClose={() => setWithdrawConfirmOpen(false)}
+        title="Підтвердження виплати"
+      >
+        <div className={styles.modalForm}>
+          <p className={styles.modalHint}>
+            Ви впевнені, що хочете вивести{" "}
+            <strong>{withdrawAmount} FanCoins</strong>
+            {withdrawUrgent && (
+              <>
+                {" "}
+                <span style={{ color: "#f0ad4e", fontWeight: 600 }}>
+                  (⚡ терміново, комісія 10% = {Math.floor(Number(withdrawAmount) * 0.1)} FanCoins)
+                </span>
+              </>
+            )}
+            ?
+          </p>
+          <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+            <button
+              type="button"
+              className={styles.btnGray}
+              onClick={() => setWithdrawConfirmOpen(false)}
+            >
+              Скасувати
+            </button>
+            <button
+              type="button"
+              className={styles.btnRed}
+              onClick={handleWithdrawConfirm}
+              disabled={withdrawMutation.isPending}
+            >
+              {withdrawMutation.isPending ? "Завантаження..." : "Підтвердити"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <PayoutMethodSelectModal
+        open={payoutMethodSelectOpen}
+        onClose={() => setPayoutMethodSelectOpen(false)}
+        onSelectWise={() => {
+          if (hasPayoutProfile) {
+            // Profile already exists — just add a new IBAN
+            setAddMethodFromSelect(true);
+            setAddMethodOpen(true);
+          } else {
+            // First time — full KYC + method setup
+            setPayoutSetupOpen(true);
+          }
+        }}
+        existingMethods={payoutMethods}
+        payoutProfile={payoutProfileForSelect}
+        showPreviouslyUsed={showPreviouslyUsedPayouts}
+        onSelectExistingMethod={(method) => {
+          setSelectedMethodId(method.id);
+          setSelectedPayoutMethod(method);
+          setWithdrawIdempotencyKey(crypto.randomUUID());
+          void queryClient.invalidateQueries({ queryKey: ["payoutMethods", userId] });
+          void queryClient.invalidateQueries({
+            queryKey: ["payoutMethodDetail", userId, method.id],
+          });
+          setWithdrawModalOpen(true);
+        }}
+      />
+
       <PayoutSetupModal
         open={payoutSetupOpen}
         onClose={() => setPayoutSetupOpen(false)}
         onSuccess={async () => {
           queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
+          queryClient.invalidateQueries({ queryKey: ["payoutProfile", userId] });
+          queryClient.invalidateQueries({ queryKey: ["payoutMethods", userId] });
+          queryClient.invalidateQueries({ queryKey: ["payoutRequests", userId] });
           await refreshAuthStatus();
         }}
+        existingProfile={existingPayoutProfile}
       />
 
       <PayoutRequestsList
@@ -1195,8 +1485,19 @@ export default function Profile() {
 
       <AddPayoutMethodModal
         open={addMethodOpen}
-        onClose={() => setAddMethodOpen(false)}
+        onClose={() => {
+          setAddMethodOpen(false);
+          setAddMethodFromSelect(false);
+        }}
         userId={userId}
+        withWithdraw={addMethodFromSelect}
+        balance={profile?.balance}
+        onWithdrawSuccess={async () => {
+          queryClient.invalidateQueries({ queryKey: profileQueryKey(userId) });
+          queryClient.invalidateQueries({ queryKey: ["payoutRequests", userId] });
+          queryClient.invalidateQueries({ queryKey: ["payoutMethods", userId] });
+          await refreshAuthStatus();
+        }}
       />
 
       <Modal

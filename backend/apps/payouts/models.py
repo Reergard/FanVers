@@ -12,46 +12,22 @@ from apps.users.balance_access import profile_can_request_balance_withdraw
 class PayoutProfile(models.Model):
     """KYC + податковий статус + адреса для виплат (окремо від users.Profile)."""
 
-    class LegalStatus(models.TextChoices):
-        INDIVIDUAL = "individual", "Фізособа без бізнес-статусу"
-        FOP_UA = "fop_ua", "ФОП (Україна)"
-        SELF_EMPLOYED_OTHER = "self_employed_other", "Самозайнятий (інша країна)"
-        LEGAL_ENTITY = "legal_entity", "Юр. особа"
-
     class VerificationStatus(models.TextChoices):
         DRAFT = "draft", "Чернетка (не подано на перевірку)"
         PENDING = "pending", "Очікує перевірки"
         APPROVED = "approved", "Підтверджено"
         REJECTED = "rejected", "Відхилено"
         REQUIRES_MORE_INFO = "requires_more_info", "Потрібна додаткова інформація"
+        CANCELLED = "cancelled", "Скасовано користувачем"
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name="payout_profile",
     )
-    legal_status = models.CharField(
-        max_length=32,
-        choices=LegalStatus.choices,
-        default=LegalStatus.INDIVIDUAL,
-    )
     country = models.CharField(
         max_length=2,
         help_text="ISO 3166-1 alpha-2: UA, CZ, DE, IT, US",
-    )
-    tax_residency_country = models.CharField(
-        max_length=2,
-        help_text="Країна податкового резидентства",
-    )
-    tax_id = models.CharField(
-        max_length=64,
-        blank=True,
-        help_text="РНОКПП, DIČ, Codice Fiscale, SSN/ITIN",
-    )
-    tax_residency_certificate = models.FileField(
-        upload_to="payouts/tax_certs/%Y/%m/",
-        blank=True,
-        null=True,
     )
     full_name_legal = models.CharField(
         max_length=200,
@@ -142,15 +118,6 @@ class PayoutMethod(models.Model):
             ),
         ]
 
-    @property
-    def is_iban_cooldown_active(self) -> bool:
-        if not self.iban_changed_at:
-            return False
-        return (
-            self.iban_changed_at
-            + timedelta(days=settings.PAYOUT_IBAN_COOLDOWN_DAYS)
-            > timezone.now()
-        )
 
 
 class PayoutBatch(models.Model):
@@ -175,7 +142,7 @@ class PayoutBatch(models.Model):
     completed_count = models.PositiveIntegerField(default=0)
     failed_count = models.PositiveIntegerField(default=0)
     status = models.CharField(
-        max_length=16,
+        max_length=32,
         choices=Status.choices,
         default=Status.DRAFT,
     )
@@ -202,8 +169,8 @@ class PayoutRequest(models.Model):
     """Запит на виведення коштів з балансу."""
 
     class Status(models.TextChoices):
-        PENDING = "pending", "Подано, очікує автоперевірки"
-        AWAITING_REVIEW = "awaiting_review", "На ручній перевірці"
+        PENDING = "pending", "Подано"
+        AWAITING_REVIEW = "awaiting_review", "На перевірці"
         APPROVED = "approved", "Схвалено, готовий до batch"
         IN_BATCH = "in_batch", "Включений у batch"
         PROCESSING = "processing", "Відправлений у Wise"
@@ -235,6 +202,11 @@ class PayoutRequest(models.Model):
         blank=True,
         related_name="requests",
     )
+    is_urgent = models.BooleanField(
+        default=False,
+        help_text="Терміновий вивід (комісія 10%, дедлайн 3 дні)",
+        db_index=True,
+    )
     coins_amount = models.DecimalField(max_digits=12, decimal_places=2)
     commission_percent = models.DecimalField(max_digits=5, decimal_places=2)
     commission_coins = models.DecimalField(max_digits=12, decimal_places=2)
@@ -253,6 +225,14 @@ class PayoutRequest(models.Model):
         default=Decimal("0.00"),
     )
     amount_net = models.DecimalField(max_digits=12, decimal_places=2)
+    # Snapshot KYC-даних на момент створення запиту
+    snapshot_country = models.CharField(max_length=2, blank=True)
+    snapshot_full_name_legal = models.CharField(max_length=200, blank=True)
+    snapshot_full_name_latin = models.CharField(max_length=200, blank=True)
+    snapshot_address_line = models.CharField(max_length=300, blank=True)
+    snapshot_city = models.CharField(max_length=100, blank=True)
+    snapshot_postal_code = models.CharField(max_length=20, blank=True)
+    # Snapshot реквізитів
     snapshot_recipient_name = models.CharField(max_length=200)
     snapshot_iban = EncryptedCharField(max_length=256)
     snapshot_bic_swift = EncryptedCharField(max_length=256, blank=True)
@@ -265,6 +245,14 @@ class PayoutRequest(models.Model):
     )
     wise_transfer_id = models.CharField(max_length=64, blank=True, db_index=True)
     idempotency_key = models.CharField(max_length=64, blank=True, db_index=True)
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="approved_payouts",
+        help_text="Адмін, який схвалив запит",
+    )
     auto_check_result = models.JSONField(default=dict, blank=True)
     failure_reason = models.TextField(blank=True)
     admin_notes = models.TextField(blank=True)
@@ -297,6 +285,20 @@ class PayoutRequest(models.Model):
             models.Index(fields=["profile", "status"]),
             models.Index(fields=["status", "created_at"]),
         ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(coins_amount__gt=0),
+                name="payout_coins_amount_positive",
+            ),
+            models.CheckConstraint(
+                check=models.Q(amount_gross__gt=0),
+                name="payout_amount_gross_positive",
+            ),
+            models.CheckConstraint(
+                check=models.Q(amount_net__gt=0),
+                name="payout_amount_net_positive",
+            ),
+        ]
 
     def __str__(self):
         return (
@@ -306,7 +308,24 @@ class PayoutRequest(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.deadline_at:
-            self.deadline_at = timezone.now() + timedelta(
-                days=settings.PAYOUT_DEADLINE_DAYS
+            days = (
+                settings.PAYOUT_URGENT_DEADLINE_DAYS
+                if self.is_urgent
+                else settings.PAYOUT_DEADLINE_DAYS
             )
+            self.deadline_at = timezone.now() + timedelta(days=days)
         super().save(*args, **kwargs)
+
+
+class WiseWebhookDelivery(models.Model):
+    """Персистентна дедуплікація вебхуків Wise за X-Delivery-Id."""
+
+    delivery_id = models.CharField(max_length=128, unique=True)
+    received_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Wise Webhook Delivery"
+        verbose_name_plural = "Wise Webhook Deliveries"
+        indexes = [
+            models.Index(fields=["received_at"]),
+        ]

@@ -13,10 +13,10 @@
 | Маршрут | `apps/monitoring/api/urls.py` → `path('thanks/', ...)` |
 | Повний URL | **`POST /api/monitoring/thanks/`** (префікс `api/` у кореневих `urls.py`) |
 | Запис у БД | `apps/monitoring/models.py` → `AuthorThanks` |
-| Зміна балансу | `apps/users/api/mixins.py` → `BalanceOperationMixin.perform_balance_operation` з типами **`thanks_given`** (списання) та **`thanks_received`** (зарахування) |
+| Зміна балансу | `apps/users/models.py` → `Profile.balance_operation()` з типами **`thanks_given`** (списання) та **`thanks_received`** (зарахування) |
 | Міграція ключа повторів | `apps/monitoring/migrations/0008_authorthanks_idempotency_key.py` |
 
-Детальніше про сам міксин і ліміти сум див. **`BALANCE_DEPOSIT_WITHDRAW_BACKEND.md`** (типи `thanks_*` там перелічені).
+Детальніше про `balance_operation()` і ліміти сум див. **`BALANCE_DEPOSIT_WITHDRAW_BACKEND.md`** (типи `thanks_*` там перелічені).
 
 ---
 
@@ -57,7 +57,7 @@
 
 ## Що цей ендпоінт навмисно не робить
 
-- Не створює записів у **`BalanceOperationLog`** (там зараз лише **deposit / withdraw** у міксині).
+- Не створює записів у **`BalanceOperationLog`** (там зараз лише **deposit / withdraw / refund** у `balance_operation()`).
 - Не шле окремого **in-app** або email-сповіщення власнику — лише оновлення **`Profile.balance`** і **`AuthorThanks`**.
 
 Якщо знадобиться сповіщення, його варто додати окремо (наприклад, сигнал або виклик сервісу після успішного коміту).

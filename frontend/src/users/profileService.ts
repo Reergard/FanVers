@@ -97,12 +97,14 @@ export async function depositBalance(
 export async function withdrawBalance(
   amount: number,
   method_id: number,
-  idempotency_key: string
+  idempotency_key: string,
+  is_urgent = false,
 ): Promise<PayoutRequestResponse> {
   const { data } = await http.post<PayoutRequestResponse>(API.withdrawBalance, {
     amount,
     method_id,
     idempotency_key,
+    is_urgent,
   });
   return data;
 }

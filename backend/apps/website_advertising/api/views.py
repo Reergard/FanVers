@@ -213,7 +213,7 @@ class AdvertisementViewSet(
                     }
                 )
 
-            profile.update_balance(total_order_cost, "advertising")
+            profile.balance_operation(total_order_cost, "advertising")
 
             created_ads = []
             for item in prepared_items:

@@ -9,6 +9,7 @@ export type AuthStatusPayload = {
   role?: string | null;
   can_withdraw_balance?: boolean | null;
   has_active_payout_profile?: boolean | null;
+  payout_profile_status?: string | null;
   role_self_promotion_allowed?: boolean | null;
 };
 
@@ -36,6 +37,9 @@ export function authStatusToStorePatch(
   }
   if (typeof data.has_active_payout_profile === "boolean") {
     patch.hasActivePayoutProfile = data.has_active_payout_profile;
+  }
+  if (data.payout_profile_status !== undefined) {
+    patch.payoutProfileStatus = data.payout_profile_status ?? null;
   }
   if (typeof data.role_self_promotion_allowed === "boolean") {
     patch.roleSelfPromotionAllowed = data.role_self_promotion_allowed;

@@ -160,6 +160,12 @@ class Profile(models.Model):
     class Meta:
         verbose_name = 'Профіль'
         verbose_name_plural = 'Профілі'
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(balance__gte=0),
+                name="balance_non_negative",
+            ),
+        ]
 
     def __str__(self):
         if self.image:
@@ -184,38 +190,102 @@ class Profile(models.Model):
         """Перевірка чи є кастомне зображення"""
         return bool(self.image and getattr(self.image, "name", None))
 
-    def update_balance(self, amount, operation_type):
+    MIN_DEPOSIT_AMOUNT = 100
+    MIN_WITHDRAW_AMOUNT = 1000
+    MAX_BALANCE = Decimal('1000000')
+    MAX_DEPOSIT_AMOUNT = Decimal('100000')
+    MAX_WITHDRAW_AMOUNT = Decimal('50000')
+
+    DEBIT_OPERATIONS = frozenset([
+        'withdraw', 'purchase', 'advertising', 'thanks_given',
+    ])
+    CREDIT_OPERATIONS = frozenset([
+        'deposit', 'earning', 'thanks_received', 'refund',
+    ])
+
+    def balance_operation(self, amount, operation_type):
         """
-        Зміна балансу з блокуванням рядка (select_for_update).
-        Для withdraw — перевірка ролі та достатності коштів лише після блокування.
+        Єдиний метод зміни балансу з блокуванням рядка (select_for_update).
+        Повертає BalanceLog запис.
         """
+        if not isinstance(amount, (int, float, Decimal)) or amount <= 0:
+            raise ValidationError('Сума операції повинна бути більше нуля')
+
+        if isinstance(amount, float):
+            amount = Decimal(str(amount))
+
+        if operation_type == 'deposit':
+            if amount < self.MIN_DEPOSIT_AMOUNT:
+                raise ValidationError(
+                    f'Мінімальна сума поповнення: {self.MIN_DEPOSIT_AMOUNT} FanCoins'
+                )
+            if Decimal(str(amount)) > self.MAX_DEPOSIT_AMOUNT:
+                raise ValidationError(
+                    f'Максимальна сума поповнення: {self.MAX_DEPOSIT_AMOUNT} FanCoins'
+                )
+        elif operation_type == 'withdraw':
+            if amount < self.MIN_WITHDRAW_AMOUNT:
+                raise ValidationError(
+                    f'Мінімальна сума виведення: {self.MIN_WITHDRAW_AMOUNT} FanCoins'
+                )
+            if Decimal(str(amount)) > self.MAX_WITHDRAW_AMOUNT:
+                raise ValidationError(
+                    f'Максимальна сума виведення: {self.MAX_WITHDRAW_AMOUNT} FanCoins'
+                )
+
+        if operation_type not in self.DEBIT_OPERATIONS and operation_type not in self.CREDIT_OPERATIONS:
+            raise ValidationError(f'Невідомий тип операції: {operation_type}')
+
         with transaction.atomic():
             profile = Profile.objects.select_for_update().get(pk=self.pk)
 
             if operation_type == 'withdraw':
                 if not profile_can_request_balance_withdraw(profile):
                     raise ValidationError(API_WITHDRAW_ROLE_FORBIDDEN_MESSAGE)
-                if profile.balance < amount:
-                    raise ValidationError('Недостатньо коштів')
-            elif operation_type in ('purchase', 'advertising'):
-                if profile.balance < amount:
-                    raise ValidationError('Недостатньо коштів')
 
-            if operation_type in ['withdraw', 'purchase', 'advertising']:
+            if operation_type in self.DEBIT_OPERATIONS:
+                if profile.balance < amount:
+                    raise ValidationError(
+                        f'Недостатньо коштів. Доступно: {profile.balance} FanCoins, '
+                        f'потрібно: {amount} FanCoins'
+                    )
                 profile.balance -= amount
             else:
-                profile.balance += amount
+                new_balance = profile.balance + amount
+                if new_balance > self.MAX_BALANCE:
+                    raise ValidationError('Максимальний баланс: 1,000,000 FanCoins')
+                profile.balance = new_balance
 
             profile.save(update_fields=['balance'])
 
-            return profile.balance_logs.create(
+            balance_log = profile.balance_logs.create(
                 amount=amount,
                 operation_type=operation_type,
-                status='completed'
+                status='completed',
             )
+
+            if operation_type in ('deposit', 'withdraw', 'refund'):
+                try:
+                    from apps.monitoring.models import BalanceOperationLog
+                    BalanceOperationLog.objects.create(
+                        profile=profile,
+                        amount=amount,
+                        operation_type=operation_type,
+                        status='completed',
+                    )
+                except Exception:
+                    logger.error(
+                        "Failed to create BalanceOperationLog for profile=%s op=%s",
+                        profile.pk, operation_type, exc_info=True,
+                    )
+
+            return balance_log
+
     
     def can_perform_operation(self, operation_type, amount=None):
-        if operation_type == 'withdraw':
+        """Перевірка для UI-підказок. НЕ використовувати для фінансових рішень —
+        використовуйте balance_operation() з select_for_update."""
+        if operation_type == 'withdraw' and amount is not None:
             return self.balance >= amount
         return True
 
@@ -230,6 +300,14 @@ class Profile(models.Model):
             return self.user.payout_profile.can_request_payout
         except Exception:
             return False
+
+    @property
+    def payout_profile_status(self) -> str | None:
+        """Статус верифікації профілю виплат (None якщо профілю немає)."""
+        try:
+            return self.user.payout_profile.verification_status
+        except Exception:
+            return None
 
     @property
     def is_owner(self):
@@ -360,6 +438,8 @@ class BalanceLog(models.Model):
             ('earning', 'Заробіток'),
             ('advertising', 'Реклама'),
             ('refund', 'Повернення'),
+            ('thanks_given', 'Подяка (списання)'),
+            ('thanks_received', 'Подяка (зарахування)'),
         ]
     )
     created_at = models.DateTimeField(auto_now_add=True)

@@ -349,6 +349,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     can_withdraw_balance = serializers.SerializerMethodField()
     has_active_payout_profile = serializers.SerializerMethodField()
+    payout_profile_status = serializers.SerializerMethodField()
     role_self_promotion_allowed = serializers.SerializerMethodField()
     total_characters = serializers.SerializerMethodField()
     total_chapters = serializers.SerializerMethodField()
@@ -368,7 +369,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['id', 'username', 'about', 'image', 'role', 'can_withdraw_balance',
-                 'has_active_payout_profile',
+                 'has_active_payout_profile', 'payout_profile_status',
                  'role_self_promotion_allowed',
                  'total_characters', 'total_chapters', 'free_chapters', 
                  'total_author', 'total_translations', 'is_owner', 'balance_history', 'commission',
@@ -449,6 +450,27 @@ class ProfileSerializer(serializers.ModelSerializer):
         if not same_user:
             return None
         return obj.has_active_payout_profile
+
+    def get_payout_profile_status(self, obj):
+        request = self.context.get('request')
+        user = getattr(request, "user", None) if request else None
+        if not user or not getattr(user, "is_authenticated", False):
+            return None
+        ctx_owner = self.context.get("is_owner")
+        if ctx_owner is True:
+            return obj.payout_profile_status
+        if ctx_owner is False:
+            return None
+        upk, uid = getattr(user, "pk", None), getattr(obj, "user_id", None)
+        if upk is None or uid is None:
+            return None
+        try:
+            same_user = int(upk) == int(uid)
+        except (TypeError, ValueError):
+            same_user = upk == uid
+        if not same_user:
+            return None
+        return obj.payout_profile_status
 
     def get_role_self_promotion_allowed(self, obj):
         return is_role_self_promotion_allowed()
@@ -671,7 +693,7 @@ class BalanceOperationSerializer(serializers.Serializer):
         max_digits=10, 
         decimal_places=2, 
         min_value=Decimal('0.01'),
-        max_value=Decimal(str(getattr(settings, 'MAX_BALANCE_OPERATION_AMOUNT', 1000000)))
+        max_value=Decimal('100000')
     )
     operation_type = serializers.ChoiceField(choices=['deposit', 'withdraw'])
 
@@ -707,7 +729,7 @@ class UpdateBalanceSerializer(serializers.Serializer):
         max_digits=10, 
         decimal_places=2, 
         min_value=Decimal('0.01'),
-        max_value=Decimal(str(getattr(settings, 'MAX_BALANCE_OPERATION_AMOUNT', 1000000)))
+        max_value=Decimal('100000')
     )
 
     def validate_amount(self, value):

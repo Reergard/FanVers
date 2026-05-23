@@ -21,7 +21,6 @@ from .models import (
 from apps.catalog.models import Book, Chapter
 from apps.catalog.api.permissions import check_book_access_permission
 from apps.users.models import Profile
-from apps.users.api.mixins import BalanceOperationMixin
 from apps.monitoring.models import TransactionLog
 
 logger = logging.getLogger(__name__)
@@ -297,14 +296,13 @@ class SubscriptionService:
             # Усе в одному savepoint/atomic, щоб при помилці не лишалось "безкоштовної" підписки.
             sid = transaction.savepoint()
             try:
-                balance_mixin = BalanceOperationMixin()
                 owner_profile = book.owner.profile
                 commission = owner_profile.calculate_commission_amount(charge_price)
                 owner_amount = charge_price - commission
 
                 balance_before = float(profile.balance)
-                balance_mixin.perform_balance_operation(profile, charge_price, 'purchase')
-                balance_mixin.perform_balance_operation(owner_profile, owner_amount, 'earning')
+                profile.balance_operation(charge_price, 'purchase')
+                owner_profile.balance_operation(owner_amount, 'earning')
                 profile.refresh_from_db()
                 balance_after = float(profile.balance)
 
@@ -494,14 +492,13 @@ class SubscriptionService:
                 return False, CHAPTER_ALREADY_PURCHASED, 'Chapter already purchased (race)'
             transaction.savepoint_commit(sid)
 
-            balance_mixin = BalanceOperationMixin()
             owner_profile = book.owner.profile
             commission = owner_profile.calculate_commission_amount(charge_price)
             owner_amount = charge_price - commission
 
             balance_before = float(profile.balance)
-            balance_mixin.perform_balance_operation(profile, charge_price, 'purchase')
-            balance_mixin.perform_balance_operation(owner_profile, owner_amount, 'earning')
+            profile.balance_operation(charge_price, 'purchase')
+            owner_profile.balance_operation(owner_amount, 'earning')
             profile.refresh_from_db()
             balance_after = float(profile.balance)
 
@@ -687,9 +684,8 @@ class SubscriptionAdminService:
             commission = owner_profile.calculate_commission_amount(price_paid)
             owner_amount = price_paid - commission
 
-            balance_mixin = BalanceOperationMixin()
-            balance_mixin.perform_balance_operation(owner_profile, owner_amount, 'purchase')
-            balance_mixin.perform_balance_operation(profile, price_paid, 'deposit')
+            owner_profile.balance_operation(owner_amount, 'purchase')
+            profile.balance_operation(price_paid, 'deposit')
 
             sub.status = UserBookSubscription.STATUS_REFUNDED
             sub.save(update_fields=['status', 'updated_at'])
@@ -892,11 +888,10 @@ class ChapterPurchaseService:
             owner_profile = book.owner.profile
             commission = owner_profile.calculate_commission_amount(chapter_price)
             owner_amount = chapter_price - commission
-            balance_mixin = BalanceOperationMixin()
             balance_before = float(profile.balance)
             sid = transaction.savepoint()
-            balance_mixin.perform_balance_operation(profile, chapter_price, 'purchase')
-            balance_mixin.perform_balance_operation(owner_profile, owner_amount, 'earning')
+            profile.balance_operation(chapter_price, 'purchase')
+            owner_profile.balance_operation(owner_amount, 'earning')
             profile.refresh_from_db()
             balance_after = float(profile.balance)
 
