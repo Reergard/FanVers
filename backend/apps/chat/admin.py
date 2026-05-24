@@ -1,8 +1,9 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from .models import Chat, Message
 
 @admin.register(Message)
-class MessageAdmin(admin.ModelAdmin):
+class MessageAdmin(ModelAdmin):
     list_display = ('id', 'chat', 'sender', 'content', 'created_at')
     list_filter = ('chat', 'sender', 'created_at')
     search_fields = ('content', 'sender__username')
@@ -14,7 +15,7 @@ class MessageAdmin(admin.ModelAdmin):
 
 
 @admin.register(Chat)
-class ChatAdmin(admin.ModelAdmin):
+class ChatAdmin(ModelAdmin):
     list_display = ('id', 'get_participants', 'created_at', 'updated_at', 'get_messages_count')
     list_filter = ('created_at', 'updated_at')
     search_fields = ('participants__username',)

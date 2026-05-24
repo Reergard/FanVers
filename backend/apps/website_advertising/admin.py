@@ -1,8 +1,9 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from .models import Advertisement
 
 @admin.register(Advertisement)
-class AdvertisementAdmin(admin.ModelAdmin):
+class AdvertisementAdmin(ModelAdmin):
     list_display = (
         'get_book_title',
         'get_user_username',

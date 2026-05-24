@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from apps.catalog.models import Chapter, Book
 from apps.users.models import Profile
 from django.db.models import Count, Q, F
@@ -49,6 +50,8 @@ class TransactionLog(models.Model):
     audit_metadata = models.JSONField(null=True, blank=True)
 
     class Meta:
+        verbose_name = _('Запис транзакції')
+        verbose_name_plural = _('Журнал транзакцій')
         ordering = ['-created_at']
 
 class BalanceOperationLog(models.Model):

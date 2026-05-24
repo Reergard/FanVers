@@ -2,11 +2,10 @@ import csv
 import io
 
 from django.db import transaction
-from django.db.models import F
-from django.utils import timezone
 
-from apps.payouts.models import PayoutMethod, PayoutRequest
+from apps.payouts.models import PayoutRequest
 from apps.payouts.services.payout_cancel import handle_failed_payout
+from apps.payouts.services.payout_complete import mark_payout_request_completed
 
 
 def import_wise_reconciliation_csv(csv_content, batch_id=None):
@@ -61,16 +60,11 @@ def _reconcile_completed(payout_id, transfer_id, results, batch_id=None):
         results["skipped"] += 1
         return
 
-    payout_request.status = PayoutRequest.Status.COMPLETED
-    payout_request.completed_at = timezone.now()
-    payout_request.wise_transfer_id = transfer_id
-    payout_request.save(
-        update_fields=["status", "completed_at", "wise_transfer_id"]
-    )
-    PayoutMethod.objects.filter(pk=payout_request.method_id).update(
-        last_used_at=timezone.now(),
-        successful_payouts_count=F("successful_payouts_count") + 1,
-    )
+    try:
+        mark_payout_request_completed(payout_request, wise_transfer_id=transfer_id or "")
+    except ValueError:
+        results["skipped"] += 1
+        return
     results["updated"] += 1
 
 

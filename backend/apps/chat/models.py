@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 class Chat(models.Model):
     participants = models.ManyToManyField(
@@ -18,6 +19,8 @@ class Chat(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name = _('Чат')
+        verbose_name_plural = _('Чати')
         ordering = ['-updated_at']
 
     def __str__(self):
@@ -38,6 +41,8 @@ class Message(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
+        verbose_name = _('Повідомлення')
+        verbose_name_plural = _('Повідомлення')
         ordering = ["created_at"]
         indexes = [
             models.Index(

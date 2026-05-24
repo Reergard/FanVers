@@ -15,6 +15,7 @@ import re
 from datetime import timedelta
 import logging
 from decimal import Decimal
+from django.utils.translation import gettext_lazy as _
 
 import bleach
 
@@ -147,6 +148,10 @@ class Tag(models.Model):
     name = models.CharField(max_length=255)
     group = models.ForeignKey('catalog.TagGroups', on_delete=models.CASCADE, related_name='tags')
 
+    class Meta:
+        verbose_name = _('Тег')
+        verbose_name_plural = _('Теги')
+
     def __str__(self):
         return self.name
 
@@ -157,12 +162,20 @@ class Tag(models.Model):
 class TagGroups(models.Model):
     name = models.CharField(max_length=255)
 
+    class Meta:
+        verbose_name = _('Група тегів')
+        verbose_name_plural = _('Групи тегів')
+
     def __str__(self):
         return self.name
 
 
 class Fandom(models.Model):
     name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = _('Фандом')
+        verbose_name_plural = _('Фандоми')
 
     def __str__(self):
         return self.name
@@ -174,6 +187,10 @@ class Fandom(models.Model):
 class Country(models.Model):
     name = models.CharField(max_length=255)
 
+    class Meta:
+        verbose_name = _('Країна')
+        verbose_name_plural = _('Країни')
+
     def __str__(self):
         return self.name
 
@@ -183,6 +200,10 @@ class Country(models.Model):
 
 class Genres(models.Model):
     name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = _('Жанр')
+        verbose_name_plural = _('Жанри')
 
     def __str__(self):
         return self.name
@@ -466,6 +487,10 @@ class Book(models.Model):
         book.owner_last_activity_at = now
         book.abandoned_warning_sent_at = None
 
+    class Meta:
+        verbose_name = _('Книга')
+        verbose_name_plural = _('Книги')
+
 
 def process_table(table):
     table_text = ''
@@ -489,6 +514,8 @@ class Volume(models.Model):
         return f"{self.book.title} - {self.title}"
 
     class Meta:
+        verbose_name = _('Том')
+        verbose_name_plural = _('Томи')
         ordering = ['order', 'created_at']
         unique_together = ('book', 'title')
 
@@ -589,6 +616,8 @@ class Chapter(models.Model):
     )
 
     class Meta:
+        verbose_name = _('Глава')
+        verbose_name_plural = _('Глави')
         ordering = ['order']
         constraints = [
             models.UniqueConstraint(

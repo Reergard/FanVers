@@ -1,10 +1,11 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from .models import PaymentSession, WebhookEvent
 
 
 @admin.register(PaymentSession)
-class PaymentSessionAdmin(admin.ModelAdmin):
+class PaymentSessionAdmin(ModelAdmin):
     list_display = ("id", "user", "amount_coins", "status", "created_at", "paid_at")
     list_filter = ("status", "currency")
     search_fields = ("user__username", "user__email", "stripe_session_id")
@@ -12,7 +13,7 @@ class PaymentSessionAdmin(admin.ModelAdmin):
 
 
 @admin.register(WebhookEvent)
-class WebhookEventAdmin(admin.ModelAdmin):
+class WebhookEventAdmin(ModelAdmin):
     list_display = ("stripe_event_id", "event_type", "processed_at")
     list_filter = ("event_type",)
     readonly_fields = ("payload", "processed_at")

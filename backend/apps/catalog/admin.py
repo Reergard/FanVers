@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from .models import Book, Tag, Fandom, Country, Genres, TagGroups, Chapter, Volume
 
 import logging
@@ -7,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 @admin.register(Book)
-class BookAdmin(admin.ModelAdmin):
+class BookAdmin(ModelAdmin):
 
     list_display = ['title', 'title_en', 'author', 'get_creator', 'get_owner', 'translation_status', 'original_status', 'get_tags', 'get_fandoms', 'get_country', 'get_genres', 'last_updated']
     list_filter = ['author', 'creator', 'owner', 'tags', 'fandoms', 'country', 'genres', 'translation_status', 'original_status', 'last_updated']
@@ -116,13 +117,13 @@ class BookAdmin(admin.ModelAdmin):
 
 
 @admin.register(Chapter)
-class ChapterAdmin(admin.ModelAdmin):
+class ChapterAdmin(ModelAdmin):
     list_display = ['title']
     search_fields = ['title']
 
 
 @admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
+class TagAdmin(ModelAdmin):
     list_display = ['name', 'get_tags']
     search_fields = [all]
 
@@ -131,31 +132,31 @@ class TagAdmin(admin.ModelAdmin):
 
 
 @admin.register(TagGroups)
-class TagGroupsAdmin(admin.ModelAdmin):
+class TagGroupsAdmin(ModelAdmin):
     list_display = ['name']
     search_fields = ['name']
 
 
 @admin.register(Fandom)
-class FandomAdmin(admin.ModelAdmin):
+class FandomAdmin(ModelAdmin):
     list_display = ['name']
     search_fields = ['name']
 
 
 @admin.register(Country)
-class CountryAdmin(admin.ModelAdmin):
+class CountryAdmin(ModelAdmin):
     list_display = ['name']
     search_fields = ['name']
 
 
 @admin.register(Genres)
-class GenresAdmin(admin.ModelAdmin):
+class GenresAdmin(ModelAdmin):
     list_display = ['name']
     search_fields = ['name']
 
 
 @admin.register(Volume)
-class VolumeAdmin(admin.ModelAdmin):
+class VolumeAdmin(ModelAdmin):
     list_display = ['title', 'book', 'created_at']
     list_filter = ['book']
     search_fields = ['title', 'book__title']

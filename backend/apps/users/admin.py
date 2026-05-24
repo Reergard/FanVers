@@ -5,9 +5,12 @@
 """
 
 from django.contrib import admin
+from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import Group
+from unfold.admin import ModelAdmin
+from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 from .models import Profile, User
-from .forms import CustomUserChangeForm, CustomUserCreationForm
 from django.urls import reverse
 import logging
 
@@ -15,13 +18,14 @@ logger = logging.getLogger(__name__)
 
 
 @admin.register(User)
-class UserAdmin(BaseUserAdmin):
+class UserAdmin(BaseUserAdmin, ModelAdmin):
     """Адміністративна панель для управління користувачами. Ролі управляються через Profile."""
     
     model = User
     ordering = ["username"]
-    add_form = CustomUserCreationForm
-    form = CustomUserChangeForm
+    add_form = UserCreationForm
+    form = UserChangeForm
+    change_password_form = AdminPasswordChangeForm
 
     list_display = ["email", "username", "created", "is_active", "get_profile_role"]
     list_display_links = ["email"]
@@ -61,7 +65,7 @@ class UserAdmin(BaseUserAdmin):
 
 
 @admin.register(Profile)
-class ProfileAdmin(admin.ModelAdmin):
+class ProfileAdmin(ModelAdmin):
     """Адміністративна панель для управління профілями користувачів та їх ролями"""
     
     list_display = ('username', 'email', 'created', 'image', 'get_owned_books_count', 'role')
@@ -154,4 +158,12 @@ class ProfileAdmin(admin.ModelAdmin):
                 return
             
         super().save_model(request, obj, form, change)
+
+
+admin.site.unregister(Group)
+
+
+@admin.register(Group)
+class GroupAdmin(BaseGroupAdmin, ModelAdmin):
+    pass
 

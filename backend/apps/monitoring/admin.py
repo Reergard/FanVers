@@ -1,11 +1,12 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from django.utils.html import format_html
 from .models import TransactionLog, BalanceOperationLog, UserChapterProgress, AdvertisingLog
 from django.db.models import Sum
 from django.utils import timezone
 
 @admin.register(TransactionLog)
-class TransactionLogAdmin(admin.ModelAdmin):
+class TransactionLogAdmin(ModelAdmin):
     list_display = (
         'book_info',
         'buyer_info',
@@ -125,7 +126,7 @@ class TransactionLogAdmin(admin.ModelAdmin):
         }
 
 @admin.register(BalanceOperationLog)
-class BalanceOperationLogAdmin(admin.ModelAdmin):
+class BalanceOperationLogAdmin(ModelAdmin):
     list_display = (
         'get_username',
         'created_at',
@@ -152,7 +153,7 @@ class BalanceOperationLogAdmin(admin.ModelAdmin):
         return False
 
 @admin.register(UserChapterProgress)
-class UserChapterProgressAdmin(admin.ModelAdmin):
+class UserChapterProgressAdmin(ModelAdmin):
     list_display = ['user', 'chapter', 'is_read', 'is_purchased', 
                    'reading_progress', 'last_read_at']
     list_filter = ['is_read', 'is_purchased', 'last_read_at']
@@ -160,7 +161,7 @@ class UserChapterProgressAdmin(admin.ModelAdmin):
     raw_id_fields = ['user', 'chapter']
 
 @admin.register(AdvertisingLog)
-class AdvertisingLogAdmin(admin.ModelAdmin):
+class AdvertisingLogAdmin(ModelAdmin):
     list_display = (
         'user',
         'book',

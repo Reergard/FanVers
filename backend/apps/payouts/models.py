@@ -131,27 +131,40 @@ class PayoutBatch(models.Model):
         PARTIAL = "partial", "Частково виплачено"
         FAILED = "failed", "Не вдалось"
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, verbose_name="Назва")
     csv_file = models.FileField(
         upload_to="payouts/batches/%Y/%m/",
         blank=True,
         null=True,
+        verbose_name="CSV-файл",
     )
-    total_amount_by_currency = models.JSONField(default=dict)
-    total_count = models.PositiveIntegerField(default=0)
-    completed_count = models.PositiveIntegerField(default=0)
-    failed_count = models.PositiveIntegerField(default=0)
+    total_amount_by_currency = models.JSONField(
+        default=dict,
+        verbose_name="Суми за валютами",
+    )
+    total_count = models.PositiveIntegerField(default=0, verbose_name="Кількість заявок")
+    completed_count = models.PositiveIntegerField(default=0, verbose_name="Виконано")
+    failed_count = models.PositiveIntegerField(default=0, verbose_name="Помилки")
     status = models.CharField(
         max_length=32,
         choices=Status.choices,
         default=Status.DRAFT,
+        verbose_name="Статус",
     )
-    wise_batch_reference = models.CharField(max_length=100, blank=True)
-    notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    csv_generated_at = models.DateTimeField(null=True, blank=True)
-    sent_at = models.DateTimeField(null=True, blank=True)
-    confirmed_at = models.DateTimeField(null=True, blank=True)
+    wise_batch_reference = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Референс Wise",
+    )
+    notes = models.TextField(blank=True, verbose_name="Примітки")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Створено")
+    csv_generated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="CSV згенеровано",
+    )
+    sent_at = models.DateTimeField(null=True, blank=True, verbose_name="Відправлено у Wise")
+    confirmed_at = models.DateTimeField(null=True, blank=True, verbose_name="Підтверджено")
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -160,8 +173,8 @@ class PayoutBatch(models.Model):
     )
 
     class Meta:
-        verbose_name = "Batch виплат"
-        verbose_name_plural = "Batches виплат"
+        verbose_name = "Пакет batch для Wise (CSV)"
+        verbose_name_plural = "Пакети batch для Wise (CSV)"
         ordering = ["-created_at"]
 
 
@@ -206,14 +219,39 @@ class PayoutRequest(models.Model):
         default=False,
         help_text="Терміновий вивід (комісія 10%, дедлайн 3 дні)",
         db_index=True,
+        verbose_name="Терміново",
     )
-    coins_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    commission_percent = models.DecimalField(max_digits=5, decimal_places=2)
-    commission_coins = models.DecimalField(max_digits=12, decimal_places=2)
-    coins_after_commission = models.DecimalField(max_digits=12, decimal_places=2)
-    payout_currency = models.CharField(max_length=3)
-    exchange_rate = models.DecimalField(max_digits=12, decimal_places=6)
-    amount_gross = models.DecimalField(max_digits=12, decimal_places=2)
+    coins_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        verbose_name="Сума (coins)",
+    )
+    commission_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        verbose_name="% комісії",
+    )
+    commission_coins = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        verbose_name="Комісія (coins)",
+    )
+    coins_after_commission = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        verbose_name="Після комісії (coins)",
+    )
+    payout_currency = models.CharField(max_length=3, verbose_name="Валюта виплати")
+    exchange_rate = models.DecimalField(
+        max_digits=12,
+        decimal_places=6,
+        verbose_name="Курс обміну",
+    )
+    amount_gross = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        verbose_name="Сума брутто",
+    )
     withholding_tax_rate = models.DecimalField(
         max_digits=5,
         decimal_places=2,
@@ -224,7 +262,11 @@ class PayoutRequest(models.Model):
         decimal_places=2,
         default=Decimal("0.00"),
     )
-    amount_net = models.DecimalField(max_digits=12, decimal_places=2)
+    amount_net = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        verbose_name="Сума нетто",
+    )
     # Snapshot KYC-даних на момент створення запиту
     snapshot_country = models.CharField(max_length=2, blank=True)
     snapshot_full_name_legal = models.CharField(max_length=200, blank=True)
@@ -242,8 +284,14 @@ class PayoutRequest(models.Model):
         choices=Status.choices,
         default=Status.PENDING,
         db_index=True,
+        verbose_name="Статус",
     )
-    wise_transfer_id = models.CharField(max_length=64, blank=True, db_index=True)
+    wise_transfer_id = models.CharField(
+        max_length=64,
+        blank=True,
+        db_index=True,
+        verbose_name="ID переказу Wise",
+    )
     idempotency_key = models.CharField(max_length=64, blank=True, db_index=True)
     approved_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -267,18 +315,27 @@ class PayoutRequest(models.Model):
         blank=True,
         null=True,
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    auto_checked_at = models.DateTimeField(null=True, blank=True)
-    approved_at = models.DateTimeField(null=True, blank=True)
-    processed_at = models.DateTimeField(null=True, blank=True)
-    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Створено")
+    auto_checked_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Автоперевірка",
+    )
+    approved_at = models.DateTimeField(null=True, blank=True, verbose_name="Схвалено")
+    processed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Відправлено у Wise",
+    )
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Виплачено")
     deadline_at = models.DateTimeField(
         help_text="Дата до якої зобов'язані відправити (created_at + 14 днів)",
+        verbose_name="Дедлайн",
     )
 
     class Meta:
         verbose_name = "Запит на виплату"
-        verbose_name_plural = "Запити на виплати"
+        verbose_name_plural = "Усі заявки на виплату"
         ordering = ["-created_at"]
         indexes = [
             models.Index(fields=["status", "deadline_at"]),

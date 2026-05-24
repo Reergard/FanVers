@@ -2,6 +2,7 @@ import io
 from decimal import Decimal
 
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
@@ -15,9 +16,9 @@ from .services.csv_import import import_wise_reconciliation_csv
 
 
 @admin.register(PayoutRequest)
-class PayoutRequestAdmin(admin.ModelAdmin):
+class PayoutRequestAdmin(ModelAdmin):
     list_display = (
-        "id",
+        "display_id",
         "get_username",
         "urgent_badge",
         "coins_amount",
@@ -31,7 +32,7 @@ class PayoutRequestAdmin(admin.ModelAdmin):
         "deadline_status",
     )
     list_display_links = (
-        "id",
+        "display_id",
         "get_username",
         "coins_amount",
         "amount_net",
@@ -154,8 +155,24 @@ class PayoutRequestAdmin(admin.ModelAdmin):
         "approve_requests",
         "create_wise_batch",
         "mark_batch_sent",
+        "mark_as_paid",
         "cancel_requests",
     ]
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        delete_action = actions.get("delete_selected")
+        if delete_action is not None:
+            actions["delete_selected"] = (
+                delete_action[0],
+                delete_action[1],
+                "Видалити запит на виплату",
+            )
+        return actions
+
+    @admin.display(description="№", ordering="id")
+    def display_id(self, obj):
+        return obj.pk
 
     @admin.display(description="Користувач")
     def get_username(self, obj):
@@ -320,9 +337,55 @@ class PayoutRequestAdmin(admin.ModelAdmin):
             )
         self.message_user(request, f"{updated} запитів позначено як processing.")
 
+    @admin.action(description="Позначити виплаченим")
+    def mark_as_paid(self, request, queryset):
+        import logging
+
+        from apps.payouts.services.payout_complete import mark_payout_request_completed_manual
+
+        logger = logging.getLogger(__name__)
+        updated = 0
+        skipped = 0
+        errors = []
+
+        for req in queryset:
+            try:
+                with transaction.atomic():
+                    mark_payout_request_completed_manual(
+                        PayoutRequest.objects.select_for_update().get(pk=req.pk)
+                    )
+                updated += 1
+            except ValueError as exc:
+                skipped += 1
+                errors.append(f"#{req.id}: {exc}")
+            except Exception as exc:
+                logger.error("Помилка завершення запиту #%s: %s", req.id, exc)
+                errors.append(f"#{req.id}: {exc}")
+
+        if updated:
+            self.message_user(request, f"Позначено виплаченими: {updated} запитів.")
+        if skipped:
+            self.message_user(
+                request,
+                f"Пропущено: {skipped}. {'; '.join(errors[:5])}",
+                level="warning",
+            )
+        elif errors:
+            self.message_user(
+                request,
+                f"Помилки: {'; '.join(errors[:5])}",
+                level="error",
+            )
+        elif not updated:
+            self.message_user(
+                request,
+                "Немає заявок для завершення (потрібен статус «У batch» або «Відправлений у Wise»).",
+                level="warning",
+            )
+
 
 @admin.register(PayoutBatch)
-class PayoutBatchAdmin(admin.ModelAdmin):
+class PayoutBatchAdmin(ModelAdmin):
     list_display = (
         "id",
         "name",
@@ -334,7 +397,7 @@ class PayoutBatchAdmin(admin.ModelAdmin):
         "reconciliation_link",
     )
 
-    @admin.display(description="Reconciliation")
+    @admin.display(description="Звірка")
     def reconciliation_link(self, obj):
         if obj.status in (
             PayoutBatch.Status.SENT_TO_WISE,

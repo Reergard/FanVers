@@ -1,16 +1,17 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin, TabularInline
 
 from .models import SupportTicket, SupportTicketAttachment, SupportTicketStatusHistory
 
 
-class SupportTicketAttachmentInline(admin.TabularInline):
+class SupportTicketAttachmentInline(TabularInline):
     model = SupportTicketAttachment
     extra = 0
     readonly_fields = ("uploaded_at",)
     fields = ("original_name", "file", "uploaded_at")
 
 
-class SupportTicketStatusHistoryInline(admin.TabularInline):
+class SupportTicketStatusHistoryInline(TabularInline):
     model = SupportTicketStatusHistory
     extra = 0
     can_delete = False
@@ -20,7 +21,7 @@ class SupportTicketStatusHistoryInline(admin.TabularInline):
 
 
 @admin.register(SupportTicket)
-class SupportTicketAdmin(admin.ModelAdmin):
+class SupportTicketAdmin(ModelAdmin):
     list_display = (
         "ticket_number",
         "created_at",
@@ -103,7 +104,7 @@ class SupportTicketAdmin(admin.ModelAdmin):
 
 
 @admin.register(SupportTicketAttachment)
-class SupportTicketAttachmentAdmin(admin.ModelAdmin):
+class SupportTicketAttachmentAdmin(ModelAdmin):
     list_display = ("ticket", "original_name", "uploaded_at")
     search_fields = ("original_name", "ticket__ticket_number")
     readonly_fields = ("uploaded_at",)

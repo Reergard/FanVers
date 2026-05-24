@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 def create_initial_data(sender, **kwargs):
     from .models import TagGroups, Tag, Genres, Fandom, Country
@@ -225,6 +226,7 @@ def create_initial_data(sender, **kwargs):
 class CatalogConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'apps.catalog'
+    verbose_name = _('Каталог')
 
     def ready(self):
         post_migrate.connect(create_initial_data, sender=self)

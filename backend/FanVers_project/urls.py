@@ -9,5 +9,14 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
+    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
+    # Як runserver: статика з INSTALLED_APPS (unfold тощо), не лише з STATIC_ROOT
+    urlpatterns += staticfiles_urlpatterns()
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Після реєстрації admin у всіх INSTALLED_APPS (unfold-стилі для celery-beat, authtoken, social_django)
+from apps.main.admin_third_party import register_third_party_unfold_admins
+
+register_third_party_unfold_admins()

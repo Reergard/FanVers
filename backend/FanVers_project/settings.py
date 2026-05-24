@@ -50,6 +50,10 @@ else:
     ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['fan-vers.com', 'www.fan-vers.com'])
 
 INSTALLED_APPS = [
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
+    'unfold.contrib.inlines',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -688,3 +692,163 @@ if not DEBUG:
     USE_X_FORWARDED_HOST = True
 else:
     SECURE_PROXY_SSL_HEADER = None
+
+from urllib.parse import urlencode
+
+from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext_lazy as _
+
+
+def _payout_requests_link(query: dict):
+    """Посилання на changelist заявок з фільтром по status (для SIDEBAR unfold)."""
+
+    def link(request):
+        base = reverse("admin:payouts_payoutrequest_changelist")
+        return f"{base}?{urlencode(query, doseq=True)}"
+
+    return link
+
+UNFOLD = {
+    "SITE_TITLE": "FanVers Admin",
+    "SITE_HEADER": "FanVers",
+    "SITE_SUBHEADER": "Панель управління",
+    "SITE_SYMBOL": "auto_stories",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "THEME": None,
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": _("Контент"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {"title": _("Книги"), "icon": "menu_book", "link": reverse_lazy("admin:catalog_book_changelist")},
+                    {"title": _("Глави"), "icon": "article", "link": reverse_lazy("admin:catalog_chapter_changelist")},
+                    {"title": _("Томи"), "icon": "library_books", "link": reverse_lazy("admin:catalog_volume_changelist")},
+                    {"title": _("Жанри"), "icon": "category", "link": reverse_lazy("admin:catalog_genres_changelist")},
+                    {"title": _("Теги"), "icon": "label", "link": reverse_lazy("admin:catalog_tag_changelist")},
+                    {"title": _("Групи тегів"), "icon": "label_important", "link": reverse_lazy("admin:catalog_taggroups_changelist")},
+                    {"title": _("Фандоми"), "icon": "groups_3", "link": reverse_lazy("admin:catalog_fandom_changelist")},
+                    {"title": _("Країни"), "icon": "public", "link": reverse_lazy("admin:catalog_country_changelist")},
+                    {"title": _("Рейтинги"), "icon": "star", "link": reverse_lazy("admin:rating_bookrating_changelist")},
+                    {"title": _("Реклама"), "icon": "campaign", "link": reverse_lazy("admin:website_advertising_advertisement_changelist")},
+                ],
+            },
+            {
+                "title": _("Користувачі"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {"title": _("Користувачі"), "icon": "person", "link": reverse_lazy("admin:users_user_changelist")},
+                    {"title": _("Профілі"), "icon": "badge", "link": reverse_lazy("admin:users_profile_changelist")},
+                    {"title": _("Групи"), "icon": "groups", "link": reverse_lazy("admin:auth_group_changelist")},
+                ],
+            },
+            {
+                "title": _("Поповнення балансу"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {"title": _("Платежі (Stripe)"), "icon": "payment", "link": reverse_lazy("admin:payments_paymentsession_changelist")},
+                    {"title": _("Stripe-події"), "icon": "webhook", "link": reverse_lazy("admin:payments_webhookevent_changelist")},
+                ],
+            },
+            {
+                "title": _("Вивід балансу"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Усі заявки на виплату"),
+                        "icon": "request_quote",
+                        "link": reverse_lazy("admin:payouts_payoutrequest_changelist"),
+                    },
+                    {
+                        "title": _("Схвалені заявки"),
+                        "icon": "check_circle",
+                        "link": _payout_requests_link({"status__exact": "approved"}),
+                    },
+                    {
+                        "title": _("У batch"),
+                        "icon": "inventory_2",
+                        "link": _payout_requests_link({"status__exact": "in_batch"}),
+                    },
+                    {
+                        "title": _("Відправлені у Wise"),
+                        "icon": "send",
+                        "link": _payout_requests_link({"status__exact": "processing"}),
+                    },
+                    {
+                        "title": _("Завершені"),
+                        "icon": "task_alt",
+                        "link": _payout_requests_link({"status__exact": "completed"}),
+                    },
+                    {
+                        "title": _("Скасовані"),
+                        "icon": "cancel",
+                        "link": _payout_requests_link({"status__exact": "cancelled"}),
+                    },
+                    {
+                        "title": _("Відхилені Wise"),
+                        "icon": "error",
+                        "link": _payout_requests_link({"status__exact": "failed"}),
+                    },
+                    {
+                        "title": _("Пакети batch для Wise (CSV)"),
+                        "icon": "account_balance",
+                        "link": reverse_lazy("admin:payouts_payoutbatch_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Підтримка"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {"title": _("Тікети"), "icon": "support_agent", "link": reverse_lazy("admin:support_supportticket_changelist")},
+                ],
+            },
+            {
+                "title": _("Моніторинг"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {"title": _("Транзакції"), "icon": "receipt_long", "link": reverse_lazy("admin:monitoring_transactionlog_changelist")},
+                    {"title": _("Операції з балансом"), "icon": "account_balance_wallet", "link": reverse_lazy("admin:monitoring_balanceoperationlog_changelist")},
+                    {"title": _("Прогрес читання"), "icon": "auto_stories", "link": reverse_lazy("admin:monitoring_userchapterprogress_changelist")},
+                    {"title": _("Рекламні логи"), "icon": "ad_group", "link": reverse_lazy("admin:monitoring_advertisinglog_changelist")},
+                ],
+            },
+            {
+                "title": _("Підписки"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {"title": _("Налаштування підписок"), "icon": "settings", "link": reverse_lazy("admin:subscription_booksubscriptionsettings_changelist")},
+                    {"title": _("Підписки користувачів"), "icon": "card_membership", "link": reverse_lazy("admin:subscription_userbooksubscription_changelist")},
+                    {"title": _("Операції підписок"), "icon": "sync", "link": reverse_lazy("admin:subscription_subscriptionoperation_changelist")},
+                ],
+            },
+            {
+                "title": _("Повідомлення"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {"title": _("Чати"), "icon": "chat", "link": reverse_lazy("admin:chat_chat_changelist")},
+                    {"title": _("Повідомлення"), "icon": "message", "link": reverse_lazy("admin:chat_message_changelist")},
+                ],
+            },
+            {
+                "title": _("Система"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {"title": _("Періодичні завдання"), "icon": "schedule", "link": reverse_lazy("admin:django_celery_beat_periodictask_changelist")},
+                ],
+            },
+        ],
+    },
+}

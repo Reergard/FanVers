@@ -3,6 +3,7 @@ import uuid
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 
 class PaymentSession(models.Model):
@@ -39,6 +40,8 @@ class PaymentSession(models.Model):
     expires_at = models.DateTimeField()
 
     class Meta:
+        verbose_name = _('Платіжна сесія')
+        verbose_name_plural = _('Платіжні сесії')
         indexes = [
             models.Index(fields=["status", "created_at"], name="idx_pay_sess_status_created"),
         ]
@@ -66,6 +69,8 @@ class WebhookEvent(models.Model):
     payload = models.JSONField()
 
     class Meta:
+        verbose_name = _('Webhook-подія')
+        verbose_name_plural = _('Webhook-події')
         indexes = [
             models.Index(fields=["event_type", "processed_at"], name="idx_webhook_event_type_time"),
         ]
