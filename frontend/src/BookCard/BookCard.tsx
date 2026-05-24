@@ -6,6 +6,7 @@ import badge18Large from "../assets/backgrounds/18+.svg";
 import ellipseBg from "../assets/backgrounds/Ellipse_for_book.svg";
 import newBadge from "../assets/icons/NEW.svg";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
+import { buildBookCardCoverAlt } from "../seo/bookSeo";
 import { resolveIsNewBadge } from "../shared/bookNewBadge";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import actionBtnStyles from "../shared/ActionButton/ActionButton.module.css";
@@ -220,7 +221,7 @@ export function BookCard({
           <img
             className="bookCard__cover-img"
             src={imageUrl}
-            alt={book.title || "Обкладинка"}
+            alt={buildBookCardCoverAlt(book.title || "")}
             loading="lazy"
             decoding="async"
           />
@@ -267,7 +268,7 @@ export function BookCard({
           <img
             className="bookCard__cover-img"
             src={imageUrl}
-            alt={book.title || "Обкладинка"}
+            alt={buildBookCardCoverAlt(book.title || "")}
             loading="lazy"
             decoding="async"
           />
@@ -319,7 +320,7 @@ export function BookCard({
         <img
           className="bookCard__cover-img"
           src={imageUrl}
-          alt={book.title || "Обкладинка"}
+          alt={buildBookCardCoverAlt(book.title || "")}
           loading="lazy"
           decoding="async"
         />

@@ -12,6 +12,7 @@ import { AuthorWorks } from "./sections/AuthorWorks";
 import { BookChapters } from "./sections/BookChapters";
 import { BookCommentsContainer } from "./sections/BookCommentsContainer";
 import { SubscriptionPurchaseBlock } from "./sections/SubscriptionPurchaseBlock";
+import { buildBookCoverAlt } from "../seo/bookSeo";
 
 interface BookDetailReaderProps {
   book: Book;
@@ -105,6 +106,7 @@ export default function BookDetailReader({
           title={book.title}
           titleSecondary={book.titleSecondary ?? undefined}
           coverImageUrl={book.image ? resolveBookCoverUrl(book.image) : null}
+          coverImageAlt={buildBookCoverAlt(book.title)}
           showAgeBadge={book.adult_content === true}
           authorMarkText={authorMarkText ?? undefined}
           metaRows={metaRows}

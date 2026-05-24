@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
 
     # Custom apps
     'apps.api',
@@ -79,6 +80,7 @@ INSTALLED_APPS = [
     'apps.support.apps.SupportConfig',
     'apps.payments.apps.PaymentsConfig',
     'apps.payouts.apps.PayoutsConfig',
+    'apps.seo.apps.SeoConfig',
 
     'rest_framework',
     'rest_framework.authtoken',
@@ -95,6 +97,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'apps.seo.middleware.SeoPrerendererMiddleware',
     'csp.middleware.CSPMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',  # Нужен для CSRF (если CSRF_USE_SESSIONS=True)
     'corsheaders.middleware.CorsMiddleware',
@@ -544,6 +547,8 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.user.user_details',
 )
 FRONTEND_URL = env('FRONTEND_URL', default=('http://127.0.0.1:5173' if DEBUG else 'https://fan-vers.com'))
+SEO_SITE_URL = (env('SEO_SITE_URL', default=FRONTEND_URL) or FRONTEND_URL).rstrip('/')
+SEO_PRERENDER_ENABLED = env.bool('SEO_PRERENDER_ENABLED', default=True)
 LOGIN_REDIRECT_URL = '/api/users/oauth-complete/'
 LOGIN_ERROR_URL = '/api/users/oauth-error/'
 

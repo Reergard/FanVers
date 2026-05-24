@@ -1,0 +1,53 @@
+{% extends "seo/base_seo.html" %}
+{% load static %}
+
+{% block title %}{{ seo_title }}{% endblock %}
+{% block meta_description %}{{ seo_meta_description }}{% endblock %}
+{% block canonical %}{{ book_url }}{% endblock %}
+{% block hreflang_uk %}{{ book_url }}{% endblock %}
+
+{% block extra_meta %}
+    <meta name="keywords" content="{{ seo_keywords }}">
+    <meta property="og:type" content="book">
+    <meta property="og:title" content="{{ book.title }} — читати українською | FanVers">
+    <meta property="og:description" content="{{ seo_meta_description }}">
+    <meta property="og:url" content="{{ book_url }}">
+    {% if og_image %}<meta property="og:image" content="{{ og_image }}">{% endif %}
+    <meta property="og:site_name" content="FanVers — бібліотека ранобе українською">
+    <meta property="og:locale" content="uk_UA">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ book.title }} — FanVers">
+    <meta name="twitter:description" content="{{ seo_meta_description }}">
+    {% if book.title_en %}
+    <link rel="alternate" hreflang="en" href="{{ book_url }}">
+    {% endif %}
+{% endblock %}
+
+{% block json_ld %}
+    <script type="application/ld+json">{{ book_json_ld }}</script>
+    <script type="application/ld+json">{{ website_json_ld }}</script>
+{% endblock %}
+
+{% block body %}
+    <header>
+        <a href="{{ site_url }}/">FanVers</a>
+    </header>
+    <main>
+        <h1>{{ book.title }}</h1>
+        {% if book.title_en %}<p lang="en">{{ book.title_en }}</p>{% endif %}
+        <p>Автор: {{ book.author }}</p>
+        {% if book.image %}
+        <img src="{{ og_image }}" alt="{{ cover_alt }}" width="300">
+        {% endif %}
+        {% if book.description %}
+        <section aria-label="Опис">
+            {{ book.description|striptags|truncatewords:80 }}
+        </section>
+        {% endif %}
+        <p>Жанри: {{ book.get_genres_string }}</p>
+        {% if book.get_tags_string %}<p>Теги: {{ book.get_tags_string }}</p>{% endif %}
+        <p>Статус оригіналу: {{ book.get_original_status_display }}</p>
+        <p>Розділів: {{ book.chapters_count }}</p>
+        <p><a href="{{ book_url }}">Читати «{{ book.title }}» на FanVers</a></p>
+    </main>
+{% endblock %}

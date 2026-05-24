@@ -1,0 +1,41 @@
+# Приклад nginx: проксі SEO-шляхів і ботів на Django (Daphne/Gunicorn).
+# Додайте до server { } для fan-vers.com ПЕРЕД location / { try_files ... }
+
+# sitemap і robots — завжди з Django
+location = /sitemap.xml {
+    proxy_pass http://127.0.0.1:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+
+location = /robots.txt {
+    proxy_pass http://127.0.0.1:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+
+# Книги, каталог, головна — для ботів (User-Agent) на Django SEO-middleware.
+# Список ботів має збігатися з BOT_AGENTS у middleware.py!
+location ~ ^/(books/[^/]+/?|catalog/?|)$ {
+    set $seo_prerender 0;
+    if ($http_user_agent ~* "(googlebot|bingbot|yandex|baiduspider|duckduckbot|chatgpt-user|gptbot|claude-web|anthropic-ai|google-extended|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|applebot|petalbot|semrushbot|ahrefsbot|bytespider|perplexitybot|cohere-ai|meta-externalagent)") {
+        set $seo_prerender 1;
+    }
+    if ($seo_prerender = 1) {
+        proxy_pass http://127.0.0.1:8000;
+        break;
+    }
+
+    # Без proxy_set_header Django побачить Host: 127.0.0.1:8000
+    # і og:image / canonical URL будуть хибними.
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+    try_files $uri $uri/ /index.html;
+}

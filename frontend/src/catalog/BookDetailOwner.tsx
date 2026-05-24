@@ -5,6 +5,7 @@ import { useNotification } from "../shared/NotificationModal/NotificationProvide
 import { catalogApi, catalogKeys } from "../api/catalogApi";
 import type { Book, Chapter, Volume } from "../api/catalogApi";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
+import { buildBookCoverAlt } from "../seo/bookSeo";
 import { BookDetailLayout } from "./BookDetailLayout";
 import { BookHero } from "./sections/BookHero";
 import { BookDescription } from "./sections/BookDescription";
@@ -232,6 +233,7 @@ export default function BookDetailOwner({
           title={book.title}
           titleSecondary={book.titleSecondary ?? undefined}
           coverImageUrl={book.image ? resolveBookCoverUrl(book.image) : null}
+          coverImageAlt={buildBookCoverAlt(book.title)}
           showAgeBadge={book.adult_content === true}
           authorMarkText={authorMarkText ?? undefined}
           metaRows={metaRows}

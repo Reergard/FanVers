@@ -1,0 +1,30 @@
+{% extends "seo/base_seo.html" %}
+
+{% block title %}{{ seo_title }}{% endblock %}
+{% block meta_description %}{{ seo_meta_description }}{% endblock %}
+{% block canonical %}{{ catalog_url }}{% endblock %}
+{% block hreflang_uk %}{{ catalog_url }}{% endblock %}
+
+{% block json_ld %}
+    <script type="application/ld+json">{{ website_json_ld }}</script>
+{% endblock %}
+
+{% block body %}
+    <header>
+        <h1>Каталог ранобе українською</h1>
+        <p><a href="{{ site_url }}/">FanVers</a></p>
+    </header>
+    <main>
+        <p>{{ seo_meta_description }}</p>
+        <ul>
+            {% for book in books %}
+            <li>
+                <a href="{{ site_url }}/books/{{ book.slug }}/">{{ book.title }}</a>
+                — {{ book.author }}
+            </li>
+            {% empty %}
+            <li>Книг поки немає.</li>
+            {% endfor %}
+        </ul>
+    </main>
+{% endblock %}

@@ -457,6 +457,59 @@ class Book(models.Model):
         chapters = self.chapters.count()
         return chapters
 
+    def _clean_user_description(self) -> str:
+        base = self.description or ''
+        clean = strip_tags(base)
+        clean = html_lib.unescape(clean)
+        return re.sub(r'\s+', ' ', clean).strip()
+
+    def get_seo_snippet(self, max_len: int = 120) -> str:
+        """Короткий фрагмент опису користувача для meta/JSON-LD."""
+        clean = self._clean_user_description()
+        if len(clean) <= max_len:
+            return clean
+        truncated = clean[:max_len].rsplit(' ', 1)[0]
+        if truncated and not truncated.endswith(('.', '…')):
+            truncated += '...'
+        return truncated
+
+    def get_seo_description(self) -> str:
+        """Сумісність з шаблонами: короткий опис без константних фраз."""
+        return self.get_seo_snippet(120)
+
+    def get_seo_meta_description(self) -> str:
+        from apps.seo.constants import SEO_BOOK_DESCRIPTION_PREFIX, SEO_BOOK_DESCRIPTION_SUFFIX
+
+        parts = [SEO_BOOK_DESCRIPTION_PREFIX.format(title=self.title)]
+        snippet = self.get_seo_snippet(120)
+        if snippet:
+            parts.append(snippet)
+        parts.append(SEO_BOOK_DESCRIPTION_SUFFIX)
+        return ' '.join(parts)
+
+    def get_seo_title(self) -> str:
+        from apps.seo.constants import SEO_BOOK_TITLE_SUFFIX
+
+        return f'{self.title} {SEO_BOOK_TITLE_SUFFIX}'
+
+    def get_seo_keywords(self) -> str:
+        from apps.seo.constants import SEO_KEYWORDS_BASE
+
+        extra = [self.title, self.get_genres_string(), self.get_tags_string()]
+        extra = [x for x in extra if x]
+        return ', '.join([SEO_KEYWORDS_BASE, *extra])
+
+    def get_genres_string(self) -> str:
+        return ', '.join(g.name for g in self.genres.all())
+
+    def get_tags_string(self) -> str:
+        return ', '.join(t.name for t in self.tags.all())
+
+    def get_cover_alt(self) -> str:
+        from apps.seo.constants import SEO_COVER_ALT_TEMPLATE
+
+        return SEO_COVER_ALT_TEMPLATE.format(title=self.title)
+
     def has_recent_activity(self):
         """
         Чи була «свіжа» активність за останній місяць.

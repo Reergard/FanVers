@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FanVers{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{% endblock %}">
+    {% block extra_meta %}{% endblock %}
+    <link rel="canonical" href="{% block canonical %}{{ site_url }}/{% endblock %}">
+    <link rel="alternate" hreflang="uk" href="{% block hreflang_uk %}{{ site_url }}/{% endblock %}">
+    {% block json_ld %}{% endblock %}
+</head>
+<body>
+    {% block body %}{% endblock %}
+</body>
+</html>

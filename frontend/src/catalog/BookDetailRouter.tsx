@@ -8,6 +8,8 @@ import BookDetailOwner from "./BookDetailOwner";
 import BookDetailReader from "./BookDetailReader";
 import BookDetailSkeleton from "./BookDetailSkeleton";
 import { AxiosError } from "axios";
+import { BookSeoHelmet } from "../seo/BookSeoHelmet";
+import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 
 const STALE_TIME = 2 * 60_000;
 
@@ -117,8 +119,17 @@ export default function BookDetailRouter() {
 
   const refreshVolumes = () => setVolumesRefreshKey((k) => k + 1);
 
+  const coverForSeo = book.image ? resolveBookCoverUrl(book.image) : null;
+
   if (isOwner) {
     return (
+      <>
+      <BookSeoHelmet
+        title={book.title}
+        slug={book.slug}
+        description={book.description}
+        coverImageUrl={coverForSeo}
+      />
       <BookDetailOwner
         book={book as Book}
         volumes={volumes}
@@ -128,10 +139,18 @@ export default function BookDetailRouter() {
         volumesLoading={volumesQ.isLoading}
         onVolumesRefresh={refreshVolumes}
       />
+      </>
     );
   }
 
   return (
+    <>
+    <BookSeoHelmet
+      title={book.title}
+      slug={book.slug}
+      description={book.description}
+      coverImageUrl={coverForSeo}
+    />
     <BookDetailReader
       book={book as Book}
       volumes={volumes}
@@ -139,5 +158,6 @@ export default function BookDetailRouter() {
       chaptersLoading={chaptersQ.isLoading || volumesQ.isLoading || directVolumes === null}
       volumesLoading={volumesQ.isLoading}
     />
+    </>
   );
 }
