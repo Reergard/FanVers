@@ -107,7 +107,10 @@ export const API = {
     `/api/subscription/books/${encodeURIComponent(bookSlug)}/apply-plan/`,
   subscriptionUserSubscriptions: "/api/subscription/user/subscriptions/",
 
-  // Monitoring (подяка власнику книги)
+  // Monitoring (прогрес читання, подяка власнику)
+  chapterProgress: (chapterId: number) =>
+    `/api/monitoring/chapters/${chapterId}/progress/`,
+  readingStats: "/api/monitoring/stats/",
   authorThanks: "/api/monitoring/thanks/",
 
   // Editors (репорти помилок у тексті розділу)

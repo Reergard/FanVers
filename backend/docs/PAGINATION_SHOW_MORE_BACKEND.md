@@ -51,7 +51,7 @@
 - `GET /api/catalog/user-translations/`
   - файл: `backend/apps/catalog/api/views.py`
   - функція: `user_translations`
-  - повертає всі книги поточного користувача (з owner=request.user) зі статистикою.
+  - повертає всі книги поточного користувача (з owner=request.user) зі статистикою на книгу: `daily_income`, `monthly_income` (`TransactionLog`), `daily_views` (`BookView`), `total_readers`, `completed_readers` (`UserChapterProgress`) — див. **READING_PROGRESS_BACKEND.md** §7.
 
 ### Users
 

@@ -52,6 +52,8 @@ import type {
 } from "./types";
 import backgroundsAvatarsSvgRaw from "./assets/backgrounds/backgrounds_avatars.svg?raw";
 import { profileQueryKey } from "../shared/queryKeys";
+import { getUserReadingStats } from "../api/monitoringApi";
+import { monitoringKeys } from "../api/monitoringKeys";
 
 /** Strips feGaussianBlur filter from SVG — iOS Safari renders it blurry (like AvatarOrbit in header menu). */
 function stripSvgFilter(svg: string): string {
@@ -248,7 +250,21 @@ export default function Profile() {
     refetchOnReconnect: true,
   });
 
+  const readingStatsQuery = useQuery({
+    queryKey: monitoringKeys.readingStats(),
+    queryFn: getUserReadingStats,
+    enabled: isAuthenticated && authReady,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (isAuthenticated && authReady) {
+      void queryClient.invalidateQueries({ queryKey: monitoringKeys.readingStats() });
+    }
+  }, [isAuthenticated, authReady, queryClient]);
+
   const profile = profileQuery.data;
+  const readingStats = readingStatsQuery.data;
   const isLoading = profileQuery.isLoading;
 
   const hasPayoutProfile = profile?.has_active_payout_profile === true;
@@ -812,6 +828,24 @@ export default function Profile() {
               <div className={styles.statRow}>
                 <span className={styles.statLabel}>Кількість перекладів:</span>
                 <span className={styles.statValue}>{profile.total_translations ?? 0}</span>
+              </div>
+              <div className={styles.statRow}>
+                <span className={styles.statLabel}>Прочитано розділів:</span>
+                <span className={styles.statValue}>
+                  {readingStats?.read_chapters ?? 0}
+                </span>
+              </div>
+              <div className={styles.statRow}>
+                <span className={styles.statLabel}>Придбано розділів:</span>
+                <span className={styles.statValue}>
+                  {readingStats?.purchased_chapters ?? 0}
+                </span>
+              </div>
+              <div className={styles.statRow}>
+                <span className={styles.statLabel}>Книг у статусі «Прочитав»:</span>
+                <span className={styles.statValue}>
+                  {readingStats?.completed_books ?? 0}
+                </span>
               </div>
           </section>
 

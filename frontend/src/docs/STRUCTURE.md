@@ -165,6 +165,8 @@ frontend/src/
 │   ├── PAGINATION_SHOW_MORE_FRONTEND.md
 │   ├── SORT_BY_NAVIGATION_FRONTEND.md
 │   ├── RATINGS_FRONTEND.md
+│   ├── READING_PROGRESS_FRONTEND.md
+│   ├── BOOK_AUTHOR_THANKS_FRONTEND.md
 │   ├── SEARCH_FRONTEND.md
 │   ├── ANALYTICS_FRONTEND.md
 │   ├── LISTS_AND_CAROUSELS_FRONTEND.md
@@ -320,6 +322,8 @@ export function Base({ children }: Props) {
 - `searchApi.ts` — API пошуку книг (`searchBooks`) для сторінки `/search`
 - `ratingApi.ts` — API рейтингів книги: fetchBookRatings(slug), submitRating(slug, type, value); нормалізація відповіді. Див. docs/RATINGS_FRONTEND.md.
 - `reviewsApi.ts` — API коментарів (книга/глава): fetch, post, delete, reaction, owner_like. Див. docs/COMMENTS_FRONTEND.md.
+- `monitoringApi.ts`, `monitoringKeys.ts` — прогрес читання (`chapterProgress`, `readingStats`), подяка автору (`authorThanks`). Див. **docs/READING_PROGRESS_FRONTEND.md**, **docs/BOOK_AUTHOR_THANKS_FRONTEND.md**.
+- `catalog/hooks/useReadingProgress.ts` — трекинг на сторінці глави (**docs/CHAPTER_PAGE_DATA_FLOW.md**).
 - ТОП за періодом: `api/top/*` (`topApi`, типи, `normalizeTopReaderRow`, `mapTopBook`), `endpoints.topBooks`, хук **`shared/hooks/useTopBooks.ts`**, карусель **`main/MagicalGuide3.tsx`** (`GET /api/analytics_books/top/?type=...`). **Тренди** (майбутнє) — `MagicalGuide1` без цього API. Див. **docs/LISTS_AND_CAROUSELS_FRONTEND.md**, **docs/ANALYTICS_FRONTEND.md**, `backend/docs/ANALYTICS_BOOKS_BACKEND.md`.
 
 ---

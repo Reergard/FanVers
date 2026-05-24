@@ -11,7 +11,8 @@
 | `catalog/sections/BookHero.tsx` | Блок подяки: кнопка для читача, перехід у модалку або **модалка входу**; для власника — статичний вигляд без дії. |
 | `catalog/ModalThankAuthor.tsx` + `ModalThankAuthor.module.css` | Модалка: текст, ліміти сум, поле вводу, баланс з `useAuth`, відправка. |
 | `api/authorThanksApi.ts` | `POST` на ендпоінт подяки з полями, які очікує бекенд. |
-| `api/endpoints.ts` | Константа **`API.authorThanks`** → `/api/monitoring/thanks/`. |
+| `api/endpoints.ts` | **`API.authorThanks`**, **`API.chapterProgress`**, **`API.readingStats`** (секция monitoring). |
+| `api/monitoringApi.ts` | Прогрес читання и stats — **READING_PROGRESS_FRONTEND.md**. |
 | `api/http.ts` | Спільний клієнт: **Bearer**, **CSRF** для POST, повтор після refresh при 401. |
 | `catalog/BookDetailReader.tsx` | Передає в `BookHero` підпис залежно від типу книги, **`thankAuthorInteractive={true}`**, `bookId`, тощо. |
 | `catalog/BookDetailOwner.tsx` | **`thankAuthorInteractive={false}`** — не подякувати самому собі через UI. |

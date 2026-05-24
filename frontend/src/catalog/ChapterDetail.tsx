@@ -10,6 +10,7 @@ import { useAuthModal } from "../auth/AuthModalContext";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { ModalErrorReport } from "./ModalErrorReport";
+import { useReadingProgress } from "./hooks/useReadingProgress";
 import styles from "./ChapterDetail.module.css";
 
 const prevLabel = "Попередній розділ";
@@ -132,11 +133,21 @@ function ChapterDetailImpl({
   chapterMeta,
 }: ChapterDetailProps) {
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, authReady } = useAuth();
   const { openLoginModal } = useAuthModal();
   const { showError } = useNotification();
 
   const readerRef = useRef<HTMLDivElement>(null);
+
+  const chapterId = chapterMeta.id;
+  useReadingProgress({
+    chapterId,
+    enabled:
+      isAuthenticated &&
+      authReady &&
+      chapterId != null &&
+      chapterId > 0,
+  });
 
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [selectedText, setSelectedText] = useState("");

@@ -198,7 +198,7 @@ type Props = {
 **Мінімальні поля:**
 - `id`, `slug?`, `title`, `image?`, `adult_content?`
 
-**Для default:** потрібні також `created_at`, `last_updated`, `daily_views`, `daily_income`, `monthly_income` (UserTranslationBook).
+**Для default** (`/my-translations`, `UserTranslationBook`): `created_at`, `last_updated`, `daily_views`, `daily_income`, `monthly_income`, `total_readers`, `completed_readers` — джерело `GET /api/catalog/user-translations/` (**READING_PROGRESS_FRONTEND.md** §6).
 
 **Для withTags:** потрібні `fandoms`, `tags`, `genres`, `translation_status_display`.
 

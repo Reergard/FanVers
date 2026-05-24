@@ -802,9 +802,9 @@ def user_translations(request):
         ).order_by('-last_updated')
         
         # Додаємо додаткову інформацію про кожну книгу
-        from apps.monitoring.models import TransactionLog, BookView
+        from apps.monitoring.models import TransactionLog, BookView, UserChapterProgress
         from django.utils import timezone
-        from django.db.models import Sum
+        from django.db.models import Sum, Count
         
         today = timezone.now().date()
         month_start = today.replace(day=1)
@@ -833,6 +833,26 @@ def user_translations(request):
             
             # Реальные просмотры за день
             daily_views = BookView.get_daily_views(book, today)
+
+            total_readers = UserChapterProgress.objects.filter(
+                chapter__book=book,
+                is_read=True,
+            ).values('user').distinct().count()
+
+            total_chapters = book.chapters.count()
+            if total_chapters > 0:
+                completed_readers = (
+                    UserChapterProgress.objects.filter(
+                        chapter__book=book,
+                        is_read=True,
+                    )
+                    .values('user')
+                    .annotate(read_count=Count('chapter', distinct=True))
+                    .filter(read_count=total_chapters)
+                    .count()
+                )
+            else:
+                completed_readers = 0
             
             # Добавляем статистику та дату створення до даних книги
             from django.utils.dateformat import format
@@ -840,6 +860,8 @@ def user_translations(request):
                 'daily_income': float(daily_income),
                 'monthly_income': float(monthly_income),
                 'daily_views': daily_views,
+                'total_readers': total_readers,
+                'completed_readers': completed_readers,
                 'created_at': format(book.created_at, 'd.m.Y') if book.created_at else None,
                 'last_updated': format(book.last_updated, 'd.m.Y') if book.last_updated else None,
             })

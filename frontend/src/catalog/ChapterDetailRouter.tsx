@@ -6,6 +6,7 @@ import { AxiosError } from "axios";
 import { catalogApi, catalogKeys } from "../api/catalogApi";
 import { getSubscriptionSettings, purchaseChapter } from "../api/subscriptionApi";
 import { subscriptionKeys } from "../api/subscriptionApi";
+import { monitoringKeys } from "../api/monitoringKeys";
 import { useAuth } from "../auth/useAuth";
 import { useAuthModal } from "../auth/AuthModalContext";
 import { Modal } from "../shared/Modal/Modal";
@@ -53,6 +54,7 @@ export default function ChapterDetailRouter() {
       qc.invalidateQueries({ queryKey: catalogKeys.chapters(bookSlug) });
       qc.invalidateQueries({ queryKey: subscriptionKeys.settings(bookSlug) });
       qc.invalidateQueries({ queryKey: subscriptionKeys.userSubscriptions() });
+      qc.invalidateQueries({ queryKey: monitoringKeys.readingStats() });
       showSuccess("Розділ придбано");
       setForbiddenPurchase(null);
       if (targetChapterSlug) {

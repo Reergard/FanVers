@@ -9,7 +9,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
 from apps.catalog.models import Book
 from django.db import models
-from apps.catalog.api.permissions import check_book_access_permission
+from apps.catalog.api.permissions import check_book_access_permission, is_book_owner_or_creator
+from apps.monitoring.models import UserChapterProgress
 
 from ..domain import (
     available_rating_types,
@@ -50,6 +51,23 @@ class BookRatingViewSet(viewsets.ModelViewSet):
                         {'error': error_message}, 
                         status=status.HTTP_403_FORBIDDEN
                     )
+
+                if not is_book_owner_or_creator(request.user, book):
+                    has_read = UserChapterProgress.objects.filter(
+                        user=request.user,
+                        chapter__book=book,
+                        is_read=True,
+                    ).exists()
+                    if not has_read:
+                        return Response(
+                            {
+                                'error': (
+                                    'Щоб оцінити книгу, потрібно прочитати '
+                                    'хоча б один розділ'
+                                ),
+                            },
+                            status=status.HTTP_403_FORBIDDEN,
+                        )
             
             serializer = self.get_serializer(data=request.data)
             if not serializer.is_valid():

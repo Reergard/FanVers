@@ -10,7 +10,11 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 import logging
 from rest_framework.exceptions import NotFound
 from rest_framework.decorators import action
-from apps.catalog.api.permissions import check_book_access_permission
+from apps.catalog.api.permissions import (
+    check_book_access_permission,
+    is_book_owner_or_creator,
+)
+from apps.monitoring.models import UserChapterProgress
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +47,23 @@ class BookCommentViewSet(viewsets.ModelViewSet):
                     {"detail": error_message}, 
                     status=status.HTTP_403_FORBIDDEN
                 )
+
+            if not is_book_owner_or_creator(request.user, book):
+                has_read = UserChapterProgress.objects.filter(
+                    user=request.user,
+                    chapter__book=book,
+                    is_read=True,
+                ).exists()
+                if not has_read:
+                    return Response(
+                        {
+                            "detail": (
+                                "Щоб залишити коментар, потрібно прочитати "
+                                "хоча б один розділ"
+                            ),
+                        },
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
             
             if not request.user.is_authenticated:
                 return Response(
@@ -133,6 +154,23 @@ class ChapterCommentViewSet(viewsets.ModelViewSet):
                     {"detail": error_message}, 
                     status=status.HTTP_403_FORBIDDEN
                 )
+
+            if not is_book_owner_or_creator(request.user, book):
+                has_read = UserChapterProgress.objects.filter(
+                    user=request.user,
+                    chapter=chapter,
+                    is_read=True,
+                ).exists()
+                if not has_read:
+                    return Response(
+                        {
+                            "detail": (
+                                "Щоб залишити коментар, потрібно прочитати "
+                                "цей розділ"
+                            ),
+                        },
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
             
             if not request.user.is_authenticated:
                 return Response(

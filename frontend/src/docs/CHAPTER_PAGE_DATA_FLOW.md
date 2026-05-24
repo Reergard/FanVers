@@ -16,7 +16,9 @@
 | Файл | Роль |
 |---|---|
 | `catalog/ChapterDetailRouter.tsx` | Точка входа страницы главы: загрузка данных, обработка ошибок, навигация между главами, модалка 403. |
-| `catalog/ChapterDetail.tsx` | Чистый UI страницы: верхняя/нижняя навигация, контент главы, блок комментариев. |
+| `catalog/ChapterDetail.tsx` | UI страницы + **`useReadingProgress`** (трекинг скролла/времени). |
+| `catalog/hooks/useReadingProgress.ts` | POST прогресу на `/api/monitoring/chapters/{id}/progress/` — див. **READING_PROGRESS_FRONTEND.md**. |
+| `api/monitoringApi.ts`, `api/monitoringKeys.ts` | Клиент мониторинга чтения. |
 | `api/catalogApi.ts` | API-методы `getChapterDetail()` и `getChapterNavigation()`, нормализация ответа. |
 | `catalog/sections/BookCommentsContainer.tsx` | Комментарии для главы (`type="chapter"`). |
 | `shared/Modal/Modal.tsx` | Локальная модалка предупреждения при 403 в переходах Prev/Next. |
@@ -93,4 +95,13 @@ UI-кнопки перехода находятся в `ChapterDetail.tsx`, но
 ## 8) Покупка на странице главы
 
 При 403 (requires_purchase) `ChapterDetailRouter` показывает кнопку «Купити», которая вызывает `purchaseChapter(chapterId)`. Покупка выполняется за баланс або за слот prepaid-пакета (backend выбирает автоматически).
+
+---
+
+## 9) Мониторинг чтения
+
+- Трекинг только для **авторизованных** (`enabled = isAuthenticated && authReady && chapterId > 0`).
+- Компонент `ChapterDetail` монтируется после успешной загрузки контента (или после логина/покупки) — сессия чтения начинается с нуля.
+- Условие «прочитано» на бекенде: `scroll_progress >= 90` и `reading_time >= chapter.min_reading_time` → `is_read` (нужно для комментария к главе и рейтинга книги).
+- Полное описание: **READING_PROGRESS_FRONTEND.md**, бекенд — **backend/docs/READING_PROGRESS_BACKEND.md**.
 

@@ -15,6 +15,7 @@ import {
 } from "../../api/subscriptionApi";
 import styles from "../styles/BookDetail.module.css";
 import { catalogKeys, type Chapter, type Volume } from "../../api/catalogApi";
+import { monitoringKeys } from "../../api/monitoringKeys";
 import checkIcon from "../assets/icons/check.svg";
 import deleteIcon from "../assets/icons/Delete.svg";
 import editIcon from "../assets/icons/Edit.svg";
@@ -207,6 +208,7 @@ export function BookChapters({
         queryClient.invalidateQueries({ queryKey: subscriptionKeys.settings(bookSlug) });
         queryClient.invalidateQueries({ queryKey: catalogKeys.chapters(bookSlug) });
       }
+      queryClient.invalidateQueries({ queryKey: monitoringKeys.readingStats() });
       showSuccess("Главу придбано");
       onPurchaseSuccess?.();
     },
@@ -229,6 +231,7 @@ export function BookChapters({
         queryClient.invalidateQueries({ queryKey: subscriptionKeys.settings(bookSlug) });
         queryClient.invalidateQueries({ queryKey: subscriptionKeys.userSubscriptions() });
       }
+      queryClient.invalidateQueries({ queryKey: monitoringKeys.readingStats() });
       showSuccess("Розділи успішно придбано");
       setSubscriptionSelectedIds(new Set());
       setSelectedPlanId(null);

@@ -11,6 +11,7 @@ import {
   updateBookmark,
 } from "./api";
 import { bookmarkKeys } from "./keys";
+import { monitoringKeys } from "../api/monitoringKeys";
 import type { BookmarkStatus } from "./types";
 import styles from "./BookmarkButton.module.css";
 
@@ -49,6 +50,7 @@ export function BookmarkButton({ bookId }: Props) {
       queryClient.invalidateQueries({
         predicate: (q) => q.queryKey[0] === "user-bookmarks",
       });
+      queryClient.invalidateQueries({ queryKey: monitoringKeys.readingStats() });
     },
     onError: () => {
       showError("Не вдалося додати закладку");
@@ -68,6 +70,7 @@ export function BookmarkButton({ bookId }: Props) {
       queryClient.invalidateQueries({
         predicate: (q) => q.queryKey[0] === "user-bookmarks",
       });
+      queryClient.invalidateQueries({ queryKey: monitoringKeys.readingStats() });
     },
     onError: () => {
       showError("Не вдалося оновити закладку");

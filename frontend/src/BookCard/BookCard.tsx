@@ -456,6 +456,14 @@ export function BookCard({
                 <span className="bookCard__value">{formatStat(userBook.daily_views)}</span>
               </div>
               <div className="bookCard__row">
+                <span className="bookCard__label">Читачів</span>
+                <span className="bookCard__value">{formatStat(userBook.total_readers)}</span>
+              </div>
+              <div className="bookCard__row">
+                <span className="bookCard__label">Дочитали до кінця</span>
+                <span className="bookCard__value">{formatStat(userBook.completed_readers)}</span>
+              </div>
+              <div className="bookCard__row">
                 <span className="bookCard__label">Дохід за день</span>
                 <span className="bookCard__value">{formatStat(userBook.daily_income)}</span>
               </div>

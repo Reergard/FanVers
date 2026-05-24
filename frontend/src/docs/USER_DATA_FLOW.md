@@ -71,6 +71,17 @@ const { isAuthenticated, userId, username, balance, role, canWithdrawBalance, ro
 
 Кеш React Query для «мого» профілю: **`profileQueryKey(userId)`** з **`shared/queryKeys.ts`** (кореневий рядок **`"profile"`** + `userId`), а не голий літерал без id — той самий ключ на `Profile`, `Header`, `NotificationsPage`, `ChatPage`, `search`, `CreateBookPage`, `UserTranslations` тощо.
 
+### Статистика читання на профілі
+
+Окремий запит (не з `GET /api/users/profile/`):
+
+- **API:** `GET /api/monitoring/stats/` через `getUserReadingStats()` (`api/monitoringApi.ts`).
+- **Ключ React Query:** `monitoringKeys.readingStats()` з `api/monitoringKeys.ts`.
+- **UI:** `users/Profile.tsx`, секція `.colStats` — прочитано розділів / придбано розділів / книг у статусі «Прочитав».
+- При відкритті профілю — `invalidateQueries` для свіжих цифр; після покупки глави або зміни закладки — теж інвалідується (див. **READING_PROGRESS_FRONTEND.md**).
+
+Збір `is_read` на сторінці глави — той самий документ.
+
 ## Страница "Покинуті переклади" и auth
 
 - Страница: `catalog/AbandonedTranslations.tsx`

@@ -88,6 +88,8 @@ export interface UserTranslationBook extends Book {
   daily_income?: number;
   monthly_income?: number;
   daily_views?: number;
+  total_readers?: number;
+  completed_readers?: number;
 }
 
 /** Книга зі списку покинутих перекладів */
@@ -309,6 +311,9 @@ function normalizeUserTranslation(raw: Record<string, unknown>): UserTranslation
     daily_income: raw.daily_income != null ? Number(raw.daily_income) : 0,
     monthly_income: raw.monthly_income != null ? Number(raw.monthly_income) : 0,
     daily_views: raw.daily_views != null ? Number(raw.daily_views) : 0,
+    total_readers: raw.total_readers != null ? Number(raw.total_readers) : 0,
+    completed_readers:
+      raw.completed_readers != null ? Number(raw.completed_readers) : 0,
   };
 }
 
