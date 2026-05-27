@@ -4,6 +4,8 @@
 
 Деталі фронтенд-частини (Helmet, alt-теги) — у **`frontend/src/docs/SEO_SYSTEM_FRONTEND.md`**.
 
+Зовнішня аналітика (GA4, UTM, GSC, Bing, Meta Pixel) — у **`SEO_EXTERNAL_ANALYTICS.md`**.
+
 ---
 
 ## 1. Навіщо це потрібно

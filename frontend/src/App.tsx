@@ -11,6 +11,7 @@ import { RequireAuth } from "./auth/RequireAuth";
 import { NotificationProvider } from "./shared/NotificationModal/NotificationProvider";
 import BookDetailSkeleton from "./catalog/BookDetailSkeleton";
 import { CookieConsentSyncRoot } from "./settings/CookieConsentSyncRoot";
+import { AnalyticsProvider } from "./analytics/AnalyticsProvider";
 
 const BookDetailRouter = lazy(() => import("./catalog/BookDetailRouter"));
 const BookmarksPage = lazy(() => import("./bookmarks/BookmarksPage"));
@@ -112,6 +113,7 @@ export default function App() {
       <NotificationProvider>
         <CookieConsentSyncRoot />
         <BrowserRouter>
+          <AnalyticsProvider />
           <AuthModalProvider>
             <ScrollToTop />
             <Base>

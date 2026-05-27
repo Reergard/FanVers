@@ -105,11 +105,16 @@ Endpoint:
 
 В dev конфиге Vite должен проксировать `/api` на backend (см. `frontend/vite.config.ts`).
 
-## 7) Как правильно применять consent в коде (когда появятся интеграции)
+## 7) Как правильно применять consent в коде
+
+**Реализовано:**
+- GA4 (Google Analytics 4) завантажується тільки при `consent.analytics === true` — див. `src/analytics/AnalyticsProvider.tsx`
+- Деталі: **`SEO_GA4_AND_TRACKING.md`**
 
 Правильный паттерн:
 
-- `if (consent.analytics) loadGoogleAnalytics()`
+- `if (consent.analytics) loadGoogleAnalytics()` ← реалізовано в `AnalyticsProvider`
+- `if (consent.analytics) loadMetaPixel()` ← буде реалізовано
 - `if (consent.preferences) persistOptionalUiState()`
 
 Неправильный паттерн:

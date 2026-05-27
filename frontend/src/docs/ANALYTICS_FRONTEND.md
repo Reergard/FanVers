@@ -7,9 +7,11 @@
 - Як саме рахується й зберігається: **`backend/docs/ANALYTICS_BOOKS_BACKEND.md`**.
 - Де на UI показуються **списки / каруселі**, зокрема **ТОП за періодом**: **`LISTS_AND_CAROUSELS_FRONTEND.md`**.
 - Побічні згадки в фічах: **COMMENTS_FRONTEND.md**, **RATINGS_FRONTEND.md**, **SORT_BY_NAVIGATION_FRONTEND.md** (закладки).
+- **Зовнішня аналітика (GA4, UTM, Meta Pixel):** **`SEO_GA4_AND_TRACKING.md`** — окремий документ.
+- **Зовнішня аналітика з боку бекенду (GSC, Bing):** **`backend/docs/SEO_EXTERNAL_ANALYTICS.md`**.
 
 Користувачу **не** потрібно викликати `POST /api/analytics_books/update/` для нормального сценарію — лише якщо підтримується застарілий клієнт.
 
 ---
 
-**Останнє оновлення:** 2026-03-21
+**Останнє оновлення:** 2026-05-27
