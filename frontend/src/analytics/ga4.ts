@@ -33,13 +33,14 @@ export function initGA4(): void {
   injectGtagScript();
 
   window.dataLayer = window.dataLayer || [];
-  function gtag(...args: any[]) {
-    window.dataLayer!.push(args);
-  }
-  window.gtag = gtag;
+  // Must use `arguments` object (NOT rest params) — gtag.js expects Arguments, not Array
+  window.gtag = function () {
+    // eslint-disable-next-line prefer-rest-params
+    window.dataLayer!.push(arguments);
+  };
 
-  gtag("js", new Date());
-  gtag("config", GA4_ID, {
+  window.gtag("js", new Date());
+  window.gtag("config", GA4_ID, {
     send_page_view: false, // we send page views manually on route change
   });
 
