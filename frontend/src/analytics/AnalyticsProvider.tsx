@@ -1,13 +1,13 @@
 /**
- * AnalyticsProvider — connects GA4 (and future Meta Pixel) to the
+ * AnalyticsProvider — connects GA4 and Meta Pixel to the
  * cookie consent system and React Router.
  *
  * Place this component inside <BrowserRouter> so it can read location.
  *
  * Behaviour:
- *  - analytics consent granted  => init GA4, track page views
- *  - analytics consent revoked  => destroy GA4
- *  - route changes              => send page_view to GA4
+ *  - analytics consent granted  => init GA4 + Meta Pixel, track page views
+ *  - analytics consent revoked  => destroy GA4 + Meta Pixel
+ *  - route changes              => send page_view to GA4 + PageView to Meta Pixel
  *  - first load                 => capture & clean UTM params
  */
 
@@ -19,6 +19,7 @@ import {
   subscribeCookieConsent,
 } from "../settings/cookieConsentStore";
 import { initGA4, destroyGA4, trackPageView } from "./ga4";
+import { initMetaPixel, destroyMetaPixel, trackPixelEvent } from "./metaPixel";
 import { captureUtm } from "./utm";
 
 export function AnalyticsProvider() {
@@ -42,12 +43,14 @@ export function AnalyticsProvider() {
     }
   }, []);
 
-  // --- GA4 lifecycle tied to consent ---
+  // --- GA4 + Meta Pixel lifecycle tied to consent ---
   useEffect(() => {
     if (analyticsAllowed) {
       initGA4();
+      initMetaPixel();
     } else {
       destroyGA4();
+      destroyMetaPixel();
     }
   }, [analyticsAllowed]);
 
@@ -56,17 +59,17 @@ export function AnalyticsProvider() {
   useEffect(() => {
     if (!analyticsAllowed) return;
 
-    // On first render initGA4 already sends the initial page view via
-    // config hit, so we skip the duplicate.  On subsequent navigations
-    // we fire manually.
     if (isFirstRender.current) {
-      // Send initial page view (config has send_page_view:false)
+      // Send initial page view
       trackPageView(location.pathname + location.search);
+      // Meta Pixel initial PageView is sent in initMetaPixel()
       isFirstRender.current = false;
       return;
     }
 
+    // Subsequent SPA navigations
     trackPageView(location.pathname + location.search);
+    trackPixelEvent("PageView");
   }, [location.pathname, location.search, analyticsAllowed]);
 
   return null; // renderless component
