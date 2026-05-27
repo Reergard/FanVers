@@ -104,18 +104,35 @@ GSC регулярно перечитує `sitemap.xml` для виявленн�
 
 ```python
 class BookSitemap(Sitemap):
-    changefreq = "weekly"
+    changefreq = 'weekly'
     priority = 0.8
+    protocol = 'https'
 
     def items(self):
-        return Book.objects.filter(view_permission="all").order_by("-last_updated")
+        return Book.objects.filter(view_permission='all').order_by('-last_updated')
 
     def lastmod(self, obj):
         return obj.last_updated
 
     def location(self, obj):
-        return f"/books/{obj.slug}/"
+        return f'/books/{obj.slug}/'
+
+
+class StaticSitemap(Sitemap):
+    changefreq = 'monthly'
+    priority = 1.0
+    protocol = 'https'
+
+    def items(self):
+        return ['/', '/catalog/']
+
+    def location(self, item):
+        return item
 ```
+
+Sitemap складається з двох частин:
+- **BookSitemap** — всі публічні книги (priority 0.8, оновлення weekly)
+- **StaticSitemap** — головна `/` та каталог `/catalog/` (priority 1.0, оновлення monthly)
 
 **URL:** `https://fan-vers.com/sitemap.xml`
 **Маршрут Nginx:** проксується на Django (налаштовано в nginx конфігу)
@@ -150,7 +167,7 @@ GSC перевіряє структуровані дані і показує ї�
 |---------------|---------|-----------|
 | «URL не проіндексовано: виявлено, не проіндексовано» | Google знайшов URL але ще не проіндексував | Чекати (нормально для нових сайтів), або запросити індексацію вручну |
 | «Помилка сервера (5xx)» | Django повернув 500 на запит бота | Перевірити логи Django/Daphne: `journalctl -u daphne-fanvers` |
-| «Заблоковано файлом robots.txt» | robots.txt блокує URL | Перевірити `robots.txt` — `/api/` та `/admin/` заблоковані навмисно, інші URL повинні бути дозволені |
+| «Заблоковано файлом robots.txt» | robots.txt блокує URL | Перевірити `robots.txt` — `/api/` та адмін-панель (шлях з `settings.DJANGO_ADMIN_PATH`) заблоковані навмисно, інші URL повинні бути дозволені |
 | «Redirect error» | Некоректний redirect (наприклад цикл) | Перевірити nginx конфіг на наявність redirect loops |
 | Sitemap «Не вдалося отримати» | Nginx не проксує `/sitemap.xml` на Django | Перевірити nginx конфіг: `location = /sitemap.xml` повинен проксувати на Django |
 
@@ -167,10 +184,18 @@ Bing Webmaster Tools — аналог GSC для Microsoft Bing. Важливи�
 
 ### 4.2. Верифікація
 
-Bing підтримує **імпорт з Google Search Console** — найпростіший спосіб. При імпорті:
-- Bing автоматично верифікує сайт (через зв'язок з GSC)
-- Імпортує sitemap
-- Починає індексацію
+Сайт верифікований через **CNAME DNS-запис в Cloudflare**.
+
+**Спосіб верифікації:** Cloudflare DNS → CNAME record
+
+| Параметр | Значення |
+|----------|----------|
+| Тип запису | CNAME |
+| Ім'я | `242df44e551d4873c504c8cb4a7fee5e` |
+| Цільовий хост | `verify.bing.com` |
+| Проксі | Вимкнено (DNS only) |
+
+**Чому не імпорт з GSC?** GSC зареєстрований як Domain property (`sc-domain:fan-vers.com`), а Bing вміє імпортувати тільки URL prefix properties. Тому верифікація виконана вручну через DNS CNAME.
 
 **URL:** `bing.com/webmasters`
 
@@ -185,15 +210,22 @@ Bing бот (`bingbot`) включений у список розпізнани�
 
 ---
 
-## 5. Meta Pixel (Facebook/Instagram) — підготовка
+## 5. Meta Pixel (Facebook/Instagram)
 
 ### 5.1. Поточний стан
 
-Meta Pixel **ще не підключений**. Коли буде підключений:
+Meta Pixel **підключений та працює** з 2026-05-27.
+
+| Параметр | Значення |
+|----------|----------|
+| Pixel ID | `2102301083891760` |
+| Events Manager | `business.facebook.com` → Events Manager |
+| Скрипт | `fbevents.js` (завантажується динамічно фронтендом) |
+| Файл конфігурації | `frontend/src/analytics/metaPixel.ts` |
 
 ### 5.2. Роль бекенду
 
-Аналогічно GA4 — бекенд **не завантажує** Meta Pixel скрипт. Але забезпечує:
+Аналогічно GA4 — бекенд **не завантажує** Meta Pixel скрипт. Це робить фронтенд. Але бекенд забезпечує:
 
 | Що забезпечує бекенд | Навіщо для Meta Pixel |
 |---------------------|----------------------|
@@ -207,15 +239,25 @@ Meta Pixel **ще не підключений**. Коли буде підклю�
 
 Бот `facebookexternalhit` отримує HTML з:
 ```html
-<meta property="og:title" content="Назва книги — FanVers">
-<meta property="og:description" content="Читати ранобе ...">
-<meta property="og:image" content="https://fan-vers.com/media/cover.jpg">
 <meta property="og:type" content="book">
+<meta property="og:title" content="Назва книги — читати українською | FanVers">
+<meta property="og:description" content="...">
 <meta property="og:url" content="https://fan-vers.com/books/slug/">
-<meta property="og:site_name" content="FanVers">
+<meta property="og:image" content="https://fan-vers.com/media/cover.jpg">  <!-- якщо є -->
+<meta property="og:site_name" content="FanVers — бібліотека ранобе українською">
+<meta property="og:locale" content="uk_UA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Назва книги — FanVers">
+<meta name="twitter:description" content="...">
 ```
 
 Це забезпечує красиве прев'ю при шарингу посилання на книгу в Facebook, Telegram, Discord тощо.
+
+### 5.4. Що бекенд НЕ повинен робити
+
+- Не додавати Meta Pixel скрипт в Django-шаблони для ботів. Боти не виконують JavaScript.
+- Не зберігати Pixel ID в Django settings. Це фронтенд-конфігурація.
+- Не відправляти серверні події через Meta Conversions API — це складно і не потрібно для поточного масштабу.
 
 ---
 
@@ -276,21 +318,64 @@ fan-vers.com/books/slug/?utm_source=instagram&utm_medium=ad&utm_campaign=summer2
 
 ---
 
-## 8. Nginx — взаємодія із зовнішніми сервісами
+## 8. Канонічний домен: www → non-www редирект
 
-### 8.1. Бот-роутинг (нагадування)
+### 8.1. Проблема
+
+Google Search Console визначив `www.fan-vers.com` як канонічний URL замість `fan-vers.com`. Це означає що Google індексує www-версію і вважає non-www копією. Це погано для SEO — виникає дублювання контенту.
+
+### 8.2. Рішення
+
+Додано **301 (permanent) редирект** з `www.fan-vers.com` на `fan-vers.com` через nginx.
+
+**Конфігурація:** `/etc/nginx/sites-available/fan-vers.com`
+
+```nginx
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name www.fan-vers.com;
+
+    ssl_certificate     /etc/letsencrypt/live/fan-vers.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/fan-vers.com/privkey.pem;
+
+    return 301 https://fan-vers.com$request_uri;
+}
+```
+
+### 8.3. Важливі деталі
+
+- **301 (permanent)** — повідомляє Google що це постійний редирект і потрібно індексувати тільки `fan-vers.com`
+- **SSL сертифікат** повинен покривати обидва домени (`fan-vers.com` та `www.fan-vers.com`). Let's Encrypt з Cloudflare DNS це робить автоматично.
+- **`$request_uri`** — зберігає повний шлях (наприклад, `www.fan-vers.com/books/solo-leveling/` → `fan-vers.com/books/solo-leveling/`)
+- Після додавання — виконати `sudo nginx -t && sudo systemctl reload nginx`
+
+### 8.4. DNS (Cloudflare)
+
+В Cloudflare повинен бути CNAME або A-запис для `www`:
+
+| Тип | Ім'я | Значення | Проксі |
+|-----|------|----------|--------|
+| CNAME | www | fan-vers.com | Увімкнено (Proxied) |
+
+---
+
+## 9. Nginx — взаємодія із зовнішніми сервісами
+
+### 9.1. Бот-роутинг (нагадування)
 
 Nginx визначає чи запит від бота і проксує на Django:
 
 ```nginx
-# В /etc/nginx/snippets/fanvers_front.current.conf:
+# В nginx конфігу (приклад: backend/apps/seo/nginx_seo.conf.example):
 location ~ ^/(books/[^/]+/?|catalog/?|)$ {
     set $seo_prerender 0;
-    if ($http_user_agent ~* "(googlebot|bingbot|...)") {
+    if ($http_user_agent ~* "(googlebot|bingbot|yandex|...повний список...)") {
         set $seo_prerender 1;
     }
     if ($seo_prerender = 1) {
-        proxy_pass http://fanvers_daphne;
+        proxy_pass http://127.0.0.1:8000;
+        break;
     }
     # інакше — SPA
     try_files $uri $uri/ /index.html;
@@ -303,7 +388,7 @@ location ~ ^/(books/[^/]+/?|catalog/?|)$ {
 - **Meta** — facebookexternalhit отримує OG-теги
 - **ChatGPT** — GPTBot отримує JSON-LD
 
-### 8.2. Content Security Policy (CSP) — увага!
+### 9.2. Content Security Policy (CSP) — увага!
 
 Якщо в nginx налаштований CSP-заголовок — потрібно дозволити домени GA4 та Meta Pixel:
 
@@ -320,33 +405,40 @@ add_header Content-Security-Policy "
 
 ---
 
-## 9. Чеклист для бекенд-розробника/DevOps
+## 10. Чеклист для бекенд-розробника/DevOps
 
 ### Для коректної роботи GA4:
-- [ ] Sitemap.xml генерується і доступний (`curl https://fan-vers.com/sitemap.xml`)
-- [ ] Robots.txt дозволяє сканування (`curl https://fan-vers.com/robots.txt`)
-- [ ] Nginx проксує `/sitemap.xml` і `/robots.txt` на Django
-- [ ] Cookie consent API працює (`/api/users/cookie-consent/`)
-- [ ] Фронтенд зібраний з модулем analytics (`frontend/src/analytics/`)
+- [x] Sitemap.xml генерується і доступний (`curl https://fan-vers.com/sitemap.xml`)
+- [x] Robots.txt дозволяє сканування (`curl https://fan-vers.com/robots.txt`)
+- [x] Nginx проксує `/sitemap.xml` і `/robots.txt` на Django
+- [x] Cookie consent API працює (`/api/users/cookie-consent/`)
+- [x] Фронтенд зібраний з модулем analytics (`frontend/src/analytics/`)
 
 ### Для коректної роботи GSC:
-- [ ] DNS верифікація пройдена (Cloudflare TXT-запис)
-- [ ] Sitemap відправлений в GSC
-- [ ] Nginx повертає коректні HTTP-коди для ботів (200 для існуючих, 404 для неіснуючих)
-- [ ] SeoPrerendererMiddleware працює (перевірити: `curl -H "User-Agent: Googlebot" https://fan-vers.com/`)
+- [x] DNS верифікація пройдена (Cloudflare TXT-запис)
+- [x] Sitemap відправлений в GSC
+- [x] Nginx повертає коректні HTTP-коди для ботів (200 для існуючих, 404 для неіснуючих)
+- [x] SeoPrerendererMiddleware працює (перевірити: `curl -H "User-Agent: Googlebot" https://fan-vers.com/`)
+- [x] www → non-www 301 редирект налаштований (nginx, секція 8)
 
 ### Для коректної роботи Bing:
-- [ ] Імпортовано з GSC (або верифіковано окремо)
-- [ ] `bingbot` є в списку розпізнаних ботів (middleware.py та nginx)
+- [x] Верифіковано через CNAME DNS-запис в Cloudflare
+- [x] Sitemap відправлений в Bing Webmaster Tools
+- [x] `bingbot` є в списку розпізнаних ботів (middleware.py та nginx)
 
-### Для майбутнього Meta Pixel:
-- [ ] `facebookexternalhit` є в списку ботів (middleware.py та nginx) ← вже зроблено
-- [ ] OG-теги генеруються в шаблонах (`og:image`, `og:title`, `og:description`)
-- [ ] Cookie consent API синхронізує рішення між пристроями
+### Для коректної роботи Meta Pixel:
+- [x] `facebookexternalhit` є в списку ботів (middleware.py та nginx)
+- [x] OG-теги генеруються в шаблонах (`og:image`, `og:title`, `og:description`)
+- [x] Cookie consent API синхронізує рішення між пристроями
+- [x] Meta Pixel ID: `2102301083891760` (файл `frontend/src/analytics/metaPixel.ts`)
+
+### Канонічний домен:
+- [x] www → non-www 301 редирект (nginx)
+- [x] SSL сертифікат покриває обидва домени
 
 ---
 
-## 10. FAQ
+## 11. FAQ
 
 **Q: Чи потрібно додавати GA4 скрипт в Django шаблони для ботів?**
 A: Ні. Боти не виконують JavaScript. GA4 працює тільки для реальних користувачів через фронтенд.

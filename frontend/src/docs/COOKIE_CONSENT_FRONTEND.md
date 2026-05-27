@@ -10,7 +10,10 @@ Cookie consent в текущем проекте — это:
 - синхронизация гостевого выбора с аккаунтом,
 - “флаги” для будущего контроля необязательных client-side интеграций.
 
-На текущий момент **отказ / выключение `Preferences` и `Analytics` не отключает продуктовую функциональность**, потому что в проекте нет подключенных внешних tracking‑скриптов, а продуктовая “аналитика” считается на backend как часть работы сервиса (см. `docs/ANALYTICS_FRONTEND.md`, `backend/docs/ANALYTICS_BOOKS_BACKEND.md`, и текст `info/legal/cookie-policy.tsx`).
+**Что реально зависит от consent:**
+- **`Analytics` = true** → загружаются **GA4** (Google Analytics 4) и **Meta Pixel** (Facebook/Instagram). При отключении — скрипты удаляются из DOM. Детали: `SEO_GA4_AND_TRACKING.md`.
+- **`Preferences`** — флаг для будущего контроля необязательных UI-настроек (пока не используется).
+- **Продуктовая аналитика** (лайки, просмотры, тренды) — это доменная логика backend, она **не зависит** от cookie consent (см. `docs/ANALYTICS_FRONTEND.md`, `backend/docs/ANALYTICS_BOOKS_BACKEND.md`).
 
 ## 2) Модель согласия
 
@@ -114,7 +117,7 @@ Endpoint:
 Правильный паттерн:
 
 - `if (consent.analytics) loadGoogleAnalytics()` ← реалізовано в `AnalyticsProvider`
-- `if (consent.analytics) loadMetaPixel()` ← буде реалізовано
+- `if (consent.analytics) loadMetaPixel()` ← реалізовано в `AnalyticsProvider`
 - `if (consent.preferences) persistOptionalUiState()`
 
 Неправильный паттерн:

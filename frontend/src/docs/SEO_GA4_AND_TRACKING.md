@@ -1,14 +1,15 @@
-# Google Analytics 4, UTM-мітки та зовнішній трекінг (Frontend)
+# Google Analytics 4, Meta Pixel, UTM-мітки та зовнішній трекінг (Frontend)
 
 Дата: 2026-05-27
 
-Коротко: фронтенд інтегрує **Google Analytics 4 (GA4)** та **UTM-трекінг** для відстеження трафіку, рекламних кампаній та поведінки користувачів. Усі зовнішні скрипти завантажуються **тільки після згоди на analytics cookies** (GDPR).
+Коротко: фронтенд інтегрує **Google Analytics 4 (GA4)**, **Meta Pixel (Facebook/Instagram)** та **UTM-трекінг** для відстеження трафіку, рекламних кампаній та поведінки користувачів. Усі зовнішні скрипти завантажуються **тільки після згоди на analytics cookies** (GDPR).
 
 Пов'язана документація:
+- Головний довідник SEO: **`SEO_INDEX.md`**
 - Cookie consent UI та збереження: **`COOKIE_CONSENT_FRONTEND.md`**
 - SEO мета-теги та Helmet: **`SEO_SYSTEM_FRONTEND.md`**
 - SEO бекенд (middleware, JSON-LD, sitemap): **`backend/docs/SEO_SYSTEM_BACKEND.md`**
-- Зовнішня аналітика з боку бекенду (GSC, Bing): **`backend/docs/SEO_EXTERNAL_ANALYTICS.md`**
+- Зовнішня аналітика з боку бекенду (GSC, Bing, nginx): **`backend/docs/SEO_EXTERNAL_ANALYTICS.md`**
 
 ---
 
@@ -28,15 +29,18 @@
      │ (cookieConsentStore)  │
      └─────┬─────────────────┘
            │
+     ├─── captureUtm() (завжди, один раз при mount)
+     │
      ┌─────┴─────┐
      │ analytics  │ analytics
      │ = true     │ = false (або null)
      ▼            ▼
-  initGA4()     destroyGA4()
-  captureUtm()  (скрипт НЕ завантажується)
-     │
+  initGA4()       destroyGA4()
+  initMetaPixel() destroyMetaPixel()
+     │            (скрипти НЕ завантажуються)
      ▼
-  Кожна зміна маршруту → trackPageView()
+  Кожна зміна маршруту → trackPageView() (GA4)
+                       → trackPixelEvent("PageView") (Meta Pixel)
 ```
 
 **Ключовий принцип:** поки користувач не натисне «Прийняти всі» або не увімкне «Analytics» в налаштуваннях cookies — жоден зовнішній скрипт НЕ завантажується. Це забезпечує GDPR compliance.
@@ -48,8 +52,9 @@
 ```
 frontend/src/analytics/
 ├── ga4.ts                  # Модуль GA4: init/destroy/track
+├── metaPixel.ts            # Модуль Meta Pixel: init/destroy/track
 ├── utm.ts                  # UTM-параметри: capture/clean/read
-├── AnalyticsProvider.tsx   # React-компонент: зв'язує consent + routing + GA4
+├── AnalyticsProvider.tsx   # React-компонент: зв'язує consent + routing + GA4 + Meta Pixel
 └── index.ts                # Реекспорт для зручного імпорту
 ```
 
@@ -237,10 +242,11 @@ GA4 встигає прочитати UTM **до** очищення, тому а
 
 ### Що робить
 
-Це **renderless** компонент (повертає `null`, нічого не малює). Він зв'язує три системи:
+Це **renderless** компонент (повертає `null`, нічого не малює). Він зв'язує чотири системи:
 1. **Cookie consent** — визначає чи можна трекати
-2. **GA4** — зовнішній трекінг
-3. **React Router** — відстеження навігації в SPA
+2. **GA4** — Google Analytics трекінг
+3. **Meta Pixel** — Facebook/Instagram трекінг
+4. **React Router** — відстеження навігації в SPA
 
 ### Як працює
 
@@ -249,11 +255,12 @@ Mount → captureUtm() (один раз)
       → підписка на consent
 
 consent.analytics змінився?
-  → true:  initGA4()
-  → false: destroyGA4()
+  → true:  initGA4() + initMetaPixel()
+  → false: destroyGA4() + destroyMetaPixel()
 
 location змінився?
-  → якщо analytics дозволено → trackPageView(path)
+  → якщо analytics дозволено → trackPageView(path)        [GA4]
+                              → trackPixelEvent("PageView") [Meta Pixel]
 ```
 
 ### Де підключений
@@ -287,9 +294,9 @@ import { AnalyticsProvider } from "./analytics/AnalyticsProvider";
 1. Користувач натиснув «Прийняти всі» → `setCookieConsent()` оновлює localStorage
 2. `subscribeCookieConsent` сповіщує всіх підписників
 3. `AnalyticsProvider` перерендерюється
-4. `useEffect` бачить `analyticsAllowed = true` → викликає `initGA4()`
+4. `useEffect` бачить `analyticsAllowed = true` → викликає `initGA4()` + `initMetaPixel()`
 
-Аналогічно при відкликанні згоди → `destroyGA4()`.
+Аналогічно при відкликанні згоди → `destroyGA4()` + `destroyMetaPixel()`.
 
 ---
 
@@ -309,7 +316,11 @@ CookieConsent = {
 
 ```typescript
 // В AnalyticsProvider.tsx:
-const consent = useSyncExternalStore(subscribeCookieConsent, getCookieConsent);
+const consent = useSyncExternalStore(
+  subscribeCookieConsent,
+  getCookieConsent,
+  getCookieConsent,  // server snapshot (SSR fallback)
+);
 const analyticsAllowed = consent?.analytics === true;
 
 // consent === null → користувач ще не обрав → НЕ трекаємо
@@ -424,30 +435,211 @@ trackEvent("sign_up", { method: "google_oauth" });
 
 ---
 
-## 10. Підготовка до Meta Pixel (майбутнє)
+## 10. Meta Pixel (Facebook/Instagram)
 
-Архітектура вже підготовлена для Meta Pixel. Коли з'явиться Pixel ID:
+### 10.1. Що це і навіщо
 
-1. Створити файл `frontend/src/analytics/metaPixel.ts` (аналогічно `ga4.ts`)
-2. Додати `initMetaPixel()` / `destroyMetaPixel()` з тією ж логікою consent
-3. В `AnalyticsProvider.tsx` додати виклики поруч з GA4:
-   ```typescript
-   useEffect(() => {
-     if (analyticsAllowed) {
-       initGA4();
-       initMetaPixel();    // ← додати
-     } else {
-       destroyGA4();
-       destroyMetaPixel(); // ← додати
-     }
-   }, [analyticsAllowed]);
-   ```
+Meta Pixel — JavaScript-код від Meta (Facebook/Instagram) для відстеження дій користувачів на сайті. Необхідний для:
+- **Рекламних кампаній** в Facebook та Instagram — Pixel збирає дані для оптимізації реклами
+- **Ретаргетингу** — показувати рекламу людям які вже відвідали сайт
+- **Конверсій** — вимірювати ефективність рекламних кампаній
+- **Lookalike аудиторій** — Meta знаходить схожих користувачів для розширення охоплення
 
-Meta Pixel також має завантажуватися **тільки після согласія** — інакше Meta заблокує рекламний акаунт.
+**Без Pixel неможливо ефективно запускати рекламу в Facebook/Instagram.**
+
+### 10.2. Pixel ID
+
+```
+2102301083891760
+```
+
+Це унікальний ідентифікатор нашого Meta Pixel. Зашитий у файлі `metaPixel.ts`. Якщо потрібно змінити — правити **тільки в цьому файлі**.
+
+**Де подивитися Pixel ID:** `business.facebook.com` → Events Manager → Data Sources → обрати піксель → Settings.
+
+### 10.3. Файл `metaPixel.ts` — детально
+
+**Розташування:** `frontend/src/analytics/metaPixel.ts`
+
+#### Константи
+
+```typescript
+const PIXEL_ID = "2102301083891760";
+```
+
+Єдине місце де зберігається Pixel ID. При зміні — правити тільки тут.
+
+#### Функція `initMetaPixel()`
+
+Що робить:
+1. Перевіряє чи Pixel вже ініціалізований (захист від повторного виклику)
+2. Створює **fbq stub** — функцію-заглушку яка збирає виклики в чергу поки основний скрипт `fbevents.js` не завантажиться
+3. Додає `<script>` тег з `src="https://connect.facebook.net/en_US/fbevents.js"` в `<head>`
+4. Викликає `fbq('init', PIXEL_ID)` — реєструє піксель
+5. Викликає `fbq('track', 'PageView')` — відправляє перший перегляд сторінки
+
+**Fbq stub** — це стандартний патерн від Meta. Суть: поки `fbevents.js` ще завантажується (це асинхронний процес), всі виклики `fbq()` збираються в чергу (`fbq.queue`). Коли скрипт завантажиться — він обробить чергу.
+
+Коли викликається: автоматично з `AnalyticsProvider` коли `consent.analytics === true`.
+
+#### Функція `destroyMetaPixel()`
+
+Що робить:
+1. Видаляє `<script>` тег з DOM
+2. Очищає `window.fbq` та `window._fbq`
+3. Скидає стан `initialized = false`
+
+Коли викликається: автоматично коли користувач відкликає згоду на analytics cookies.
+
+#### Функція `trackPixelEvent(eventName, params?)`
+
+Що робить: відправляє **стандартну подію** Meta Pixel.
+
+Стандартні події Meta (відповідають рекламним цілям):
+
+| Подія | Коли використовувати |
+|-------|---------------------|
+| `PageView` | Перегляд сторінки (відправляється автоматично при навігації) |
+| `ViewContent` | Перегляд конкретного контенту (книги) |
+| `Search` | Пошук на сайті |
+| `AddToWishlist` | Додавання в обране/закладки |
+| `CompleteRegistration` | Реєстрація нового користувача |
+| `Lead` | Користувач зацікавився (наприклад, підписка на оновлення) |
+
+Приклад використання:
+
+```typescript
+import { trackPixelEvent } from "../analytics";
+
+// Перегляд книги:
+trackPixelEvent("ViewContent", {
+  content_name: "Підняття рівня в одиночку",
+  content_category: "ранобе",
+  content_ids: "solo-leveling",
+  content_type: "product",
+});
+
+// Пошук:
+trackPixelEvent("Search", {
+  search_string: "фентезі ісекай",
+});
+
+// Реєстрація:
+trackPixelEvent("CompleteRegistration", {
+  content_name: "email_signup",
+});
+```
+
+#### Функція `trackPixelCustomEvent(eventName, params?)`
+
+Що робить: відправляє **кастомну подію** (для нестандартних дій які не входять у список Meta).
+
+```typescript
+import { trackPixelCustomEvent } from "../analytics";
+
+// Кастомна подія: читання розділу
+trackPixelCustomEvent("ReadChapter", {
+  book_slug: "solo-leveling",
+  chapter_number: "42",
+});
+```
+
+**Різниця між стандартними та кастомними подіями:**
+- **Стандартні** (`trackPixelEvent`) — Meta розуміє їх і використовує для оптимізації реклами (рекомендується використовувати де можливо)
+- **Кастомні** (`trackPixelCustomEvent`) — для ваших унікальних подій, Meta не оптимізує під них автоматично, але вони доступні в звітах
+
+**Важливо:** обидві функції безпечні — якщо Pixel не ініціалізований (немає згоди), виклики просто ігноруються.
+
+#### TypeScript декларації
+
+В кінці файлу розширюється інтерфейс `Window`:
+
+```typescript
+declare global {
+  interface Window {
+    fbq?: any;
+    _fbq?: any;
+  }
+}
+```
+
+### 10.4. Як Meta Pixel працює з SPA-навігацією
+
+В звичайному (не-SPA) сайті кожна сторінка завантажується заново і Pixel автоматично фіксує `PageView`. В React SPA сторінки змінюються без перезавантаження, тому `AnalyticsProvider` вручну відправляє `PageView` при кожній навігації:
+
+```
+Перша сторінка:
+  initMetaPixel() → fbq('track', 'PageView')   ← відправляється в initMetaPixel
+
+Наступні сторінки (SPA-навігація):
+  trackPixelEvent("PageView")                    ← відправляється в AnalyticsProvider
+```
+
+### 10.5. Налагодження Meta Pixel
+
+#### Локально (dev)
+
+1. Відкрий сайт в dev-режимі
+2. Прийми cookies (натисни «Прийняти всі»)
+3. Встанови розширення **«Meta Pixel Helper»** для Chrome
+4. Зайди на сайт — розширення покаже що Pixel працює та які події відправляються
+5. Перейди на іншу сторінку — побачиш нову подію `PageView`
+
+#### На продакшені
+
+1. Зайди на `fan-vers.com` з встановленим **Meta Pixel Helper**
+2. Прийми cookies
+3. Розширення покаже зелену іконку ✓ та список подій
+
+#### В Meta Events Manager
+
+1. Зайди на `business.facebook.com` → Events Manager
+2. Обери піксель `2102301083891760`
+3. Вкладка **Test Events** — покаже події в реальному часі (потрібно вказати URL сайту)
+4. Вкладка **Overview** — загальна статистика подій (дані з затримкою до 20 хвилин)
+
+#### Перевірка GDPR compliance
+
+1. Відкрий сайт в режимі інкогніто
+2. НЕ натискай банер cookies
+3. DevTools → Network → фільтр `facebook` → **повинно бути порожньо**
+4. Натисни «Прийняти всі» → з'являться запити до `connect.facebook.net`
+5. Вимкни Analytics в налаштуваннях cookies → запити зникнуть
+
+### 10.6. Зв'язок Meta Pixel з рекламою
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  Facebook    │◄───►│  Meta Pixel  │◄───►│  Events      │
+│  Ads Manager │     │  (на сайті)  │     │  Manager     │
+│  (реклама)   │     │              │     │  (звіти)     │
+└──────────────┘     └──────────────┘     └──────────────┘
+│ Instagram    │            ▲
+│  Ads         │            │ збирає дані через
+└──────────────┘            │ fbevents.js на сайті
+                            │
+                     ┌──────────────┐
+                     │  FanVers     │
+                     │  (фронтенд)  │
+                     └──────────────┘
+```
+
+- **Meta Pixel + Facebook Ads:** Pixel автоматично передає дані в Ads Manager для оптимізації. Рекламні кампанії можуть оптимізуватися під `ViewContent`, `CompleteRegistration` тощо.
+- **Ретаргетинг:** Pixel дозволяє створювати аудиторії «люди які відвідали сайт за останні 30 днів» і показувати їм рекламу.
+- **Lookalike:** Meta знаходить людей схожих на ваших відвідувачів і показує їм рекламу.
+
+### 10.7. Залежності Meta Pixel
+
+| Пакет | Чи встановлений | Навіщо |
+|-------|-----------------|--------|
+| fbevents.js | Завантажується динамічно | Скрипт Meta Pixel від Facebook CDN |
+| — | — | Зовнішніх npm-пакетів НЕ потрібно |
+
+Meta Pixel не вимагає жодних npm-пакетів. Скрипт `fbevents.js` завантажується з CDN Facebook динамічно.
 
 ---
 
-## 11. Зв'язок GA4 з іншими системами
+## 11. Зв'язок GA4 та Meta Pixel з іншими системами
 
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
@@ -456,18 +648,26 @@ Meta Pixel також має завантажуватися **тільки пі�
 │              │     │              │     │  Console     │
 └──────────────┘     └──────────────┘     └──────────────┘
                             ▲
-                            │ збирає дані через
-                            │ gtag.js на сайті
+                            │ gtag.js
                             │
                      ┌──────────────┐
                      │  FanVers     │
                      │  (фронтенд)  │
                      └──────────────┘
+                            │
+                            │ fbevents.js
+                            ▼
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  Facebook    │◄───►│  Meta Pixel  │◄───►│  Events      │
+│  Ads Manager │     │  (трекінг)   │     │  Manager     │
+│  + Instagram │     │              │     │  (звіти)     │
+└──────────────┘     └──────────────┘     └──────────────┘
 ```
 
 - **GA4 + Google Ads:** коли запустиш рекламу — GA4 автоматично передає дані в Ads для оптимізації. Зв'язування відбувається в інтерфейсі GA4 (Admin → Product Links → Google Ads).
 - **GA4 + Search Console:** зв'язування показує в GA4 по яких пошукових запитах тебе знаходять. Налаштовується в GA4 (Admin → Product Links → Search Console).
-- **UTM-мітки:** Google Ads автоматично додає UTM до рекламних посилань. GA4 автоматично розпізнає їх у звітах.
+- **Meta Pixel + Facebook/Instagram Ads:** Pixel передає дані для оптимізації реклами. Налаштовується в Ads Manager при створенні кампанії.
+- **UTM-мітки:** Google Ads і Facebook Ads автоматично додають UTM до рекламних посилань. GA4 автоматично розпізнає їх у звітах.
 
 ---
 
@@ -476,9 +676,10 @@ Meta Pixel також має завантажуватися **тільки пі�
 | Пакет | Чи встановлений | Навіщо |
 |-------|-----------------|--------|
 | gtag.js | Завантажується динамічно | Скрипт GA4 від Google CDN |
+| fbevents.js | Завантажується динамічно | Скрипт Meta Pixel від Facebook CDN |
 | — | — | Зовнішніх npm-пакетів НЕ потрібно |
 
-GA4 не вимагає жодних npm-пакетів. Скрипт `gtag.js` завантажується з CDN Google динамічно через `<script>` тег.
+GA4 та Meta Pixel не вимагають жодних npm-пакетів. Скрипти завантажуються з CDN динамічно через `<script>` теги.
 
 ---
 
@@ -505,19 +706,47 @@ A: `analytics.google.com` → обрати ресурс FanVers → Звіти. 
 **Q: trackEvent виклики — обов'язкові?**
 A: Ні. Enhanced Measurement автоматично збирає базові дані. Кастомні події (`trackEvent`) — для додаткової деталізації (перегляд книги, додавання в обране тощо). Додавати за потребою.
 
+**Q: Що буде якщо Meta Pixel ID зміниться?**
+A: Змінити рядок `PIXEL_ID` в `frontend/src/analytics/metaPixel.ts`. Більше нічого міняти не потрібно.
+
+**Q: Чи можна використовувати GA4 і Meta Pixel одночасно?**
+A: Так. Вони працюють незалежно і не конфліктують. Обидва завантажуються/знищуються одночасно через `AnalyticsProvider`.
+
+**Q: Де подивитися дані Meta Pixel?**
+A: `business.facebook.com` → Events Manager → обрати піксель. Вкладки: Overview (загальна статистика), Test Events (тестування в реальному часі), Diagnostics (помилки).
+
+**Q: Чи впливає Meta Pixel на швидкість сайту?**
+A: Скрипт `fbevents.js` (~60 KB) завантажується з `async` атрибутом — не блокує рендеринг. Вплив мінімальний, аналогічно GA4.
+
+**Q: Що якщо Meta заблокує рекламний акаунт через GDPR?**
+A: Перевірити що Pixel завантажується **тільки після згоди** на analytics cookies. Наша архітектура це гарантує — `AnalyticsProvider` перевіряє `consent.analytics === true` перед `initMetaPixel()`.
+
 ---
 
 ## 14. Чеклист для SEO-спеціаліста
 
-- [ ] GA4 Measurement ID: `G-J9978WWKVX` (файл `ga4.ts`)
-- [ ] GA4 інтерфейс: `analytics.google.com`
-- [ ] Enhanced Measurement увімкнено в GA4 (page_view, scroll, click, search)
-- [ ] Cookie consent контролює завантаження GA4 (GDPR)
-- [ ] UTM-параметри підтримуються і зберігаються в sessionStorage
-- [ ] URL очищується від UTM після збереження
-- [ ] Для нових кастомних подій — використовувати `trackEvent()` з `analytics/index.ts`
-- [ ] Для Meta Pixel — створити `metaPixel.ts` за аналогією з `ga4.ts`
-- [ ] Зв'язати GA4 з Google Ads та Search Console в інтерфейсі GA4
+### GA4
+- [x] GA4 Measurement ID: `G-J9978WWKVX` (файл `ga4.ts`)
+- [x] GA4 інтерфейс: `analytics.google.com`
+- [x] Enhanced Measurement увімкнено в GA4 (page_view, scroll, click, search)
+- [x] Cookie consent контролює завантаження GA4 (GDPR)
+- [x] SPA page view трекінг працює (AnalyticsProvider)
+- [ ] Зв'язати GA4 з Google Ads в інтерфейсі GA4 (Admin → Product Links)
+- [ ] Зв'язати GA4 з Search Console в інтерфейсі GA4 (Admin → Product Links)
+- [ ] Додати кастомні події (`trackEvent`) для ключових дій (перегляд книги, пошук, реєстрація)
+
+### Meta Pixel
+- [x] Meta Pixel ID: `2102301083891760` (файл `metaPixel.ts`)
+- [x] Meta Events Manager: `business.facebook.com` → Events Manager
+- [x] Cookie consent контролює завантаження Meta Pixel (GDPR)
+- [x] SPA PageView трекінг працює (AnalyticsProvider)
+- [ ] Додати кастомні події (`trackPixelEvent`) для ключових дій (ViewContent, Search, CompleteRegistration)
+- [ ] Налаштувати Conversions в Events Manager (визначити які події є конверсіями)
+
+### UTM
+- [x] UTM-параметри підтримуються і зберігаються в sessionStorage
+- [x] URL очищується від UTM після збереження
+- [ ] Створити UTM-шаблони для рекламних кампаній (Google Ads, Facebook Ads, Telegram)
 
 ---
 
