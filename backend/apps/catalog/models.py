@@ -257,7 +257,7 @@ class Book(models.Model):
     )
     tags = models.ManyToManyField(Tag)
     genres = models.ManyToManyField(Genres)
-    fandoms = models.ManyToManyField(Fandom)
+    fandoms = models.ManyToManyField(Fandom, blank=True)
     country = models.ForeignKey(
         Country, 
         on_delete=models.PROTECT,  
