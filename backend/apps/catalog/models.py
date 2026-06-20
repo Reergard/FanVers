@@ -776,7 +776,7 @@ class Chapter(models.Model):
             plain_len = _chapter_plain_text_len(self.html_content)
             self.character_count = plain_len
             self.characters_count = plain_len
-            self.reading_time = int((plain_len / 1000) * 180) if plain_len else 0
+            self.reading_time = int((plain_len / 1000) * 55) if plain_len else 0
             self.min_reading_time = int(self.reading_time * 0.75) if self.reading_time else 0
 
         try:
@@ -807,7 +807,7 @@ class Chapter(models.Model):
             self.html_content = html_content
             self.character_count = plain_len
             self.characters_count = plain_len
-            self.reading_time = int((plain_len / 1000) * 180) if plain_len else 0
+            self.reading_time = int((plain_len / 1000) * 55) if plain_len else 0
             self.min_reading_time = int(self.reading_time * 0.75) if self.reading_time else 0
             self.save(
                 update_fields=[
@@ -842,8 +842,8 @@ class Chapter(models.Model):
         self.toc_json = extract_toc(self.content_json)
 
         chars = self.plain_text_length
-        # Узгоджено з легасі save() / save_html_content: 180 с на 1000 символів (3 хв/1000)
-        self.reading_time = int((chars / 1000) * 180) if chars else 0
+        # 55 с на 1000 символів (~1000 символів/хв — неспішне читання)
+        self.reading_time = int((chars / 1000) * 55) if chars else 0
         self.min_reading_time = int(self.reading_time * 0.75) if self.reading_time else 0
 
         self.character_count = self.plain_text_length

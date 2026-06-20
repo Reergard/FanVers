@@ -35,7 +35,7 @@ class Command(BaseCommand):
 
                     chapter.character_count = plain_len
                     chapter.characters_count = plain_len
-                    chapter.reading_time = int((plain_len / 1000) * 180) if plain_len else 0
+                    chapter.reading_time = int((plain_len / 1000) * 55) if plain_len else 0
                     chapter.min_reading_time = int(chapter.reading_time * 0.75) if chapter.reading_time else 0
 
                     chapter.save(

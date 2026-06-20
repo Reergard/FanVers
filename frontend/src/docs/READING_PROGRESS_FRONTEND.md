@@ -67,19 +67,28 @@ useReadingProgress({
 
 ### Хук `useReadingProgress.ts`
 
-**Refs** (без зайвих ре-рендерів): `readingStartTime`, `isRead`, `enabled`, `chapterId`.
+**Refs** (без зайвих ре-рендерів): `readingStartTime`, `previousReadingTime`, `isRead`, `enabled`, `chapterId`, `sendInFlight`.
 
-**Скрол:** `window` — `scrollHeight`, `pageYOffset`, % 0–100 (як у легасі, без `.chapter-content-inner`).
+**Накопичення часу між сесіями:**
+
+1. При старті — `GET /api/monitoring/chapters/{id}/progress/` для отримання вже збереженого `reading_time`.
+2. Якщо `is_read === true` — POST-и не шлються (глава вже прочитана).
+3. Якщо ні — `previousReadingTimeRef = existing.reading_time ?? 0`, таймер сесії стартує з `Date.now()`.
+4. При відправці: `readingTime = previousReadingTimeRef + sessionSeconds` — кумулятивне значення, **не** дельта.
+
+**Скрол:** `computeScrollProgress()` — `window.scrollHeight`, `pageYOffset`, % 0–100. **Якщо контент вміщується без скролла** (`totalHeight <= viewportHeight`), повертає **100** (короткі глави автоматично вважаються повністю прокрученими).
 
 **Тригери відправки** (debounce 1 с на scroll):
 
-1. Старт: GET прогресу → якщо вже `is_read`, POST не шлеться; інакше `readingStartTime` + immediate POST
+1. Старт: GET прогресу → `resetSession(existingReadingTime)` → immediate POST
 2. `window` scroll
 3. `visibilitychange` + `document.hidden` → flush
 4. `setInterval` 30 с
 5. unmount → flush
 
-Помилки POST — **тихо** (не блокують читання).
+**Захист від паралельних POST-ів:** `sendInFlightRef` запобігає одночасним запитам.
+
+Помилки POST — **тихо** (не блокують читання). Бекенд додатково захищає дані через `max()` (час/скролл ніколи не зменшуються).
 
 ---
 
@@ -164,4 +173,4 @@ queryClient.invalidateQueries({ queryKey: monitoringKeys.readingStats() });
 
 ---
 
-**Останнє оновлення:** 2026-05-24.
+**Останнє оновлення:** 2026-06-21 — накопичення reading_time між сесіями (GET при старті + previousReadingTimeRef); computeScrollProgress повертає 100 для коротких глав без скролла; sendInFlightRef проти паралельних POST-ів.

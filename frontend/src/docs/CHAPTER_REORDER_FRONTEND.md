@@ -74,8 +74,8 @@ BookDetailRouter
 
 **Логіка:**
 - У режимі reorder: замість «Редагувати» показується «Перемістити в том».
-- Стрілки вгору/вниз: `handleSwapWithNeighbor` — обмін позицій двох глав; на межі тому — виклик `onMoveToVolume`.
-- Поле позиції: локальний state `editingValue`, на blur/Enter — `applyPositionInput` (swap з главою на цій позиції або просто зміна позиції).
+- Стрілки вгору/вниз: `handleSwapWithNeighbor` — обмін позицій двох сусідніх глав; на межі тому — виклик `onMoveToVolume`.
+- Поле позиції: локальний state `editingValue`, на blur/Enter — `applyPositionInput` — **вставка зі зсувом** (insert-with-shift): глава переміщується на вказану позицію, всі глави між старою та новою позиціями зсуваються на ±1. Це **не swap** (обмін двох глав місцями).
 - `displayGrouped` — групує глави по томах, у reorder сортує за `chapterPositions`.
 
 ### 4.3. MoveChapterModal

@@ -140,7 +140,37 @@
 
 ---
 
-## 10) Пов’язані документи
+## 10) Кнопка «Стати новим перекладачем»
+
+На сторінці покинутої книги (`BookDetailReader.tsx`) відображається кнопка для подачі заявки на переклад.
+
+### Де підключено
+
+- Кнопка: `catalog/sections/BookHero.tsx` — проп `onBecomeTranslator`. Показується лише коли `book.translation_status === "ABANDONED"`.
+- Модалка підтвердження: `catalog/ModalBecomeTranslator.tsx` — кнопки «Підтвердити» / «Скасувати».
+- API: `catalogApi.ts` → `applyBecomeTranslator(slug)` → `POST /api/catalog/books/<slug>/apply-translator/`.
+
+### Потік
+
+1. Користувач натискає «Стати новим перекладачем».
+2. Якщо не авторизований → відкривається модалка входу.
+3. Якщо авторизований → модалка підтвердження `ModalBecomeTranslator`.
+4. Після підтвердження → POST запит.
+5. Успіх → `showSuccessAutoClose(...)`.
+6. 409 → «Ви вже подали заявку».
+7. Інша помилка → `showErrorAutoClose(...)`.
+
+### Бекенд
+
+- View: `apply_become_translator` в `apps/catalog/api/views.py`.
+- Модель: `TranslatorApplication` в `apps/catalog/models.py` — `book`, `user`, `status` (PENDING/APPROVED/REJECTED), `created_at`, `reviewed_at`.
+- Унікальність: одна PENDING-заявка на пару user+book.
+- При створенні → `Notification` для користувача.
+- Адмінка: сторінка перегляду заявок з кнопками Approve/Reject (`admin/catalog/translatorapplication/review_actions.html`).
+
+---
+
+## 11) Пов’язані документи
 
 - `frontend/src/docs/Concept.md`
 - `frontend/src/docs/STRUCTURE.md`

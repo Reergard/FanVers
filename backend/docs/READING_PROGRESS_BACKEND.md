@@ -50,8 +50,12 @@ reading_progress = min(100, (scroll_position / 90) * 100)
 
 Файл: **`apps/catalog/models.py`** (при збереженні контенту / `rebuild_derived`).
 
-- `reading_time = int((plain_text_len / 1000) * 180)` сек (~3 хв на 1000 символів)
+- `reading_time = int((plain_text_len / 1000) * 55)` сек (~55 с на 1000 символів ≈ 1000 символів/хв — неспішне читання)
 - `min_reading_time = int(reading_time * 0.75)` — мінімум для зарахування `is_read`
+
+Формула дублюється у 4 місцях: `Chapter.save()` (legacy HTML), `save_html_content()`, `rebuild_derived()`, management command `update_recent_chapters`.
+
+**Приклад:** глава з 7689 символами → `reading_time = 422 с (7.0 хв)`, `min_reading_time = 317 с (5.3 хв)`.
 
 Детальніше про символи: **CHARACTERS_COUNT_COMMISSION_BACKEND.md**.
 
@@ -77,15 +81,16 @@ reading_progress = min(100, (scroll_position / 90) * 100)
 **Логіка POST:**
 
 1. `get_or_create(user, chapter)`
-2. Завжди оновлює `reading_time`, `scroll_position` (= `scroll_progress`), `last_read_at`
-3. Якщо ще **не** `is_read`:
-   - `scroll_progress >= 90`
-   - `reading_time >= chapter.min_reading_time`
-   - обидва true → `is_read = True`, `reading_speed = character_count / reading_time`
-4. При першому `is_read` у відповіді може бути `book_completed: true/false` (усі глави книги з `is_read` у цього користувача)
-5. `save()` → **`UserChapterProgressSerializer`**
+2. **Захист від регресії (max):** `reading_time = max(збережене, отримане)`, `scroll_position = max(збережене, отримане)`. Час і скролл **ніколи не зменшуються** — захищає від обривів інтернету, кількох вкладок/браузерів, перезавантажень сторінки.
+3. Оновлює `last_read_at`.
+4. Якщо ще **не** `is_read`, перевіряє **два** порогі (використовуючи значення **після** max):
+   - **Час:** `progress.reading_time >= chapter.min_reading_time`
+   - **Скролл:** `progress.scroll_position >= 90` **АБО** `chapter.min_reading_time == 0` (порожні/короткі глави без вимоги скролла)
+   - обидва true → `is_read = True`, `reading_speed = character_count / reading_time` (з захистом від ділення на нуль: якщо `reading_time == 0` → `reading_speed = 0`)
+5. При першому `is_read` у відповіді може бути `book_completed: true/false` (усі глави книги з `is_read` у цього користувача)
+6. `save()` → **`UserChapterProgressSerializer`**
 
-**GET:** перший запис або `null` — серіалізатор з `instance=None` (клієнт обробляє порожню відповідь).
+**GET:** перший запис або `null` — серіалізатор з `instance=None` (клієнт обробляє порожню відповідь). Фронтенд використовує GET при старті сесії для отримання вже накопиченого `reading_time`.
 
 **Відповідь:** `is_read`, `is_purchased`, `scroll_position`, `reading_time`, `last_read_at`, `reading_progress` (+ опційно `book_completed`).
 
@@ -179,4 +184,4 @@ reading_progress = min(100, (scroll_position / 90) * 100)
 
 ---
 
-**Останнє оновлення:** 2026-05-24 — прогрес читання, обмеження rate/comments, `total_readers` / `completed_readers` у `user_translations`.
+**Останнє оновлення:** 2026-06-21 — формула часу 180→55 с/1000 символів; max() захист від регресії reading_time/scroll_position; короткі глави (min_reading_time==0) не вимагають скролла; захист від ділення на нуль у reading_speed.

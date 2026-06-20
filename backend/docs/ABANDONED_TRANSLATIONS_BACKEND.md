@@ -121,8 +121,48 @@
 
 ---
 
-## 7) Frontend (посилання)
+## 7) Заявка на переклад покинутої книги
 
-- `frontend/src/api/catalogApi.ts` — `getAbandonedTranslations()`
+### Endpoint
+
+`POST /api/catalog/books/<slug>/apply-translator/` — авторизований користувач подає заявку на переклад покинутої книги.
+
+### View
+
+Файл: `apps/catalog/api/views.py`, функція `apply_become_translator`.
+
+1. Перевірка: `book.translation_status == 'ABANDONED'` (інакше 400).
+2. Перевірка дублікатів: `TranslatorApplication.objects.filter(book=book, user=user, status='PENDING')` (інакше 409).
+3. Створення `TranslatorApplication(status='PENDING')`.
+4. Створення `Notification` для користувача.
+5. Відповідь: 201.
+
+### Модель `TranslatorApplication`
+
+Файл: `apps/catalog/models.py`.
+
+| Поле | Зміст |
+|------|--------|
+| `book` | FK → Book |
+| `user` | FK → User |
+| `status` | `PENDING` / `APPROVED` / `REJECTED` |
+| `created_at` | auto_now_add |
+| `reviewed_at` | nullable, заповнюється при approve/reject |
+
+Унікальність: одна PENDING-заявка на пару user+book.
+
+### Адмінка
+
+Файл: `apps/catalog/admin.py` + шаблон `admin/catalog/translatorapplication/review_actions.html`.
+
+Кнопки Approve / Reject на сторінці заявки. При Approve — власник книги змінюється на заявника, `translation_status` оновлюється.
+
+---
+
+## 8) Frontend (посилання)
+
+- `frontend/src/api/catalogApi.ts` — `getAbandonedTranslations()`, `applyBecomeTranslator()`
 - `frontend/src/catalog/AbandonedTranslations.tsx`
+- `frontend/src/catalog/ModalBecomeTranslator.tsx` — модалка підтвердження заявки
+- `frontend/src/catalog/sections/BookHero.tsx` — кнопка «Стати новим перекладачем»
 - `frontend/src/docs/ABANDONED_TRANSLATIONS_FRONTEND.md`
