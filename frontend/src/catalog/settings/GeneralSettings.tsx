@@ -27,9 +27,10 @@ function toId(x: { id?: number } | number): number | null {
 
 function toTranslationStatus(raw?: string | null): string {
   if (!raw) return "TRANSLATING";
-  if (raw === "TRANSLATING" || raw === "WAITING" || raw === "PAUSED" || raw === "ABANDONED") return raw;
+  if (raw === "TRANSLATING" || raw === "WAITING" || raw === "COMPLETED" || raw === "PAUSED" || raw === "ABANDONED") return raw;
   if (raw === "Перекладається") return "TRANSLATING";
   if (raw === "В очікуванні розділів") return "WAITING";
+  if (raw === "Завершено") return "COMPLETED";
   if (raw === "Перерва") return "PAUSED";
   if (raw === "Покинутий") return "ABANDONED";
   return "TRANSLATING";

@@ -221,6 +221,7 @@ class Book(models.Model):
     TRANSLATION_STATUSES = [
         ('TRANSLATING', 'Перекладається'),
         ('WAITING', 'В очікуванні розділів'),
+        ('COMPLETED', 'Завершено'),
         ('PAUSED', 'Перерва'),
         ('ABANDONED', 'Покинутий'),
     ]
@@ -543,6 +544,53 @@ class Book(models.Model):
     class Meta:
         verbose_name = _('Книга')
         verbose_name_plural = _('Книги')
+
+
+class TranslatorApplication(models.Model):
+    """Заявка на переклад покинутої книги."""
+
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Очікує розгляду'
+        APPROVED = 'APPROVED', 'Схвалено'
+        REJECTED = 'REJECTED', 'Відхилено'
+
+    book = models.ForeignKey(
+        Book,
+        on_delete=models.CASCADE,
+        related_name='translator_applications',
+        verbose_name='Книга',
+    )
+    user = models.ForeignKey(
+        'users.User',
+        on_delete=models.CASCADE,
+        related_name='translator_applications',
+        verbose_name='Користувач',
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+        verbose_name='Статус заявки',
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата заявки')
+    reviewed_at = models.DateTimeField(
+        null=True, blank=True, verbose_name='Дата розгляду'
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Заявка на переклад'
+        verbose_name_plural = 'Заявки на переклад'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['book', 'user'],
+                condition=models.Q(status='PENDING'),
+                name='unique_pending_application_per_user_book',
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user.username} → «{self.book.title}»'
 
 
 def process_table(table):

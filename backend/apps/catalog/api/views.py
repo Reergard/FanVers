@@ -1,5 +1,8 @@
 from rest_framework.response import Response
-from apps.catalog.models import Book, Chapter, Genres, Tag, Country, Fandom, Volume, ChapterOrder, ChapterOrderContainer
+from apps.catalog.models import (
+    Book, Chapter, Genres, Tag, Country, Fandom, Volume, ChapterOrder,
+    ChapterOrderContainer, TranslatorApplication,
+)
 from apps.catalog.api.serializers import (
     ChapterSerializer, GenresSerializer, TagSerializer,
     CountrySerializer, FandomSerializer, VolumeSerializer, ChapterOrderSerializer,
@@ -1106,6 +1109,55 @@ def update_book_access_rights(request, slug):
             {'error': 'Внутрішня помилка сервера'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@transaction.atomic
+def apply_become_translator(request, slug):
+    """Подати заявку на переклад покинутої книги."""
+    from apps.notification.models import Notification
+
+    try:
+        book = Book.objects.get(slug=slug)
+    except Book.DoesNotExist:
+        return Response(
+            {'detail': 'Книгу не знайдено.'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    if book.translation_status != 'ABANDONED':
+        return Response(
+            {'detail': 'Заявку можна подати лише на покинуті переклади.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if TranslatorApplication.objects.filter(
+        book=book, user=request.user, status=TranslatorApplication.Status.PENDING
+    ).exists():
+        return Response(
+            {'detail': 'Ви вже подали заявку на цю книгу.'},
+            status=status.HTTP_409_CONFLICT,
+        )
+
+    application = TranslatorApplication.objects.create(
+        book=book,
+        user=request.user,
+    )
+
+    Notification.objects.create(
+        user=request.user,
+        book=book,
+        message=(
+            f'Ваш запит на переклад «{book.title}» успішно надіслано. '
+            f'Про результат розгляду вам буде повідомлено.'
+        ),
+    )
+
+    return Response(
+        {'detail': 'Заявку успішно подано.', 'application_id': application.id},
+        status=status.HTTP_201_CREATED,
+    )
 
 
 @api_view(['GET'])

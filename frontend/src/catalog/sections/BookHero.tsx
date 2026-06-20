@@ -10,6 +10,7 @@ import { fetchBookRatings } from "../../api/ratingApi";
 import { useAuth } from "../../auth/useAuth";
 import { useAuthModal } from "../../auth/AuthModalContext";
 import { ModalThankAuthor } from "../ModalThankAuthor";
+import { ModalBecomeTranslator } from "../ModalBecomeTranslator";
 import backBalanceIcon from "../assets/icons/back_balance.svg";
 import icon18Big from "../assets/icons/18+big.svg";
 import linearIcon from "../assets/icons/linear.svg";
@@ -75,6 +76,7 @@ export function BookHero({
   const { isAuthenticated } = useAuth();
   const { openLoginModal } = useAuthModal();
   const [thankModalOpen, setThankModalOpen] = useState(false);
+  const [becomeTranslatorModalOpen, setBecomeTranslatorModalOpen] = useState(false);
   const slugForRatings = (bookSlug && String(bookSlug).trim()) || "";
 
   const { shortMetaRows, chipsMetaRows } = useMemo(() => {
@@ -186,7 +188,13 @@ export function BookHero({
                 <ActionButton
                   variant="outline"
                   className={styles.becomeTranslatorBtn}
-                  onClick={onBecomeTranslator}
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      openLoginModal(location.pathname);
+                      return;
+                    }
+                    setBecomeTranslatorModalOpen(true);
+                  }}
                   leftIcon={<img src={newTranslaterIcon} alt="" width={22} height={34} />}
                 >
                   Стати новим перекладачем
@@ -289,6 +297,14 @@ export function BookHero({
           open={thankModalOpen}
           onClose={() => setThankModalOpen(false)}
           bookId={bookId}
+          bookTitle={title}
+        />
+      ) : null}
+      {bookSlug ? (
+        <ModalBecomeTranslator
+          open={becomeTranslatorModalOpen}
+          onClose={() => setBecomeTranslatorModalOpen(false)}
+          bookSlug={bookSlug}
           bookTitle={title}
         />
       ) : null}

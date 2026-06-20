@@ -727,6 +727,14 @@ export async function getAbandonedTranslations(): Promise<AbandonedTranslationBo
   return Array.isArray(data) ? data.map(normalizeAbandonedTranslation) : [];
 }
 
+/** Подати заявку стати перекладачем покинутої книги */
+export async function applyBecomeTranslator(slug: string): Promise<{ detail: string }> {
+  const { data } = await http.post<{ detail: string }>(
+    `${CATALOG}/books/${encodeURIComponent(slug)}/apply-translator/`
+  );
+  return data;
+}
+
 // --- Справочники для сторінки створення книги ---
 
 const STALE_REF = 10 * 60 * 1000; // 10 хв
@@ -868,6 +876,7 @@ export const catalogApi = {
   getAllCatalogBooks,
   getUserTranslations,
   getAbandonedTranslations,
+  applyBecomeTranslator,
   getGenres,
   getTags,
   getCountries,

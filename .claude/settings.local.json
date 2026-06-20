@@ -25,7 +25,8 @@
       "Bash(python manage.py shell -c \"from django.core.cache import cache; cache.clear\\(\\); print\\('Cache cleared'\\)\")",
       "Bash(npx tsc *)",
       "PowerShell(curl.exe -s http://127.0.0.1:8000/books/first/)",
-      "Bash(Get-ChildItem -Path \"D:\\\\Website\\\\desing\\\\Fan-vers\\\\backend\\\\docs\\\\\" -Force 2>&1)"
+      "Bash(Get-ChildItem -Path \"D:\\\\Website\\\\desing\\\\Fan-vers\\\\backend\\\\docs\\\\\" -Force 2>&1)",
+      "Bash(grep -r \"{% static\" \"C:/Python312/Lib/site-packages/unfold/templates\" --include=\"*.html\" | grep -E \"\\(css|js\\)\" | sort | uniq)"
     ]
   }
 }

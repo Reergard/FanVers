@@ -248,7 +248,6 @@ export default function BookDetailOwner({
           }
           thankAuthorInteractive={false}
           showSettings
-          onBecomeTranslator={() => {}}
         />
       }
       description={<BookDescription description={description} />}

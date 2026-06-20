@@ -1,6 +1,7 @@
 from django.contrib import admin
+from django.utils import timezone
 from unfold.admin import ModelAdmin
-from .models import Book, Tag, Fandom, Country, Genres, TagGroups, Chapter, Volume
+from .models import Book, Tag, Fandom, Country, Genres, TagGroups, Chapter, Volume, TranslatorApplication
 
 import logging
 
@@ -161,4 +162,173 @@ class VolumeAdmin(ModelAdmin):
     list_filter = ['book']
     search_fields = ['title', 'book__title']
     ordering = ['created_at']
+
+
+@admin.register(TranslatorApplication)
+class TranslatorApplicationAdmin(ModelAdmin):
+    list_display = [
+        'get_book_title',
+        'get_applicants_count',
+        'get_book_status',
+        'created_at',
+        'status',
+    ]
+    list_filter = ['status', 'created_at']
+    search_fields = ['book__title', 'user__username']
+    readonly_fields = [
+        'book',
+        'user',
+        'created_at',
+        'reviewed_at',
+        'get_user_stats',
+    ]
+    actions = ['approve_application']
+
+    def get_book_title(self, obj):
+        return obj.book.title
+    get_book_title.short_description = 'Книга'
+    get_book_title.admin_order_field = 'book__title'
+
+    def get_applicants_count(self, obj):
+        count = TranslatorApplication.objects.filter(
+            book=obj.book, status='PENDING'
+        ).count()
+        return f'{count} заявок' if count != 1 else '1 заявка'
+    get_applicants_count.short_description = 'Претенденти'
+
+    def get_book_status(self, obj):
+        return obj.book.get_translation_status_display() or '—'
+    get_book_status.short_description = 'Статус книги'
+
+    def get_user_stats(self, obj):
+        """Статистика користувача: книги, розділи, статуси."""
+        user = obj.user
+        owned_books = Book.objects.filter(owner=user)
+        total_books = owned_books.count()
+        translating = owned_books.filter(translation_status='TRANSLATING').count()
+        waiting = owned_books.filter(translation_status='WAITING').count()
+        completed = owned_books.filter(translation_status='COMPLETED').count()
+        abandoned = owned_books.filter(translation_status='ABANDONED').count()
+
+        created_books = Book.objects.filter(creator=user)
+        total_chapters = Chapter.objects.filter(book__in=created_books).count()
+
+        profile = getattr(user, 'profile', None)
+        total_chars = profile.total_characters if profile else 0
+        role = profile.get_role_display() if profile else '—'
+
+        return (
+            f'Роль: {role}\n'
+            f'Книг у власності: {total_books} '
+            f'(перекладає: {translating}, очікує розділів: {waiting}, '
+            f'покинуто: {abandoned}, завершено: {completed})\n'
+            f'Усього розділів створено: {total_chapters}\n'
+            f'Усього символів перекладено: {total_chars:,}'
+        )
+    get_user_stats.short_description = 'Статистика користувача'
+
+    def get_fieldsets(self, request, obj=None):
+        return (
+            ('Заявка', {
+                'fields': ('book', 'user', 'status', 'created_at', 'reviewed_at'),
+            }),
+            ('Статистика претендента', {
+                'fields': ('get_user_stats',),
+                'classes': ('collapse',),
+            }),
+        )
+
+    @admin.action(description='✅ Схвалити заявку та передати книгу')
+    def approve_application(self, request, queryset):
+        """
+        Admin action: схвалює заявку, передає книгу користувачу.
+        Працює тільки з одною заявкою за раз.
+        """
+        from datetime import timedelta
+        from apps.notification.models import Notification
+        from apps.catalog.abandoned_thresholds import total_inactivity_delta
+        from apps.users.models import User
+
+        if queryset.count() != 1:
+            self.message_user(
+                request,
+                'Оберіть рівно одну заявку для схвалення.',
+                level='error',
+            )
+            return
+
+        application = queryset.first()
+
+        if application.status != 'PENDING':
+            self.message_user(
+                request,
+                'Ця заявка вже розглянута.',
+                level='warning',
+            )
+            return
+
+        book = application.book
+        user = application.user
+
+        book.owner = user
+        book.translation_status = 'TRANSLATING'
+
+        grace_days = 5
+        book.owner_last_activity_at = (
+            timezone.now() - total_inactivity_delta() + timedelta(days=grace_days)
+        )
+        book.abandoned_warning_sent_at = None
+
+        book.save(update_fields=[
+            'owner',
+            'translation_status',
+            'owner_last_activity_at',
+            'abandoned_warning_sent_at',
+        ])
+
+        application.status = TranslatorApplication.Status.APPROVED
+        application.reviewed_at = timezone.now()
+        application.save(update_fields=['status', 'reviewed_at'])
+
+        other_pending = TranslatorApplication.objects.filter(
+            book=book, status=TranslatorApplication.Status.PENDING
+        ).exclude(pk=application.pk)
+
+        rejected_users = list(other_pending.values_list('user', flat=True))
+        other_pending.update(
+            status=TranslatorApplication.Status.REJECTED,
+            reviewed_at=timezone.now(),
+        )
+
+        Notification.objects.create(
+            user=user,
+            book=book,
+            message=(
+                f'Вам передано переклад «{book.title}». '
+                f'Зверніть увагу: оскільки книга перебувала у покинутих перекладах, '
+                f'у вас є 5 днів для публікації нових розділів. '
+                f'У разі бездіяльності книгу буде повернено до покинутих.'
+            ),
+        )
+
+        for rejected_user_id in rejected_users:
+            try:
+                rejected_user = User.objects.get(pk=rejected_user_id)
+                Notification.objects.create(
+                    user=rejected_user,
+                    book=book,
+                    message=(
+                        f'На жаль, вашу заявку на переклад «{book.title}» відхилено. '
+                        f'Книгу передано іншому перекладачу.'
+                    ),
+                )
+            except User.DoesNotExist:
+                pass
+
+        self.message_user(
+            request,
+            f'Книгу «{book.title}» передано користувачу {user.username}. '
+            f'Відхилено заявок: {len(rejected_users)}.',
+            level='success',
+        )
 

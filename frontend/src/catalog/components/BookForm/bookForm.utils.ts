@@ -3,7 +3,7 @@ import type { BookFormData, BookFormMode } from "./BookForm";
 
 export const DESCRIPTION_MAX_CHARS = 300;
 /** Статуси перекладу, заборонені для нових книг при створенні */
-export const INVALID_NEW_BOOK_TRANSLATION_STATUSES = ["PAUSED", "ABANDONED"];
+export const INVALID_NEW_BOOK_TRANSLATION_STATUSES = ["PAUSED", "ABANDONED", "COMPLETED"];
 
 type ValidateContext = {
   mode: BookFormMode;

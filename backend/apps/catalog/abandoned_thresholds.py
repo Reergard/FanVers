@@ -8,9 +8,9 @@ import os
 from datetime import timedelta
 
 # У проді: дні. У dev (хвилини): ті самі імена та числа, але одиниця — хвилини.
-# Dev-тест (хв): попередження після 10 хв неактивності, перенос після 15 хв; вікно (now−15, now−10] = 5 хв.
-ABANDONED_TOTAL_DAYS = 15
-ABANDONED_WARNING_AFTER_DAYS = 10
+# Dev-тест (хв): попередження після 25 хв неактивності, перенос після 30 хв; вікно (now−30, now−25] = 5 хв.
+ABANDONED_TOTAL_DAYS = 30
+ABANDONED_WARNING_AFTER_DAYS = 25
 
 
 def thresholds_use_minutes():

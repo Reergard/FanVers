@@ -6,7 +6,7 @@ from .views import (
     add_chapter, chapter_list, chapter_detail, volume_list,
     create_volume, owned_books, delete_chapter, BookInfoView,
     create_book, update_book, abandoned_translations, user_translations, register_book_view,
-    update_book_access_rights, check_book_access
+    update_book_access_rights, check_book_access, apply_become_translator,
 )
 from apps.editors.api.views import reorder_chapters, move_chapter
 
@@ -37,5 +37,6 @@ urlpatterns = [
     path('books/<int:book_id>/view/', register_book_view, name='register-book-view'),
     path('books/<slug:slug>/check-access/', check_book_access, name='check-book-access'),
     path('books/<slug:slug>/access-rights/', update_book_access_rights, name='update-book-access-rights'),
+    path('books/<slug:slug>/apply-translator/', apply_become_translator, name='apply-translator'),
     path('abandoned-translations/', abandoned_translations, name='abandoned-translations'),
 ] + router.urls

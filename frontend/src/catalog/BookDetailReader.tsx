@@ -121,7 +121,9 @@ export default function BookDetailReader({
           }
           thankAuthorInteractive={true}
           showSettings={false}
-          onBecomeTranslator={isAuthenticated ? () => {} : undefined}
+          onBecomeTranslator={
+            book.translation_status === "ABANDONED" ? () => {} : undefined
+          }
         />
       }
       description={<BookDescription description={description} />}

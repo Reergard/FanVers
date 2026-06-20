@@ -22,6 +22,7 @@ export const BOOK_TYPES = [
 export const TRANSLATION_STATUSES = [
   { value: "TRANSLATING", label: "Перекладається" },
   { value: "WAITING", label: "В очікуванні розділів" },
+  { value: "COMPLETED", label: "Завершено" },
   { value: "PAUSED", label: "Перерва" },
   { value: "ABANDONED", label: "Покинутий" },
 ];
