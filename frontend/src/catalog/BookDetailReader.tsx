@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "../auth/useAuth";
 import { catalogKeys } from "../api/catalogApi";
 import type { Book, Chapter, Volume } from "../api/catalogApi";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
@@ -29,7 +28,6 @@ export default function BookDetailReader({
   chaptersLoading = false,
   volumesLoading: _volumesLoading,
 }: BookDetailReaderProps) {
-  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
