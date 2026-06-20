@@ -340,18 +340,25 @@ export function BookChapters({
   }
 
   function applyPositionInput(chapterId: number, value: string, groupChapters: Chapter[]) {
-    const num = Math.max(1, parseInt(value, 10) || 1);
+    const maxPos = groupChapters.length;
+    const num = Math.max(1, Math.min(parseInt(value, 10) || 1, maxPos));
     const currentChapter = groupChapters.find((c) => c.id === chapterId);
     if (!currentChapter || !onPositionChange) return;
     const myPos = chapterPositions[chapterId] ?? currentChapter.order;
     if (num === myPos) return;
-    const targetChapter = groupChapters.find((c) => (chapterPositions[c.id] ?? c.order) === num);
-    if (targetChapter) {
-      const targetPos = chapterPositions[targetChapter.id] ?? targetChapter.order;
-      onPositionChange({ [chapterId]: targetPos, [targetChapter.id]: myPos });
-    } else {
-      onPositionChange({ [chapterId]: num });
+
+    const updates: Record<number, number> = {};
+    for (const c of groupChapters) {
+      if (c.id === chapterId) continue;
+      const pos = chapterPositions[c.id] ?? c.order;
+      if (num < myPos && pos >= num && pos < myPos) {
+        updates[c.id] = pos + 1;
+      } else if (num > myPos && pos > myPos && pos <= num) {
+        updates[c.id] = pos - 1;
+      }
     }
+    updates[chapterId] = num;
+    onPositionChange(updates);
     setEditingChapterId(null);
   }
 
