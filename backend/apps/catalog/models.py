@@ -739,15 +739,19 @@ class Chapter(models.Model):
 
     def generate_unique_slug(self):
         """Генерує унікальний слаг для розділів"""
+        max_length = self._meta.get_field('slug').max_length or 50
         base_slug = slugify(unidecode(self.title))
-        
-        # Видаляємо спеціальні символи
+
         slug = re.sub(r'[^a-zA-Z0-9-]', '', base_slug)
-        
-        # Замінюємо множинні дефіси
         slug = re.sub(r'-+', '-', slug)
-        
-        # Перевіряємо унікальність
+        slug = slug.strip('-')
+
+        slug = slug[:max_length]
+        slug = slug.rstrip('-')
+
+        if not slug:
+            slug = 'chapter'
+
         original_slug = slug
         counter = 1
         while Chapter.objects.filter(
@@ -755,9 +759,11 @@ class Chapter(models.Model):
             slug=slug
         ).exists():
             suffix = f'-{counter}'
-            slug = f'{original_slug}{suffix}'
+            trimmed = original_slug[:max_length - len(suffix)]
+            trimmed = trimmed.rstrip('-')
+            slug = f'{trimmed}{suffix}'
             counter += 1
-            
+
         return slug
 
     def save(self, *args, **kwargs):
