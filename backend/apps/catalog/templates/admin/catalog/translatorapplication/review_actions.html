@@ -1,0 +1,27 @@
+{% load i18n %}
+{% if show_review_actions %}
+<div class="flex flex-col gap-3 pt-6 mt-2 border-t border-base-200 dark:border-base-800">
+    <p class="text-sm font-medium text-font-important-light dark:text-font-important-dark">
+        Розгляд заявки
+    </p>
+    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <button
+            type="submit"
+            name="_approve_application"
+            class="font-medium flex group items-center gap-2 px-3 py-2 rounded-default justify-center whitespace-nowrap bg-primary-600 border border-transparent text-white w-full sm:w-auto"
+        >
+            {% trans "Схвалити та передати книгу" %}
+        </button>
+        <button
+            type="submit"
+            name="_reject_application"
+            class="font-medium flex group items-center gap-2 px-3 py-2 rounded-default justify-center whitespace-nowrap bg-red-600 border border-transparent text-white w-full sm:w-auto"
+        >
+            {% trans "Відмовити" %}
+        </button>
+    </div>
+    <p class="text-xs text-base-500 dark:text-base-400">
+        Схвалення передає книгу претенденту, зсуває відлік бездіяльності на 5 днів і відхиляє інші очікувані заявки на цю книгу.
+    </p>
+</div>
+{% endif %}

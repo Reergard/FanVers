@@ -976,6 +976,7 @@ class BookInfoView(generics.RetrieveAPIView):
             owner_username = serializers.SerializerMethodField()
             creator_username = serializers.SerializerMethodField()
             translation_status_display = serializers.CharField(source='get_translation_status_display', read_only=True)
+            translation_status = serializers.CharField(read_only=True)
             original_status_display = serializers.CharField(source='get_original_status_display', read_only=True)
             genres = GenresSerializer(many=True, read_only=True)
             tags = TagSerializer(many=True, read_only=True)
@@ -986,7 +987,7 @@ class BookInfoView(generics.RetrieveAPIView):
                 model = Book
                 fields = [
                     'id', 'title', 'title_en', 'author', 'description',
-                    'image', 'translation_status_display',
+                    'image', 'translation_status', 'translation_status_display',
                     'original_status_display', 'country', 'slug',
                     'last_updated', 'owner', 'creator', 'adult_content',
                     'owner_username', 'creator_username', 'book_type',

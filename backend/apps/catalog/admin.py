@@ -1,5 +1,8 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import format_html
 from unfold.admin import ModelAdmin
 from .models import Book, Tag, Fandom, Country, Genres, TagGroups, Chapter, Volume, TranslatorApplication
 
@@ -166,6 +169,8 @@ class VolumeAdmin(ModelAdmin):
 
 @admin.register(TranslatorApplication)
 class TranslatorApplicationAdmin(ModelAdmin):
+    change_form_after_template = 'admin/catalog/translatorapplication/review_actions.html'
+
     list_display = [
         'get_book_title',
         'get_applicants_count',
@@ -178,11 +183,52 @@ class TranslatorApplicationAdmin(ModelAdmin):
     readonly_fields = [
         'book',
         'user',
+        'get_status_label',
         'created_at',
         'reviewed_at',
+        'get_other_applicants',
         'get_user_stats',
     ]
     actions = ['approve_application']
+
+    def has_add_permission(self, request):
+        return False
+
+    def get_status_label(self, obj):
+        if not obj:
+            return '—'
+        return obj.get_status_display()
+    get_status_label.short_description = 'Статус заявки'
+
+    def get_other_applicants(self, obj):
+        if not obj or not obj.pk:
+            return '—'
+        others = (
+            TranslatorApplication.objects.filter(
+                book=obj.book,
+                status=TranslatorApplication.Status.PENDING,
+            )
+            .exclude(pk=obj.pk)
+            .select_related('user')
+            .order_by('created_at')
+        )
+        if not others:
+            return 'Інших очікуваних заявок на цю книгу немає'
+        lines = []
+        for application in others:
+            url = reverse(
+                'admin:catalog_translatorapplication_change',
+                args=[application.pk],
+            )
+            lines.append(format_html(
+                '<a href="{}">{}</a> — заявка від {}, {}',
+                url,
+                application.user.username,
+                application.created_at.strftime('%d.%m.%Y %H:%M'),
+                application.get_status_display(),
+            ))
+        return format_html('<br>'.join(lines))
+    get_other_applicants.short_description = 'Інші претенденти на цю книгу'
 
     def get_book_title(self, obj):
         return obj.book.title
@@ -230,7 +276,14 @@ class TranslatorApplicationAdmin(ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         return (
             ('Заявка', {
-                'fields': ('book', 'user', 'status', 'created_at', 'reviewed_at'),
+                'fields': (
+                    'book',
+                    'user',
+                    'get_status_label',
+                    'created_at',
+                    'reviewed_at',
+                    'get_other_applicants',
+                ),
             }),
             ('Статистика претендента', {
                 'fields': ('get_user_stats',),
@@ -238,37 +291,61 @@ class TranslatorApplicationAdmin(ModelAdmin):
             }),
         )
 
-    @admin.action(description='✅ Схвалити заявку та передати книгу')
-    def approve_application(self, request, queryset):
-        """
-        Admin action: схвалює заявку, передає книгу користувачу.
-        Працює тільки з одною заявкою за раз.
-        """
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        obj = self.get_object(request, object_id) if object_id else None
+        pending = (
+            obj is not None
+            and obj.status == TranslatorApplication.Status.PENDING
+        )
+        extra_context['show_review_actions'] = pending
+
+        response = super().changeform_view(
+            request, object_id, form_url, extra_context
+        )
+
+        if hasattr(response, 'context_data') and response.context_data and pending:
+            response.context_data['show_save'] = False
+            response.context_data['show_save_and_continue'] = False
+            response.context_data['show_save_and_add_another'] = False
+            response.context_data['show_save_as_new'] = False
+
+        return response
+
+    def response_change(self, request, obj):
+        if '_approve_application' in request.POST:
+            level, message = self._approve_application_instance(obj)
+            self.message_user(request, message, level=level)
+            return HttpResponseRedirect(
+                reverse('admin:catalog_translatorapplication_change', args=[obj.pk])
+            )
+
+        if '_reject_application' in request.POST:
+            level, message = self._reject_application_instance(obj)
+            self.message_user(request, message, level=level)
+            return HttpResponseRedirect(
+                reverse('admin:catalog_translatorapplication_change', args=[obj.pk])
+            )
+
+        return super().response_change(request, obj)
+
+    def _approve_application_instance(self, application):
         from datetime import timedelta
         from apps.notification.models import Notification
         from apps.catalog.abandoned_thresholds import total_inactivity_delta
         from apps.users.models import User
 
-        if queryset.count() != 1:
-            self.message_user(
-                request,
-                'Оберіть рівно одну заявку для схвалення.',
-                level='error',
-            )
-            return
-
-        application = queryset.first()
-
-        if application.status != 'PENDING':
-            self.message_user(
-                request,
-                'Ця заявка вже розглянута.',
-                level='warning',
-            )
-            return
+        if application.status != TranslatorApplication.Status.PENDING:
+            return messages.WARNING, 'Ця заявка вже розглянута.'
 
         book = application.book
         user = application.user
+
+        if book.translation_status != 'ABANDONED':
+            return (
+                messages.ERROR,
+                f'Книга «{book.title}» більше не в статусі «Покинутий».',
+            )
 
         book.owner = user
         book.translation_status = 'TRANSLATING'
@@ -325,10 +402,49 @@ class TranslatorApplicationAdmin(ModelAdmin):
             except User.DoesNotExist:
                 pass
 
-        self.message_user(
-            request,
+        return (
+            messages.SUCCESS,
             f'Книгу «{book.title}» передано користувачу {user.username}. '
-            f'Відхилено заявок: {len(rejected_users)}.',
-            level='success',
+            f'Відхилено інших заявок: {len(rejected_users)}.',
         )
+
+    def _reject_application_instance(self, application):
+        from apps.notification.models import Notification
+
+        if application.status != TranslatorApplication.Status.PENDING:
+            return messages.WARNING, 'Ця заявка вже розглянута.'
+
+        book = application.book
+        user = application.user
+
+        application.status = TranslatorApplication.Status.REJECTED
+        application.reviewed_at = timezone.now()
+        application.save(update_fields=['status', 'reviewed_at'])
+
+        Notification.objects.create(
+            user=user,
+            book=book,
+            message=(
+                f'На жаль, вашу заявку на переклад «{book.title}» відхилено. '
+                f'Книга наразі залишається у покинутих перекладах.'
+            ),
+        )
+
+        return (
+            messages.SUCCESS,
+            f'Заявку користувача {user.username} на «{book.title}» відхилено.',
+        )
+
+    @admin.action(description='✅ Схвалити заявку та передати книгу')
+    def approve_application(self, request, queryset):
+        if queryset.count() != 1:
+            self.message_user(
+                request,
+                'Оберіть рівно одну заявку для схвалення.',
+                level=messages.ERROR,
+            )
+            return
+
+        level, message = self._approve_application_instance(queryset.first())
+        self.message_user(request, message, level=level)
 
