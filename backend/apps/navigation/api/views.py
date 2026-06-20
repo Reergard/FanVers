@@ -10,13 +10,15 @@ from apps.catalog.api.serializers import ChapterSerializer
 from .serializers import BookmarkSerializer
 from ..models import Bookmark, ChapterPagination
 import logging
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from apps.catalog.api.permissions import is_book_owner_or_creator
 
 logger = logging.getLogger(__name__)
 
 
 class ChapterNavigationView(APIView):
+    permission_classes = [AllowAny]
+
     def get(self, request, book_slug, chapter_slug):
         try:
             # Отримуємо книгу та поточний розділ

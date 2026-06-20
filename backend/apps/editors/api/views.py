@@ -104,16 +104,26 @@ def update_chapter(request, chapter_id):
 
             if "volume" in request.data:
                 volume_id = request.data.get("volume")
-                if volume_id:
-                    vol = Volume.objects.filter(id=volume_id, book=chapter.book).first()
-                    if not vol:
-                        return Response(
-                            {"error": "Обраний том не належить цій книзі"},
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
-                    chapter.volume = vol
-                else:
-                    chapter.volume = None
+                new_vol_id = int(volume_id) if volume_id else None
+                old_vol_id = chapter.volume_id
+
+                if new_vol_id != old_vol_id:
+                    if new_vol_id is not None:
+                        vol = Volume.objects.filter(id=new_vol_id, book=chapter.book).first()
+                        if not vol:
+                            return Response(
+                                {"error": "Обраний том не належить цій книзі"},
+                                status=status.HTTP_400_BAD_REQUEST,
+                            )
+                        chapter.volume = vol
+                    else:
+                        chapter.volume = None
+
+                    from django.db.models import Max
+                    agg = Chapter.objects.filter(
+                        book=chapter.book, volume_id=new_vol_id,
+                    ).exclude(id=chapter.id).aggregate(Max('order'))
+                    chapter.order = (agg['order__max'] or 0) + 1
 
             if new_uploaded_file is not None:
                 file_error = validate_docx_file(new_uploaded_file)

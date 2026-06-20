@@ -190,25 +190,23 @@ def chapter_detail(request, book_slug, chapter_slug):
             chapter.is_paid,
         )
         if not is_owner_or_creator:
-            # Для платної глави неавторизований користувач має отримати 401.
-            if chapter.is_paid and not request.user.is_authenticated:
-                return Response(
-                    {"error": "Необхідна авторизація для перегляду платної глави"},
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-
-            # Загальні правила доступу до книги для інших користувачів.
+            # Перевіряємо загальний доступ до книги (view_permission).
             is_allowed, error_message = check_book_access_permission(
-                request.user, chapter.book, 'download'
+                request.user, chapter.book, 'view'
             )
             if not is_allowed:
                 return Response(
-                    {"error": error_message}, 
+                    {"error": error_message},
                     status=status.HTTP_403_FORBIDDEN
                 )
 
-            # Платну главу може читати тільки той, хто купив.
+            # Платну главу може читати тільки авторизований користувач, який купив.
             if chapter.is_paid:
+                if not request.user.is_authenticated:
+                    return Response(
+                        {"error": "Необхідна авторизація для перегляду платної глави"},
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
                 from apps.subscription.services import user_has_chapter_access
                 is_purchased = user_has_chapter_access(request.user, chapter.id)
                 if not is_purchased:
