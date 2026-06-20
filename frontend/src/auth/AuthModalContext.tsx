@@ -49,6 +49,11 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
     navigate(returnToRef.current, { replace: true });
   }, [navigate]);
 
+  const switchToRegisterModal = useCallback(() => {
+    setLoginModalOpen(false);
+    setRegisterModalOpen(true);
+  }, []);
+
   const value: AuthModalContextValue = {
     openLoginModal,
     openRegisterModal,
@@ -63,7 +68,7 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
         title="Вхід"
         className="auth-modal"
       >
-        <LoginForm onSuccess={handleLoginSuccess} />
+        <LoginForm onSuccess={handleLoginSuccess} onSwitchToRegister={switchToRegisterModal} />
       </Modal>
       <Modal
         open={registerModalOpen}

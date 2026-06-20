@@ -14,9 +14,10 @@ import styles from "./AuthForms.module.css";
 
 type Props = {
   onSuccess?: () => void;
+  onSwitchToRegister?: () => void;
 };
 
-export function LoginForm({ onSuccess }: Props) {
+export function LoginForm({ onSuccess, onSwitchToRegister }: Props) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -185,6 +186,19 @@ export function LoginForm({ onSuccess }: Props) {
           </div>
           <SocialLoginButton provider="google" label="Google" />
         </div>
+
+        {onSwitchToRegister ? (
+          <p className={styles.switchAuthRow}>
+            <span className={styles.switchAuthText}>Незареєстровані? Тоді </span>
+            <button
+              type="button"
+              className={styles.switchAuthLink}
+              onClick={onSwitchToRegister}
+            >
+              зареєструйтеся
+            </button>
+          </p>
+        ) : null}
       </form>
     </AuthModalContent>
   );
