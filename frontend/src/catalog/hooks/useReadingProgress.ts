@@ -13,9 +13,10 @@ function computeScrollProgress(): number {
     document.body.scrollHeight,
   );
   const viewportHeight = window.innerHeight;
+  if (totalHeight <= viewportHeight) return 100;
   const currentScroll =
     window.pageYOffset || document.documentElement.scrollTop;
-  const maxScroll = Math.max(1, totalHeight - viewportHeight);
+  const maxScroll = totalHeight - viewportHeight;
   return Math.min(100, Math.max(0, (currentScroll / maxScroll) * 100));
 }
 
@@ -29,6 +30,7 @@ export function useReadingProgress({
   enabled,
 }: UseReadingProgressOptions): void {
   const readingStartTimeRef = useRef<number | null>(null);
+  const previousReadingTimeRef = useRef(0);
   const isReadRef = useRef(false);
   const enabledRef = useRef(enabled);
   const chapterIdRef = useRef(chapterId);
@@ -38,7 +40,8 @@ export function useReadingProgress({
   enabledRef.current = enabled;
   chapterIdRef.current = chapterId;
 
-  const resetSession = useCallback(() => {
+  const resetSession = useCallback((existingReadingTime = 0) => {
+    previousReadingTimeRef.current = existingReadingTime;
     readingStartTimeRef.current = Date.now();
     isReadRef.current = false;
   }, []);
@@ -56,9 +59,10 @@ export function useReadingProgress({
       if (!readingStartTimeRef.current) return;
       if (sendInFlightRef.current) return;
 
-      const readingTime = Math.floor(
+      const sessionTime = Math.floor(
         (Date.now() - readingStartTimeRef.current) / 1000,
       );
+      const readingTime = previousReadingTimeRef.current + sessionTime;
       const scrollProgress = computeScrollProgress();
 
       sendInFlightRef.current = true;
@@ -114,6 +118,7 @@ export function useReadingProgress({
     let cancelled = false;
 
     void (async () => {
+      let existingReadingTime = 0;
       try {
         const existing = await getChapterProgress(chapterId);
         if (cancelled) return;
@@ -122,11 +127,12 @@ export function useReadingProgress({
           readingStartTimeRef.current = null;
           return;
         }
+        existingReadingTime = existing?.reading_time ?? 0;
       } catch {
         if (cancelled) return;
       }
 
-      resetSession();
+      resetSession(existingReadingTime);
       sendProgress(true);
     })();
 

@@ -42,19 +42,23 @@ class ChapterProgressView(APIView):
             chapter=chapter
         )
 
-        # Завжди оновлюємо час читання та позицію прокрутки
-        progress.reading_time = reading_time
-        progress.scroll_position = scroll_progress
+        # Оновлюємо тільки вгору — час і прокрутка не можуть зменшуватись
+        progress.reading_time = max(progress.reading_time, reading_time)
+        progress.scroll_position = max(progress.scroll_position, scroll_progress)
         progress.last_read_at = timezone.now()
 
         # Перевіряємо умови для зарахування прочитання
         min_reading_time = chapter.min_reading_time
-        is_time_valid = reading_time >= min_reading_time
-        is_scroll_valid = scroll_progress >= 90
+        is_time_valid = progress.reading_time >= min_reading_time
+        # Короткі розділи (min_reading_time == 0) не потребують прокрутки
+        is_scroll_valid = min_reading_time == 0 or progress.scroll_position >= 90
 
         if not progress.is_read and is_scroll_valid and is_time_valid:
             progress.is_read = True
-            progress.reading_speed = chapter.character_count / reading_time
+            progress.reading_speed = (
+                chapter.character_count / progress.reading_time
+                if progress.reading_time > 0 else 0
+            )
 
             # Перевіряємо, чи всі глави книги прочитані
             book = chapter.book
