@@ -294,21 +294,21 @@ export function BookForm({
       aria-label={mode === "create" ? "Створення книги" : "Оновлення книги"}
     >
       <div className={styles.gridTwo}>
-        <Field label="Назва мовою оригіналу" readOnly={isReadOnly}>
+        <Field label="Назва українською" readOnly={isReadOnly}>
           {isReadOnly ? (
             <div className={styles.inputReadonly} aria-readonly>{formData.title || "—"}</div>
           ) : (
             <input
               className={styles.input}
-              placeholder="Назва мовою оригіналу"
+              placeholder="Назва українською"
               value={formData.title}
               onChange={(e) => setFormData((p) => ({ ...p, title: e.target.value }))}
             />
           )}
         </Field>
         <Field
-          label="Назва мовою перекладу"
-          hint="*у разі авторського твору — повторити назву"
+          label="Назва мовою оригіналу"
+          hint="*у разі авторського твору — повторити назву українською"
           readOnly={isReadOnly}
         >
           {isReadOnly ? (
@@ -316,7 +316,7 @@ export function BookForm({
           ) : (
             <input
               className={styles.input}
-              placeholder="Назва мовою перекладу"
+              placeholder="Назва мовою оригіналу"
               value={formData.title_en}
               onChange={(e) => setFormData((p) => ({ ...p, title_en: e.target.value }))}
             />

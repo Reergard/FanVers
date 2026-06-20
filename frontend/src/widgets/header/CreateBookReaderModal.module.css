@@ -1,19 +1,36 @@
 .text {
   margin: 0 0 clamp(16px, 2.5vw, 20px);
-  font-size: clamp(14px, 1.2vw, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, calc(1.2 * var(--vwu)), 12px);
+  font-size: clamp(14px, calc(1.2 * var(--vwu)), 16px);
   line-height: 1.55;
   color: rgba(255, 255, 255, 0.9);
 }
 
+.lead {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.instruction {
+  display: block;
+  font-size: clamp(15px, calc(1.45 * var(--vwu)), 17px);
+  line-height: 1.5;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.94);
+}
+
 .profileLink {
-  color: rgba(5, 180, 199, 0.95);
+  font-size: clamp(16px, calc(1.55 * var(--vwu)), 18px);
   font-weight: 600;
+  color: #05b4c7;
   text-decoration: underline;
   text-underline-offset: 3px;
+  transition: color 0.15s ease;
 }
 
 .profileLink:hover {
-  color: rgba(5, 220, 235, 1);
+  color: #00eafd;
 }
 
 .okBtn {
