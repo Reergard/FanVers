@@ -74,6 +74,10 @@ export function Footer() {
               <Link to="/" className={styles.logo} aria-label="FanVers">
                 <img src={logo} alt="FanVers" className={styles.logoImg} />
               </Link>
+              <div className={styles.logoKsWrap}>
+                <p className={styles.logoKsLabel}>design by:</p>
+                <img src={logoKS} alt="KS" className={styles.logoKsImg} />
+              </div>
             </div>
 
             <div className={styles.vLine} aria-hidden="true" />

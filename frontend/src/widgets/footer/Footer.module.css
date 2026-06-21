@@ -89,12 +89,13 @@
 .centerLogo {
   display: grid;
   place-items: center;
+  gap: 10px;
   padding-top: 8px;
 }
 
 .logo {
-  width: 180px;
-  height: 180px;
+  width: 130px;
+  height: 130px;
   border-radius: 999px;
   display: grid;
   place-items: center;
@@ -105,11 +106,33 @@
 }
 
 .logoImg {
-  width: 150px;
-  height: 150px;
+  width: 105px;
+  height: 105px;
   object-fit: contain;
   display: block;
   filter: drop-shadow(0 0 18px rgba(80, 220, 220, 0.10));
+}
+
+.logoKsWrap {
+  display: grid;
+  place-items: center;
+  gap: 1px;
+}
+
+.logoKsLabel {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.6;
+  letter-spacing: 0.5px;
+  text-transform: lowercase;
+}
+
+.logoKsImg {
+  width: 115px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  opacity: 0.85;
 }
 
 /* Правая колонка: соц + 18+ */
