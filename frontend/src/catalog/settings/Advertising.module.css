@@ -54,7 +54,6 @@
 .row {
   display: grid;
   grid-template-columns:
-    1.5rem
     minmax(18rem, 1.6fr)
     minmax(20rem, 1.15fr)
     minmax(10rem, 0.7fr)
@@ -63,49 +62,6 @@
   align-items: start;
   padding-block: clamp(1.5rem, 2vw, 2rem);
   border-bottom: 1px dotted #f58807;
-}
-
-/* ===== CHECKBOX COLUMN ===== */
-.checkCol {
-  padding-top: 0.25rem;
-}
-
-.checkboxWrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.checkboxInput {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-  margin: 0;
-  width: 1rem;
-  height: 1rem;
-}
-
-.checkboxBox {
-  width: 1rem;
-  height: 1rem;
-  border: 1px solid #f58807;
-  border-radius: 0.25rem;
-  display: inline-block;
-  flex-shrink: 0;
-}
-
-.checkboxInput:checked + .checkboxBox::after {
-  content: "";
-  display: block;
-  width: 0.375rem;
-  height: 0.625rem;
-  margin: 0.0625rem auto 0;
-  border-right: 2px solid #f58807;
-  border-bottom: 2px solid #f58807;
-  transform: rotate(40deg);
 }
 
 /* ===== INFO COLUMN ===== */
@@ -141,7 +97,6 @@
   font-weight: 400;
 }
 
-.row[data-unavailable] .dateField input,
 .row[data-unavailable] .selectField :global(.filters-item),
 .row[data-unavailable] .orderButton {
   opacity: 0.6;
@@ -276,11 +231,47 @@
   border-radius: 999px;
   text-decoration: underline;
   text-underline-offset: 0.2em;
+  white-space: nowrap;
 }
 
 .orderButton:hover {
-  background: #f58807;
-  color: #fff;
+  background: rgba(245, 136, 7, 0.1);
+}
+
+.orderButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.orderButtonActive {
+  border-color: #f58807;
+  background: rgba(245, 136, 7, 0.08);
+}
+
+.orderButtonActive:hover {
+  background: rgba(245, 136, 7, 0.15);
+}
+
+/* Checkbox inside order button */
+.orderCheckbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid #f58807;
+  border-radius: 0.25rem;
+  flex-shrink: 0;
+}
+
+.orderCheckmark {
+  display: block;
+  width: 0.375rem;
+  height: 0.625rem;
+  border-right: 2px solid #f58807;
+  border-bottom: 2px solid #f58807;
+  transform: rotate(40deg);
+  margin-top: -0.0625rem;
 }
 
 /* Іконка кнопки — placeholder, замінити на SVG emblem */
@@ -354,24 +345,9 @@
 /* ===== TABLET (768px – 1023px) ===== */
 @media (max-width: 1023.98px) {
   .row {
-    grid-template-columns: 1.5rem 1fr;
+    grid-template-columns: 1fr;
     grid-template-rows: auto;
     row-gap: 1rem;
-    column-gap: clamp(0.875rem, 2vw, 1.25rem);
-  }
-
-  .checkCol {
-    grid-column: 1;
-    grid-row: 1 / -1;
-    align-self: start;
-    padding-top: 0.15rem;
-  }
-
-  .infoCol,
-  .controlsCol,
-  .amountCol,
-  .actionCol {
-    grid-column: 2;
   }
 
   .actionCol {
@@ -429,10 +405,6 @@
 @media (max-width: 479.98px) {
   .dateRow {
     gap: 0.625rem;
-  }
-
-  .dateField {
-    padding-inline: 0.75rem 2rem;
   }
 
   .rowTitle {

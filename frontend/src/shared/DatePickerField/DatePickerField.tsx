@@ -290,6 +290,7 @@ export function DatePickerField({
 
   const fieldRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const skipFocusOpenRef = useRef(false);
   const [dropPos, setDropPos] = useState<DropPos | null>(null);
 
   // Sync inputText when value prop changes externally
@@ -333,6 +334,8 @@ export function DatePickerField({
       if (e.key === "Escape") {
         e.stopPropagation();
         setOpen(false);
+        // Prevent onFocus from reopening the calendar when focus returns
+        skipFocusOpenRef.current = true;
         inputRef.current?.focus();
       }
     };
@@ -342,6 +345,10 @@ export function DatePickerField({
 
   const handleOpen = useCallback(() => {
     if (disabled) return;
+    if (skipFocusOpenRef.current) {
+      skipFocusOpenRef.current = false;
+      return;
+    }
     setOpen(true);
   }, [disabled]);
 
@@ -370,6 +377,8 @@ export function DatePickerField({
     (iso: string) => {
       commitValue(iso);
       setOpen(false);
+      // Prevent onFocus from reopening the calendar when focus returns
+      skipFocusOpenRef.current = true;
       inputRef.current?.focus();
     },
     [commitValue]

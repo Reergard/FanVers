@@ -209,26 +209,6 @@ export default function Advertising() {
               className={styles.row}
               data-unavailable={!isAvailable || undefined}
             >
-              <div className={styles.checkCol}>
-                <label className={styles.checkboxWrap}>
-                  <input
-                    type="checkbox"
-                    className={styles.checkboxInput}
-                    aria-label={`Обрати ${config.title}`}
-                    checked={state.includedInOrder}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        handleAddToOrder(config.slotKey);
-                      } else {
-                        removeFromOrder(config.slotKey);
-                      }
-                    }}
-                    disabled={!isAvailable}
-                  />
-                  <span className={styles.checkboxBox} aria-hidden />
-                </label>
-              </div>
-
               <div className={styles.infoCol}>
                 <h3 className={styles.rowTitle}>
                   {config.title}{" "}
@@ -325,16 +305,21 @@ export default function Advertising() {
               <div className={styles.actionCol}>
                 <button
                   type="button"
-                  className={styles.orderButton}
-                  onClick={() => handleAddToOrder(config.slotKey)}
-                  disabled={
-                    !isAvailable ||
-                    state.includedInOrder ||
-                    !state.startDate ||
-                    !state.endDate
-                  }
+                  className={`${styles.orderButton} ${state.includedInOrder ? styles.orderButtonActive : ""}`}
+                  onClick={() => {
+                    if (state.includedInOrder) {
+                      removeFromOrder(config.slotKey);
+                    } else {
+                      handleAddToOrder(config.slotKey);
+                    }
+                  }}
+                  disabled={!isAvailable}
                 >
-                  <ButtonEmblem />
+                  <span className={styles.orderCheckbox} aria-hidden>
+                    {state.includedInOrder && (
+                      <span className={styles.orderCheckmark} />
+                    )}
+                  </span>
                   {state.includedInOrder ? "Додано" : "Додати в заказ"}
                 </button>
               </div>
