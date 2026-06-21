@@ -1,0 +1,265 @@
+/* ===== FIELD WRAPPER ===== */
+.field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 2.25rem;
+  border: 1px solid #00d2ff;
+  border-radius: 0.625rem;
+  padding-inline: 0.875rem 2.25rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field[data-open] {
+  border-color: #00d2ff;
+  box-shadow: 0 0 0 1px rgba(0, 210, 255, 0.25);
+}
+
+.field[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== TEXT INPUT ===== */
+.input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #00d2ff;
+  font: inherit;
+  font-family: "BadScript", "Arizonia", cursive;
+  padding: 0;
+  cursor: text;
+}
+
+.input::placeholder {
+  color: #00d2ff;
+  opacity: 0.5;
+}
+
+.input:disabled {
+  cursor: not-allowed;
+}
+
+/* ===== CALENDAR ICON BUTTON ===== */
+.iconBtn {
+  position: absolute;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 0;
+  background: transparent;
+  color: #00d2ff;
+  cursor: pointer;
+  padding: 0;
+}
+
+.iconBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.iconSvg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ===== OVERLAY ===== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2060;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  cursor: default;
+}
+
+/* ===== DROPDOWN PANEL ===== */
+.dropdown {
+  position: fixed;
+  border-radius: 14px;
+  border: 1px solid #00d2ff;
+  background: linear-gradient(
+    180deg,
+    rgba(4, 12, 14, 0.97),
+    rgba(4, 12, 14, 0.93)
+  );
+  box-shadow:
+    0 10px 32px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(0, 210, 255, 0.12);
+  padding: 12px;
+  animation: datePickerIn 0.18s ease-out;
+}
+
+@keyframes datePickerIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== CALENDAR ===== */
+.calendar {
+  user-select: none;
+}
+
+/* Header: < Month Year > */
+.calHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.calTitle {
+  color: #f58807;
+  font-family: "BadScript", "Arizonia", cursive;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+}
+
+.calArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(0, 210, 255, 0.35);
+  border-radius: 50%;
+  background: transparent;
+  color: #00d2ff;
+  font-size: 1.35rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  line-height: 1;
+}
+
+.calArrow:hover:not(:disabled) {
+  background: rgba(0, 210, 255, 0.1);
+  border-color: #00d2ff;
+}
+
+.calArrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Weekday labels */
+.weekRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.weekLabel {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 4px 0;
+}
+
+/* Days grid */
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.emptyCell {
+  aspect-ratio: 1;
+}
+
+/* Day button base */
+.dayCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 0.875rem;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+/* Enabled day */
+.dayEnabled {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.dayEnabled:hover {
+  background: rgba(0, 210, 255, 0.12);
+  border-color: rgba(0, 210, 255, 0.4);
+  color: #00d2ff;
+}
+
+/* Today marker */
+.dayToday {
+  border-color: rgba(245, 136, 7, 0.5);
+  color: #f58807;
+}
+
+/* Selected day */
+.daySelected {
+  background: #00d2ff;
+  color: #020a0b;
+  font-weight: 600;
+  border-color: #00d2ff;
+}
+
+.daySelected:hover {
+  background: #00badf;
+  border-color: #00badf;
+  color: #020a0b;
+}
+
+/* Disabled day */
+.dayDisabled {
+  color: rgba(255, 255, 255, 0.2);
+  cursor: not-allowed;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 479.98px) {
+  .dropdown {
+    padding: 10px;
+  }
+
+  .field {
+    padding-inline: 0.75rem 2rem;
+  }
+
+  .calArrow {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 1.2rem;
+  }
+
+  .calTitle {
+    font-size: 0.95rem;
+  }
+
+  .dayCell {
+    font-size: 0.8rem;
+    border-radius: 6px;
+  }
+}

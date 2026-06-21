@@ -29,7 +29,7 @@
 | `characters_count` | `IntegerField` | Кількість символів — **джерело правди** |
 | `character_count` | `IntegerField` | Дублює `characters_count` — спадщина, завжди рівний `characters_count` |
 | `reading_time` | `IntegerField` | Розрахунковий час читання (секунди): `(characters_count / 1000) * 55` |
-| `min_reading_time` | `IntegerField` | Мінімум для зарахування прочитання: `reading_time * 0.75` (використовується в `ChapterProgressView` разом із `scroll_progress >= 80`) — **READING_PROGRESS_BACKEND.md** |
+| `min_reading_time` | `IntegerField` | Мінімум для зарахування прочитання: `reading_time * 0.75` (використовується в `ChapterProgressView` разом із `scroll_progress >= 55`) — **READING_PROGRESS_BACKEND.md** |
 
 ### `Profile` (`apps/users/models.py`)
 

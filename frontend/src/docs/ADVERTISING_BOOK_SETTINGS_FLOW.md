@@ -24,6 +24,12 @@
 
 Ціни за день узгоджені з `backend/apps/website_advertising/services.py` (головна 30; каталог 15; пошук: загальний 15, жанр 18, тег 12, фендом 18).
 
+## UI компоненти сторінки налаштувань
+
+- **Поля дат:** `DatePickerField` (`shared/DatePickerField/`) — кастомний text input + dropdown-календар (замість нативного `<input type="date">`). Валідація при blur, min/max блокування, українська локаль.
+- **Фільтр таргету:** `FilterDropdown` (`navigation/FilterDropdown`) + метадані з `useBookFormMeta` (жанри, теги, фендоми).
+- **Стан замовлення:** хук `useAdvertisingOrder` (`catalog/settings/useAdvertisingOrder.ts`) — дати, вартість, валідація.
+
 ## Публічна видача (різні сценарії)
 
 | Поверхня | Що робить endpoint | Примітка |

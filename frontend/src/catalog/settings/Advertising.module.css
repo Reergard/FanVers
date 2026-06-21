@@ -160,40 +160,7 @@
   gap: 0.75rem;
 }
 
-.dateField {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-height: 2.25rem;
-  border: 1px solid #00d2ff;
-  border-radius: 0.625rem;
-  padding-inline: 0.875rem 2.25rem;
-}
-
-.dateField input {
-  width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #00d2ff;
-  font: inherit;
-  font-family: "BadScript", "Arizonia", cursive;
-}
-
-.dateField input::placeholder {
-  color: #00d2ff;
-  opacity: 0.9;
-}
-
-/* Іконка календаря — placeholder. Замінити span на: <svg><use href="#icon-calendar"/></svg> */
-.dateIcon {
-  position: absolute;
-  right: 0.75rem;
-  width: 1rem;
-  height: 1rem;
-  color: #00d2ff;
-  pointer-events: none;
-}
+/* Date fields — стилі в shared/DatePickerField/DatePickerField.module.css */
 
 .selectGroup {
   display: grid;

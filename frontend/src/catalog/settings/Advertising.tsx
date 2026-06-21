@@ -5,6 +5,7 @@ import { useAuth } from "../../auth/useAuth";
 import { useNotification } from "../../shared/NotificationModal/NotificationProvider";
 import { refreshAuthStatus } from "../../auth/service";
 import { FilterDropdown } from "../../navigation/FilterDropdown";
+import { DatePickerField } from "../../shared/DatePickerField/DatePickerField";
 import { useBookBySlug } from "../hooks/useBookBySlug";
 import { useBookFormMeta } from "../hooks/useBookFormMeta";
 import "../../search/search.css";
@@ -28,25 +29,6 @@ function parseBalance(value: string | number | undefined): number {
   if (value == null || value === "") return 0;
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
-}
-
-/** Placeholder: замінити на <svg><use href="#icon-calendar"/></svg> коли буде sprite */
-function CalendarIcon() {
-  return (
-    <svg
-      className={styles.dateIcon}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden
-    >
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  );
 }
 
 /** Placeholder: замінити на SVG emblem коли буде готовий */
@@ -260,35 +242,25 @@ export default function Advertising() {
 
               <div className={styles.controlsCol}>
                 <div className={styles.dateRow}>
-                  <label className={styles.dateField}>
-                    <input
-                      type="date"
-                      value={state.startDate}
-                      min={minStartDate}
-                      onChange={(e) =>
-                        updatePlacement(config.slotKey, {
-                          startDate: e.target.value,
-                        })
-                      }
-                      disabled={!isAvailable}
-                    />
-                    <CalendarIcon />
-                  </label>
-                  <label className={styles.dateField}>
-                    <input
-                      key={`${config.slotKey}-end-${state.startDate}`}
-                      type="date"
-                      value={state.endDate}
-                      min={minEndDate}
-                      onChange={(e) =>
-                        updatePlacement(config.slotKey, {
-                          endDate: e.target.value,
-                        })
-                      }
-                      disabled={!isAvailable}
-                    />
-                    <CalendarIcon />
-                  </label>
+                  <DatePickerField
+                    value={state.startDate}
+                    min={minStartDate}
+                    onChange={(iso) =>
+                      updatePlacement(config.slotKey, { startDate: iso })
+                    }
+                    disabled={!isAvailable}
+                    ariaLabel={`Дата початку — ${config.title}`}
+                  />
+                  <DatePickerField
+                    key={`${config.slotKey}-end-${state.startDate}`}
+                    value={state.endDate}
+                    min={minEndDate}
+                    onChange={(iso) =>
+                      updatePlacement(config.slotKey, { endDate: iso })
+                    }
+                    disabled={!isAvailable}
+                    ariaLabel={`Дата закінчення — ${config.title}`}
+                  />
                 </div>
 
                 {config.filterType && (

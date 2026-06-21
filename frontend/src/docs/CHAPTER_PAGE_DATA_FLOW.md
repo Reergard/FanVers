@@ -103,6 +103,6 @@ UI-кнопки перехода находятся в `ChapterDetail.tsx`, но
 - Трекинг только для **авторизованных** (`enabled = isAuthenticated && authReady && chapterId > 0`).
 - При старте сессии: GET прогресса → загружает уже накопленное `reading_time` → новая сессия **добавляет** время сверху (не начинает с нуля).
 - Если контент помещается на экран без скролла → `computeScrollProgress()` возвращает 100 (короткие главы).
-- Условие «прочитано» на бекенде (после max-защиты): `reading_time >= min_reading_time` **И** (`scroll_position >= 80` **ИЛИ** `min_reading_time == 0`) → `is_read` (нужно для комментария к главе и рейтинга книги).
+- Условие «прочитано» на бекенде (после max-защиты): `reading_time >= min_reading_time` **И** (`scroll_position >= 55` **ИЛИ** `min_reading_time == 0`) → `is_read` (нужно для комментария к главе и рейтинга книги).
 - Полное описание: **READING_PROGRESS_FRONTEND.md**, бекенд — **backend/docs/READING_PROGRESS_BACKEND.md**.
 

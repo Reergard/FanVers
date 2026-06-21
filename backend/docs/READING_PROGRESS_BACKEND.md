@@ -37,10 +37,10 @@
 **Властивість для адмінки:**
 
 ```python
-reading_progress = min(100, (scroll_position / 80) * 100)
+reading_progress = min(100, (scroll_position / 55) * 100)
 ```
 
-80% скролу = 100% «прогресу» в UI (футер/навігація внизу).
+55% скролу = 100% «прогресу» в UI (футер/навігація внизу).
 
 Індекси: `[user, chapter]`, `[is_read]`, `[user, is_read]` тощо.
 
@@ -85,7 +85,7 @@ reading_progress = min(100, (scroll_position / 80) * 100)
 3. Оновлює `last_read_at`.
 4. Якщо ще **не** `is_read`, перевіряє **два** порогі (використовуючи значення **після** max):
    - **Час:** `progress.reading_time >= chapter.min_reading_time`
-   - **Скролл:** `progress.scroll_position >= 80` **АБО** `chapter.min_reading_time == 0` (порожні/короткі глави без вимоги скролла)
+   - **Скролл:** `progress.scroll_position >= 55` **АБО** `chapter.min_reading_time == 0` (порожні/короткі глави без вимоги скролла)
    - обидва true → `is_read = True`, `reading_speed = character_count / reading_time` (з захистом від ділення на нуль: якщо `reading_time == 0` → `reading_speed = 0`)
 5. При першому `is_read` у відповіді може бути `book_completed: true/false` (усі глави книги з `is_read` у цього користувача)
 6. `save()` → **`UserChapterProgressSerializer`**
@@ -184,4 +184,4 @@ reading_progress = min(100, (scroll_position / 80) * 100)
 
 ---
 
-**Останнє оновлення:** 2026-06-21 — формула часу 180→55 с/1000 символів; поріг скролла 90→80%; max() захист від регресії reading_time/scroll_position; короткі глави (min_reading_time==0) не вимагають скролла; захист від ділення на нуль у reading_speed.
+**Останнє оновлення:** 2026-06-21 — формула часу 180→55 с/1000 символів; поріг скролла 90→55%; max() захист від регресії reading_time/scroll_position; короткі глави (min_reading_time==0) не вимагають скролла; захист від ділення на нуль у reading_speed.
