@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('catalog', '0016_add_completed_translation_status'),
+        ('catalog', '0017_merge_20260620_1712'),
     ]
 
     operations = [
