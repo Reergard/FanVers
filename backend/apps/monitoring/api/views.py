@@ -51,7 +51,7 @@ class ChapterProgressView(APIView):
         min_reading_time = chapter.min_reading_time
         is_time_valid = progress.reading_time >= min_reading_time
         # Короткі розділи (min_reading_time == 0) не потребують прокрутки
-        is_scroll_valid = min_reading_time == 0 or progress.scroll_position >= 90
+        is_scroll_valid = min_reading_time == 0 or progress.scroll_position >= 55
 
         if not progress.is_read and is_scroll_valid and is_time_valid:
             progress.is_read = True

@@ -124,7 +124,7 @@ class UserChapterProgress(models.Model):
 
     @property
     def reading_progress(self):
-        return min(100, (self.scroll_position / 90) * 100)
+        return min(100, (self.scroll_position / 80) * 100)
 
     @classmethod
     def get_user_stats(cls, user):
