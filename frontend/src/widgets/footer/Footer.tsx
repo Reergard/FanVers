@@ -94,10 +94,10 @@ export function Footer() {
 
             <div className={styles.side}>
               <div className={styles.social} aria-label="Social links">
-                <a className={styles.footerSocialGlyphLink} href="#" aria-label="Facebook">
+                <a className={styles.footerSocialGlyphLink} href="https://www.facebook.com/share/1HGtkBXYSw/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                   <FacebookGlyph size={34} />
                 </a>
-                <a className={styles.footerSocialGlyphLink} href="#" aria-label="Instagram">
+                <a className={styles.footerSocialGlyphLink} href="https://www.instagram.com/fanvers.books?utm_source=qr&igsh=cWVqOTFydHBybmIy" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                   <InstagramGlyph size={34} />
                 </a>
                 <a className={styles.socialBtn} href="#" aria-label="YouTube">
@@ -186,7 +186,7 @@ export function Footer() {
           </div>
 
           <div className={styles.mobileBrandRow}>
-            <a className={styles.footerSocialGlyphLink} href="#" aria-label="Facebook">
+            <a className={styles.footerSocialGlyphLink} href="https://www.facebook.com/share/1HGtkBXYSw/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
               <FacebookGlyph size={44} />
             </a>
             <div className={styles.mobileLogosGroup}>
@@ -197,7 +197,7 @@ export function Footer() {
                 <img src={logoKS} alt="KS" className={styles.mobileLogoImg} />
               </div>
             </div>
-            <a className={styles.footerSocialGlyphLink} href="#" aria-label="Instagram">
+            <a className={styles.footerSocialGlyphLink} href="https://www.instagram.com/fanvers.books?utm_source=qr&igsh=cWVqOTFydHBybmIy" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
               <InstagramGlyph size={44} />
             </a>
           </div>

@@ -373,7 +373,7 @@ function ChapterDetailImpl({
 
       {/* COMMENTS — дизайн 1:1 як у BookComments (той самий компонент і стилі) */}
       <section className={styles.commentsWrap} aria-label="Коментарі до розділу">
-        <BookCommentsContainer type="chapter" slug={chapterSlug} isOwner={isOwner} />
+        <BookCommentsContainer type="chapter" slug={chapterSlug} bookSlug={bookSlug} isOwner={isOwner} />
       </section>
     </article>
   );

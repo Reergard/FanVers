@@ -42,17 +42,18 @@ export async function postBookComment(
   return res.data;
 }
 
-export async function fetchChapterComments(chapterSlug: string): Promise<ApiComment[]> {
-  const res = await http.get<ApiComment[]>(API.chapterComments(chapterSlug));
+export async function fetchChapterComments(bookSlug: string, chapterSlug: string): Promise<ApiComment[]> {
+  const res = await http.get<ApiComment[]>(API.chapterComments(bookSlug, chapterSlug));
   return Array.isArray(res.data) ? res.data : [];
 }
 
 export async function postChapterComment(
+  bookSlug: string,
   chapterSlug: string,
   text: string,
   parentId?: number | null
 ): Promise<ApiComment> {
-  const res = await http.post<ApiComment>(API.chapterComments(chapterSlug), {
+  const res = await http.post<ApiComment>(API.chapterComments(bookSlug, chapterSlug), {
     text,
     parent: parentId ?? null,
   });
@@ -79,12 +80,13 @@ export async function updateOwnerLike(
 export async function deleteComment(
   type: "book" | "chapter",
   slug: string,
-  commentId: number
+  commentId: number,
+  bookSlug?: string
 ): Promise<void> {
   const url =
     type === "book"
       ? API.bookCommentDetail(slug, commentId)
-      : API.chapterCommentDetail(slug, commentId);
+      : API.chapterCommentDetail(bookSlug ?? "", slug, commentId);
   await http.delete(url);
 }
 

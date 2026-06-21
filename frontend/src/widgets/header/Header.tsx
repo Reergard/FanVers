@@ -329,13 +329,15 @@ export function Header() {
           <div className={[styles.left, styles.leftCompact].filter(Boolean).join(" ")}>
             <div className={styles.compactLeft}>
               {/* Всегда рендерим структуру, но скрываем если не авторизован */}
-              <div
+              <Link
+                to="/profile"
                 className={styles.avatar}
                 style={{ visibility: isAuthenticated ? "visible" : "hidden" }}
-                aria-hidden="true"
+                aria-label="Мій профіль"
+                tabIndex={isAuthenticated ? 0 : -1}
               >
                 <img className={styles.avatarImage} src={user.avatarUrl} alt="" />
-              </div>
+              </Link>
 
               <div className={styles.compactMeta} style={{ visibility: isAuthenticated ? "visible" : "hidden" }}>
                 <div className={styles.compactActions} aria-label="Сповіщення та повідомлення">
@@ -438,12 +440,13 @@ export function Header() {
             </button>
 
             <div className={styles.user}>
-              <div
+              <Link
+                to="/profile"
                 className={styles.avatar}
-                aria-hidden="true"
+                aria-label="Мій профіль"
               >
                 <img className={styles.avatarImage} src={user.avatarUrl} alt="" />
-              </div>
+              </Link>
               <div className={styles.userText}>
                 <div className={styles.userName}>{user.name}</div>
                 <div className={styles.userCoins}>

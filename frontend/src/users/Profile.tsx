@@ -893,10 +893,17 @@ export default function Profile() {
 
           <div className={styles.colBalance}>
               <div className={styles.balanceRow}>
-                <div className={styles.balanceInfo} data-mobile-area="commission">
-                  <span className={styles.mutedGold}>Комісія з транзакцій:</span>
-                  <span className={styles.balanceCommissionValue}>{profile.commission ?? 15}%</span>
-                </div>
+                {profile.role !== "Читач" && (
+                  <div className={styles.balanceInfo} data-mobile-area="commission">
+                    <div>
+                      <span className={styles.mutedGold}>Комісія з продажу:</span>{" "}
+                      <span className={styles.balanceCommissionValue}>{profile.commission ?? 15}%</span>
+                    </div>
+                    <p className={styles.modalHint} style={{ margin: "4px 0 0", fontSize: "0.78em" }}>
+                      * Даний % стягується із суми кожної транзакції з продажу.
+                    </p>
+                  </div>
+                )}
                 {mayWithdrawBalance ? (
                   payoutPending ? (
                     <button
@@ -1225,13 +1232,16 @@ export default function Profile() {
               <input
                 className={styles.input}
                 type="number"
-                min="1"
+                min="100"
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
                 placeholder="0"
               />
             </span>
           </label>
+          <p className={styles.modalHint}>
+            Мінімальна сума поповнення — 100.
+          </p>
           <button
             type="button"
             className={styles.btnGreen}

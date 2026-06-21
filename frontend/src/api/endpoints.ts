@@ -62,15 +62,15 @@ export const API = {
 
   // Reviews (comments)
   bookComments: (bookSlug: string) => `/api/reviews/book/${bookSlug}/comments/`,
-  chapterComments: (chapterSlug: string) => `/api/reviews/chapter/${chapterSlug}/comments/`,
+  chapterComments: (bookSlug: string, chapterSlug: string) => `/api/reviews/book/${bookSlug}/chapter/${chapterSlug}/comments/`,
   commentReaction: (type: "book" | "chapter", commentId: number) =>
     `/api/reviews/${type}-comment/${commentId}/update_reaction/`,
   commentOwnerLike: (type: "book" | "chapter", commentId: number) =>
     `/api/reviews/${type}-comment/${commentId}/owner_like/`,
   bookCommentDetail: (bookSlug: string, commentId: number) =>
     `/api/reviews/book/${bookSlug}/comments/${commentId}/`,
-  chapterCommentDetail: (chapterSlug: string, commentId: number) =>
-    `/api/reviews/chapter/${chapterSlug}/comments/${commentId}/`,
+  chapterCommentDetail: (bookSlug: string, chapterSlug: string, commentId: number) =>
+    `/api/reviews/book/${bookSlug}/chapter/${chapterSlug}/comments/${commentId}/`,
 
   // Rating (book + translation quality)
   ratingBookRatings: (bookSlug: string) => `/api/rating/${encodeURIComponent(bookSlug)}/book-ratings/`,

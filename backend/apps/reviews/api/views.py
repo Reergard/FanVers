@@ -129,20 +129,28 @@ class ChapterCommentViewSet(viewsets.ModelViewSet):
     serializer_class = ChapterCommentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
+    def _get_chapter(self):
+        """Отримує главу за book_slug + chapter_slug (унікальна пара)."""
+        book_slug = self.kwargs.get('book_slug')
+        chapter_slug = self.kwargs.get('chapter_slug')
+        return get_object_or_404(
+            Chapter,
+            book__slug=book_slug,
+            slug=chapter_slug,
+        )
+
     def get_queryset(self):
-        chapter_slug = self.kwargs.get('slug')
-        chapter = get_object_or_404(Chapter, slug=chapter_slug)
+        chapter = self._get_chapter()
         if self.action == 'list':
             return ChapterComment.objects.filter(chapter=chapter, parent=None)  # Кореневі для списку
         return ChapterComment.objects.filter(chapter=chapter)  # Всі для retrieve/update/destroy
 
     def create(self, request, *args, **kwargs):
         logger.info(f"Received data: {request.data}")
-        
+
         try:
             # Перевіряємо права доступу до коментування розділу
-            chapter_slug = self.kwargs.get('slug')
-            chapter = get_object_or_404(Chapter, slug=chapter_slug)
+            chapter = self._get_chapter()
             book = chapter.book
             
             is_allowed, error_message = check_book_access_permission(
@@ -195,8 +203,7 @@ class ChapterCommentViewSet(viewsets.ModelViewSet):
             )
 
     def perform_create(self, serializer):
-        chapter_slug = self.kwargs.get('slug')
-        chapter = get_object_or_404(Chapter, slug=chapter_slug)
+        chapter = self._get_chapter()
         serializer.save(user=self.request.user, chapter=chapter)
         from apps.analytics_books.services.analytics_counters import record_comment_created
 
@@ -232,7 +239,7 @@ class ChapterCommentViewSet(viewsets.ModelViewSet):
         record_comment_deleted(book)
 
     @action(detail=True, methods=['post'])
-    def reply(self, request, pk=None, slug=None):
+    def reply(self, request, pk=None, **kwargs):
         parent_comment = self.get_object()
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():

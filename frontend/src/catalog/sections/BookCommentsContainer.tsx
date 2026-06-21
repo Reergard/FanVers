@@ -101,9 +101,11 @@ export type BookCommentsContainerProps = {
   type: "book" | "chapter";
   slug: string;
   isOwner: boolean;
+  /** Slug книги — обов'язковий для type="chapter" */
+  bookSlug?: string;
 };
 
-export function BookCommentsContainer({ type, slug, isOwner }: BookCommentsContainerProps) {
+export function BookCommentsContainer({ type, slug, isOwner, bookSlug }: BookCommentsContainerProps) {
   const { isAuthenticated, userId } = useAuth();
   const { showError } = useNotification();
   const qc = useQueryClient();
@@ -118,11 +120,11 @@ export function BookCommentsContainer({ type, slug, isOwner }: BookCommentsConta
 
   const fetchComments = type === "book"
     ? () => reviewsApi.fetchBookComments(slug)
-    : () => reviewsApi.fetchChapterComments(slug);
+    : () => reviewsApi.fetchChapterComments(bookSlug ?? "", slug);
 
   const postComment = type === "book"
     ? (text: string, parentId?: number | null) => reviewsApi.postBookComment(slug, text, parentId)
-    : (text: string, parentId?: number | null) => reviewsApi.postChapterComment(slug, text, parentId);
+    : (text: string, parentId?: number | null) => reviewsApi.postChapterComment(bookSlug ?? "", slug, text, parentId);
 
   const { data: comments = [], isError } = useQuery({
     queryKey,
@@ -153,7 +155,7 @@ export function BookCommentsContainer({ type, slug, isOwner }: BookCommentsConta
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (commentId: number) => reviewsApi.deleteComment(type, slug, commentId),
+    mutationFn: (commentId: number) => reviewsApi.deleteComment(type, slug, commentId, bookSlug),
     onSuccess: () => qc.invalidateQueries({ queryKey }),
   });
 
