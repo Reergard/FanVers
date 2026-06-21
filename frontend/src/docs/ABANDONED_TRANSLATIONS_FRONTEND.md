@@ -166,7 +166,7 @@
 - Модель: `TranslatorApplication` в `apps/catalog/models.py` — `book`, `user`, `status` (PENDING/APPROVED/REJECTED), `created_at`, `reviewed_at`.
 - Унікальність: одна PENDING-заявка на пару user+book.
 - При створенні → `Notification` для користувача.
-- Адмінка: сторінка перегляду заявок з кнопками Approve/Reject (`admin/catalog/translatorapplication/review_actions.html`).
+- Адмінка: proxy-модель `BookTranslatorReview` + `TranslatorApplicationInline` в `apps/catalog/admin.py`. Кожна книга з PENDING-заявками — один рядок у списку; inline-таблиця з кнопками «Схвалити» / «Відмовити» для кожного заявника. Custom admin URL для approve/reject дій. Детальніше: `backend/docs/ABANDONED_TRANSLATIONS_BACKEND.md`, секція 7.
 
 ---
 

@@ -593,6 +593,15 @@ class TranslatorApplication(models.Model):
         return f'{self.user.username} → «{self.book.title}»'
 
 
+class BookTranslatorReview(Book):
+    """Proxy-модель для адмінки: книги, що мають заявки на переклад."""
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Заявка на переклад'
+        verbose_name_plural = 'Заявки на переклад'
+
+
 def process_table(table):
     table_text = ''
     for row in table.rows:

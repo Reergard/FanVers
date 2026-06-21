@@ -731,7 +731,7 @@ UNFOLD = {
                 "collapsible": True,
                 "items": [
                     {"title": _("Книги"), "icon": "menu_book", "link": reverse_lazy("admin:catalog_book_changelist")},
-                    {"title": _("Заявки на переклад"), "icon": "assignment_ind", "link": reverse_lazy("admin:catalog_translatorapplication_changelist")},
+                    {"title": _("Заявки на переклад"), "icon": "assignment_ind", "link": reverse_lazy("admin:catalog_booktranslatorreview_changelist")},
                     {"title": _("Глави"), "icon": "article", "link": reverse_lazy("admin:catalog_chapter_changelist")},
                     {"title": _("Томи"), "icon": "library_books", "link": reverse_lazy("admin:catalog_volume_changelist")},
                     {"title": _("Жанри"), "icon": "category", "link": reverse_lazy("admin:catalog_genres_changelist")},

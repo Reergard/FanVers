@@ -37,13 +37,13 @@ def _abandon_message(book):
 
 def _send_abandoned_warnings_impl():
     """
-    Попередження лише у «вікні» 83–90 днів (у dev — 83–90 хв): вже ≥83, але ще <90 до переносу.
-    Якщо неактивність уже ≥90 — попередження не шлемо (лише перенос у другому кроці).
+    Попередження лише у «вікні» 25–30 днів (у dev — 25–30 хв): вже ≥25, але ще <30 до переносу.
+    Якщо неактивність уже ≥30 — попередження не шлемо (лише перенос у другому кроці).
     Ідемпотентність: abandoned_warning_sent_at is null.
     """
     now = timezone.now()
-    warn_cutoff = now - warning_inactivity_delta()  # 83d: активність старіша за це → ≥83d бездіяльності
-    abandon_cutoff = now - total_inactivity_delta()  # 90d: строга межа переносу
+    warn_cutoff = now - warning_inactivity_delta()  # 25d: активність старіша за це → ≥25d бездіяльності
+    abandon_cutoff = now - total_inactivity_delta()  # 30d: строга межа переносу
     candidate_ids = list(
         Book.objects.filter(
             book_type='TRANSLATION',
@@ -88,7 +88,7 @@ def _send_abandoned_warnings_impl():
 
 def _abandon_inactive_translations_impl():
     """
-    Перенос у ABANDONED після повної неактивності власника (90 днів / 90 хв у dev).
+    Перенос у ABANDONED після повної неактивності власника (30 днів / 30 хв у dev).
     """
     threshold = timezone.now() - total_inactivity_delta()
     candidate_ids = list(

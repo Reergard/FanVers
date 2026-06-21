@@ -56,6 +56,7 @@
 
 Файл: `apps/catalog/models.py`
 
+- **`translation_status`** — можливі значення: `TRANSLATING`, `WAITING`, `COMPLETED`, `PAUSED`, `ABANDONED`. Статус `COMPLETED` (Завершено) доданий для позначення книг із завершеним перекладом; він **заблокований при створенні** книги (див. `INVALID_NEW_BOOK_TRANSLATION_STATUSES` у фронтенді та `invalid_statuses` у `BookCreateSerializer`), але доступний при редагуванні.
 - **`translation_status = 'ABANDONED'`** — книга показується в розділі покинутих і **виключається** з ТОП/трендів (див. `apps/analytics_books/services/books_filter.py`).
 - **`owner_last_activity_at`** — час останньої **свідомої** активності власника перекладу (не кожен `save()` книги).
 - **`abandoned_warning_sent_at`** — коли було надіслано попередження в поточному циклі неактивності (щоб не дублювати листи).
@@ -74,14 +75,14 @@
 
 | Константа | Значення (зміст) |
 |-----------|------------------|
-| `ABANDONED_TOTAL_DAYS` | 90 — повна неактивність до переносу в `ABANDONED` |
-| `ABANDONED_WARNING_AFTER_DAYS` | 83 — після стільки днів без активності надсилається **перше** попередження |
+| `ABANDONED_TOTAL_DAYS` | 30 — повна неактивність до переносу в `ABANDONED` |
+| `ABANDONED_WARNING_AFTER_DAYS` | 25 — після стільки днів без активності надсилається **перше** попередження |
 
-У тексті першого попередження кількість «днів/хвилин до переносу» береться як **`ABANDONED_TOTAL_DAYS - ABANDONED_WARNING_AFTER_DAYS`** (наприклад 90−83=7).
+У тексті першого попередження кількість «днів/хвилин до переносу» береться як **`ABANDONED_TOTAL_DAYS - ABANDONED_WARNING_AFTER_DAYS`** (наприклад 30−25=5).
 
-**Попередження** шлеться лише у **вікні** між 83 і 90 днями неактивності: якщо вже ≥90 днів, у тому ж запуску задачі спочатку **не** шлють попередження, а виконується перенос (щоб не було двох листів одразу).
+**Попередження** шлеться лише у **вікні** між 25 і 30 днями неактивності: якщо вже ≥30 днів, у тому ж запуску задачі спочатку **не** шлють попередження, а виконується перенос (щоб не було двох листів одразу).
 
-**Перемикач dev:** якщо встановити змінну оточення **`ABANDONED_THRESHOLDS_USE_MINUTES=1`** (або `true`/`yes`), ті самі **числа 90 / 83** трактуються як **хвилини** (локальні тести; у тексті лишається різниця 90−83). У продакені змінну **не вмикати** — використовуються **дні**.
+**Перемикач dev:** якщо встановити змінну оточення **`ABANDONED_THRESHOLDS_USE_MINUTES=1`** (або `true`/`yes`), ті самі **числа 30 / 25** трактуються як **хвилини** (локальні тести; у тексті лишається різниця 30−25). У продакені змінну **не вмикати** — використовуються **дні**.
 
 ### 5.4 Задачі Celery і сповіщення
 
@@ -109,14 +110,16 @@
 
 | Файл | Роль |
 |------|------|
-| `apps/catalog/api/views.py` | `abandoned_translations` |
+| `apps/catalog/api/views.py` | `abandoned_translations`, `apply_become_translator` |
 | `apps/catalog/api/serializers.py` | `BookReaderSerializer` |
-| `apps/catalog/models.py` | `Book`, статуси, `owner_last_activity_at`, `mark_translation_owner_activity` |
-| `apps/catalog/abandoned_thresholds.py` | пороги 90 / 83 і режим хвилин |
+| `apps/catalog/models.py` | `Book`, `TranslatorApplication`, `BookTranslatorReview` (proxy), статуси, `owner_last_activity_at` |
+| `apps/catalog/admin.py` | `BookTranslatorReviewAdmin` + `TranslatorApplicationInline` (approve/reject) |
+| `apps/catalog/abandoned_thresholds.py` | пороги 30 / 25 і режим хвилин |
 | `apps/notification/tasks.py` | попередження та перенос у `ABANDONED` |
 | `apps/notification/models.py` | `Notification` |
 | `docs/NOTIFICATIONS_BACKEND.md` | REST списку повідомлень, права, `version`, сигнали |
 | `FanVers_project/celery.py` | `beat_schedule`, задача `check_abandoned_books` |
+| `FanVers_project/settings.py` | сайдбар навігація (`catalog_booktranslatorreview_changelist`) |
 | `apps/analytics_books/services/books_filter.py` | виключення `ABANDONED` з ТОП/трендів |
 
 ---
@@ -151,11 +154,43 @@
 
 Унікальність: одна PENDING-заявка на пару user+book.
 
-### Адмінка
+### Адмінка (Proxy-модель + Inline)
 
-Файл: `apps/catalog/admin.py` + шаблон `admin/catalog/translatorapplication/review_actions.html`.
+Файли: `apps/catalog/admin.py`, `apps/catalog/models.py` (proxy-модель `BookTranslatorReview`).
 
-Кнопки Approve / Reject на сторінці заявки. При Approve — власник книги змінюється на заявника, `translation_status` оновлюється.
+Архітектура: **одна книга = один рядок у списку**, усі PENDING-заявки на цю книгу відображаються як **inline-таблиця** на сторінці зміни.
+
+#### Proxy-модель `BookTranslatorReview`
+
+`apps/catalog/models.py` — `class BookTranslatorReview(Book)` з `proxy = True`. Не створює окремої таблиці в БД; дає окрему реєстрацію в адмінці з власним `verbose_name` («Заявка на переклад»).
+
+#### `BookTranslatorReviewAdmin`
+
+- **Список**: `get_queryset` фільтрує лише книги з хоча б однією PENDING-заявкою (`.filter(translator_applications__status='PENDING').distinct()`). Колонки: назва, кількість заявок, статус перекладу, поточний власник.
+- **Форма**: readonly-поля книги (title, author, translation_status, owner). Кнопки Save приховані (`show_save = False` і т.д.).
+- **Inline**: `TranslatorApplicationInline(TabularInline)` — показує лише PENDING-заявки з полями: user, status, created_at, статистика користувача, кнопки дій.
+- **Кнопки Approve / Reject**: readonly-поле `get_actions` рендерить HTML-посилання (`format_html`) на custom admin URL для кожної заявки.
+- **Custom URL**: `get_urls()` реєструє `approve-application/<int:app_id>/` і `reject-application/<int:app_id>/`, обгорнуті в `admin_site.admin_view()` (перевірка `is_staff`).
+- **Доступ**: `has_add_permission = False`, `has_delete_permission = False`.
+
+#### Бізнес-логіка Approve
+
+1. Перевірка: заявка PENDING, книга ABANDONED.
+2. Книга: `owner = user`, `translation_status = 'TRANSLATING'`, grace period 5 днів (`owner_last_activity_at` = now − total_inactivity_delta + 5 days), скидання `abandoned_warning_sent_at`.
+3. Заявка → APPROVED, `reviewed_at = now`.
+4. Інші PENDING-заявки на ту саму книгу → REJECTED (bulk `update`).
+5. Нотифікація схваленому: «Вам передано переклад ... у вас є 5 днів для публікації нових розділів».
+6. Нотифікації відхиленим: «Приносимо вибачення, але «{title}» не може бути передана вам, оскільки адміністрація сайту передала переклад іншому користувачу.»
+
+#### Бізнес-логіка Reject
+
+1. Перевірка: заявка PENDING.
+2. Заявка → REJECTED, `reviewed_at = now`.
+3. Нотифікація: «На жаль, вашу заявку на переклад «{title}» відхилено. Книга наразі залишається у покинутих перекладах.»
+
+#### Навігація
+
+Сайдбар: `FanVers_project/settings.py` → `reverse_lazy("admin:catalog_booktranslatorreview_changelist")`.
 
 ---
 
