@@ -1,6 +1,6 @@
 # SEO — Головний довідник (Frontend)
 
-Дата: 2026-05-27
+Дата: 2026-06-22
 
 Цей файл — єдина точка входу у всю SEO-документацію проекту FanVers. Тут зібрані посилання на всі документи, короткий опис кожного, швидкий довідник ідентифікаторів та загальна архітектура.
 
@@ -48,7 +48,9 @@
 | Сервіс | ID / Ключ | Де зберігається | Інтерфейс |
 |--------|-----------|-----------------|-----------|
 | GA4 | `G-J9978WWKVX` | `frontend/src/analytics/ga4.ts` | `analytics.google.com` |
-| Meta Pixel | `2102301083891760` | `frontend/src/analytics/metaPixel.ts` | `business.facebook.com` → Events Manager |
+| Meta Business Portfolio | FanVers | — | `business.facebook.com` |
+| Meta Рекламний акаунт | FanVers (ID: `2118256932432323`) | — | `business.facebook.com` → Ads Manager |
+| Meta Pixel | `988312620871477` | `frontend/src/analytics/metaPixel.ts` | `business.facebook.com` → Events Manager |
 | Google Search Console | — | DNS TXT (Cloudflare) | `search.google.com/search-console` |
 | Bing Webmaster Tools | — | DNS CNAME (Cloudflare) | `bing.com/webmasters` |
 | Домен | `fan-vers.com` | Cloudflare DNS | `dash.cloudflare.com` |
@@ -144,6 +146,8 @@ frontend/src/settings/
 | Компонент | Статус |
 |-----------|--------|
 | GA4 інтеграція з GDPR consent | ✅ Працює |
+| Meta Business Portfolio «FanVers» | ✅ Створено |
+| Meta Рекламний акаунт FanVers (ID: `2118256932432323`) | ✅ Створено, пов'язано з Pixel |
 | Meta Pixel інтеграція з GDPR consent | ✅ Працює |
 | UTM capture та URL cleanup | ✅ Працює |
 | SPA page view трекінг (GA4 + Meta Pixel) | ✅ Працює |
@@ -174,4 +178,4 @@ frontend/src/settings/
 
 ---
 
-Останнє оновлення: 2026-05-27
+Останнє оновлення: 2026-06-22

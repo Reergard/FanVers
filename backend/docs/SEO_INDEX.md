@@ -1,6 +1,6 @@
 # SEO — Головний довідник (Backend)
 
-Дата: 2026-05-27
+Дата: 2026-06-22
 
 Цей файл — єдина точка входу у всю SEO-документацію з боку бекенду. Тут зібрані посилання, швидкий довідник та загальна архітектура.
 
@@ -40,7 +40,9 @@
 | Сервіс | ID / Ключ | Інтерфейс |
 |--------|-----------|-----------|
 | GA4 Measurement ID | `G-J9978WWKVX` | `analytics.google.com` |
-| Meta Pixel ID | `2102301083891760` | `business.facebook.com` → Events Manager |
+| Meta Business Portfolio | FanVers | `business.facebook.com` |
+| Meta Рекламний акаунт | FanVers (ID: `2118256932432323`) | `business.facebook.com` → Ads Manager |
+| Meta Pixel ID | `988312620871477` | `business.facebook.com` → Events Manager |
 | Google Search Console | DNS TXT верифікація | `search.google.com/search-console` |
 | Bing Webmaster Tools | DNS CNAME верифікація | `bing.com/webmasters` |
 | Канонічний домен | `fan-vers.com` (не www) | 301 redirect в nginx |
@@ -158,7 +160,9 @@ backend/apps/users/
 - [x] Google Search Console — верифікований, sitemap відправлений
 - [x] Bing Webmaster Tools — верифікований через CNAME
 - [x] GA4 — підключений на фронтенді
-- [x] Meta Pixel — підключений на фронтенді
+- [x] Meta Business Portfolio «FanVers» створено
+- [x] Meta Рекламний акаунт FanVers (ID: `2118256932432323`) створено
+- [x] Meta Pixel (ID: `988312620871477`) підключений на фронтенді та пов'язаний з рекламним акаунтом
 
 ### Залишилось зробити 📋
 
@@ -200,4 +204,4 @@ journalctl -u daphne-fanvers --since "1 hour ago"
 
 ---
 
-Останнє оновлення: 2026-05-27
+Останнє оновлення: 2026-06-22

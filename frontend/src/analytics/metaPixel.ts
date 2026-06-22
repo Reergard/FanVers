@@ -6,7 +6,7 @@
  * and removed if consent is revoked.
  */
 
-const PIXEL_ID = "2102301083891760";
+const PIXEL_ID = "988312620871477";
 
 let initialized = false;
 
