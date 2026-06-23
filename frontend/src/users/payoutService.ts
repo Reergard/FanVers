@@ -71,6 +71,10 @@ export async function createPayoutMethod(
   return data;
 }
 
+export async function deletePayoutMethod(id: number): Promise<void> {
+  await http.delete(API.payoutMethod(id));
+}
+
 export async function getPayoutRequests(): Promise<PayoutRequestItem[]> {
   const { data } = await http.get<PayoutRequestItem[]>(API.payoutRequests);
   return data;

@@ -1,4 +1,8 @@
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Modal } from "../shared/Modal/Modal";
+import { useNotification } from "../shared/NotificationModal/NotificationProvider";
+import { deletePayoutMethod } from "./payoutService";
 import styles from "./Profile.module.css";
 import {
   PAYOUT_PROFILE_STATUS_COLORS,
@@ -21,6 +25,7 @@ type Props = {
   showPreviouslyUsed?: boolean;
   /** Opens withdraw modal with the chosen method (no dropdown) */
   onSelectExistingMethod?: (method: PayoutMethod) => void;
+  userId?: number | null;
 };
 
 export function PayoutMethodSelectModal({
@@ -31,7 +36,24 @@ export function PayoutMethodSelectModal({
   payoutProfile = null,
   showPreviouslyUsed = false,
   onSelectExistingMethod,
+  userId = null,
 }: Props) {
+  const { showSuccess, showError } = useNotification();
+  const queryClient = useQueryClient();
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deletePayoutMethod(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payoutMethods", userId] });
+      showSuccess("Метод виплати видалено");
+      setDeletingId(null);
+    },
+    onError: (err: any) => {
+      showError(err?.response?.data?.error ?? "Помилка при видаленні");
+      setDeletingId(null);
+    },
+  });
   const seenIbans = new Set<string>();
   const dedupeMethods = (list: PayoutMethod[]) =>
     list.filter((m) => {
@@ -109,55 +131,88 @@ export function PayoutMethodSelectModal({
               Способи які ви раніше використовували:
             </p>
             {methodsToShow.map((m) => (
-              <button
+              <div
                 key={m.id}
-                type="button"
-                className={styles.payoutMethodBtn}
                 style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
                   marginBottom: "6px",
-                  width: "100%",
-                  textAlign: "left",
-                }}
-                onClick={() => {
-                  onClose();
-                  onSelectExistingMethod(m);
                 }}
               >
-                <div
+                <button
+                  type="button"
+                  className={styles.payoutMethodBtn}
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                    gap: "8px",
-                    width: "100%",
+                    flex: 1,
+                    textAlign: "left",
+                  }}
+                  onClick={() => {
+                    onClose();
+                    onSelectExistingMethod(m);
                   }}
                 >
-                  <div>
-                    <strong>Заявка на виплати</strong>
-                    <br />
-                    <span style={{ fontSize: "0.85em", opacity: 0.7 }}>
-                      {payoutProfile.full_name_latin} · {payoutProfile.country}
-                      {m.iban_masked ? ` · ${m.iban_masked}` : ""}
-                    </span>
-                  </div>
-                  <span
+                  <div
                     style={{
-                      color:
-                        PAYOUT_PROFILE_STATUS_COLORS[
-                          payoutProfile.verification_status
-                        ] ?? "#ccc",
-                      fontWeight: 600,
-                      fontSize: "0.9em",
-                      whiteSpace: "nowrap",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: "8px",
+                      width: "100%",
                     }}
                   >
-                    {PAYOUT_PROFILE_STATUS_LABELS[
-                      payoutProfile.verification_status
-                    ] ?? payoutProfile.verification_status}
-                  </span>
-                </div>
-              </button>
+                    <div>
+                      <strong>Заявка на виплати</strong>
+                      <br />
+                      <span style={{ fontSize: "0.85em", opacity: 0.7 }}>
+                        {payoutProfile.full_name_latin} · {payoutProfile.country}
+                        {m.iban_masked ? ` · ${m.iban_masked}` : ""}
+                      </span>
+                    </div>
+                    <span
+                      style={{
+                        color:
+                          PAYOUT_PROFILE_STATUS_COLORS[
+                            payoutProfile.verification_status
+                          ] ?? "#ccc",
+                        fontWeight: 600,
+                        fontSize: "0.9em",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {PAYOUT_PROFILE_STATUS_LABELS[
+                        payoutProfile.verification_status
+                      ] ?? payoutProfile.verification_status}
+                    </span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  title="Видалити метод"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => {
+                    if (deletingId === m.id) {
+                      deleteMutation.mutate(m.id);
+                    } else {
+                      setDeletingId(m.id);
+                    }
+                  }}
+                  style={{
+                    background: deletingId === m.id ? "#d9534f" : "transparent",
+                    color: deletingId === m.id ? "#fff" : "#d9534f",
+                    border: "1px solid #d9534f",
+                    borderRadius: "6px",
+                    padding: "6px 10px",
+                    cursor: "pointer",
+                    fontSize: "0.8em",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                  }}
+                >
+                  {deletingId === m.id ? "Точно?" : "✕"}
+                </button>
+              </div>
             ))}
           </div>
         )}

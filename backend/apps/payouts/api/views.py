@@ -295,16 +295,22 @@ class PayoutMethodView(APIView):
                 {"error": "Спочатку створіть профіль виплат"},
                 status=400,
             )
-        active_count = PayoutMethod.objects.filter(
+        serializer = PayoutMethodSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        raw_iban = serializer.validated_data.get("iban", "").replace(" ", "").upper()
+        existing = PayoutMethod.objects.filter(
             profile=payout_profile, is_active=True,
-        ).count()
-        if active_count >= self.MAX_ACTIVE_METHODS:
+        )
+        for m in existing:
+            if m.iban and m.iban.replace(" ", "").upper() == raw_iban:
+                return Response(PayoutMethodSerializer(m).data, status=201)
+
+        if existing.count() >= self.MAX_ACTIVE_METHODS:
             return Response(
                 {"error": f"Максимум {self.MAX_ACTIVE_METHODS} активних методів виплати"},
                 status=400,
             )
-        serializer = PayoutMethodSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
         serializer.save(profile=payout_profile)
         return Response(serializer.data, status=201)
 
@@ -315,11 +321,11 @@ class PayoutMethodDetailView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
-    def get(self, request, pk):
+    def _get_method(self, request, pk):
         try:
             payout_profile = request.user.payout_profile
         except PayoutProfile.DoesNotExist:
-            return Response({"error": "Профіль виплат не знайдено"}, status=404)
+            return None, Response({"error": "Профіль виплат не знайдено"}, status=404)
         try:
             method = PayoutMethod.objects.get(
                 pk=pk,
@@ -327,8 +333,37 @@ class PayoutMethodDetailView(APIView):
                 is_active=True,
             )
         except PayoutMethod.DoesNotExist:
-            return Response({"error": "Метод виплати не знайдено"}, status=404)
+            return None, Response({"error": "Метод виплати не знайдено"}, status=404)
+        return method, None
+
+    def get(self, request, pk):
+        method, err = self._get_method(request, pk)
+        if err:
+            return err
         return Response(PayoutMethodSerializer(method).data)
+
+    def delete(self, request, pk):
+        method, err = self._get_method(request, pk)
+        if err:
+            return err
+        has_active_payouts = PayoutRequest.objects.filter(
+            method=method,
+            status__in=[
+                PayoutRequest.Status.PENDING,
+                PayoutRequest.Status.AWAITING_REVIEW,
+                PayoutRequest.Status.APPROVED,
+                PayoutRequest.Status.IN_BATCH,
+                PayoutRequest.Status.PROCESSING,
+            ],
+        ).exists()
+        if has_active_payouts:
+            return Response(
+                {"error": "Не можна видалити метод з активними заявками на виплату"},
+                status=400,
+            )
+        method.is_active = False
+        method.save(update_fields=["is_active"])
+        return Response(status=204)
 
 
 class CreatePayoutRequestView(APIView):

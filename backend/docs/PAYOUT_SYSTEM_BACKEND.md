@@ -317,13 +317,31 @@ Email відправляється на `PAYOUT_ADMIN_EMAIL` з налаштув
 | GET | `/profile/` | PayoutProfileView | Отримати профіль виплат |
 | POST | `/profile/` | PayoutProfileView | Створити профіль |
 | PUT | `/profile/` | PayoutProfileView | Оновити профіль |
+| DELETE | `/profile/` | PayoutProfileView | Скасувати профіль (soft delete) |
 | POST | `/profile/submit/` | PayoutProfileSubmitView | Подати на перевірку |
-| GET | `/methods/` | PayoutMethodView | Список методів виплати |
-| POST | `/methods/` | PayoutMethodView | Додати метод (IBAN) |
+| GET | `/methods/` | PayoutMethodView | Список активних методів виплати (з анотацією `used_in_payouts`) |
+| POST | `/methods/` | PayoutMethodView | Додати метод (IBAN). Перевіряє дублікати IBAN та ліміт (макс. 5) |
+| GET | `/methods/<id>/` | PayoutMethodDetailView | Один метод з повним IBAN (для форми виведення) |
+| DELETE | `/methods/<id>/` | PayoutMethodDetailView | Soft-delete методу (is_active=False). Блокується якщо є активні заявки |
 | POST | `/request/` | CreatePayoutRequestView | Створити запит на виплату |
 | GET | `/requests/` | PayoutRequestListView | Мої запити (останні 50) |
 | POST | `/request/<id>/cancel/` | CancelPayoutRequestView | Скасувати запит |
 | POST | `/wise-webhook/` | wise_webhook_view | Webhook від Wise |
+
+### POST `/methods/` — деталі
+
+1. Перевіряє наявність `PayoutProfile`
+2. Нормалізує IBAN: `replace(" ", "").upper()`
+3. **Дедуплікація:** порівнює нормалізований IBAN з кожним активним методом (ітерація в Python, бо `EncryptedCharField` не підтримує SQL WHERE). Якщо збіг — повертає існуючий метод (201) без створення нового
+4. Перевіряє ліміт: `MAX_ACTIVE_METHODS = 5`. При перевищенні — 400
+5. Створює новий метод
+
+### DELETE `/methods/<id>/` — деталі
+
+1. Перевіряє що метод належить поточному користувачу і `is_active=True`
+2. Блокує видалення якщо є `PayoutRequest` зі статусами: pending, awaiting_review, approved, in_batch, processing
+3. Soft-delete: `is_active = False` (метод залишається в БД для аудиту)
+4. Повертає 204 No Content
 
 **Throttling:** `CreatePayoutRequestView` обмежений 5 запитами на годину (scope `payout`).
 

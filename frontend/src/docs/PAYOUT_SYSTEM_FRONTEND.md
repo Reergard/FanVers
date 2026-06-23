@@ -7,7 +7,8 @@
 2. Запит на виведення FanCoins
 3. Перегляд історії запитів та їх статусів
 4. Додавання нових методів виплати (IBAN)
-5. Скасування запитів у статусі "pending" / "awaiting_review"
+5. Видалення методів виплати (soft-delete, two-click confirmation)
+6. Скасування запитів у статусі "pending" / "awaiting_review"
 
 ---
 
@@ -16,9 +17,13 @@
 | Файл | Опис |
 |------|------|
 | `users/PayoutSetupModal.tsx` | Модалка налаштування профілю виплат |
+| `users/PayoutMethodSelectModal.tsx` | Модалка вибору способу виплати (Wise / раніше використані методи / видалення) |
 | `users/PayoutRequestsList.tsx` | Модалка зі списком запитів на виплату |
 | `users/AddPayoutMethodModal.tsx` | Модалка додавання нового IBAN |
 | `users/payoutService.ts` | API-функції для роботи з виплатами |
+| `users/payoutLabels.ts` | Мітки статусів та кольори для профілю виплат |
+| `users/payoutMethodDisplay.ts` | Хелпери відображення IBAN/BIC (`payoutMethodFullIban`, `payoutMethodBic`) |
+| `users/payoutErrors.ts` | `extractApiError()` — розбір помилок API |
 | `users/profileService.ts` | `withdrawBalance()` — запит на виплату |
 | `users/types.ts` | TypeScript типи (PayoutProfile, PayoutMethod, PayoutRequestItem) |
 | `api/endpoints.ts` | URL ендпоінтів API |
@@ -148,6 +153,35 @@
 - Оновлює auth status (`refreshAuthStatus()`)
 - Показує повідомлення "Запит на виплату скасовано, кошти повернуто"
 
+### PayoutMethodSelectModal
+
+**Файл:** `users/PayoutMethodSelectModal.tsx`
+
+**Props:**
+```typescript
+{
+  open: boolean;
+  onClose: () => void;
+  onSelectWise: () => void;
+  existingMethods?: PayoutMethod[];
+  payoutProfile?: PayoutProfile | null;
+  showPreviouslyUsed?: boolean;
+  onSelectExistingMethod?: (method: PayoutMethod) => void;
+  userId?: number | null;
+}
+```
+
+**Призначення:** Показує доступні способи виплати. Завжди показує кнопку «Wise» (для створення нового методу або налаштування профілю). Якщо є раніше використані методи (де хоча б один `PayoutRequest` у статусі processing/completed/failed) — показує секцію «Способи які ви раніше використовували» з кнопкою вибору та кнопкою видалення для кожного.
+
+**Видалення методу:**
+- Кнопка «✕» біля кожного методу (two-click confirmation: перший клік показує «Точно?», другий — видаляє)
+- Викликає `deletePayoutMethod(id)` → `DELETE /api/payouts/methods/<id>/`
+- Бекенд блокує видалення якщо є активні заявки на виплату
+- Soft-delete: `is_active = False`
+- Після видалення інвалідує query `["payoutMethods", userId]`
+
+**Дедуплікація:** Методи дедуплікуються за `iban_masked` (або `id` якщо маски немає), щоб не показувати дублікати.
+
 ### AddPayoutMethodModal
 
 **Файл:** `users/AddPayoutMethodModal.tsx`
@@ -176,12 +210,15 @@
 
 | Функція | HTTP | URL | Опис |
 |---------|------|-----|------|
-| `getPayoutProfile()` | GET | `/api/payouts/profile/` | Профіль виплат (або `{exists: false}` якщо 404) |
+| `getPayoutProfile()` | GET | `/api/payouts/profile/` | Профіль виплат (або `{exists: false}` якщо немає) |
 | `createPayoutProfile(data)` | POST | `/api/payouts/profile/` | Створити профіль |
 | `updatePayoutProfile(data)` | PUT | `/api/payouts/profile/` | Оновити профіль |
-| `submitPayoutProfile()` | POST | `/api/payouts/profile/submit/` | Подати на перевірку |
-| `getPayoutMethods()` | GET | `/api/payouts/methods/` | Список методів |
-| `createPayoutMethod(data)` | POST | `/api/payouts/methods/` | Додати метод |
+| `cancelPayoutProfile()` | DELETE | `/api/payouts/profile/` | Скасувати профіль (soft delete) |
+| `submitPayoutProfile(coins, key, urgent)` | POST | `/api/payouts/profile/submit/` | Подати на перевірку з сумою виплати |
+| `getPayoutMethods()` | GET | `/api/payouts/methods/` | Список активних методів (з `used_in_payouts` анотацією) |
+| `getPayoutMethod(id)` | GET | `/api/payouts/methods/{id}/` | Один метод з повним IBAN |
+| `createPayoutMethod(data)` | POST | `/api/payouts/methods/` | Додати метод (дедуплікація по IBAN на бекенді) |
+| `deletePayoutMethod(id)` | DELETE | `/api/payouts/methods/{id}/` | Soft-delete методу (блокується якщо є активні заявки) |
 | `getPayoutRequests()` | GET | `/api/payouts/requests/` | Список запитів |
 | `cancelPayoutRequest(id)` | POST | `/api/payouts/request/{id}/cancel/` | Скасувати запит |
 
@@ -223,12 +260,15 @@ type PayoutProfile = {
 type PayoutMethod = {
   id: number;
   method_type: string;
-  iban_masked: string;        // "UA21****5678"
+  iban_full?: string;         // Повний IBAN (GET /methods/<id>/)
+  iban?: string;              // Write-only на POST
+  iban_masked?: string;       // "UA21****5678"
+  bic_swift_display?: string; // BIC/SWIFT для відображення
   recipient_full_name: string;
   currency: string;           // "UAH", "EUR", "CZK" тощо
   is_active: boolean;
   is_default: boolean;
-  is_iban_cooldown_active: boolean;
+  used_in_payouts?: boolean;  // Анотація: чи є PayoutRequest зі статусами approved+
 };
 ```
 
@@ -279,27 +319,33 @@ const [amount, setAmount] = useState("");
 const payoutMethodsQuery = useQuery({
   queryKey: ["payoutMethods", userId],
   queryFn: getPayoutMethods,
-  enabled: withdrawModalOpen && profile?.has_active_payout_profile === true,
+  enabled:
+    (withdrawModalOpen || payoutMethodSelectOpen) &&
+    (profile?.has_active_payout_profile === true || hasAnyPayoutProfile),
+  staleTime: 0,
+  refetchOnMount: "always",
 });
 ```
 
-Завантажується тільки коли відкрита модалка виведення **і** профіль виплат активний.
+Завантажується коли відкрита модалка виведення **або** вибору методу, **і** профіль виплат існує (навіть якщо не активний — для відображення раніше використаних методів).
 
 ### Mutation для виведення
 
 ```typescript
 const withdrawMutation = useMutation({
-  mutationFn: ({ amt, idempotencyKey }: { amt: number; idempotencyKey: string }) =>
-    withdrawBalance(amt, selectedMethodId!, idempotencyKey),
+  mutationFn: ({ amt, idempotencyKey, isUrgent }: { amt: number; idempotencyKey: string; isUrgent: boolean }) =>
+    withdrawBalance(amt, selectedMethodId!, idempotencyKey, isUrgent),
   onSuccess: async () => {
     // Інвалідація профілю, оновлення auth status
-    // Закриття модалки, очищення форми
+    // Закриття модалки, очищення форми, оновлення idempotency key
     showSuccess("Запит на виплату створено");
   },
 });
 ```
 
-**Idempotency key** генерується при натисканні кнопки "Запросити виплату" (`crypto.randomUUID()`), а не всередині `mutationFn`. Це гарантує що при retry React Query не створить новий ключ і не обійде захист від дублювання.
+**Idempotency key** генерується при відкритті модалки (`crypto.randomUUID()`) і оновлюється після кожного успішного запиту. Це гарантує що при retry React Query не створить новий ключ і не обійде захист від дублювання.
+
+**Терміновий вивід:** чекбокс `withdrawUrgent` додає 10% комісію і скорочує дедлайн до 3 днів. Модалка підтвердження показує розрахунок комісії перед відправкою.
 
 ### UI логіка в секції балансу
 
@@ -356,6 +402,7 @@ if (typeof data.has_active_payout_profile === 'boolean') {
 payoutProfile: "/api/payouts/profile/",
 payoutProfileSubmit: "/api/payouts/profile/submit/",
 payoutMethods: "/api/payouts/methods/",
+payoutMethod: (id: number) => `/api/payouts/methods/${id}/`,
 createPayoutRequest: "/api/payouts/request/",
 payoutRequests: "/api/payouts/requests/",
 cancelPayoutRequest: (id: number) => `/api/payouts/request/${id}/cancel/`,

@@ -1485,17 +1485,16 @@ export default function Profile() {
         onClose={() => setPayoutMethodSelectOpen(false)}
         onSelectWise={() => {
           if (hasPayoutProfile) {
-            // Profile already exists — just add a new IBAN
             setAddMethodFromSelect(true);
             setAddMethodOpen(true);
           } else {
-            // First time — full KYC + method setup
             setPayoutSetupOpen(true);
           }
         }}
         existingMethods={payoutMethods}
         payoutProfile={payoutProfileForSelect}
         showPreviouslyUsed={showPreviouslyUsedPayouts}
+        userId={userId}
         onSelectExistingMethod={(method) => {
           setSelectedMethodId(method.id);
           setSelectedPayoutMethod(method);
