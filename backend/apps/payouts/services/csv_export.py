@@ -38,6 +38,10 @@ def generate_wise_csv(payout_requests):
         "amountCurrency",
         "IBAN",
         "BIC",
+        "addressCountryCode",
+        "addressCity",
+        "addressFirstLine",
+        "addressPostCode",
         "reference",
     ])
     for req in payout_requests:
@@ -51,6 +55,10 @@ def generate_wise_csv(payout_requests):
             "target",
             _safe_csv_value(req.snapshot_iban),
             _safe_csv_value(req.snapshot_bic_swift or ""),
+            req.snapshot_country or "",
+            _safe_csv_value(req.snapshot_city or ""),
+            _safe_csv_value(req.snapshot_address_line or ""),
+            req.snapshot_postal_code or "",
             f"FV-{req.id}",
         ])
     return output.getvalue()

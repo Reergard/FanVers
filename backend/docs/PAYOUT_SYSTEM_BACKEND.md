@@ -243,7 +243,13 @@ snapshot_bic_swift=method.bic_swift or "",
 | `amountCurrency` | Завжди `target` — amount вказана у валюті отримувача, Wise сам конвертує з sourceCurrency |
 | `IBAN` | IBAN отримувача (snapshot) |
 | `BIC` | BIC/SWIFT (snapshot, може бути порожнім) |
+| `addressCountryCode` | Країна отримувача ISO 3166-1 alpha-2 (`snapshot_country`, напр. `UA`, `CZ`) |
+| `addressCity` | Місто отримувача (`snapshot_city`) |
+| `addressFirstLine` | Адреса отримувача (`snapshot_address_line`) |
+| `addressPostCode` | Поштовий індекс (`snapshot_postal_code`) |
 | `reference` | `FV-{request.id}` — ідентифікатор для reconciliation |
+
+> **Примітка:** Wise вимагає адресні поля для певних валют/країн (наприклад, UAH → Україна). Для CZK/EUR локальних переказів Wise може їх не вимагати, але ми включаємо їх завжди для уніфікації.
 
 ### `exchange_rates.py` — Курси валют через Wise API
 
