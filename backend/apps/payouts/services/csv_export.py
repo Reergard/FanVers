@@ -29,26 +29,28 @@ def generate_wise_csv(payout_requests):
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "recipientName",
+        "name",
         "recipientEmail",
+        "receiverType",
+        "amount",
+        "sourceCurrency",
+        "targetCurrency",
+        "amountCurrency",
         "IBAN",
         "BIC",
-        "targetCurrency",
-        "targetAmount",
-        "sourceCurrency",
-        "amountCurrency",
         "reference",
     ])
     for req in payout_requests:
         writer.writerow([
             _safe_csv_value(req.snapshot_recipient_name),
             "",
-            _safe_csv_value(req.snapshot_iban),
-            _safe_csv_value(req.snapshot_bic_swift or ""),
-            req.payout_currency,
+            "PRIVATE",
             str(req.amount_net),
             source_currency,
+            req.payout_currency,
             "target",
+            _safe_csv_value(req.snapshot_iban),
+            _safe_csv_value(req.snapshot_bic_swift or ""),
             f"FV-{req.id}",
         ])
     return output.getvalue()
