@@ -19,8 +19,13 @@ def _safe_csv_value(value):
 def generate_wise_csv(payout_requests):
     """
     Генерує CSV для Wise Batch Payments.
-    При першому тестовому батчі звірте колонки з шаблоном Wise Business.
+    sourceCurrency — з settings.WISE_SOURCE_CURRENCY (рахунок FanVers).
+    targetCurrency — валюта отримувача (з PayoutMethod).
+    amountCurrency = "target" → amount_net вже сконвертована у валюту отримувача.
     """
+    from django.conf import settings as django_settings
+
+    source_currency = django_settings.WISE_SOURCE_CURRENCY
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
@@ -31,6 +36,7 @@ def generate_wise_csv(payout_requests):
         "targetCurrency",
         "targetAmount",
         "sourceCurrency",
+        "amountCurrency",
         "reference",
     ])
     for req in payout_requests:
@@ -41,7 +47,8 @@ def generate_wise_csv(payout_requests):
             _safe_csv_value(req.snapshot_bic_swift or ""),
             req.payout_currency,
             str(req.amount_net),
-            req.payout_currency,
+            source_currency,
+            "target",
             f"FV-{req.id}",
         ])
     return output.getvalue()

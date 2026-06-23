@@ -13,6 +13,7 @@ from django.utils.html import format_html
 from .models import PayoutBatch, PayoutMethod, PayoutProfile, PayoutRequest
 from .services.csv_export import generate_wise_csv
 from .services.csv_import import import_wise_reconciliation_csv
+from .services.exchange_rates import RateFetchError, apply_rate_to_payout
 
 
 @admin.register(PayoutRequest)
@@ -71,12 +72,9 @@ class PayoutRequestAdmin(ModelAdmin):
         "commission_percent",
         "commission_coins",
         "coins_after_commission",
-        "exchange_rate",
         "amount_gross",
-        "withholding_tax_rate",
-        "withholding_tax_amount",
-        "amount_net",
         "payout_currency",
+        "exchange_rate_hint",
         # Системне
         "idempotency_key",
         "created_at",
@@ -115,8 +113,9 @@ class PayoutRequestAdmin(ModelAdmin):
                 "commission_coins",
                 "coins_after_commission",
                 "payout_currency",
-                "exchange_rate",
                 "amount_gross",
+                "exchange_rate_hint",
+                "exchange_rate",
                 "withholding_tax_rate",
                 "withholding_tax_amount",
                 "amount_net",
@@ -153,11 +152,20 @@ class PayoutRequestAdmin(ModelAdmin):
     )
     actions = [
         "approve_requests",
+        "fetch_exchange_rates",
         "create_wise_batch",
         "mark_batch_sent",
         "mark_as_paid",
         "cancel_requests",
     ]
+
+    def save_model(self, request, obj, form, change):
+        if change and "exchange_rate" in form.changed_data:
+            tax = obj.withholding_tax_amount or Decimal("0.00")
+            obj.amount_net = (
+                obj.amount_gross * obj.exchange_rate - tax
+            ).quantize(Decimal("0.01"))
+        super().save_model(request, obj, form, change)
 
     def get_actions(self, request):
         actions = super().get_actions(request)
@@ -200,6 +208,25 @@ class PayoutRequestAdmin(ModelAdmin):
             )
         return ""
 
+    @admin.display(description="Курс (UAH → валюта)")
+    def exchange_rate_hint(self, obj):
+        if obj.payout_currency == "UAH":
+            return "UAH → UAH: курс завжди 1.0, конвертація не потрібна"
+        if obj.exchange_rate == Decimal("1.000000"):
+            return format_html(
+                '<span style="color:red;font-weight:bold">'
+                '⚠ Курс НЕ встановлено! Натисніть «Схвалити» або «Оновити курс» '
+                'для автоматичного отримання, або вкажіть вручну нижче.'
+                '</span>',
+            )
+        return format_html(
+            '{} UAH × {} = <b>{} {}</b> &nbsp; '
+            '<span style="color:#888;font-size:0.9em">'
+            '(щоб оновити — виберіть заявку → дія «Оновити курс валют»)</span>',
+            obj.amount_gross, obj.exchange_rate,
+            obj.amount_net, obj.payout_currency,
+        )
+
     @admin.display(description="Дедлайн")
     def deadline_status(self, obj):
         if obj.status in ("completed", "cancelled", "failed"):
@@ -232,7 +259,58 @@ class PayoutRequestAdmin(ModelAdmin):
                 payout_approved=True,
                 verified_at=timezone.now(),
             )
-        self.message_user(request, f"Схвалено {updated} запитів.")
+
+        rate_ok = 0
+        rate_fail = []
+        for req in queryset.filter(status="approved").exclude(payout_currency="UAH"):
+            try:
+                apply_rate_to_payout(req)
+                rate_ok += 1
+            except RateFetchError as exc:
+                rate_fail.append(f"#{req.id} ({req.payout_currency}): {exc}")
+
+        msg = f"Схвалено {updated} запитів."
+        if rate_ok:
+            msg += f" Курс автоматично встановлено для {rate_ok} заявок."
+        if rate_fail:
+            msg += (
+                f" ⚠ Не вдалося отримати курс для {len(rate_fail)} заявок"
+                f" (встановіть вручну): {'; '.join(rate_fail[:3])}"
+            )
+            self.message_user(request, msg, level="warning")
+        else:
+            self.message_user(request, msg)
+
+    @admin.action(description="Оновити курс валют (Wise API)")
+    def fetch_exchange_rates(self, request, queryset):
+        non_uah = queryset.exclude(payout_currency="UAH").filter(
+            status__in=["awaiting_review", "approved"],
+        )
+        if not non_uah.exists():
+            self.message_user(
+                request,
+                "Немає заявок для оновлення курсу (лише не-UAH зі статусом awaiting_review/approved).",
+                level="warning",
+            )
+            return
+
+        updated = 0
+        failed = []
+        for req in non_uah:
+            try:
+                new_net = apply_rate_to_payout(req)
+                updated += 1
+            except RateFetchError as exc:
+                failed.append(f"#{req.id} ({req.payout_currency}): {exc}")
+
+        msg = ""
+        if updated:
+            msg += f"Курс оновлено для {updated} заявок."
+        if failed:
+            msg += f" Помилки ({len(failed)}): {'; '.join(failed[:5])}"
+            self.message_user(request, msg, level="warning" if updated else "error")
+        else:
+            self.message_user(request, msg)
 
     @admin.action(description="Скасувати вибрані запити (повернення коштів)")
     def cancel_requests(self, request, queryset):
@@ -272,6 +350,22 @@ class PayoutRequestAdmin(ModelAdmin):
                     request,
                     "Немає схвалених запитів для batch.",
                     level="warning",
+                )
+                return
+
+            no_rate = (
+                PayoutRequest.objects.filter(id__in=request_ids)
+                .exclude(payout_currency="UAH")
+                .filter(exchange_rate=Decimal("1.000000"))
+            )
+            if no_rate.exists():
+                ids = list(no_rate.values_list("id", flat=True))
+                self.message_user(
+                    request,
+                    f"Не можна створити batch: для заявок {ids} не встановлено курс "
+                    f"(exchange_rate = 1.0, але валюта не UAH). "
+                    f"Відкрийте кожну заявку і вкажіть актуальний курс UAH → валюта.",
+                    level="error",
                 )
                 return
 

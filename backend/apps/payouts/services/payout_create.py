@@ -10,9 +10,11 @@ from apps.users.models import BalanceIdempotencyRecord
 
 logger = logging.getLogger(__name__)
 
-# 1 FanCoin = 1 UAH, фіксований курс.
-# Для виплат в інших валютах конвертація відбувається на стороні Wise.
-EXCHANGE_RATE = Decimal("1.000000")
+# 1 FanCoin = 1 UAH.
+# exchange_rate встановлюється адміном при ревью заявки (UAH → payout_currency).
+# Початкове значення 1.0 — для UAH-отримувачів коректне, для інших валют
+# адмін ОБОВ'ЯЗКОВО оновлює курс перед створенням batch.
+INITIAL_EXCHANGE_RATE = Decimal("1.000000")
 
 
 @transaction.atomic
@@ -82,8 +84,15 @@ def create_payout_request(
         commission_coins = Decimal("0.00")
     coins_after = coins_amount - commission_coins
 
-    # 1 FanCoin = 1 UAH → amount_gross = coins_after_commission
-    amount_gross = coins_after
+    # 1 FanCoin = 1 UAH → amount_gross завжди в UAH
+    amount_gross_uah = coins_after
+
+    if method.currency == "UAH":
+        exchange_rate = Decimal("1.000000")
+        amount_net = amount_gross_uah
+    else:
+        exchange_rate = INITIAL_EXCHANGE_RATE
+        amount_net = amount_gross_uah
 
     payout_request = PayoutRequest.objects.create(
         profile=payout_profile,
@@ -96,9 +105,9 @@ def create_payout_request(
         commission_coins=commission_coins,
         coins_after_commission=coins_after,
         payout_currency=method.currency,
-        exchange_rate=EXCHANGE_RATE,
-        amount_gross=amount_gross,
-        amount_net=amount_gross,
+        exchange_rate=exchange_rate,
+        amount_gross=amount_gross_uah,
+        amount_net=amount_net,
         status=PayoutRequest.Status.AWAITING_REVIEW,
         # KYC snapshot
         snapshot_country=payout_profile.country,
@@ -115,9 +124,9 @@ def create_payout_request(
     )
 
     logger.info(
-        "Payout request #%s created: %s %s, user=%s, status=AWAITING_REVIEW, urgent=%s, commission=%s%%",
-        payout_request.id, amount_gross, method.currency, user.username,
-        is_urgent, commission_pct,
+        "Payout request #%s created: %s UAH (gross), %s %s (net), user=%s, urgent=%s, commission=%s%%",
+        payout_request.id, amount_gross_uah, amount_net, method.currency,
+        user.username, is_urgent, commission_pct,
     )
 
     return payout_request
