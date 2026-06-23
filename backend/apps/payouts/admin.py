@@ -10,7 +10,13 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.html import format_html
 
-from .models import PayoutBatch, PayoutMethod, PayoutProfile, PayoutRequest
+from .models import (
+    NewPayoutRequest,
+    PayoutBatch,
+    PayoutMethod,
+    PayoutProfile,
+    PayoutRequest,
+)
 from .services.csv_export import generate_wise_csv
 from .services.csv_import import import_wise_reconciliation_csv
 from .services.exchange_rates import RateFetchError, apply_rate_to_payout
@@ -479,6 +485,16 @@ class PayoutRequestAdmin(ModelAdmin):
                 "Немає заявок для завершення (потрібен статус «У batch» або «Відправлений у Wise»).",
                 level="warning",
             )
+
+
+@admin.register(NewPayoutRequest)
+class NewPayoutRequestAdmin(PayoutRequestAdmin):
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .filter(status__in=["pending", "awaiting_review"])
+        )
 
 
 @admin.register(PayoutBatch)

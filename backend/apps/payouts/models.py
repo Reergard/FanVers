@@ -374,6 +374,15 @@ class PayoutRequest(models.Model):
         super().save(*args, **kwargs)
 
 
+class NewPayoutRequest(PayoutRequest):
+    """Proxy: нові заявки (pending / awaiting_review)."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "Нова заявка на виплату"
+        verbose_name_plural = "Нові заявки на виплату"
+
+
 class WiseWebhookDelivery(models.Model):
     """Персистентна дедуплікація вебхуків Wise за X-Delivery-Id."""
 

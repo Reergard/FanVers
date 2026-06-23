@@ -770,9 +770,9 @@ UNFOLD = {
                 "collapsible": True,
                 "items": [
                     {
-                        "title": _("Усі заявки на виплату"),
-                        "icon": "request_quote",
-                        "link": reverse_lazy("admin:payouts_payoutrequest_changelist"),
+                        "title": _("Нові заявки на виплату"),
+                        "icon": "fiber_new",
+                        "link": reverse_lazy("admin:payouts_newpayoutrequest_changelist"),
                     },
                     {
                         "title": _("Схвалені заявки"),
@@ -808,6 +808,11 @@ UNFOLD = {
                         "title": _("Пакети batch для Wise (CSV)"),
                         "icon": "account_balance",
                         "link": reverse_lazy("admin:payouts_payoutbatch_changelist"),
+                    },
+                    {
+                        "title": _("Усі заявки на виплату"),
+                        "icon": "request_quote",
+                        "link": reverse_lazy("admin:payouts_payoutrequest_changelist"),
                     },
                 ],
             },

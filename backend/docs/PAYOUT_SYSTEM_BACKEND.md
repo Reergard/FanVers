@@ -117,6 +117,10 @@ failed           → Виплата не вдалась (кошти поверн
 cancelled        → Скасовано (кошти повернуто)
 ```
 
+### NewPayoutRequest (proxy)
+
+Proxy-модель для `PayoutRequest`. Не створює окрему таблицю — використовує ту саму `payouts_payoutrequest`. Зареєстрована в admin окремо як `NewPayoutRequestAdmin` і показує лише заявки зі статусами `pending` / `awaiting_review`.
+
 ### PayoutBatch
 
 Batch для групової відправки через Wise.
@@ -373,6 +377,10 @@ Email відправляється на `PAYOUT_ADMIN_EMAIL` з налаштув
 **Видалення запитів (delete_selected):** при натисканні «Видалити запит на виплату» відображається кастомна сторінка підтвердження українською мовою з попередженням, що кошти НЕ будуть повернуті на баланс (шаблон `admin/payouts/payoutrequest/delete_selected_confirmation.html`).
 
 **Створення batch** обгорнуто в `transaction.atomic()` з `select_for_update()` для захисту від race conditions.
+
+### NewPayoutRequestAdmin
+
+Proxy-адмін для `NewPayoutRequest`. Наслідує повну конфігурацію `PayoutRequestAdmin` (колонки, дії, fieldsets), але `get_queryset()` фільтрує лише `status__in=["pending", "awaiting_review"]`. У сайдбарі — перший пункт розділу «Вивід балансу».
 
 ### PayoutBatchAdmin
 
