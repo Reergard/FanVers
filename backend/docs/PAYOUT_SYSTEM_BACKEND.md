@@ -2,7 +2,9 @@
 
 ## Загальний огляд
 
-Система виплат дозволяє авторам та перекладачам виводити зароблені FanCoins на банківський рахунок (IBAN) через Wise Batch Payments. Курс фіксований: **1 FanCoin = 1 UAH**. Wise автоматично конвертує UAH у валюту отримувача при відправці.
+Система виплат дозволяє авторам та перекладачам виводити зароблені FanCoins на банківський рахунок (IBAN) через Wise Batch Payments.
+
+**Курс:** 1 FanCoin = 1 UAH (фіксований). Рахунок FanVers у Wise — у **CZK** (чеські крони, `WISE_SOURCE_CURRENCY`). Конвертація UAH → валюту отримувача (EUR, CZK, UAH тощо) відбувається адміном через курс Wise API або вручну перед створенням batch. У CSV для Wise використовується `amountCurrency=target` — тобто `amount_net` вказується у валюті отримувача.
 
 **Django-додаток:** `apps.payouts` (`backend/apps/payouts/`)
 
@@ -17,17 +19,20 @@
   → POST /api/users/withdraw-balance/
     → create_payout_request() [atomic, select_for_update]
       → Списання FanCoins з балансу
-      → Створення PayoutRequest (status=pending)
-      → Запуск async задачі auto_check_payout_request
-        → Перевірка профілю, суми, кулдауну IBAN
-        → Якщо все ок і сума < порогу → status=approved
-        → Інакше → status=awaiting_review (ручна перевірка)
+      → Створення PayoutRequest (status=awaiting_review)
+      → amount_gross = coins_after_commission (UAH)
+      → exchange_rate = 1.0 (початковий, для UAH — остаточний)
   → Адмін у Django Admin:
+    → Перевіряє заявку → "Схвалити" → status=approved
+      → Автоматично підтягує курс від Wise API (UAH → payout_currency)
+      → exchange_rate оновлюється, amount_net перераховується
     → Вибирає approved запити → "Створити batch для Wise (CSV)"
-      → Генерується CSV-файл, PayoutBatch створюється
-      → Запити переходять у status=in_batch
+      → Перевірка: чи встановлено exchange_rate для не-UAH заявок
+      → Генерується CSV (sourceCurrency=CZK, amountCurrency=target)
+      → PayoutBatch створюється, запити → status=in_batch
     → Завантажує CSV у Wise Business
     → Позначає batch як відправлений → status=processing
+      → CSV-файл видаляється (безпека IBAN)
   → Wise обробляє платежі:
     → Webhook або CSV reconciliation → status=completed або failed
     → При failed → refund FanCoins на баланс
@@ -63,7 +68,7 @@
 | `iban` | EncryptedCharField | IBAN, зашифрований Fernet |
 | `bic_swift` | EncryptedCharField | BIC/SWIFT, зашифрований (необов'язковий) |
 | `recipient_full_name` | CharField | Ім'я отримувача в банку |
-| `currency` | CharField | Валюта, завжди `UAH` |
+| `currency` | CharField | Валюта отримувача (`UAH`, `EUR`, `CZK` тощо) |
 | `is_active` | BooleanField | Чи активний метод |
 | `is_default` | BooleanField | Чи метод за замовчуванням |
 | `last_used_at` | DateTimeField | Остання виплата |
@@ -84,10 +89,10 @@
 | `commission_percent` | DecimalField | Відсоток комісії на момент запиту |
 | `commission_coins` | DecimalField | Комісія в FanCoins |
 | `coins_after_commission` | DecimalField | FanCoins після комісії |
-| `payout_currency` | CharField | Завжди `UAH` |
-| `exchange_rate` | DecimalField | Завжди `1.000000` |
-| `amount_gross` | DecimalField | Сума до податків (= coins_after_commission) |
-| `amount_net` | DecimalField | Сума до виплати |
+| `payout_currency` | CharField | Валюта виплати (`UAH`, `EUR`, `CZK` тощо — з `PayoutMethod.currency`) |
+| `exchange_rate` | DecimalField(12,6) | Курс UAH → payout_currency. Для UAH = `1.000000` (остаточний). Для інших валют — початково `1.000000`, адмін оновлює через Wise API або вручну перед batch |
+| `amount_gross` | DecimalField | Сума до податків **у UAH** (= coins_after_commission × 1.0) |
+| `amount_net` | DecimalField | Сума до виплати **у валюті отримувача** (= amount_gross × exchange_rate − withholding_tax) |
 | `snapshot_recipient_name` | CharField | Знімок імені отримувача |
 | `snapshot_iban` | EncryptedCharField | Знімок IBAN (зашифрований у БД, розшифровується автоматично при читанні через ORM — див. «Подвійне шифрування при snapshot-ах») |
 | `snapshot_bic_swift` | EncryptedCharField | Знімок BIC/SWIFT (зашифрований у БД) |
@@ -195,9 +200,10 @@ snapshot_bic_swift=method.bic_swift or "",
 3. Перевіряє мінімальну суму (`PAYOUTS_MIN_AMOUNT_COINS` = 1000)
 4. Перевіряє кулдаун IBAN (`PAYOUT_IBAN_COOLDOWN_DAYS` = 7 днів)
 5. Списує FanCoins з балансу через `profile.balance_operation(coins_amount, "withdraw")` (усередині: `select_for_update`, перевірка балансу, `BalanceLog`)
-6. Комісія при виведенні: **0%** (комісія платформи знімається при покупці глав, не при виплаті)
-7. Створює `PayoutRequest` з фіксованим курсом 1:1, snapshot реквізитів (IBAN, KYC-дані)
-8. Запускає `auto_check_payout_request.delay(request.id)`
+6. Комісія при виведенні: **0%** звичайний, **10%** терміновий (`is_urgent`)
+7. `amount_gross` = coins_after_commission (у UAH). Для UAH-отримувачів `exchange_rate=1.0` (остаточний), для інших — `1.0` (початковий, адмін оновлює перед batch)
+8. Створює `PayoutRequest` зі статусом `awaiting_review`, snapshot реквізитів (IBAN, KYC-дані)
+9. Автоперевірка **вимкнена** — усі заявки потребують ручного схвалення адміністратором
 
 **Захист від дублювання:** `BalanceIdempotencyRecord` з unique constraint на `(user, key)`. Якщо запит з таким же `idempotency_key` вже існує — `IntegrityError`, повертається існуючий `PayoutRequest`.
 
@@ -205,9 +211,10 @@ snapshot_bic_swift=method.bic_swift or "",
 
 **`cancel_payout_request(payout_request, reason)`:**
 - Блокує запит через `select_for_update()` (спочатку блокує, потім перевіряє статус — захист від TOCTOU)
+- Дозволені статуси для скасування: `pending`, `awaiting_review`, `approved`, `in_batch`
 - Якщо статус `processing` або `completed` — кидає `ValidationError`
 - Якщо вже `cancelled` або `failed` — мовчки повертає (ідемпотентність)
-- Повертає FanCoins на баланс через `profile.balance_operation(amount, 'refund')`
+- Повертає FanCoins на баланс через `profile.balance_operation(coins_amount, 'refund')`
 - Змінює статус на `cancelled`
 
 **`handle_failed_payout(payout_request, wise_reason)`:**
@@ -217,18 +224,34 @@ snapshot_bic_swift=method.bic_swift or "",
 
 ### `csv_export.py` — Генерація CSV для Wise
 
-**`generate_wise_csv(payout_requests)`** — створює CSV з колонками:
+**`generate_wise_csv(payout_requests)`** — створює CSV для Wise Batch Payments.
+
+Захист від CSV formula injection: значення, що починаються з `=`, `+`, `-`, `@`, табуляції — екрануються префіксом `'`.
 
 | Колонка | Опис |
 |---------|------|
-| recipientName | Ім'я отримувача (snapshot) |
-| recipientEmail | Порожнє |
-| IBAN | IBAN (snapshot) |
-| BIC | BIC/SWIFT (snapshot) |
-| targetCurrency | Завжди `UAH` |
-| targetAmount | Сума до виплати (amount_net) |
-| sourceCurrency | Завжди `UAH` |
-| reference | `FV-{request.id}` — ідентифікатор для reconciliation |
+| `name` | Ім'я отримувача (snapshot_recipient_name) |
+| `recipientEmail` | Порожнє |
+| `receiverType` | Завжди `PRIVATE` |
+| `amount` | Сума до виплати (`amount_net`, **у валюті отримувача**) |
+| `sourceCurrency` | Валюта рахунку FanVers у Wise (`settings.WISE_SOURCE_CURRENCY` = `CZK`) |
+| `targetCurrency` | Валюта отримувача (`payout_currency`: `EUR`, `CZK`, `UAH` тощо) |
+| `amountCurrency` | Завжди `target` — amount вказана у валюті отримувача, Wise сам конвертує з sourceCurrency |
+| `IBAN` | IBAN отримувача (snapshot) |
+| `BIC` | BIC/SWIFT (snapshot, може бути порожнім) |
+| `reference` | `FV-{request.id}` — ідентифікатор для reconciliation |
+
+### `exchange_rates.py` — Курси валют через Wise API
+
+**`fetch_rate(source, target)`** — отримує актуальний курс від Wise API (`GET https://api.wise.com/v1/rates`).
+- Кешується на 10 хвилин (Redis/Django cache)
+- Потрібен `WISE_API_TOKEN` у `.env`
+- Якщо `source == target` — повертає `1.000000`
+- Кидає `RateFetchError` при проблемах (немає токена, 401, 403, невалідна відповідь)
+
+**`apply_rate_to_payout(payout_request)`** — отримує курс UAH → `payout_currency` і оновлює `exchange_rate` та `amount_net` у БД.
+- Формула: `amount_net = amount_gross × rate − withholding_tax_amount`
+- Для UAH-отримувачів — нічого не робить (повертає існуючий `amount_net`)
 
 ### `csv_import.py` — Reconciliation з Wise
 
@@ -260,18 +283,9 @@ snapshot_bic_swift=method.bic_swift or "",
 
 ### `auto_check_payout_request(payout_request_id)`
 
-Запускається автоматично після створення запиту. Виконує перевірки:
+**Зараз не використовується** — усі заявки створюються одразу зі статусом `awaiting_review`, а схвалення виконується вручну адміністратором. Задача залишається в коді для можливого ввімкнення автосхвалення у майбутньому.
 
-1. **Профіль схвалений** — `profile.payout_approved == True`
-2. **Мінімальна сума** — `coins_amount >= PAYOUTS_MIN_AMOUNT_COINS`
-3. **Кулдаун IBAN** — метод не на кулдауні
-4. **Максимальна сума** — `coins_amount <= PAYOUTS_AUTO_APPROVE_THRESHOLD_COINS` (50000)
-5. **Попередні виплати** — чи має користувач завершені виплати раніше
-
-**Результати:**
-- Усі перевірки пройдені + нижче порогу + є попередні виплати → `status=approved` (авто-схвалення)
-- Інакше → `status=awaiting_review` (ручна перевірка)
-- Критична помилка (профіль не схвалений) → `status=cancelled` + refund
+Виконує перевірки: профіль схвалений, мінімальна сума, кулдаун IBAN, максимальна сума (порог 50000), наявність попередніх виплат.
 
 ### `check_payout_deadlines()`
 
@@ -336,20 +350,27 @@ Email відправляється на `PAYOUT_ADMIN_EMAIL` з налаштув
 
 ### PayoutRequestAdmin
 
-- Список: id, username, coins_amount, amount_net, status, created_at, deadline_at, deadline_status
+- Список: id, username, urgent_badge, coins_amount, amount_net, commission_percent, commission_coins, payout_currency, status, created_at, deadline_at, deadline_status
 - `deadline_status` — кольорове відображення:
   - Червоний "ПРОСТРОЧЕНО" якщо після дедлайну
   - Оранжевий "{N} дн" якщо <= 3 дні
   - Звичайний "{N} дн" інакше
+- `exchange_rate_hint` — кольорова підказка: червоний "⚠ Курс НЕ встановлено!" якщо не-UAH і rate=1.0, або розрахунок "X UAH × rate = Y CUR"
+
+**Редаговані поля** (не readonly): `exchange_rate`, `amount_net`, `withholding_tax_rate`, `withholding_tax_amount`. При зміні `exchange_rate` в формі `save_model` автоматично перераховує `amount_net`.
 
 **Дії адміністратора:**
 
 | Дія | Опис |
 |-----|------|
-| Схвалити запити | Переводить pending/awaiting_review → approved |
-| Скасувати запити | Скасовує з поверненням FanCoins |
-| Створити batch для Wise | Генерує CSV з approved запитів, створює PayoutBatch, завантажує CSV |
-| Позначити batch відправленим | in_batch → processing, batch → sent_to_wise |
+| Схвалити вибрані запити | pending/awaiting_review → approved. Автоматично отримує курс від Wise API для не-UAH заявок |
+| Оновити курс валют (Wise API) | Оновлює exchange_rate і amount_net для не-UAH заявок (awaiting_review/approved) через Wise API |
+| Створити batch для Wise (CSV) | Генерує CSV з approved запитів. **Блокує** якщо є не-UAH заявки з exchange_rate=1.0 (курс не встановлено) |
+| Позначити batch відправленим | in_batch → processing, batch → sent_to_wise. **Видаляє CSV-файли** з диску (містять розшифровані IBAN) |
+| Позначити виплаченим | Для кожного запиту викликає `mark_payout_request_completed_manual()` |
+| Скасувати вибрані запити (повернення коштів) | Скасовує запити зі статусами pending/awaiting_review/approved/**in_batch** з поверненням FanCoins на баланс |
+
+**Видалення запитів (delete_selected):** при натисканні «Видалити запит на виплату» відображається кастомна сторінка підтвердження українською мовою з попередженням, що кошти НЕ будуть повернуті на баланс (шаблон `admin/payouts/payoutrequest/delete_selected_confirmation.html`).
 
 **Створення batch** обгорнуто в `transaction.atomic()` з `select_for_update()` для захисту від race conditions.
 
@@ -399,6 +420,8 @@ PAYOUTS_MIN_AMOUNT_COINS = 1000          # Мінімальна сума вив�
 PAYOUTS_AUTO_APPROVE_THRESHOLD_COINS = 50000  # Авто-схвалення до цієї суми
 PAYOUT_DEADLINE_DAYS = 14                # Дедлайн обробки (днів)
 PAYOUT_IBAN_COOLDOWN_DAYS = 7            # Кулдаун після зміни IBAN
+WISE_SOURCE_CURRENCY = "CZK"             # Валюта рахунку FanVers у Wise
+WISE_API_TOKEN = env.str("WISE_API_TOKEN", default="")  # Токен для Wise API (курси валют)
 WISE_WEBHOOK_ENABLED = env('WISE_WEBHOOK_ENABLED')  # Увімкнути webhook
 PAYOUT_ADMIN_EMAIL = env('PAYOUT_ADMIN_EMAIL')       # Email адміна для сповіщень
 ```
@@ -454,7 +477,7 @@ Throttle rate: `'payout': '5/hour'`
 
 ## Комісія
 
-Комісія платформи **знімається при покупці глав** (в `subscription/services.py`), а **не при виведенні коштів**. При створенні `PayoutRequest` комісія завжди **0%**.
+Комісія платформи **знімається при покупці глав** (в `subscription/services.py`), а **не при виведенні коштів**. При створенні `PayoutRequest` комісія **0%** для звичайного виведення, **10%** для термінового (`is_urgent=True`, дедлайн 3 дні замість 14).
 
 Поле `Profile.commission` визначає відсоток, що утримується при покупці глав, і залежить від `total_characters` (загальна кількість символів у опублікованих розділах):
 
@@ -471,6 +494,8 @@ Throttle rate: `'payout': '5/hour'`
 ## Налаштування .env
 
 ```
+WISE_API_TOKEN=                 # Токен Wise API для автоматичних курсів валют
+                                # Створити: Wise Business → Settings → API tokens → Full access або Read only
 WISE_WEBHOOK_ENABLED=True       # або False для тестового середовища
 PAYOUT_ADMIN_EMAIL=admin@fan-vers.com
 ```
@@ -482,14 +507,27 @@ PAYOUT_ADMIN_EMAIL=admin@fan-vers.com
 ### Обробка batch виплат (покроково)
 
 1. Відкрити Django Admin → PayoutRequest
-2. Відфільтрувати за статусом "approved"
-3. Вибрати потрібні запити → Дія "Створити batch для Wise (CSV)"
-4. Завантажити CSV-файл, що автоматично скачається
-5. Увійти в Wise Business → Batch Payments → Upload CSV
-6. Перевірити отримувачів у Wise → Підтвердити відправку
-7. У Django Admin: вибрати ті ж запити → "Позначити batch як відправлений у Wise"
-8. Дочекатися обробки Wise (webhook або ручна перевірка)
-9. Якщо webhook вимкнений: завантажити reconciliation CSV з Wise → PayoutBatch → "Імпорт CSV"
+2. Відфільтрувати за статусом "pending" або "awaiting_review"
+3. Вибрати потрібні запити → Дія **"Схвалити вибрані запити"**
+   - Статус → `approved`
+   - Автоматично підтягуються курси від Wise API для не-UAH заявок
+   - Якщо Wise API не доступний — встановити курс вручну (відкрити заявку → поле `exchange_rate`)
+4. (Опціонально) Перевірити/оновити курси: вибрати заявки → **"Оновити курс валют (Wise API)"**
+5. Вибрати approved запити → Дія **"Створити batch для Wise (CSV)"**
+   - Якщо для не-UAH заявок exchange_rate=1.0 — дія **заблокована** (потрібно встановити курс)
+   - CSV-файл автоматично скачається, запити → `in_batch`
+6. Увійти в Wise Business → Batch Payments → Upload CSV
+7. Перевірити отримувачів у Wise → Підтвердити відправку
+8. У Django Admin: вибрати ті ж запити → **"Позначити batch як відправлений у Wise"**
+   - CSV-файли автоматично видаляються з диску (містять розшифровані IBAN)
+9. Дочекатися обробки Wise (webhook або ручна перевірка)
+10. Якщо webhook вимкнений: завантажити reconciliation CSV з Wise → PayoutBatch → "Імпорт CSV"
+    Або: вибрати запити → **"Позначити виплаченим"** (ручне підтвердження)
+
+### Скасування заявок
+
+- **З поверненням коштів:** вибрати запити → "Скасувати вибрані запити (повернення коштів)". Працює для: pending, awaiting_review, approved, in_batch
+- **Без повернення (видалення):** вибрати запити → "Видалити запит на виплату". Показує сторінку підтвердження з попередженням, що кошти НЕ повернуться
 
 ### Перевірка дедлайнів
 

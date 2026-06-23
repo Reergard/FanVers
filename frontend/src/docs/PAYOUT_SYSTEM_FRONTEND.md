@@ -111,7 +111,7 @@
 - Якщо `existingProfile` передано → режим редагування (IBAN-поля приховані)
 - При створенні → `createPayoutProfile()` + `createPayoutMethod()` + `submitPayoutProfile()`
 - При редагуванні → `updatePayoutProfile()` + `submitPayoutProfile()`
-- Валюта завжди `"UAH"` (захардкоджено)
+- Валюта задається з `PayoutMethod.currency` (може бути `UAH`, `EUR`, `CZK` тощо — залежить від країни отримувача)
 - IBAN перетворюється у верхній регістр, пробіли видаляються
 
 ### PayoutRequestsList
@@ -225,7 +225,7 @@ type PayoutMethod = {
   method_type: string;
   iban_masked: string;        // "UA21****5678"
   recipient_full_name: string;
-  currency: string;           // "UAH"
+  currency: string;           // "UAH", "EUR", "CZK" тощо
   is_active: boolean;
   is_default: boolean;
   is_iban_cooldown_active: boolean;

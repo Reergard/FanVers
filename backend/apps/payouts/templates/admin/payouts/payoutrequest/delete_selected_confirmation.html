@@ -1,0 +1,52 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls %}
+
+{% block content %}
+<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:20px;margin-bottom:20px;">
+    <h2 style="color:#856404;margin-top:0;">
+        &#9888; Увага! Видалення без повернення коштів
+    </h2>
+    <p style="color:#856404;font-size:1.1em;">
+        Ви збираєтесь <strong>видалити</strong> обрані заявки на виплату.
+        <br>
+        <strong>Кошти НЕ будуть повернуті на баланс користувачів!</strong>
+    </p>
+    <p style="color:#856404;">
+        Якщо потрібно скасувати заявки <em>з поверненням коштів</em>, закрийте цю сторінку
+        і скористайтесь дією <strong>«Скасувати вибрані запити (повернення коштів)»</strong>.
+    </p>
+</div>
+
+<p>Будуть видалені наступні заявки:</p>
+<ul>
+{% for obj in queryset %}
+    <li>
+        <strong>#{{ obj.pk }}</strong> —
+        {{ obj.profile.user.username }},
+        {{ obj.coins_amount }} coins,
+        {{ obj.amount_net }} {{ obj.payout_currency }},
+        статус: {{ obj.get_status_display }}
+    </li>
+{% endfor %}
+</ul>
+
+<form method="post">
+    {% csrf_token %}
+    {% for obj in queryset %}
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}">
+    {% endfor %}
+    <input type="hidden" name="action" value="delete_selected">
+    <input type="hidden" name="post" value="yes">
+
+    <div style="margin-top:20px;">
+        <input type="submit" value="Так, видалити без повернення"
+               style="background:#dc3545;color:#fff;border:none;padding:10px 24px;
+                      border-radius:6px;font-size:1em;cursor:pointer;margin-right:10px;">
+        <a href="{% url opts|admin_urlname:'changelist' %}"
+           style="background:#6c757d;color:#fff;text-decoration:none;padding:10px 24px;
+                  border-radius:6px;font-size:1em;">
+            Ні, повернутись
+        </a>
+    </div>
+</form>
+{% endblock %}

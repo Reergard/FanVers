@@ -11,6 +11,7 @@ CANCELLABLE_STATUSES = frozenset([
     PayoutRequest.Status.PENDING,
     PayoutRequest.Status.AWAITING_REVIEW,
     PayoutRequest.Status.APPROVED,
+    PayoutRequest.Status.IN_BATCH,
 ])
 
 REFUNDABLE_STATUSES = frozenset([
@@ -40,7 +41,10 @@ def cancel_payout_request(payout_request, reason):
         return
 
     if payout_request.status not in CANCELLABLE_STATUSES:
-        raise ValidationError("Не можна скасувати запит, що вже у Wise")
+        raise ValidationError(
+            f"Не можна скасувати запит зі статусом «{payout_request.get_status_display()}». "
+            "Скасування можливе лише для: подано, на перевірці, схвалено, у batch."
+        )
 
     profile = payout_request.profile.user.profile
     profile.balance_operation(payout_request.coins_amount, "refund")

@@ -18,6 +18,9 @@ from .services.exchange_rates import RateFetchError, apply_rate_to_payout
 
 @admin.register(PayoutRequest)
 class PayoutRequestAdmin(ModelAdmin):
+    delete_selected_confirmation_template = (
+        "admin/payouts/payoutrequest/delete_selected_confirmation.html"
+    )
     list_display = (
         "display_id",
         "get_username",
@@ -322,7 +325,7 @@ class PayoutRequestAdmin(ModelAdmin):
         cancelled = 0
         errors = []
         for req in queryset.filter(
-            status__in=["pending", "awaiting_review", "approved"]
+            status__in=["pending", "awaiting_review", "approved", "in_batch"]
         ):
             try:
                 cancel_payout_request(req, "Скасовано адміністратором")
