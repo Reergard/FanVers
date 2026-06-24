@@ -13,7 +13,7 @@
 **Призначення:** Універсальна кнопка дії, яка може працювати як `<button>` або `<a>` посилання.
 
 **Особливості:**
-- Підтримка prop `as` для вибору типу елемента (`button` або `a`); опційний prop **`to`** — при передачі рендериться `<Link to={to}>` (React Router) замість button.
+- Підтримка prop `as` для вибору типу елемента (`button` або `a`); опційний prop **`to`** — при передачі рендериться `<Link to={to}>` (React Router) замість button. При передачі `onClick` разом з `to` — `onClick` спрацює перед навігацією.
 - Підтримка **`loading`** (показ спінера та disabled під час відправки).
 - Автоматична підтримка `aria-label` для доступності.
 - Єдині стилі для всіх кнопок дій у проекті.
@@ -30,6 +30,8 @@
 - `shared/NotificationModal/NotificationModal.tsx` — кнопка "Зрозуміло" для закриття уведомлення
 - `widgets/header/UserMenuOverlay/UserMenuOverlay.tsx` — кнопки "Вхід" і "Реєстрація" в меню неавторизованого користувача
 - `navigation/ShowMoreNavigation.tsx` — через `ShowMoreButton` для кнопки "Показати ще" (єдина обгортка пагінації списків)
+- `widgets/announcementBanner/AnnouncementBanner.tsx` — кнопка-посилання в банері оголошення (variant="outline", size="sm", to + onClick)
+- `info/about/behind-the-scenes.tsx` — кнопка «Написати в підтримку» на сторінці «За лаштунками»
 
 **Приклад використання:**
 ```tsx

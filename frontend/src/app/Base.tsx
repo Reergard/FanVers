@@ -5,6 +5,8 @@ import { SvgSprite } from "../shared/SvgSprite";
 import { ScrollIndicator } from "../shared/ScrollIndicator/ScrollIndicator";
 import { useLocation } from "react-router-dom";
 import { CookieConsentManager } from "../widgets/cookieConsent/CookieConsentManager";
+import { AnnouncementBanner } from "../widgets/announcementBanner/AnnouncementBanner";
+import { ANNOUNCEMENT_BANNER_CONFIG } from "../widgets/announcementBanner/announcementBannerConfig";
 
 type Props = { children: React.ReactNode };
 export function Base({ children }: Props) {
@@ -17,6 +19,14 @@ export function Base({ children }: Props) {
       <ScrollIndicator />
       <div className={styles.bg} aria-hidden="true" />
       <Header />
+      <AnnouncementBanner
+        visible={ANNOUNCEMENT_BANNER_CONFIG.visible}
+        version={ANNOUNCEMENT_BANNER_CONFIG.version}
+        title={ANNOUNCEMENT_BANNER_CONFIG.title}
+        message={ANNOUNCEMENT_BANNER_CONFIG.message}
+        to={ANNOUNCEMENT_BANNER_CONFIG.to}
+        linkLabel={ANNOUNCEMENT_BANNER_CONFIG.linkLabel}
+      />
       <main className={[styles.main, isHome && styles.mainHome].filter(Boolean).join(" ")} role="main">
           {children}
       </main>

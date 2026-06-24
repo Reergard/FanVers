@@ -5,6 +5,7 @@ import { Container } from "../../shared/Container";
 import { Breadcrumb } from "../../navigation/Breadcrumb";
 import { PageTitle } from "../../navigation/PageTitle";
 import { ActionButton } from "../../shared/ActionButton/ActionButton";
+import { PillDropdownSelect } from "../../shared/PillDropdownSelect/PillDropdownSelect";
 import { http } from "../../api/http";
 import { API } from "../../api/endpoints";
 import { fetchCsrfToken } from "../../auth/csrf";
@@ -13,11 +14,11 @@ import { getMyProfile } from "../../users/profileService";
 import styles from "./HelpPages.module.css";
 
 const CATEGORY_OPTIONS = [
-  { value: "", label: "Виберіть тип звернення" },
   { value: "technical", label: "Технічна проблема" },
   { value: "payment", label: "Питання по платежам" },
   { value: "content", label: "Питання по контенту" },
   { value: "account", label: "Проблеми з акаунтом" },
+  { value: "suggestions", label: "Пропозиції та побажання" },
   { value: "other", label: "Інше" },
 ] as const;
 
@@ -289,24 +290,17 @@ export default function SupportPage() {
 
                 <form className={styles.form} onSubmit={onSubmit}>
               <div className={styles.field}>
-                <label htmlFor="support-category" className={styles.label}>
+                <label className={styles.label}>
                   Тип звернення
                 </label>
-                <select
-                  id="support-category"
-                  className={styles.control}
+                <PillDropdownSelect
                   value={category}
-                  onChange={(ev) => setCategory(ev.target.value)}
-                  required
-                  aria-invalid={!!fieldErrors.category}
-                  aria-describedby={fieldErrors.category ? "support-category-err" : undefined}
-                >
-                  {CATEGORY_OPTIONS.map((o) => (
-                    <option key={o.value || "empty"} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
+                  options={CATEGORY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                  onChange={setCategory}
+                  ariaLabel="Тип звернення"
+                  placeholder="Виберіть тип звернення"
+                  className={styles.selectDropdown}
+                />
                 {fieldErrors.category && (
                   <p id="support-category-err" className={styles.fieldError}>
                     {fieldErrors.category}

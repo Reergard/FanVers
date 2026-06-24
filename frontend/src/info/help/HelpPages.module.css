@@ -187,6 +187,36 @@
   box-shadow: 0 0 0 2px rgba(5, 180, 199, 0.2);
 }
 
+.selectDropdown {
+  width: 100%;
+  display: flex;
+}
+
+.selectDropdown button {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.93);
+  font-size: inherit;
+  padding: 10px 34px 10px 12px;
+}
+
+.selectDropdown button:hover:not(:disabled) {
+  border-color: rgba(5, 180, 199, 0.55);
+}
+
+.selectDropdown button:focus-visible {
+  outline: none;
+  border-color: rgba(5, 180, 199, 0.82);
+  box-shadow: 0 0 0 2px rgba(5, 180, 199, 0.2);
+}
+
+.selectDropdown button > span:last-child {
+  border-top-color: rgba(255, 255, 255, 0.75);
+}
+
 .quickHelp {
   margin-top: clamp(16px, 2vw, 22px);
 }

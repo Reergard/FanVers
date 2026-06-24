@@ -142,9 +142,26 @@ frontend/src/
 │   │   ├── Header.tsx
 │   │   ├── Header.module.css
 │   │   └── UserMenuOverlay/
-│   └── footer/
-│       ├── Footer.tsx
-│       └── Footer.module.css
+│   ├── footer/
+│   │   ├── Footer.tsx
+│   │   └── Footer.module.css
+│   ├── cookieConsent/
+│   │   ├── CookieBanner.tsx
+│   │   ├── CookieConsentManager.tsx
+│   │   ├── CookieConsentManager.module.css
+│   │   └── CookieSettingsModal.tsx
+│   └── announcementBanner/
+│       ├── AnnouncementBanner.tsx
+│       ├── AnnouncementBanner.module.css
+│       └── announcementBannerConfig.ts
+├── info/
+│   ├── help/              # сторінки допомоги (contacts, payment, support, say-thanks, faq/)
+│   │   └── HelpPages.module.css
+│   ├── legal/             # юридичні сторінки (user-agreement, privacy-policy, cookie-policy тощо)
+│   │   └── LegalPages.module.css
+│   └── about/             # сторінки «Про проект» (behind-the-scenes тощо)
+│       ├── behind-the-scenes.tsx
+│       └── AboutPages.module.css
 ├── assets/
 │   ├── logos/
 │   ├── backgrounds/
@@ -174,6 +191,7 @@ frontend/src/
 │   ├── ANALYTICS_FRONTEND.md
 │   ├── LISTS_AND_CAROUSELS_FRONTEND.md
 │   ├── TRENDS_AND_ANALYTICS_FRONTEND.md   # старе ім’я; вміст перенесено в ANALYTICS + LISTS_AND_CAROUSELS
+│   ├── ANNOUNCEMENT_BANNER_FRONTEND.md
 │   └── STRUCTURE.md
 ├── App.tsx
 ├── main.tsx
@@ -596,7 +614,12 @@ export function AppRoutes() {
 - `Footer.tsx` — футер сайту (посилання, дракони, соцмережі, 18+ текст тощо)
 - `Footer.module.css` — стилі футера
 
-**Навіщо widgets:** Header/Footer — це не дрібні shared-компоненти, а великі секції UI, що повторюються.
+### `widgets/announcementBanner/`
+- `AnnouncementBanner.tsx` — глобальний банер оголошення під хедером
+- `AnnouncementBanner.module.css` — стилі банера
+- `announcementBannerConfig.ts` — конфіг (текст, посилання, версія, visible)
+
+**Навіщо widgets:** Header/Footer/AnnouncementBanner/CookieConsent — це не дрібні shared-компоненти, а великі секції UI, що повторюються.
 
 ---
 

@@ -84,6 +84,7 @@ export function ActionButton({
       className={cls}
       aria-label={ariaLabel}
       aria-busy={loading}
+      onClick={onClick}
       onMouseEnter={onNavigateIntent}
       onTouchStart={onNavigateIntent}
     >

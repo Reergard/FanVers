@@ -15,6 +15,7 @@ class SupportTicket(models.Model):
         PAYMENT = "payment", "Питання по платежам"
         CONTENT = "content", "Питання по контенту"
         ACCOUNT = "account", "Проблеми з акаунтом"
+        SUGGESTIONS = "suggestions", "Пропозиції та побажання"
         OTHER = "other", "Інше"
 
     class Status(models.TextChoices):

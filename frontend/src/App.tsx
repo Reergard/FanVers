@@ -68,6 +68,7 @@ const CookiePolicyPage = lazy(() => import("./info/legal/cookie-policy"));
 const RefundPolicyPage = lazy(() => import("./info/legal/refund-policy"));
 const TranslatorAgreementPage = lazy(() => import("./info/legal/translator-agreement"));
 const UserAgreementPage = lazy(() => import("./info/legal/user-agreement"));
+const BehindTheScenesPage = lazy(() => import("./info/about/behind-the-scenes"));
 const OAuthCallbackPage = lazy(() =>
   import("./auth/OAuthCallbackPage").then((m) => ({ default: m.OAuthCallbackPage }))
 );
@@ -394,6 +395,14 @@ export default function App() {
                 element={
                   <Suspense fallback={<div />}>
                     <UserAgreementPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/behind-the-scenes"
+                element={
+                  <Suspense fallback={<div />}>
+                    <BehindTheScenesPage />
                   </Suspense>
                 }
               />

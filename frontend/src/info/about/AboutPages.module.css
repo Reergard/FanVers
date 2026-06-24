@@ -1,0 +1,178 @@
+.page {
+  width: 100%;
+  padding-block: clamp(20px, 3vw, 42px);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.content {
+  width: min(860px, 100%);
+  margin-inline: auto;
+}
+
+/* ===== Hero (заголовок + підзаголовок) ===== */
+.hero {
+  text-align: center;
+  margin-bottom: clamp(18px, 2.5vw, 32px);
+}
+
+.heroEmoji {
+  display: block;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.heroSubtitle {
+  margin: 8px 0 0;
+  font-family: "Inter", sans-serif;
+  font-size: clamp(14px, 1.3vw, 17px);
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.68);
+  font-style: italic;
+}
+
+/* ===== Intro card (циановая обводка) ===== */
+.introCard {
+  border: 1px solid rgba(5, 180, 199, 0.3);
+  border-radius: 12px;
+  padding: clamp(16px, 2.2vw, 28px);
+  background:
+    linear-gradient(130deg, rgba(5, 180, 199, 0.08), rgba(5, 180, 199, 0.01) 45%, transparent),
+    rgba(8, 16, 22, 0.66);
+  margin-bottom: clamp(14px, 2vw, 22px);
+}
+
+/* ===== Section card (тонкая обводка) ===== */
+.section {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: clamp(16px, 2.2vw, 28px);
+  background: rgba(255, 255, 255, 0.025);
+  margin-bottom: clamp(14px, 2vw, 22px);
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  margin: 0 0 10px;
+  font-family: "SofiaSansSemiCondensed", system-ui, sans-serif;
+  font-size: clamp(19px, 2vw, 25px);
+  color: #05b4c7;
+}
+
+/* ===== Text & paragraphs ===== */
+.text {
+  margin: 0 0 12px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: clamp(14px, 1.15vw, 16px);
+}
+
+.text:last-child {
+  margin-bottom: 0;
+}
+
+.highlight {
+  color: #05b4c7;
+  font-weight: 600;
+}
+
+.strong {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+}
+
+/* ===== CTA card (призыв к действию) ===== */
+.ctaCard {
+  border: 1px solid rgba(245, 136, 7, 0.35);
+  border-radius: 12px;
+  padding: clamp(16px, 2.2vw, 28px);
+  background:
+    linear-gradient(140deg, rgba(245, 136, 7, 0.06), transparent 50%),
+    rgba(8, 16, 22, 0.66);
+  text-align: center;
+  margin-bottom: clamp(14px, 2vw, 22px);
+}
+
+.ctaTitle {
+  margin: 0 0 10px;
+  font-family: "SofiaSansSemiCondensed", system-ui, sans-serif;
+  font-size: clamp(19px, 2vw, 25px);
+  color: #f58807;
+}
+
+.ctaActions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: clamp(12px, 1.5vw, 18px);
+}
+
+/* ===== Signature ===== */
+.signature {
+  text-align: center;
+  margin-top: clamp(18px, 2.5vw, 32px);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: clamp(14px, 1.15vw, 16px);
+  line-height: 1.6;
+}
+
+.signatureName {
+  display: block;
+  margin-top: 4px;
+  font-family: "SofiaSansSemiCondensed", system-ui, sans-serif;
+  font-size: clamp(16px, 1.5vw, 20px);
+  color: #05b4c7;
+  font-weight: 600;
+}
+
+.signatureHeart {
+  font-size: 1.2em;
+}
+
+/* ===== Link ===== */
+.link {
+  color: #05b4c7;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* ===== TABLET ===== */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .content {
+    width: min(720px, 100%);
+  }
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 480px) {
+  .hero {
+    text-align: left;
+  }
+
+  .ctaCard {
+    text-align: left;
+  }
+
+  .ctaActions {
+    justify-content: flex-start;
+  }
+
+  .signature {
+    text-align: left;
+  }
+}
+
+/* ===== 4K ===== */
+@media (min-width: 2560px) and (min-height: 1400px) {
+  .content {
+    width: min(1080px, 100%);
+  }
+}
