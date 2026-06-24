@@ -8,7 +8,7 @@ import { getTranslatorsList } from "./profileService";
 import "./TranslatorsList.css";
 
 type SortKey = "books" | "comments" | "lastVisit";
-const PAGE_SIZE = 1;
+const PAGE_SIZE = 10;
 const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: "books", label: "Кількість книг" },
   { value: "comments", label: "К-сть коментарів" },

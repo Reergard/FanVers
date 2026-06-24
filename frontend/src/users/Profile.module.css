@@ -482,6 +482,12 @@
   display: none;
 }
 
+.balanceHistoryBtns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 /* Кнопка "Змінити фото профілю" — овальная рамка + иконка (у розмітці — <label for="…">) */
 .btnPhotoChange {
   display: inline-flex;
@@ -867,6 +873,57 @@
   font-size: clamp(12px, 1.05vw, 14px);
 }
 
+.transactionHistoryItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.transactionHistoryMain {
+  min-width: 0;
+}
+
+.transactionHistoryType {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.transactionHistoryDate {
+  margin-top: 2px;
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.transactionHistoryAside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.transactionHistoryStatus {
+  font-size: 0.8em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.transactionHistoryAmountCredit,
+.transactionHistoryAmountDebit {
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.transactionHistoryAmountCredit {
+  color: #05ff00;
+}
+
+.transactionHistoryAmountDebit {
+  color: #f58807;
+}
+
 /* ----------------------------------------
    Responsive
    ---------------------------------------- */
@@ -1224,19 +1281,44 @@
     padding-block: clamp(14px, 4vw, 18px);
   }
 
+  /* Читач: без рядка комісії — баланс і кнопки займають праву колонку без порожнього рядка */
+  .colBalance:not(:has([data-mobile-area="commission"])) {
+    grid-template-areas:
+      "history balance balance"
+      "history deposit withdraw";
+    grid-template-rows: auto auto;
+  }
+
+  .colBalance:not(:has([data-mobile-area="commission"])) [data-mobile-area="balance"] {
+    padding-block: 0 8px;
+    border-bottom: 1px solid #FD9800;
+  }
+
   .balanceRow {
     display: contents;
   }
 
-  .balanceHistoryBtn {
+  .balanceHistoryBtns {
     grid-area: history;
     align-self: stretch;
     justify-self: start;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 100%;
+  }
+
+  .balanceHistoryBtn {
+    flex: 1 1 0;
+    align-self: stretch;
     width: auto;
-    min-width: 44px;
+    min-width: 0;
+    min-height: unset;
     flex-direction: column;
-    padding: 10px 12px;
-    gap: 4px;
+    justify-content: center;
+    padding: 4px 4px;
+    gap: 2px;
+    font-size: clamp(10px, 2.5vw, 12px);
+    line-height: 1.15;
     border-color: #FD9800 !important;
     color: #FD9800;
   }
@@ -1248,6 +1330,8 @@
 
   .balanceHistoryBtn .btnBalanceIcon {
     order: -1;
+    width: 14px;
+    height: 14px;
   }
 
   .historyBtnTextDesktop {

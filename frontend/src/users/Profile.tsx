@@ -50,6 +50,14 @@ import type {
   BalanceHistoryItem,
   PayoutMethod,
 } from "./types";
+import {
+  balanceHistoryStatusColor,
+  balanceHistoryStatusLabel,
+  balanceOperationIsCredit,
+  balanceOperationLabel,
+  formatBalanceHistoryAmount,
+  formatBalanceHistoryDate,
+} from "./balanceHistoryDisplay";
 import backgroundsAvatarsSvgRaw from "./assets/backgrounds/backgrounds_avatars.svg?raw";
 import { profileQueryKey } from "../shared/queryKeys";
 import { getUserReadingStats } from "../api/monitoringApi";
@@ -955,27 +963,28 @@ export default function Profile() {
                   </span>
                 </button>
               </div>
-              <button
-                type="button"
-                className={`${styles.btnOutlineGold} ${styles.balanceHistoryBtn}`}
-                onClick={handleTransactionHistory}
-              >
-                <img src={historyIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
-                <span className={styles.historyBtnTextDesktop}>Історія транзакцій</span>
-                <span className={styles.historyBtnTextMobile}>Історія<br />транзакцій</span>
-              </button>
-              {hasAnyPayoutProfile && (
+              <div className={styles.balanceHistoryBtns}>
                 <button
                   type="button"
                   className={`${styles.btnOutlineGold} ${styles.balanceHistoryBtn}`}
-                  onClick={() => setPayoutRequestsOpen(true)}
-                  style={{ marginTop: "6px" }}
+                  onClick={handleTransactionHistory}
                 >
-                  <img src={cashWithdrawalIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
-                  <span className={styles.historyBtnTextDesktop}>Запити на виплату</span>
-                  <span className={styles.historyBtnTextMobile}>Запити<br />виплат</span>
+                  <img src={historyIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
+                  <span className={styles.historyBtnTextDesktop}>Історія транзакцій</span>
+                  <span className={styles.historyBtnTextMobile}>Історія<br />транзакцій</span>
                 </button>
-              )}
+                {hasAnyPayoutProfile && (
+                  <button
+                    type="button"
+                    className={`${styles.btnOutlineGold} ${styles.balanceHistoryBtn}`}
+                    onClick={() => setPayoutRequestsOpen(true)}
+                  >
+                    <img src={cashWithdrawalIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
+                    <span className={styles.historyBtnTextDesktop}>Запити на виплату</span>
+                    <span className={styles.historyBtnTextMobile}>Запити<br />виплат</span>
+                  </button>
+                )}
+              </div>
           </div>
         </div>
 
@@ -1553,13 +1562,44 @@ export default function Profile() {
             <p>Історія порожня</p>
           ) : (
             <ul>
-              {balanceHistory.map((item, i) => (
-                <li key={i}>
-                  {item.amount ?? ""}{" "}
-                  {item.operation_type ?? item.type ?? ""} —{" "}
-                  {String(item.created_at ?? item.date ?? "")}
-                </li>
-              ))}
+              {balanceHistory.map((item, i) => {
+                const statusLabel = balanceHistoryStatusLabel(item);
+                const statusColor = balanceHistoryStatusColor(item);
+                const isCredit = balanceOperationIsCredit(item);
+                return (
+                  <li key={`${item.created_at ?? item.date ?? "item"}-${item.operation_type ?? item.type ?? "op"}-${i}`}>
+                    <div className={styles.transactionHistoryItem}>
+                      <div className={styles.transactionHistoryMain}>
+                        <div className={styles.transactionHistoryType}>
+                          {balanceOperationLabel(item)}
+                        </div>
+                        <div className={styles.transactionHistoryDate}>
+                          {formatBalanceHistoryDate(item)}
+                        </div>
+                      </div>
+                      <div className={styles.transactionHistoryAside}>
+                        <span
+                          className={
+                            isCredit
+                              ? styles.transactionHistoryAmountCredit
+                              : styles.transactionHistoryAmountDebit
+                          }
+                        >
+                          {formatBalanceHistoryAmount(item)}
+                        </span>
+                        {statusLabel ? (
+                          <span
+                            className={styles.transactionHistoryStatus}
+                            style={{ color: statusColor }}
+                          >
+                            {statusLabel}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
