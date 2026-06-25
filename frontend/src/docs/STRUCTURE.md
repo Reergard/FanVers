@@ -664,8 +664,8 @@ export function HomePage() {
 
 ### `main/HomePage1.tsx`, `HomePage2.tsx`, `HomePage3.tsx`
 Окремі секції головної сторінки:
-- **HomePage2** — блок «НОВИНКИ»: карусель нових книг з API (`mainApi.getBooksNews()` → `GET /api/main/books-news/`), рейтинги через `ratingApi.fetchBookRatings`, автоперемикання 9 с.
-- **HomePage3** — блок «ОСТАННІ ОНОВЛЕННЯ»: книги з недавніми оновленнями глав.
+- **HomePage2** — блок «НОВИНКИ»: карусель нових книг з API (`mainApi.getBooksNews()` → `GET /api/main/books-news/`), рейтинги через `ratingApi.fetchBookRatings`, автоперемикання 9 с. Опис у каруселі обрізається до **500** символів (`NEWS_DESCRIPTION_MAX_CHARS`); повний текст — на сторінці книги (до **900** при збереженні).
+- **HomePage3** — блок «ОСТАННІ ОНОВЛЕННЯ»: книги з недавніми оновленнями глав; підпис картки — `getRecentUpdateCardCaption` (обрізка опису до **500** символів).
 
 ### `main/MagicalGuide.tsx`, `MagicalGuide1.tsx`, `MagicalGuide2.tsx`, `MagicalGuide3.tsx`
 **Маршрут:** `/MagicalGuide`. **Тренди** (`MagicalGuide1`) — заглушка під майбутній окремий API. **Рекомендації** (`MagicalGuide2`) — заглушки. **ТОП** (`MagicalGuide3`) — `useTopBooks` → `GET /api/analytics_books/top/`. Деталі: **docs/LISTS_AND_CAROUSELS_FRONTEND.md**; бекенд: `backend/docs/LISTS_AND_CAROUSELS_BACKEND.md`, `ANALYTICS_BOOKS_BACKEND.md`.

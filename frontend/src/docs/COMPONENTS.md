@@ -132,6 +132,7 @@
 - `mode="update"` — title, title_en, author, book_type, country тільки для читання; решта редаговна.
 - Теги: на create — спочатку 1 група + «Показати ще» (показує всі); на update — одразу всі групи без кнопки.
 - Чекбокс 18+ синхронізований з тегом «18+» (adultTagId). Валідація через `validateBookForm`, формування payload через `normalizeBookPayload`.
+- **Опис:** лічильник і `maxLength` — **900** символів (`DESCRIPTION_MAX_CHARS`); у каруселях головної показується обрізка до 500.
 
 **Місця використання:**
 - `catalog/CreateBookPage.tsx` (mode="create")

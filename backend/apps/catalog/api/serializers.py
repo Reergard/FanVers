@@ -362,8 +362,8 @@ class BookCreateSerializer(serializers.ModelSerializer):
         desc = data.get('description')
         if desc is not None:
             desc_str = str(desc)
-            if len(desc_str) > 300:
-                errors['description'] = "Опис не може перевищувати 300 символів"
+            if len(desc_str) > 900:
+                errors['description'] = "Опис не може перевищувати 900 символів"
             elif desc_str and len(desc_str.strip()) < 10:
                 errors['description'] = "Опис повинен містити мінімум 10 символів"
             

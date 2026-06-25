@@ -90,7 +90,7 @@
 - **Теги:** групи з `meta.tagGroups`. На create — спочатку 1 група, кнопка «Показати ще» показує всі групи. На update — одразу всі групи, кнопки немає.
 - **Контент 18+:** чекбокс синхронізований з тегом «18+» (adultTagId). Якщо вибрано 18+ — тег додається/прибирається з `tags`.
 - **Зображення:** max 10 МБ, тільки image/*. На update — можна залишити поточне (image=null у payload) або завантажити нове.
-- **Опис:** лічильник символів (max 300 — `DESCRIPTION_MAX_CHARS`).
+- **Опис:** лічильник символів (max **900** — `DESCRIPTION_MAX_CHARS` у `bookForm.utils.ts`); `maxLength` на textarea, валідація на клієнті та бекенді узгоджені. У каруселях головної та SEO-мета використовуються **коротші** обрізки — див. §5.1.
 
 ### 4.3. handleSubmit
 
@@ -107,12 +107,25 @@
 
 - title не пустий;
 - author не пустий;
-- description max 300 символів;
+- description max **900** символів (`DESCRIPTION_MAX_CHARS`);
 - genres.length > 0;
 - country вибрана, Number(country) не NaN;
 - original_status вибрано;
 - для TRANSLATION: translation_status вибрано;
 - для create + TRANSLATION: translation_status не PAUSED, не ABANDONED.
+
+### 5.1. Ліміти опису: збереження vs відображення
+
+| Контекст | Ліміт | Де в коді |
+|----------|-------|-----------|
+| Форма створення / налаштувань | **900** символів | `bookForm.utils.ts` → `DESCRIPTION_MAX_CHARS`; `BookForm.tsx` |
+| Бекенд create/update | **900** символів (мін. 10, якщо передано) | `BookCreateSerializer.validate` |
+| Карусель «НОВИНКИ» (ПК) | **500** символів у UI | `main/HomePage2.tsx` → `NEWS_DESCRIPTION_MAX_CHARS` |
+| Блок «ОСТАННІ ОНОВЛЕННЯ» | **500** символів у підписі картки | `api/mainApi.ts` → `getRecentUpdateCardCaption` |
+| SEO meta description | **~120** символів з опису | `Book.get_seo_snippet()` (бекенд), `bookSeo.ts` (фронт) |
+| Сторінка книги | повний текст з API | без обрізки на фронті |
+
+Повний опис до 900 символів зберігається в БД і показується на сторінці книги; коротші ліміти стосуються лише прев’ю в каруселях та пошукових снипетах.
 
 ### normalizeBookPayload
 
@@ -155,4 +168,4 @@
 - Компоненти: `docs/COMPONENTS.md`
 - Структура: `docs/STRUCTURE.md`
 
-**Останнє оновлення:** за поточним коду в проєкті.
+**Останнє оновлення:** 2026-06-24 — ліміт опису **900** символів; §5.1 про відображення в каруселях.

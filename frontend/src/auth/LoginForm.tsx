@@ -65,7 +65,6 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: Props) {
 
     try {
       await loginSession({ username, password, remember_me: rememberMe });
-      notification.showSuccess("Успішний вхід!");
       onSuccess?.();
     } catch (error: unknown) {
       const err = error as { response?: { status?: number; data?: { detail?: string } } };

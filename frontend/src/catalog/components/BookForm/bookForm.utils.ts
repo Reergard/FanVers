@@ -1,7 +1,7 @@
 import type { CreateBookPayload, UpdateBookPayload } from "../../../api/catalogApi";
 import type { BookFormData, BookFormMode } from "./BookForm";
 
-export const DESCRIPTION_MAX_CHARS = 300;
+export const DESCRIPTION_MAX_CHARS = 900;
 /** Статуси перекладу, заборонені для нових книг при створенні */
 export const INVALID_NEW_BOOK_TRANSLATION_STATUSES = ["PAUSED", "ABANDONED", "COMPLETED"];
 

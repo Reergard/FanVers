@@ -339,7 +339,7 @@
 :global(.mg2-desktopCoverWrap) {
   position: absolute;
   left: 39.9%;
-  top: 44.5%;
+  top: 41.5%;
   width: clamp(160px, 10.9vw, 182px);
   transform: translate(-50%, -50%);
   z-index: 1;
@@ -431,32 +431,41 @@
   position: relative;
   z-index: 5;
   width: min(100%, 640px);
-  height: clamp(320px, 24vw, 380px);
+  min-height: clamp(320px, 24vw, 380px);
+  height: auto;
   margin-inline: auto;
   padding-inline: 0;
+  padding-block: clamp(8px, 1vw, 14px);
   box-sizing: border-box;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(14px, 1.4vw, 22px);
 }
 
 :global(.mg2-desktopTitle) {
-  position: absolute;
-  top: 4%;
-  left: 50%;
-  transform: translateX(-50%);
+  position: static;
+  transform: none;
   width: 100%;
   margin: 0;
+  flex-shrink: 0;
   font-family: var(--font-decor);
   font-size: clamp(24px, 2.05vw, 44px);
-  line-height: 1.04;
+  line-height: 1.14;
   text-transform: uppercase;
   color: var(--mg2-orange);
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
 }
 
 :global(.mg2-desktopDescription) {
-  position: absolute;
-  top: 17%;
-  left: 50%;
-  transform: translateX(-50%);
+  position: static;
+  transform: none;
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
   max-width: 58ch;
   margin: 0;
@@ -475,10 +484,9 @@
 }
 
 :global(.mg2-desktopReadBtn) {
-  position: absolute;
-  left: 50%;
-  bottom: 4%;
-  transform: translateX(-50%);
+  position: static;
+  transform: none;
+  flex-shrink: 0;
   min-width: clamp(108px, 8.2vw, 140px);
   min-height: clamp(32px, 2.5vw, 40px);
   margin: 0;
@@ -488,7 +496,7 @@
 
 :global(.mg2-desktopArrow) {
   position: absolute;
-  top: 50%;
+  top: calc(50% - clamp(10px, 1.2vw, 18px));
   transform: translateY(-50%);
   z-index: 6;
   width: clamp(60px, 4.1vw, 86px);
@@ -500,6 +508,19 @@
   border: none;
   padding: 0;
   cursor: pointer;
+  opacity: 0.9;
+  transition: transform 140ms ease, opacity 140ms ease, filter 140ms ease;
+}
+
+:global(.mg2-desktopArrow:hover) {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.04);
+}
+
+:global(.mg2-desktopArrow:focus-visible) {
+  outline: 2px solid rgba(5, 180, 199, 0.7);
+  outline-offset: 4px;
+  border-radius: 10px;
 }
 
 :global(.mg2-desktopArrowLeft) {
@@ -514,7 +535,18 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: brightness(1.3) contrast(1.05);
+  filter:
+    brightness(1.35)
+    contrast(1.06)
+    drop-shadow(0 0 10px rgba(5, 180, 199, 0.32));
+  transition: filter 140ms ease;
+}
+
+:global(.mg2-desktopArrow:hover img) {
+  filter:
+    brightness(1.48)
+    contrast(1.08)
+    drop-shadow(0 0 14px rgba(5, 180, 199, 0.45));
 }
 
 :global(.mg2-desktopDots) {
