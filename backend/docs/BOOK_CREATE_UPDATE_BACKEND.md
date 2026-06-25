@@ -146,11 +146,46 @@ DRF може некоректно обробляти QueryDict для ManyToMany
 
 | Файл | Роль |
 |------|------|
-| `apps/catalog/api/urls.py` | Маршрути `books/create/`, `books/<slug>/update/` |
-| `apps/catalog/api/views.py` | `create_book`, `update_book` |
-| `apps/catalog/api/serializers.py` | `BookCreateSerializer` (validate, create, update) |
-| `apps/catalog/models.py` | Модель Book |
+| `apps/catalog/api/urls.py` | Маршрути create/update та `extra-images/` |
+| `apps/catalog/api/views.py` | `create_book`, `update_book`, `upload_book_extra_image`, … |
+| `apps/catalog/api/serializers.py` | `BookCreateSerializer`, `BookImageSerializer` |
+| `apps/catalog/models.py` | `Book`, `BookImage` |
+| `apps/catalog/signals.py` | Видалення файлу `BookImage` з диску |
 
 ---
 
-**Останнє оновлення:** 2026-06-24 — ліміт опису **900** символів (раніше 300 на фронті).
+## 10. Додаткові зображення (`BookImage`)
+
+Окремо від обкладинки (`Book.image`). До **5** файлів на книгу, позиції **0–4**.
+
+### Модель
+
+- `BookImage` → `related_name='extra_images'`
+- Файл: `media/books/{slug}/extra/{clean_filename}`
+- Валідатор: `validate_image_extension` (jpg/jpeg/png)
+- Constraints: унікальна пара `(book, position)`, `position ≤ 4`
+
+### API (лише власник `book.owner`)
+
+| Метод | URL | Дія |
+|-------|-----|-----|
+| POST | `/api/catalog/books/{slug}/extra-images/` | Завантажити (`image`, опційно `position` 0–4) |
+| DELETE | `/api/catalog/books/{slug}/extra-images/{id}/` | Видалити |
+| PATCH | `/api/catalog/books/{slug}/extra-images/{id}/replace/` | Замінити файл |
+
+**Throttling:** `ScopedRateThrottle`, scope `book_extra_image` → **`30/hour`** (`settings.py`). Застосовується до **POST** (upload) та **PATCH** (replace).
+
+**Replace:** новий файл зберігається через `serializer.save()`; попередній шлях видаляється з storage лише після успішного збереження (`_save_replaced_extra_image`).
+
+### Читання (публічно з перевіркою `view_permission`)
+
+Поле `extra_images` у відповідях:
+
+- `GET /api/catalog/books/info/<slug>/` (`BookInfoView`) — сторінка книги
+- `BookOwnerSerializer` / `BookReaderSerializer` — списки та налаштування
+
+Ліміт розміру: **10 МБ** (`BOOK_COVER_IMAGE_MAX_BYTES`), як у обкладинки.
+
+---
+
+**Останнє оновлення:** 2026-06-25 — throttle `book_extra_image`; безпечний replace; `extra_images` у `BookInfoView`.

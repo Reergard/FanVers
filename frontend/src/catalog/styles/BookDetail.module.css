@@ -591,6 +591,25 @@
   margin-bottom: 0;
 }
 
+/* ===== ДОДАТКОВІ ЗОБРАЖЕННЯ (сторінка книги) ===== */
+.extraImagesSection {
+  margin-block: 0 clamp(24px, 4vw, 48px);
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.extraImagesSection > div {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .extraImagesSection {
+    margin-block: 0 clamp(20px, 4vw, 32px);
+  }
+}
+
 /* ===== ІНШІ РОБОТИ АВТОРА ===== */
 .authorWorks {
   margin-block: clamp(32px, 5vw, 64px);

@@ -13,6 +13,15 @@ import {
 } from "./bookForm.utils";
 import { PillDropdownSelect } from "../../../shared/PillDropdownSelect/PillDropdownSelect";
 import styles from "./BookForm.module.css";
+import {
+  createEmptyExtraImageSlots,
+  revokeExtraImagePreviews,
+  slotDisplayUrl,
+  slotHasVisibleImage,
+  type ExtraImageSlot,
+} from "./bookFormExtraImages.utils";
+import { UploadCloudIcon } from "../BookExtraImages/UploadCloudIcon";
+import panelStyles from "../BookExtraImages/BookExtraImagesPanel.module.css";
 
 export const BOOK_TYPES = [
   { value: "TRANSLATION" as const, label: "Переклад" },
@@ -54,6 +63,7 @@ export type BookFormData = {
   fandoms: number[];
   adult_content: boolean;
   image: File | null;
+  extraImages: ExtraImageSlot[];
 };
 
 export const initialFormData: BookFormData = {
@@ -70,6 +80,7 @@ export const initialFormData: BookFormData = {
   fandoms: [],
   adult_content: false,
   image: null,
+  extraImages: createEmptyExtraImageSlots(),
 };
 
 type BookFormMeta = {
@@ -88,7 +99,10 @@ type BookFormProps = {
   meta: BookFormMeta;
   submitLabel: string;
   submitting: boolean;
-  onSubmit: (payload: CreateBookPayload | UpdateBookPayload) => void;
+  onSubmit: (
+    payload: CreateBookPayload | UpdateBookPayload,
+    context: { extraImages: ExtraImageSlot[] }
+  ) => void | Promise<void>;
   onError: (msg: string) => void;
   /** Лише mode="create": роль для обмежень «Створити книгу» */
   bookCreationProfileRole?: string | null;
@@ -105,16 +119,6 @@ function DashedLine({ className }: { className?: string }) {
   );
 }
 
-function UploadCloudIcon({ className, size = 51 }: { className?: string; size?: number }) {
-  const h = (43 / 51) * size;
-  return (
-    <svg className={className} width={size} height={h} viewBox="0 0 51 43" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <path d="M21.5141 1.74439C22.7141 1.02095 24.6739 0.299857 25.9841 0.0996563C27.3766 -0.113047 29.7593 0.0271399 31.1209 0.402222C33.8116 1.14332 36.2835 2.83807 37.8509 5.01652C38.7065 6.20553 39.5832 8.00968 39.8237 9.07601C39.9938 9.82992 40.0554 9.90978 40.5903 10.0689C41.3444 10.293 42.8718 11.2866 43.6507 12.0596C44.8589 13.2586 46.1074 15.6595 46.109 16.7868C46.1093 16.9409 46.4717 17.2316 47.0142 17.5127C48.1172 18.0842 49.5026 19.4333 50.0799 20.4979C52.3201 24.629 50.3081 29.6535 45.7937 31.2018C44.8756 31.5166 44.3885 31.5599 41.0692 31.6216C36.9712 31.6977 36.2044 31.5975 35.7625 30.928C35.3691 30.3324 35.4455 29.5085 35.9392 29.0181L36.3512 28.6089L40.5606 28.5308C44.5394 28.4568 44.8063 28.4334 45.4306 28.1022C45.7937 27.9097 46.3374 27.5002 46.6383 27.1926C48.8612 24.9212 47.9823 21.0405 45.0082 19.9954C43.3972 19.4294 43.2113 19.2028 43.0749 17.6391C42.8638 15.2178 40.9226 13.095 38.5256 12.6641C37.6492 12.5066 37.2267 11.9304 36.9238 10.4799C36.2402 7.2056 34.1093 4.7685 30.871 3.55729C29.9705 3.2205 29.5341 3.1583 27.9982 3.14736C26.4887 3.13673 25.995 3.19706 25.0331 3.50962C21.7699 4.57048 19.362 7.34484 18.7801 10.7143C18.5823 11.8605 18.4826 12.1043 18.0536 12.4914C17.5876 12.9122 17.5063 12.932 16.7536 12.8079C16.312 12.7352 15.2775 12.676 14.4546 12.6763C13.1037 12.677 12.8552 12.7252 11.8941 13.1728C9.89818 14.1024 8.44855 15.8866 7.95107 18.0255C7.66854 19.2401 7.39783 19.5463 6.33529 19.8528C4.77086 20.3041 3.63966 21.4403 3.17477 23.027C2.87209 24.0604 2.97902 25.007 3.52643 26.1402C3.94848 27.0139 4.50833 27.5615 5.53859 28.1085C6.14757 28.4318 6.44128 28.4573 10.3872 28.5308C14.5414 28.6081 14.592 28.613 14.9854 28.9802C15.5198 29.4789 15.6405 30.1053 15.3203 30.7197C14.8524 31.6175 14.3959 31.6955 10.0524 31.6197C5.6893 31.5435 5.00913 31.4128 3.37477 30.3362C-0.67679 27.6673 -1.1653 22.0245 2.37113 18.7416C2.91508 18.2366 3.73005 17.6491 4.18234 17.4361C4.95779 17.0707 5.02314 16.9935 5.32976 16.0788C6.5816 12.3459 10.3758 9.62206 14.4052 9.5633L15.8518 9.5422L16.0265 8.85908C16.6999 6.22429 18.9744 3.27551 21.5141 1.74439Z" fill="#F58807"/>
-      <path d="M21.187 20.6753C22.8111 19.0437 24.3524 17.5771 24.6123 17.416C25.1786 17.065 25.6611 17.0442 26.2344 17.346C26.7441 17.6143 32.2995 23.1491 32.5483 23.6366C32.8345 24.197 32.7523 24.8846 32.3426 25.3572C32.0292 25.7187 31.836 25.7958 31.2429 25.7958C30.5374 25.7958 30.4891 25.762 28.7917 24.0827L27.0602 22.3697L27.0174 27.6949L26.9745 37.5702L26.5414 38C25.937 38.5997 25.0198 38.5997 24.4154 38L23.9823 37.5702L23.9395 27.7009L23.8967 22.3816L22.1132 24.1278C20.4836 25.7234 20.2793 25.8739 19.7424 25.8739C18.887 25.8739 18.2342 25.1931 18.2342 24.3009C18.2342 23.655 18.2939 23.5817 21.187 20.6753Z" fill="#F58807"/>
-    </svg>
-  );
-}
-
 export function BookForm({
   mode,
   initialValues,
@@ -128,6 +132,7 @@ export function BookForm({
   bookCreationProfileLoading = false,
 }: BookFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const extraFileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const objectUrlRef = useRef<string | null>(null);
   const [formData, setFormData] = useState<BookFormData>(initialValues);
   const [imagePreview, setImagePreview] = useState<string | null>(initialImagePreview);
@@ -158,7 +163,9 @@ export function BookForm({
   useEffect(() => {
     return () => {
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+      revokeExtraImagePreviews(formData.extraImages);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- cleanup лише при unmount
   }, []);
 
   const translationStatusOptions = useMemo(() => {
@@ -243,6 +250,62 @@ export function BookForm({
     [onError]
   );
 
+  const handleExtraImageChange = useCallback(
+    (index: number, file: File | null) => {
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        onError("Будь ласка, завантажте зображення (image/png або image/jpeg)");
+        return;
+      }
+      if (file.size > IMAGE_MAX_SIZE) {
+        onError(`Розмір файлу не повинен перевищувати ${BOOK_COVER_MAX_MB} МБ`);
+        return;
+      }
+
+      setFormData((prev) => {
+        const slots = [...prev.extraImages];
+        const prevSlot = slots[index];
+        if (prevSlot.preview) {
+          URL.revokeObjectURL(prevSlot.preview);
+        }
+        slots[index] = {
+          file,
+          preview: URL.createObjectURL(file),
+          existing: prevSlot.existing,
+          markedForDelete: false,
+        };
+        return { ...prev, extraImages: slots };
+      });
+    },
+    [onError]
+  );
+
+  const handleExtraImageRemove = useCallback((index: number) => {
+    setFormData((prev) => {
+      const slots = [...prev.extraImages];
+      const slot = slots[index];
+      if (slot.preview) {
+        URL.revokeObjectURL(slot.preview);
+      }
+      if (slot.existing) {
+        slots[index] = {
+          file: null,
+          preview: null,
+          existing: slot.existing,
+          markedForDelete: true,
+        };
+      } else {
+        slots[index] = {
+          file: null,
+          preview: null,
+          existing: null,
+          markedForDelete: false,
+        };
+      }
+      return { ...prev, extraImages: slots };
+    });
+  }, []);
+
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
@@ -261,7 +324,7 @@ export function BookForm({
       }
 
       const payload = normalizeBookPayload(formData, mode);
-      onSubmit(payload);
+      void Promise.resolve(onSubmit(payload, { extraImages: formData.extraImages }));
     },
     [
       formData,
@@ -508,14 +571,68 @@ export function BookForm({
             )}
           </button>
         </section>
-        <section className={styles.imagePanel} aria-label="Додаткові зображення">
-          <div className={styles.panelTitlePill}>Додаткові зображення</div>
-          <div className={styles.extraImagesRow}>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className={styles.extraSlot} aria-hidden>
-                <UploadCloudIcon className={styles.uploadIconSmall} size={51} />
-              </div>
-            ))}
+        <section className={`${styles.imagePanel} ${panelStyles.panel}`} aria-label="Додаткові зображення">
+          <div className={panelStyles.panelTitlePill}>Додаткові зображення</div>
+          <div className={panelStyles.extraImagesRow}>
+            {formData.extraImages.map((slot, index) => {
+              const displayUrl = slotDisplayUrl(slot);
+              const hasImage = slotHasVisibleImage(slot);
+
+              return (
+                <div
+                  key={index}
+                  className={`${panelStyles.extraSlot} ${panelStyles.extraSlotInteractive}`}
+                >
+                  {hasImage && displayUrl ? (
+                    <>
+                      <img
+                        src={displayUrl}
+                        alt={`Додаткове зображення ${index + 1}`}
+                        className={panelStyles.extraSlotImage}
+                      />
+                      <button
+                        type="button"
+                        className={panelStyles.extraSlotReplace}
+                        onClick={() => extraFileInputRefs.current[index]?.click()}
+                        aria-label={`Замінити зображення ${index + 1}`}
+                      />
+                      <button
+                        type="button"
+                        className={panelStyles.extraSlotRemove}
+                        onClick={() => handleExtraImageRemove(index)}
+                        aria-label={`Видалити зображення ${index + 1}`}
+                      >
+                        ×
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className={panelStyles.extraSlotLabel}
+                      onClick={() => extraFileInputRefs.current[index]?.click()}
+                      aria-label={`Вибрати зображення ${index + 1}`}
+                    >
+                      <UploadCloudIcon className={panelStyles.uploadIconSmall} size={51} />
+                    </button>
+                  )}
+                  <input
+                    ref={(el) => {
+                      extraFileInputRefs.current[index] = el;
+                    }}
+                    type="file"
+                    accept="image/png,image/jpeg"
+                    className={panelStyles.srOnly}
+                    tabIndex={-1}
+                    aria-hidden
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      handleExtraImageChange(index, file);
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+              );
+            })}
           </div>
         </section>
       </div>
@@ -576,6 +693,7 @@ function Field({
       </div>
 
       <div className={styles.fieldBody}>{children}</div>
+      {hint ? <p className={styles.fieldHintBelow}>{hint}</p> : null}
     </label>
   );
 }

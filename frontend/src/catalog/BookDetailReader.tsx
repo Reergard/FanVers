@@ -7,6 +7,7 @@ import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 import { BookDetailLayout } from "./BookDetailLayout";
 import { BookHero } from "./sections/BookHero";
 import { BookDescription } from "./sections/BookDescription";
+import { BookExtraImages } from "./sections/BookExtraImages";
 import { AuthorWorks } from "./sections/AuthorWorks";
 import { BookChapters } from "./sections/BookChapters";
 import { BookCommentsContainer } from "./sections/BookCommentsContainer";
@@ -125,6 +126,7 @@ export default function BookDetailReader({
         />
       }
       description={<BookDescription description={description} />}
+      extraImages={<BookExtraImages extraImages={book.extra_images} bookTitle={book.title} />}
       authorWorks={<AuthorWorks />}
       subscription={
         <SubscriptionPurchaseBlock

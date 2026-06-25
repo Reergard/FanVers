@@ -36,6 +36,7 @@ URL /books/:slug
 | `catalog/BookDetailRouter.tsx` | Грузит `book/volumes/chapters`, ждет `authReady`, выбирает owner/reader, обрабатывает 404/403/other. |
 | `catalog/BookDetailOwner.tsx` | Режим владельца: передает `isOwner`, owner-кнопки и `onRead` в `BookChapters`; управление порядком глав и томами. |
 | `catalog/BookDetailReader.tsx` | Режим читателя: передает `onRead`, `getReadLabel`, `SubscriptionPurchaseBlock` в layout. |
+| `catalog/sections/BookExtraImages.tsx` | Додаткові зображення книги (read-only); між описом і «Інші роботи автора»; приховано без `extra_images`. |
 | `catalog/sections/BookChapters.tsx` | Таблица глав. `handleChapterClick`: при prepaid — purchaseChapter → navigate; иначе navigate. |
 | `catalog/sections/SubscriptionPurchaseBlock.tsx` | Блок абонименту: prepaid-плани, активний пакет, підказка. |
 | `api/catalogApi.ts` | Типы и методы `getBook/getChapters/getVolumes`, нормализация ответов. |
@@ -55,9 +56,20 @@ URL /books/:slug
 
 ---
 
-## Backend-источники данных для страницы книги
+## Розкладка сторінки (`BookDetailLayout`)
 
-- `GET /api/catalog/books/info/<slug>/` -> данные книги
+Порядок секцій у `content`:
+
+1. Опис (`description`)
+2. Додаткові зображення (`extraImages`) — лише якщо `BookExtraImages` має дані
+3. Інші роботи автора (`authorWorks`)
+4. Підписка (`subscription`, reader)
+5. Розділи (`chapters`)
+6. Коментарі (`comments`)
+
+---
+
+- `GET /api/catalog/books/info/<slug>/` -> данные книги (включая `extra_images` — додаткові зображення)
 - `GET /api/catalog/books/<slug>/volumes/` -> тома
 - `GET /api/catalog/books/<slug>/chapters/` -> главы (включая container_versions)
 - `POST /api/catalog/books/<slug>/create-volume/` -> создание тома

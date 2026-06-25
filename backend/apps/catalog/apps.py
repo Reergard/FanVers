@@ -230,3 +230,4 @@ class CatalogConfig(AppConfig):
 
     def ready(self):
         post_migrate.connect(create_initial_data, sender=self)
+        import apps.catalog.signals  # noqa: F401

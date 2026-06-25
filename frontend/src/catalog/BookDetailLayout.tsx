@@ -6,6 +6,7 @@ import type { BreadcrumbItem } from "../navigation/Breadcrumb";
 export type BookDetailLayoutProps = {
   hero: ReactNode;
   description: ReactNode;
+  extraImages?: ReactNode;
   authorWorks: ReactNode;
   chapters: ReactNode;
   comments: ReactNode;
@@ -16,6 +17,7 @@ export type BookDetailLayoutProps = {
 export function BookDetailLayout({
   hero,
   description,
+  extraImages,
   authorWorks,
   chapters,
   comments,
@@ -33,6 +35,7 @@ export function BookDetailLayout({
 
       <section className={styles.content} aria-label="Контент сторінки книги">
         {description}
+        {extraImages}
         {authorWorks}
         {subscription}
         {chapters}

@@ -1,13 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNotification } from "../../shared/NotificationModal/NotificationProvider";
 import { useAuth } from "../../auth/useAuth";
-import { catalogKeys, type UpdateBookPayload } from "../../api/catalogApi";
+import { catalogKeys, updateBook, type UpdateBookPayload } from "../../api/catalogApi";
+import { buildExtraImagesFromApi, syncBookExtraImages } from "../components/BookForm/bookFormExtraImages.utils";
 import { resolveBookCoverUrl } from "../../shared/bookCover/resolveBookCoverUrl";
 import { BookForm, initialFormData, type BookFormData } from "../components/BookForm/BookForm";
 import { useBookBySlug } from "../hooks/useBookBySlug";
-import { useBookUpdate } from "../hooks/useBookUpdate";
 import { useBookFormMeta } from "../hooks/useBookFormMeta";
 
 function toOriginalStatus(raw?: string | null): string {
@@ -44,7 +44,36 @@ export default function GeneralSettings() {
   const { userId } = useAuth();
   const meta = useBookFormMeta();
   const { data: book, isLoading } = useBookBySlug(slug);
-  const updateBookMutation = useBookUpdate(slug);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (
+    payload: UpdateBookPayload,
+    context: { extraImages: ReturnType<typeof buildExtraImagesFromApi> }
+  ) => {
+    if (userId == null || book?.owner !== userId) {
+      showError("У вас немає прав для редагування цієї книги");
+      navigate(`/books/${slug}`, { replace: true });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await updateBook(slug, payload);
+      await syncBookExtraImages(slug, context.extraImages);
+      await queryClient.invalidateQueries({ queryKey: catalogKeys.book(slug) });
+      showSuccess("Налаштування книги оновлено");
+      window.scrollTo(0, 0);
+      navigate(`/books/${slug}`);
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message: unknown }).message)
+          : "Не вдалося оновити книгу";
+      showError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const initialValues = useMemo<BookFormData>(() => {
     if (!book) return initialFormData;
@@ -63,6 +92,7 @@ export default function GeneralSettings() {
       fandoms: (book.fandoms ?? []).map(toId).filter((id): id is number => id != null),
       adult_content: book.adult_content === true,
       image: null,
+      extraImages: buildExtraImagesFromApi(book.extra_images),
     };
   }, [book]);
 
@@ -83,30 +113,10 @@ export default function GeneralSettings() {
       initialImagePreview={book.image ? resolveBookCoverUrl(book.image) : null}
       meta={meta}
       submitLabel="Зберегти зміни"
-      submitting={updateBookMutation.isPending}
+      submitting={isSubmitting}
       onError={showError}
-      onSubmit={(payload) => {
-        if (userId == null || book.owner !== userId) {
-          showError("У вас немає прав для редагування цієї книги");
-          navigate(`/books/${slug}`, { replace: true });
-          return;
-        }
-
-        updateBookMutation.mutate(payload as UpdateBookPayload, {
-          onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: catalogKeys.book(slug) });
-            showSuccess("Налаштування книги оновлено");
-            window.scrollTo(0, 0);
-            navigate(`/books/${slug}`);
-          },
-          onError: (err: unknown) => {
-            const message =
-              err && typeof err === "object" && "message" in err
-                ? String((err as { message: unknown }).message)
-                : "Не вдалося оновити книгу";
-            showError(message);
-          },
-        });
+      onSubmit={(payload, context) => {
+        void handleSubmit(payload as UpdateBookPayload, context);
       }}
     />
   );

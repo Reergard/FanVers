@@ -54,8 +54,7 @@
 | `catalog/settings/GeneralSettings.tsx` | Завантаження книги, формування initialValues, рендер BookForm (mode="update") |
 | `catalog/settings/SettingsBook.css` | Стилі сторінки налаштувань |
 | `catalog/hooks/useBookBySlug.ts` | useQuery для GET книги за slug |
-| `catalog/hooks/useBookUpdate.ts` | useMutation для PUT оновлення книги |
-| `api/catalogApi.ts` | getBook, updateBook, catalogKeys |
+| `api/catalogApi.ts` | getBook, updateBook, extra-images API, catalogKeys |
 
 ### 3.2. Перевірки доступу (SettingsBook)
 
@@ -71,7 +70,7 @@
 
 1. **BookForm** у `handleSubmit`: `validateBookForm(formData, { mode: "update" })` — на update не застосовується обмеження PAUSED/ABANDONED для translation_status.
 2. **Payload:** `normalizeBookPayload(formData, "update")` → UpdateBookPayload.
-3. **GeneralSettings** `onSubmit`: перевіряє `userId == null || book.owner !== userId` → showError, navigate на книгу, return; інакше викликає `updateBookMutation.mutate(payload, { onSuccess, onError })`.
+3. **GeneralSettings** `onSubmit`: `updateBook` → `syncBookExtraImages` → invalidate + navigate.
 4. **updateBook** (`catalogApi.ts`): FormData, `PUT /api/catalog/books/<slug>/update/`, без явного Content-Type (axios виставляє multipart з boundary).
 5. **Успіх:** `queryClient.invalidateQueries({ queryKey: catalogKeys.book(slug) })`, `showSuccess("Налаштування книги оновлено")`, `window.scrollTo(0, 0)`, `navigate(\`/books/${slug}\`)`.
 6. **Помилка:** showError з `err.message` або «Не вдалося оновити книгу».
@@ -90,7 +89,9 @@
 - **Теги:** групи з `meta.tagGroups`. На create — спочатку 1 група, кнопка «Показати ще» показує всі групи. На update — одразу всі групи, кнопки немає.
 - **Контент 18+:** чекбокс синхронізований з тегом «18+» (adultTagId). Якщо вибрано 18+ — тег додається/прибирається з `tags`.
 - **Зображення:** max 10 МБ, тільки image/*. На update — можна залишити поточне (image=null у payload) або завантажити нове.
-- **Опис:** лічильник символів (max **900** — `DESCRIPTION_MAX_CHARS` у `bookForm.utils.ts`); `maxLength` на textarea, валідація на клієнті та бекенді узгоджені. У каруселях головної та SEO-мета використовуються **коротші** обрізки — див. §5.1.
+- **Опис:** лічильник символів (max **900** — `DESCRIPTION_MAX_CHARS` у `bookForm.utils.ts`); див. §5.1.
+- **Основне зображення (обкладинка):** max 10 МБ, `image/*`; поле `image` у FormData create/update.
+- **Додаткові зображення:** 5 слотів у `BookForm`; завантаження **після** create/update через окремі ендпоінти `extra-images/` (див. §6). Стилі спільні: `components/BookExtraImages/BookExtraImagesPanel.module.css`.
 
 ### 4.3. handleSubmit
 
@@ -136,17 +137,36 @@
 
 ---
 
-## 6. Хуки
+## 6. Додаткові зображення (форма)
+
+| Файл | Роль |
+|------|------|
+| `catalog/components/BookForm/bookFormExtraImages.utils.ts` | Слоти, sync після збереження |
+| `api/catalogApi.ts` | `uploadBookExtraImage`, `deleteBookExtraImage`, `replaceBookExtraImage` |
+
+### Потік
+
+1. **Створення:** `createBook` → `uploadNewBookExtraImages(slug, slots)` (лише слоти з `file`).
+2. **Редагування:** `updateBook` → `syncBookExtraImages` (delete / replace / upload за станом слотів).
+3. Слот: `{ file, preview, existing, markedForDelete }`; позиція слоту **0–4** передається на бекенд при upload.
+
+### Відображення на сторінці книги
+
+- `catalog/sections/BookExtraImages.tsx` — read-only; дані з `book.extra_images` (API `books/info/`).
+- Блок **прихований**, якщо `extra_images` порожній — без зайвого відступу між описом і «Інші роботи автора».
+
+---
+
+## 7. Хуки
 
 | Хук | Файл | Призначення |
 |-----|------|-------------|
 | useBookFormMeta | hooks/useBookFormMeta.ts | genres, tags, countries, fandoms, tagGroups, adultTagId |
 | useBookBySlug | hooks/useBookBySlug.ts | GET книга за slug (catalogKeys.book) |
-| useBookUpdate | hooks/useBookUpdate.ts | PUT updateBook(slug, payload) |
 
 ---
 
-## 7. Кнопки та навігація
+## 8. Кнопки та навігація
 
 - **CreateBookPage:** кнопка «Опублікувати переклад» (submitLabel) — сабміт форми.
 - **GeneralSettings:** кнопка «Зберегти зміни» — сабміт форми.
@@ -154,7 +174,7 @@
 
 ---
 
-## 8. ScrollToTop
+## 9. ScrollToTop
 
 - `ScrollToTop` (shared/ScrollToTop.tsx) монтується в App.tsx всередині BrowserRouter.
 - При зміні pathname викликає `window.scrollTo(0, 0)`.
@@ -162,10 +182,10 @@
 
 ---
 
-## 9. Пов'язана документація
+## 10. Пов'язана документація
 
 - Backend: `backend/docs/BOOK_CREATE_UPDATE_BACKEND.md`
 - Компоненти: `docs/COMPONENTS.md`
 - Структура: `docs/STRUCTURE.md`
 
-**Останнє оновлення:** 2026-06-24 — ліміт опису **900** символів; §5.1 про відображення в каруселях.
+**Останнє оновлення:** 2026-06-25 — додаткові зображення (`extra_images`); ліміт опису **900** символів.

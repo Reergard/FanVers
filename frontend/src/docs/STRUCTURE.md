@@ -629,6 +629,8 @@ export function AppRoutes() {
 
 **Маршрути (App.tsx):** `/create-book` → CreateBookPage, `/books/:slug/settings` → SettingsBook, `/books/:slug/add-chapter` → AddChapter (оголошується **перед** `/books/:slug`), `/books/:bookSlug/chapters/:chapterSlug` → ChapterDetailRouter, `/books/:slug` → BookDetailRouter, `/abandoned` → AbandonedTranslations.
 
+**Секції сторінки книги (`BookDetailLayout`):** hero → опис → **додаткові зображення** (якщо є) → інші роботи автора → підписка → розділи → коментарі.
+
 ---
 
 ## `website_advertising/` — реклама книг

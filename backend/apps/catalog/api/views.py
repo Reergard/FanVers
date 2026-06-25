@@ -1,20 +1,22 @@
 from rest_framework.response import Response
 from apps.catalog.models import (
     Book, Chapter, Genres, Tag, Country, Fandom, Volume, ChapterOrder,
-    ChapterOrderContainer, TranslatorApplication,
+    ChapterOrderContainer, TranslatorApplication, BookImage,
 )
 from apps.catalog.api.serializers import (
     ChapterSerializer, GenresSerializer, TagSerializer,
     CountrySerializer, FandomSerializer, VolumeSerializer, ChapterOrderSerializer,
-    BookOwnerSerializer, BookReaderSerializer, BookCreateSerializer
+    BookOwnerSerializer, BookReaderSerializer, BookCreateSerializer, BookImageSerializer,
 )
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.decorators import api_view, parser_classes, permission_classes, throttle_classes
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR
 from rest_framework import status
 import os
 import logging
+from django.core.files.storage import default_storage
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
 from apps.navigation.models import Bookmark
@@ -456,7 +458,7 @@ class BookOwnerViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsBookOwner]
 
     def get_queryset(self):
-        return Book.objects.filter(owner=self.request.user)
+        return Book.objects.filter(owner=self.request.user).prefetch_related('extra_images')
 
 
 class BookReaderViewSet(viewsets.ReadOnlyModelViewSet):
@@ -465,7 +467,7 @@ class BookReaderViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return Book.objects.all().order_by('-last_updated')
+        return Book.objects.all().order_by('-last_updated').prefetch_related('extra_images')
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -771,6 +773,116 @@ def update_book(request, slug):
         )
 
 
+def _extra_image_owner_forbidden():
+    return Response({'detail': 'Немає прав.'}, status=status.HTTP_403_FORBIDDEN)
+
+
+def _save_replaced_extra_image(serializer):
+    """Зберегти новий файл, потім видалити попередній з диску (безпечніше за delete-before-save)."""
+    instance = serializer.instance
+    old_path = instance.image.name if instance.image else None
+    saved = serializer.save()
+    if old_path:
+        new_path = saved.image.name if saved.image else None
+        if new_path != old_path and default_storage.exists(old_path):
+            default_storage.delete(old_path)
+    return saved
+
+
+def _resolve_extra_image_position(book, request_data):
+    """Повертає position 0–4 або (None, Response) при помилці."""
+    position_raw = request_data.get('position')
+    if position_raw is not None and str(position_raw).strip() != '':
+        try:
+            position = int(position_raw)
+        except (TypeError, ValueError):
+            return None, Response({'detail': 'Невірна позиція.'}, status=HTTP_400_BAD_REQUEST)
+        if position not in range(5):
+            return None, Response({'detail': 'Позиція має бути від 0 до 4.'}, status=HTTP_400_BAD_REQUEST)
+        if book.extra_images.filter(position=position).exists():
+            return None, Response({'detail': 'Цей слот уже зайнятий.'}, status=HTTP_400_BAD_REQUEST)
+        return position, None
+
+    if book.extra_images.count() >= 5:
+        return None, Response({'detail': 'Максимум 5 додаткових зображень.'}, status=HTTP_400_BAD_REQUEST)
+
+    used_positions = set(book.extra_images.values_list('position', flat=True))
+    try:
+        return next(p for p in range(5) if p not in used_positions), None
+    except StopIteration:
+        return None, Response({'detail': 'Максимум 5 додаткових зображень.'}, status=HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
+@permission_classes([IsAuthenticated])
+@throttle_classes([ScopedRateThrottle])
+def upload_book_extra_image(request, slug):
+    book = get_object_or_404(Book, slug=slug)
+    if book.owner != request.user:
+        return _extra_image_owner_forbidden()
+
+    position, error_response = _resolve_extra_image_position(book, request.data)
+    if error_response is not None:
+        return error_response
+
+    image_file = request.FILES.get('image')
+    if not image_file:
+        return Response({'detail': 'Файл не надано.'}, status=HTTP_400_BAD_REQUEST)
+
+    serializer = BookImageSerializer(
+        data={'image': image_file, 'position': position},
+        context={'request': request},
+    )
+    serializer.is_valid(raise_exception=True)
+    serializer.save(book=book)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+upload_book_extra_image.throttle_scope = 'book_extra_image'
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_book_extra_image(request, slug, image_id):
+    book = get_object_or_404(Book, slug=slug)
+    if book.owner != request.user:
+        return _extra_image_owner_forbidden()
+
+    image = get_object_or_404(BookImage, id=image_id, book=book)
+    image.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['PATCH'])
+@parser_classes([MultiPartParser, FormParser])
+@permission_classes([IsAuthenticated])
+@throttle_classes([ScopedRateThrottle])
+def replace_book_extra_image(request, slug, image_id):
+    book = get_object_or_404(Book, slug=slug)
+    if book.owner != request.user:
+        return _extra_image_owner_forbidden()
+
+    image_obj = get_object_or_404(BookImage, id=image_id, book=book)
+    new_file = request.FILES.get('image')
+    if not new_file:
+        return Response({'detail': 'Файл не надано.'}, status=HTTP_400_BAD_REQUEST)
+
+    serializer = BookImageSerializer(
+        image_obj,
+        data={'image': new_file},
+        partial=True,
+        context={'request': request},
+    )
+    serializer.is_valid(raise_exception=True)
+
+    saved = _save_replaced_extra_image(serializer)
+    return Response(BookImageSerializer(saved, context={'request': request}).data, status=status.HTTP_200_OK)
+
+
+replace_book_extra_image.throttle_scope = 'book_extra_image'
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def owned_books(request):
@@ -940,7 +1052,7 @@ def delete_chapter(request, book_slug, chapter_id):
 
 
 class BookInfoView(generics.RetrieveAPIView):
-    queryset = Book.objects.all()
+    queryset = Book.objects.all().prefetch_related('extra_images')
     lookup_field = 'slug'
     permission_classes = [AllowAny]
     
@@ -980,6 +1092,7 @@ class BookInfoView(generics.RetrieveAPIView):
             tags = TagSerializer(many=True, read_only=True)
             fandoms = FandomSerializer(many=True, read_only=True)
             country = CountrySerializer(read_only=True)
+            extra_images = BookImageSerializer(many=True, read_only=True)
 
             class Meta:
                 model = Book
@@ -989,7 +1102,7 @@ class BookInfoView(generics.RetrieveAPIView):
                     'original_status_display', 'country', 'slug',
                     'last_updated', 'owner', 'creator', 'adult_content',
                     'owner_username', 'creator_username', 'book_type',
-                    'genres', 'tags', 'fandoms',
+                    'genres', 'tags', 'fandoms', 'extra_images',
                 ] + access_fields
                 read_only_fields = fields
 

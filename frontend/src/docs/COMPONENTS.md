@@ -133,12 +133,32 @@
 - Теги: на create — спочатку 1 група + «Показати ще» (показує всі); на update — одразу всі групи без кнопки.
 - Чекбокс 18+ синхронізований з тегом «18+» (adultTagId). Валідація через `validateBookForm`, формування payload через `normalizeBookPayload`.
 - **Опис:** лічильник і `maxLength` — **900** символів (`DESCRIPTION_MAX_CHARS`); у каруселях головної показується обрізка до 500.
+- **Додаткові зображення:** 5 слотів; upload через `extra-images/` API після збереження книги; стилі `BookExtraImagesPanel.module.css`.
 
 **Місця використання:**
 - `catalog/CreateBookPage.tsx` (mode="create")
 - `catalog/settings/GeneralSettings.tsx` (mode="update")
 
 **Деталі:** `docs/BOOK_CREATE_SETTINGS_FLOW.md`.
+
+---
+
+### `BookExtraImages`
+
+**Призначення:** Read-only блок «Додаткові зображення» на сторінці книги (між описом і «Інші роботи автора»).
+
+**Файли:**
+- `catalog/sections/BookExtraImages.tsx`
+- `catalog/components/BookExtraImages/BookExtraImagesPanel.module.css` (спільні стилі з формою; модифікатори `panelDisplay`, `extraImagesRowDisplay`)
+
+**Особливості:**
+- Дані з `book.extra_images` (API `GET /api/catalog/books/info/<slug>/`).
+- Сортування за `position`; показуються лише слоти з валідним `image`.
+- Якщо зображень немає — компонент повертає `null` (без порожнього відступу).
+- URL через `resolveBookCoverUrl()`; `loading="lazy"`, `decoding="async"`.
+
+**Місця використання:**
+- `catalog/BookDetailReader.tsx`, `catalog/BookDetailOwner.tsx` → проп `extraImages` у `BookDetailLayout`.
 
 ---
 

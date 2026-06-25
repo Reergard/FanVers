@@ -251,6 +251,7 @@ REST_FRAMEWORK = {
         'auth_logout': '20/min',   # логаут
         'support_ticket': '10/hour',  # звернення в підтримку (на IP / user id)
         'editor_chapter_image': '120/hour',  # зображення в редакторі (прив'язка до глави)
+        'book_extra_image': '30/hour',  # додаткові зображення книги (upload/replace)
         'payout_submit': '5/hour',   # подача заявки на виплату (дебет балансу)
         'payout_method': '10/hour',  # додавання методів виплати
         'payout_cancel': '10/hour',  # скасування запитів на виплату

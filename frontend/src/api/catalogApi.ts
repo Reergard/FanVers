@@ -23,6 +23,13 @@ export interface BookCountry {
   name: string;
 }
 
+/** Додаткове зображення книги (API: extra_images). */
+export interface BookExtraImage {
+  id: number;
+  image: string;
+  position: number;
+}
+
 export interface Book {
   id: number;
   slug: string;
@@ -77,6 +84,8 @@ export interface Book {
   comment_chapter_permission?: "all" | "bookmarked" | "none";
   download_permission?: "all" | "bookmarked" | "none";
   rate_permission?: PermissionLevel;
+  /** Додаткові зображення (API: extra_images) */
+  extra_images?: BookExtraImage[];
 }
 
 export type { BookAccessRights };
@@ -207,10 +216,22 @@ function toOwnerId(raw: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function normalizeExtraImage(raw: unknown): BookExtraImage | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  const id = Number(o.id);
+  const position = Number(o.position);
+  if (!Number.isFinite(id) || !Number.isFinite(position)) return null;
+  const image = o.image != null && o.image !== "" ? String(o.image) : "";
+  if (!image) return null;
+  return { id, position, image };
+}
+
 function normalizeBook(raw: Record<string, unknown>): Book {
   const genresRaw = Array.isArray(raw.genres) ? raw.genres : [];
   const tagsRaw = Array.isArray(raw.tags) ? raw.tags : [];
   const fandomsRaw = Array.isArray(raw.fandoms) ? raw.fandoms : [];
+  const extraImagesRaw = Array.isArray(raw.extra_images) ? raw.extra_images : [];
 
   const ownerId = toOwnerId(raw.ownerId ?? raw.owner ?? raw.owner_id);
   const createdAtForBadge =
@@ -294,6 +315,9 @@ function normalizeBook(raw: Record<string, unknown>): Book {
     comment_chapter_permission: toPermissionLevel(raw.comment_chapter_permission),
     download_permission: toPermissionLevel(raw.download_permission),
     rate_permission: toPermissionLevel(raw.rate_permission),
+    extra_images: extraImagesRaw
+      .map(normalizeExtraImage)
+      .filter((g): g is BookExtraImage => g != null),
   };
 }
 
@@ -858,6 +882,49 @@ export async function updateBook(slug: string, payload: UpdateBookPayload): Prom
   return normalizeBook(data);
 }
 
+export async function uploadBookExtraImage(
+  slug: string,
+  file: File,
+  position: number
+): Promise<BookExtraImage> {
+  const form = new FormData();
+  form.append("image", file);
+  form.append("position", String(position));
+  const { data } = await http.post<Record<string, unknown>>(
+    `${CATALOG}/books/${encodeURIComponent(slug)}/extra-images/`,
+    form,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+  const normalized = normalizeExtraImage(data);
+  if (!normalized) {
+    throw new Error("Некоректна відповідь сервера для додаткового зображення");
+  }
+  return normalized;
+}
+
+export async function deleteBookExtraImage(slug: string, imageId: number): Promise<void> {
+  await http.delete(`${CATALOG}/books/${encodeURIComponent(slug)}/extra-images/${imageId}/`);
+}
+
+export async function replaceBookExtraImage(
+  slug: string,
+  imageId: number,
+  file: File
+): Promise<BookExtraImage> {
+  const form = new FormData();
+  form.append("image", file);
+  const { data } = await http.patch<Record<string, unknown>>(
+    `${CATALOG}/books/${encodeURIComponent(slug)}/extra-images/${imageId}/replace/`,
+    form,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+  const normalized = normalizeExtraImage(data);
+  if (!normalized) {
+    throw new Error("Некоректна відповідь сервера для додаткового зображення");
+  }
+  return normalized;
+}
+
 export const catalogApi = {
   getBook,
   getBookAccessRights,
@@ -883,6 +950,9 @@ export const catalogApi = {
   getFandoms,
   createBook,
   updateBook,
+  uploadBookExtraImage,
+  deleteBookExtraImage,
+  replaceBookExtraImage,
 };
 
 export { STALE_REF };

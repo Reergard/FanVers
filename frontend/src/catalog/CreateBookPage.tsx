@@ -10,6 +10,7 @@ import {
   createBook,
   type CreateBookPayload,
 } from "../api/catalogApi";
+import { uploadNewBookExtraImages } from "./components/BookForm/bookFormExtraImages.utils";
 import { BookForm, initialFormData } from "./components/BookForm/BookForm";
 import { useBookFormMeta } from "./hooks/useBookFormMeta";
 import { Breadcrumb } from "../navigation/Breadcrumb";
@@ -29,7 +30,17 @@ function CreateBookPageInner() {
   const meta = useBookFormMeta();
 
   const createBookMutation = useMutation({
-    mutationFn: (payload: CreateBookPayload) => createBook(payload),
+    mutationFn: async ({
+      payload,
+      extraImages,
+    }: {
+      payload: CreateBookPayload;
+      extraImages: Parameters<typeof uploadNewBookExtraImages>[1];
+    }) => {
+      const book = await createBook(payload);
+      await uploadNewBookExtraImages(book.slug, extraImages);
+      return book;
+    },
     onSuccess: () => {
       showSuccess("Книга успішно створена!");
       navigate("/my-translations");
@@ -83,7 +94,12 @@ function CreateBookPageInner() {
           submitLabel="Опублікувати переклад"
           submitting={isSubmitting}
           onError={showError}
-          onSubmit={(payload) => createBookMutation.mutate(payload as CreateBookPayload)}
+          onSubmit={(payload, { extraImages }) =>
+            createBookMutation.mutate({
+              payload: payload as CreateBookPayload,
+              extraImages,
+            })
+          }
           bookCreationProfileRole={bookCreationProfileRole}
           bookCreationProfileLoading={profileQuery.isLoading}
         />

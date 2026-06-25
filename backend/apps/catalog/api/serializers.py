@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.catalog.models import Book, Chapter, Genres, Tag, Country, Fandom, Volume, ChapterOrder
+from apps.catalog.models import Book, Chapter, Genres, Tag, Country, Fandom, Volume, ChapterOrder, BookImage
 from apps.catalog.badge_utils import book_shows_new_badge
 from apps.navigation.models import Bookmark 
 from django.conf import settings
@@ -10,6 +10,30 @@ logger = logging.getLogger(__name__)
 # Обкладинка книги (створення / оновлення) — узгоджено з frontend BookForm
 BOOK_COVER_IMAGE_MAX_MB = 10
 BOOK_COVER_IMAGE_MAX_BYTES = BOOK_COVER_IMAGE_MAX_MB * 1024 * 1024
+
+
+class BookImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookImage
+        fields = ['id', 'image', 'position']
+        read_only_fields = ['id']
+
+    def validate_image(self, value):
+        if value and getattr(value, 'size', 0) > BOOK_COVER_IMAGE_MAX_BYTES:
+            raise serializers.ValidationError(
+                f'Розмір зображення не може перевищувати {BOOK_COVER_IMAGE_MAX_MB} МБ.'
+            )
+        return value
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if instance.image:
+            request = self.context.get('request')
+            url = instance.image.url
+            rep['image'] = request.build_absolute_uri(url) if request else url
+        else:
+            rep['image'] = None
+        return rep
 
 
 class GenresSerializer(serializers.ModelSerializer):
@@ -134,6 +158,7 @@ class BookOwnerSerializer(serializers.ModelSerializer):
     fandoms = FandomSerializer(many=True, read_only=True)
     country = CountrySerializer(read_only=True)
     is_new_badge = serializers.SerializerMethodField()
+    extra_images = BookImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Book
@@ -145,7 +170,8 @@ class BookOwnerSerializer(serializers.ModelSerializer):
             'adult_content', 'owner_username', 'creator_username', 'book_type',
             'is_new_badge',
             'genres', 'tags', 'fandoms', 'view_permission', 'comment_book_permission',
-            'comment_chapter_permission', 'download_permission', 'rate_permission'
+            'comment_chapter_permission', 'download_permission', 'rate_permission',
+            'extra_images',
         ]
         read_only_fields = ['slug', 'last_updated', 'owner', 'creator']
 
@@ -212,6 +238,7 @@ class BookReaderSerializer(serializers.ModelSerializer):
     fandoms = FandomSerializer(many=True, read_only=True)
     country = CountrySerializer(read_only=True)
     is_new_badge = serializers.SerializerMethodField()
+    extra_images = BookImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Book
@@ -222,7 +249,7 @@ class BookReaderSerializer(serializers.ModelSerializer):
             'country', 'slug', 'last_updated', 'owner_username', 
             'creator_username', 'bookmark_status', 'bookmark_id', 
             'adult_content', 'book_type', 'is_new_badge', 'chapters_count',
-            'genres', 'tags', 'fandoms', 'created_at'
+            'genres', 'tags', 'fandoms', 'created_at', 'extra_images',
         ]
         read_only_fields = fields
 

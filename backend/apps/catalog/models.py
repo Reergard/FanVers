@@ -110,6 +110,17 @@ def book_image_path(instance, filename):
     return os.path.join('books', slug, filename)
 
 
+def book_extra_image_path(instance, filename):
+    """Шлях: books/{slug}/extra/{clean_filename}"""
+    slug = instance.book.slug
+    name = clean_filename(filename)
+    return f"books/{slug}/extra/{name}"
+
+
+# Зворотна сумісність для міграції 0019
+book_gallery_image_path = book_extra_image_path
+
+
 def book_directory_path(instance, filename):
     local_cleaned_filename = clean_filename(filename)
     return f'books/{instance.slug}/{local_cleaned_filename}'
@@ -544,6 +555,42 @@ class Book(models.Model):
     class Meta:
         verbose_name = _('Книга')
         verbose_name_plural = _('Книги')
+
+
+class BookImage(models.Model):
+    """Додаткове зображення книги (до 5 штук, позиції 0–4)."""
+    book = models.ForeignKey(
+        Book,
+        on_delete=models.CASCADE,
+        related_name='extra_images',
+    )
+    image = models.ImageField(
+        upload_to=book_extra_image_path,
+        validators=[validate_image_extension],
+    )
+    position = models.PositiveSmallIntegerField(
+        default=0,
+        help_text='Порядковий номер слоту (0–4)',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['position']
+        verbose_name = _('Додаткове зображення книги')
+        verbose_name_plural = _('Додаткові зображення книг')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['book', 'position'],
+                name='unique_book_image_position',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(position__lte=4),
+                name='max_position_4',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.book.title} — image #{self.position}'
 
 
 class TranslatorApplication(models.Model):
