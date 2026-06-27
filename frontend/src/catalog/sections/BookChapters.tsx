@@ -101,6 +101,8 @@ export type BookChaptersProps = {
   addChapterTo?: string;
   onAddChapter?: () => void;
   onCreateVolume?: () => void;
+  /** Видалити том (тільки для власника) */
+  onDeleteVolume?: (volumeId: number, title: string, chaptersCount: number) => void;
   onChangeOrder?: () => void;
   onRead?: (chapter: Chapter) => void;
   onEdit?: (chapter: Chapter) => void;
@@ -127,6 +129,8 @@ export type BookChaptersProps = {
   isMovingToVolume?: boolean;
   /** Чи створюється том (блокує кнопку) */
   isCreatingVolume?: boolean;
+  /** Чи видаляється том (блокує кнопки видалення) */
+  isDeletingVolume?: boolean;
   /** Slug книги (для читачів — застосування плану до обраних розділів) */
   bookSlug?: string;
   /** Після успішної покупки/застосування плану */
@@ -143,6 +147,7 @@ export function BookChapters({
   addChapterTo,
   onAddChapter,
   onCreateVolume,
+  onDeleteVolume,
   onChangeOrder,
   onRead,
   onEdit,
@@ -160,6 +165,7 @@ export function BookChapters({
   isSavingOrder = false,
   isMovingToVolume = false,
   isCreatingVolume = false,
+  isDeletingVolume = false,
   bookSlug,
   onPurchaseSuccess,
   requireAuthForPurchase = false,
@@ -485,6 +491,26 @@ export function BookChapters({
             <div key={group.volumeId} className={styles.chapterVolumeGroup}>
               <div className={styles.chapterVolumeHeader} role="row">
                 <span className={styles.chapterVolumeTitle}>{group.title}</span>
+                {isOwner &&
+                  onDeleteVolume &&
+                  group.volumeId !== "no-volume" &&
+                  !reorderMode && (
+                    <button
+                      type="button"
+                      className={styles.volumeDeleteBtn}
+                      onClick={() =>
+                        onDeleteVolume(
+                          group.volumeId as number,
+                          group.title,
+                          group.chapters.length
+                        )
+                      }
+                      disabled={isDeletingVolume}
+                      aria-label={`Видалити том «${group.title}»`}
+                    >
+                      <img src={deleteIcon} alt="" className={styles.volumeDeleteIcon} aria-hidden />
+                    </button>
+                  )}
               </div>
               {group.chapters.length === 0 && group.volumeId !== "no-volume" ? (
                 <div className={styles.chapterEmptyRow} role="row" aria-label={`${group.title} — порожній том`}>

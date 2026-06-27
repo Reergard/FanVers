@@ -712,6 +712,10 @@
 
 .chapterVolumeHeader {
   grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(8px, 1vw, 12px);
   padding: clamp(12px, 1.5vw, 18px) 0 clamp(8px, 1vw, 12px);
   font-size: clamp(13px, 1.2vw, 14px);
   font-weight: 700;
@@ -725,7 +729,35 @@
 }
 
 .chapterVolumeTitle {
-  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+.volumeDeleteBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 2px;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.volumeDeleteBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.volumeDeleteBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.volumeDeleteIcon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .chapterTableHeader {

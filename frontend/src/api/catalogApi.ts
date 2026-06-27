@@ -590,6 +590,13 @@ export async function createVolume(slug: string, title: string): Promise<Volume>
   return normalizeVolume(data);
 }
 
+/** Видалення тому разом із усіма розділами в ньому (тільки власник книги). */
+export async function deleteVolume(bookSlug: string, volumeId: number): Promise<void> {
+  await http.delete(
+    `${CATALOG}/books/${encodeURIComponent(bookSlug)}/volumes/${volumeId}/delete/`
+  );
+}
+
 export interface ReorderChaptersResponse {
   volume_id: number | null;
   container_version: number;
@@ -935,6 +942,7 @@ export const catalogApi = {
   deleteChapter,
   getChapterNavigation,
   createVolume,
+  deleteVolume,
   reorderChapters,
   moveChapter,
   uploadChapter,

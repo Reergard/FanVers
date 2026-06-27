@@ -599,6 +599,47 @@ def create_volume(request, book_slug):
         )
 
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_volume(request, book_slug, volume_id):
+    """Видалення тому разом із усіма розділами в ньому. Тільки власник книги."""
+    try:
+        book = get_object_or_404(Book, slug=book_slug)
+        if request.user != book.owner:
+            return Response(
+                {'error': 'У вас немає прав для видалення томів у цій книзі'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        volume = get_object_or_404(Volume, id=volume_id, book=book)
+
+        with transaction.atomic():
+            chapters = list(Chapter.objects.filter(book=book, volume=volume))
+            for chapter in chapters:
+                if chapter.file:
+                    if os.path.exists(chapter.file.path):
+                        os.remove(chapter.file.path)
+                if chapter.html_file_path:
+                    html_path = os.path.join(settings.MEDIA_ROOT, chapter.html_file_path)
+                    if os.path.exists(html_path):
+                        os.remove(html_path)
+                chapter.delete()
+
+            volume.delete()
+
+        Book.mark_translation_owner_activity(book)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    except Exception as e:
+        logger.error(f"Помилка видалення тому: {str(e)}")
+        if settings.DEBUG:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(
+            {'error': 'Помилка при видаленні тому'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
 @permission_classes([IsAuthenticated])

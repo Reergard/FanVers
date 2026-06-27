@@ -14,6 +14,7 @@ import { AuthorWorks } from "./sections/AuthorWorks";
 import { BookChapters } from "./sections/BookChapters";
 import { MoveChapterModal } from "./sections/MoveChapterModal";
 import { CreateVolumeModal } from "./sections/CreateVolumeModal";
+import { DeleteVolumeModal } from "./sections/DeleteVolumeModal";
 import { BookCommentsContainer } from "./sections/BookCommentsContainer";
 import styles from "./styles/BookDetail.module.css";
 
@@ -48,6 +49,12 @@ export default function BookDetailOwner({
   const [isMovingChapter, setIsMovingChapter] = useState(false);
   const [createVolumeModalOpen, setCreateVolumeModalOpen] = useState(false);
   const [isCreatingVolume, setIsCreatingVolume] = useState(false);
+  const [volumeToDelete, setVolumeToDelete] = useState<{
+    id: number;
+    title: string;
+    chaptersCount: number;
+  } | null>(null);
+  const [isDeletingVolume, setIsDeletingVolume] = useState(false);
 
   const metaRows = useMemo(() => {
     const publicationLabel =
@@ -146,6 +153,28 @@ export default function BookDetailOwner({
       setSaveError(msg);
     } finally {
       setIsCreatingVolume(false);
+    }
+  }
+
+  async function handleDeleteVolume() {
+    if (!volumeToDelete) return;
+    setIsDeletingVolume(true);
+    setSaveError(null);
+    try {
+      await catalogApi.deleteVolume(book.slug, volumeToDelete.id);
+      await qc.invalidateQueries({ queryKey: catalogKeys.volumes(book.slug) });
+      await qc.invalidateQueries({ queryKey: catalogKeys.chapters(book.slug) });
+      await qc.invalidateQueries({ queryKey: catalogKeys.book(book.slug) });
+      onVolumesRefresh?.();
+      setVolumeToDelete(null);
+      showSuccessAutoClose("Том успішно видалено");
+    } catch (err) {
+      const axErr = err as { response?: { data?: { error?: string } } };
+      const msg = axErr.response?.data?.error ?? "Не вдалося видалити том";
+      setSaveError(msg);
+      throw err;
+    } finally {
+      setIsDeletingVolume(false);
     }
   }
 
@@ -259,11 +288,16 @@ export default function BookDetailOwner({
           {saveError && <div role="alert" className={styles.chapterSaveError}>{saveError}</div>}
           <BookChapters
             chapters={chapters}
+            volumes={volumes}
             isOwner
             loading={chaptersLoading}
             addChapterTo={`/books/${book.slug}/add-chapter`}
             onCreateVolume={() => setCreateVolumeModalOpen(true)}
             isCreatingVolume={isCreatingVolume}
+            onDeleteVolume={(volumeId, title, chaptersCount) =>
+              setVolumeToDelete({ id: volumeId, title, chaptersCount })
+            }
+            isDeletingVolume={isDeletingVolume}
             onChangeOrder={enterReorderMode}
             onRead={(ch) => navigate(`/books/${book.slug}/chapters/${ch.slug ?? ch.id}`)}
             onEdit={(ch) => navigate(`/books/${book.slug}/edit-chapter/${ch.id}`)}
@@ -318,6 +352,16 @@ export default function BookDetailOwner({
             onClose={() => setCreateVolumeModalOpen(false)}
             onConfirm={handleCreateVolume}
             isSubmitting={isCreatingVolume}
+          />
+          <DeleteVolumeModal
+            open={volumeToDelete != null}
+            onClose={() => {
+              if (!isDeletingVolume) setVolumeToDelete(null);
+            }}
+            onConfirm={handleDeleteVolume}
+            volumeTitle={volumeToDelete?.title ?? ""}
+            chaptersCount={volumeToDelete?.chaptersCount ?? 0}
+            isSubmitting={isDeletingVolume}
           />
         </>
       }
