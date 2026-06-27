@@ -724,10 +724,18 @@ UNFOLD = {
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
     "THEME": None,
+    "DASHBOARD_CALLBACK": "apps.main.admin_dashboard.dashboard_callback",
     "SIDEBAR": {
         "show_search": True,
         "show_all_applications": False,
         "navigation": [
+            {
+                "title": _("Головна"),
+                "separator": True,
+                "items": [
+                    {"title": _("Фінансова панель"), "icon": "monitoring", "link": reverse_lazy("admin:index")},
+                ],
+            },
             {
                 "title": _("Контент"),
                 "separator": True,

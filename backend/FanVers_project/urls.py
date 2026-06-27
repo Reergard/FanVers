@@ -3,7 +3,10 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from apps.main.admin_dashboard import dashboard_api
+
 urlpatterns = [
+    path(f'{settings.DJANGO_ADMIN_PATH}/dashboard-api/', dashboard_api, name='admin_dashboard_api'),
     path(f'{settings.DJANGO_ADMIN_PATH}/', admin.site.urls),
     path('api/', include('apps.api.urls')),
     path('', include('apps.seo.urls')),

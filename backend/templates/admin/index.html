@@ -1,0 +1,1009 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Фінансова панель — {{ site_title }}{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+:root {
+    --dash-bg: #0f1117;
+    --dash-card: #1a1d27;
+    --dash-card-hover: #22263a;
+    --dash-border: #2a2e3d;
+    --dash-text: #e1e4ed;
+    --dash-text-muted: #8b8fa3;
+    --dash-accent: #6c5ce7;
+    --dash-accent-light: #a29bfe;
+    --dash-green: #00b894;
+    --dash-red: #e17055;
+    --dash-blue: #0984e3;
+    --dash-yellow: #fdcb6e;
+    --dash-orange: #f59e0b;
+    --dash-purple: #8b5cf6;
+    --dash-radius: 12px;
+}
+
+.dashboard-wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 16px 40px;
+}
+
+/* Section 1: Period Filter */
+.period-filter {
+    display: flex;
+    gap: 6px;
+    padding: 16px 0;
+    flex-wrap: wrap;
+}
+.period-btn {
+    padding: 8px 18px;
+    border: 1px solid var(--dash-border);
+    border-radius: 8px;
+    background: var(--dash-card);
+    color: var(--dash-text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.period-btn:hover {
+    background: var(--dash-card-hover);
+    color: var(--dash-text);
+}
+.period-btn.active {
+    background: var(--dash-accent);
+    color: #fff;
+    border-color: var(--dash-accent);
+}
+
+/* Section 2: KPI Cards */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.kpi-card {
+    background: var(--dash-card);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius);
+    padding: 18px 20px;
+    transition: all 0.2s;
+}
+.kpi-card:hover {
+    background: var(--dash-card-hover);
+    border-color: var(--dash-accent);
+}
+.kpi-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.kpi-icon {
+    font-size: 20px;
+    color: var(--dash-accent-light);
+}
+.kpi-title {
+    font-size: 12px;
+    color: var(--dash-text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.kpi-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--dash-text);
+    margin-bottom: 4px;
+}
+.kpi-change {
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+.kpi-change.positive {
+    color: var(--dash-green);
+    background: rgba(0, 184, 148, 0.12);
+}
+.kpi-change.negative {
+    color: var(--dash-red);
+    background: rgba(225, 112, 85, 0.12);
+}
+.kpi-change.neutral {
+    color: var(--dash-text-muted);
+    background: rgba(139, 143, 163, 0.12);
+}
+
+/* Section 3: Charts */
+.charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.chart-card {
+    background: var(--dash-card);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius);
+    padding: 20px;
+}
+.chart-card h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--dash-text);
+    margin: 0 0 16px 0;
+}
+.chart-container {
+    position: relative;
+    height: 280px;
+}
+.chart-toggle {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+.chart-toggle-btn {
+    padding: 4px 12px;
+    font-size: 11px;
+    border: 1px solid var(--dash-border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--dash-text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.chart-toggle-btn.active {
+    background: var(--dash-accent);
+    color: #fff;
+    border-color: var(--dash-accent);
+}
+
+/* Section 4: Detail blocks */
+.detail-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.detail-card {
+    background: var(--dash-card);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius);
+    padding: 20px;
+}
+.detail-card h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--dash-text);
+    margin: 0 0 16px 0;
+}
+.balance-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--dash-border);
+}
+.balance-stat:last-child {
+    border-bottom: none;
+}
+.balance-stat-label {
+    font-size: 13px;
+    color: var(--dash-text-muted);
+}
+.balance-stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--dash-text);
+}
+
+/* Payout statuses */
+.payout-status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--dash-border);
+}
+.payout-status-item:last-child {
+    border-bottom: none;
+}
+.payout-status-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--dash-text-muted);
+}
+.payout-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.payout-status-count {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--dash-text);
+}
+.payout-progress-bar {
+    display: flex;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 14px;
+    background: var(--dash-border);
+}
+.payout-progress-segment {
+    height: 100%;
+    transition: width 0.5s ease;
+}
+.urgent-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+/* Section 5: Tables */
+.tables-section {
+    background: var(--dash-card);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius);
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+.tab-buttons {
+    display: flex;
+    border-bottom: 1px solid var(--dash-border);
+}
+.tab-btn {
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--dash-text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+.tab-btn:hover {
+    color: var(--dash-text);
+}
+.tab-btn.active {
+    color: var(--dash-accent-light);
+    border-bottom-color: var(--dash-accent);
+}
+.tab-content {
+    display: none;
+    padding: 0;
+}
+.tab-content.active {
+    display: block;
+}
+.dash-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.dash-table th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--dash-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: rgba(42, 46, 61, 0.5);
+    border-bottom: 1px solid var(--dash-border);
+}
+.dash-table td {
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--dash-text);
+    border-bottom: 1px solid var(--dash-border);
+}
+.dash-table tr:last-child td {
+    border-bottom: none;
+}
+.dash-table tr:hover td {
+    background: rgba(108, 92, 231, 0.05);
+}
+.status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.status-badge.paid, .status-badge.completed { background: rgba(0,184,148,0.15); color: var(--dash-green); }
+.status-badge.pending, .status-badge.awaiting_review { background: rgba(245,158,11,0.15); color: var(--dash-orange); }
+.status-badge.failed { background: rgba(239,68,68,0.15); color: var(--dash-red); }
+.status-badge.expired, .status-badge.cancelled { background: rgba(139,143,163,0.15); color: var(--dash-text-muted); }
+.status-badge.approved { background: rgba(59,130,246,0.15); color: var(--dash-blue); }
+.status-badge.processing, .status-badge.in_batch { background: rgba(139,92,246,0.15); color: var(--dash-purple); }
+.urgent-icon {
+    color: #ef4444;
+    font-size: 16px;
+    vertical-align: middle;
+}
+.table-footer {
+    padding: 10px 14px;
+    text-align: right;
+}
+.table-footer a {
+    color: var(--dash-accent-light);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+}
+.table-footer a:hover {
+    text-decoration: underline;
+}
+.empty-row td {
+    text-align: center;
+    color: var(--dash-text-muted);
+    padding: 20px;
+    font-style: italic;
+}
+
+/* Section 6: Users */
+.users-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+.donut-container {
+    position: relative;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.donut-center-label {
+    position: absolute;
+    text-align: center;
+}
+.donut-center-label .number {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--dash-text);
+    display: block;
+}
+.donut-center-label .label {
+    font-size: 11px;
+    color: var(--dash-text-muted);
+}
+.commission-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--dash-border);
+}
+.commission-item:last-child {
+    border-bottom: none;
+}
+.commission-label {
+    font-size: 14px;
+    color: var(--dash-text-muted);
+}
+.commission-count {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--dash-text);
+}
+
+/* Loading overlay */
+.dash-loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--dash-accent), var(--dash-accent-light));
+    z-index: 9999;
+    animation: loadingBar 1.5s infinite;
+    display: none;
+}
+.dash-loading.active {
+    display: block;
+}
+@keyframes loadingBar {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-row, .detail-row, .users-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+    .dashboard-wrap {
+        padding: 0 8px 24px;
+    }
+
+    /* Period filter: horizontal scroll, no wrap */
+    .period-filter {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 12px 0;
+        gap: 6px;
+        scrollbar-width: none;
+    }
+    .period-filter::-webkit-scrollbar { display: none; }
+    .period-btn {
+        padding: 6px 14px;
+        font-size: 12px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* KPI: single column, compact */
+    .kpi-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+    .kpi-card {
+        padding: 14px 16px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0;
+    }
+    .kpi-header {
+        margin-bottom: 0;
+        flex: 1 1 auto;
+    }
+    .kpi-icon { font-size: 18px; }
+    .kpi-title { font-size: 11px; }
+    .kpi-value {
+        font-size: 20px;
+        width: 100%;
+        margin-top: 6px;
+        margin-bottom: 2px;
+    }
+    .kpi-change { font-size: 11px; }
+
+    /* Charts: shorter, full width */
+    .charts-row {
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+    .chart-card {
+        padding: 14px;
+    }
+    .chart-card h3 {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    .chart-container {
+        height: 200px;
+    }
+    .chart-toggle {
+        margin-bottom: 8px;
+    }
+    .chart-toggle-btn {
+        padding: 4px 10px;
+        font-size: 10px;
+    }
+
+    /* Detail blocks */
+    .detail-row {
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+    .detail-card {
+        padding: 14px;
+    }
+    .detail-card h3 {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    .balance-stat {
+        padding: 8px 0;
+    }
+    .balance-stat-label { font-size: 12px; }
+    .balance-stat-value { font-size: 14px; }
+    .payout-status-label { font-size: 12px; }
+    .payout-status-count { font-size: 15px; }
+
+    /* Tables: horizontal scroll wrapper */
+    .tables-section {
+        margin-bottom: 16px;
+    }
+    .tab-buttons {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap;
+        scrollbar-width: none;
+    }
+    .tab-buttons::-webkit-scrollbar { display: none; }
+    .tab-btn {
+        padding: 10px 14px;
+        font-size: 12px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .tab-content {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .dash-table {
+        min-width: 600px;
+    }
+    .dash-table th {
+        padding: 8px 10px;
+        font-size: 10px;
+    }
+    .dash-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    /* Users section */
+    .users-row {
+        gap: 10px;
+    }
+    .donut-container {
+        height: 180px;
+    }
+    .donut-center-label .number {
+        font-size: 22px;
+    }
+    .donut-center-label .label {
+        font-size: 10px;
+    }
+    .commission-item {
+        padding: 10px 0;
+    }
+    .commission-label { font-size: 13px; }
+    .commission-count { font-size: 18px; }
+}
+
+/* Unfold dark theme overrides */
+.dark .dashboard-wrap { color: var(--dash-text); }
+#content { padding: 0 !important; overflow-x: hidden; }
+#content > h1, #content > #content-main { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-loading" id="loadingBar"></div>
+<div class="dashboard-wrap" id="dashboard">
+
+    <!-- SECTION 1: Period Filter -->
+    <div class="period-filter" id="periodFilter">
+        <button class="period-btn" data-period="today">Сьогодні</button>
+        <button class="period-btn" data-period="7d">7 днів</button>
+        <button class="period-btn active" data-period="30d">30 днів</button>
+        <button class="period-btn" data-period="month">Цей місяць</button>
+        <button class="period-btn" data-period="year">Цей рік</button>
+        <button class="period-btn" data-period="all">Весь час</button>
+    </div>
+
+    <!-- SECTION 2: KPI Cards -->
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <!-- SECTION 3: Charts -->
+    <div class="charts-row">
+        <div class="chart-card">
+            <h3>Фінанси по днях</h3>
+            <div class="chart-container">
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <h3>Розподіл операцій</h3>
+            <div class="chart-toggle" id="barToggle">
+                <button class="chart-toggle-btn active" data-mode="distribution">За типом</button>
+                <button class="chart-toggle-btn" data-mode="comparison">Порівняння</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 4: Detail blocks -->
+    <div class="detail-row">
+        <div class="detail-card">
+            <h3>Баланси користувачів</h3>
+            <div id="balancesBlock"></div>
+        </div>
+        <div class="detail-card">
+            <h3>Виплати (статуси)</h3>
+            <div id="payoutsStatusBlock"></div>
+        </div>
+    </div>
+
+    <!-- SECTION 5: Tables -->
+    <div class="tables-section">
+        <div class="tab-buttons">
+            <button class="tab-btn active" data-tab="deposits">Останні поповнення</button>
+            <button class="tab-btn" data-tab="purchases">Останні покупки</button>
+            <button class="tab-btn" data-tab="payouts">Останні виплати</button>
+            <button class="tab-btn" data-tab="thanks">Останні подяки</button>
+        </div>
+        <div class="tab-content active" id="tab-deposits"></div>
+        <div class="tab-content" id="tab-purchases"></div>
+        <div class="tab-content" id="tab-payouts"></div>
+        <div class="tab-content" id="tab-thanks"></div>
+    </div>
+
+    <!-- SECTION 6: Users -->
+    <div class="users-row">
+        <div class="detail-card">
+            <h3>Користувачі по ролях</h3>
+            <div class="donut-container">
+                <canvas id="donutChart"></canvas>
+                <div class="donut-center-label" id="donutCenter">
+                    <span class="number">0</span>
+                    <span class="label">користувачів</span>
+                </div>
+            </div>
+        </div>
+        <div class="detail-card">
+            <h3>Комісії авторів</h3>
+            <div id="commissionBlock"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const API_URL = "{{ admin_dashboard_api_url }}";
+    let currentPeriod = "30d";
+    let lineChart = null;
+    let barChart = null;
+    let donutChart = null;
+    let barMode = "distribution";
+    let dashData = null;
+    const isMobile = window.innerWidth <= 640;
+
+    function esc(str) {
+        if (str == null) return "";
+        const d = document.createElement("div");
+        d.appendChild(document.createTextNode(String(str)));
+        return d.innerHTML;
+    }
+
+    function fmt(val, isCount) {
+        if (isCount) return val.toLocaleString("uk-UA");
+        return val.toLocaleString("uk-UA", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function showLoading(on) {
+        document.getElementById("loadingBar").classList.toggle("active", on);
+    }
+
+    // --- KPI ---
+    function renderKPI(kpi) {
+        const grid = document.getElementById("kpiGrid");
+        grid.innerHTML = kpi.map(k => {
+            const changeClass = k.change > 0 ? "positive" : (k.change < 0 ? "negative" : "neutral");
+            const arrow = k.change > 0 ? "&#9650;" : (k.change < 0 ? "&#9660;" : "&#8212;");
+            return `<div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="material-symbols-outlined kpi-icon">${k.icon}</span>
+                    <span class="kpi-title">${k.title}</span>
+                </div>
+                <div class="kpi-value">${fmt(k.value, k.is_count)}</div>
+                <span class="kpi-change ${changeClass}">${arrow} ${Math.abs(k.change)}%</span>
+            </div>`;
+        }).join("");
+    }
+
+    // --- Line Chart ---
+    function renderLineChart(data) {
+        const ctx = document.getElementById("lineChart").getContext("2d");
+        if (lineChart) lineChart.destroy();
+
+        const allDates = new Set();
+        ["deposits", "withdrawals", "purchases", "commission"].forEach(key => {
+            data[key].forEach(d => allDates.add(d.date));
+        });
+        const labels = [...allDates].sort();
+
+        function mapData(arr) {
+            const m = {};
+            arr.forEach(d => m[d.date] = d.value);
+            return labels.map(l => m[l] || 0);
+        }
+
+        const pr = isMobile ? 0 : 2;
+        lineChart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels,
+                datasets: [
+                    { label: "Поповнення", data: mapData(data.deposits), borderColor: "#00b894", backgroundColor: "rgba(0,184,148,0.1)", tension: 0.3, fill: false, pointRadius: pr, borderWidth: isMobile ? 1.5 : 2 },
+                    { label: "Виплати", data: mapData(data.withdrawals), borderColor: "#e17055", backgroundColor: "rgba(225,112,85,0.1)", tension: 0.3, fill: false, pointRadius: pr, borderWidth: isMobile ? 1.5 : 2 },
+                    { label: "Покупки", data: mapData(data.purchases), borderColor: "#0984e3", backgroundColor: "rgba(9,132,227,0.1)", tension: 0.3, fill: false, pointRadius: pr, borderWidth: isMobile ? 1.5 : 2 },
+                    { label: "Комісія", data: mapData(data.commission), borderColor: "#fdcb6e", backgroundColor: "rgba(253,203,110,0.1)", tension: 0.3, fill: false, pointRadius: pr, borderWidth: isMobile ? 1.5 : 2 },
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: "index", intersect: false },
+                plugins: {
+                    legend: { labels: { color: "#8b8fa3", font: { size: isMobile ? 9 : 11 }, boxWidth: isMobile ? 12 : 40, padding: isMobile ? 8 : 10 } },
+                    tooltip: { backgroundColor: "#1a1d27", titleColor: "#e1e4ed", bodyColor: "#e1e4ed", borderColor: "#2a2e3d", borderWidth: 1 }
+                },
+                scales: {
+                    x: { ticks: { color: "#8b8fa3", font: { size: isMobile ? 8 : 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: isMobile ? 5 : 12 }, grid: { color: "rgba(42,46,61,0.5)" } },
+                    y: { ticks: { color: "#8b8fa3", font: { size: isMobile ? 8 : 10 } }, grid: { color: "rgba(42,46,61,0.5)" } }
+                }
+            }
+        });
+    }
+
+    // --- Bar Chart ---
+    function renderBarChart(data) {
+        const ctx = document.getElementById("barChart").getContext("2d");
+        if (barChart) barChart.destroy();
+
+        const barTickOpts = { color: "#8b8fa3", font: { size: isMobile ? 8 : 10 }, maxRotation: isMobile ? 45 : 0, autoSkip: false };
+        if (barMode === "distribution") {
+            const colors = ["#00b894", "#0984e3", "#e17055", "#a29bfe", "#fdcb6e", "#8b8fa3"];
+            barChart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: data.bar_distribution.map(d => d.label),
+                    datasets: [{
+                        data: data.bar_distribution.map(d => d.value),
+                        backgroundColor: colors,
+                        borderRadius: 4,
+                        maxBarThickness: isMobile ? 30 : 50,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: "#1a1d27", titleColor: "#e1e4ed", bodyColor: "#e1e4ed", borderColor: "#2a2e3d", borderWidth: 1 } },
+                    scales: {
+                        x: { ticks: barTickOpts, grid: { display: false } },
+                        y: { ticks: { color: "#8b8fa3", font: { size: isMobile ? 8 : 10 } }, grid: { color: "rgba(42,46,61,0.5)" } }
+                    }
+                }
+            });
+        } else {
+            if (!data.bar_comparison.length) {
+                barChart = new Chart(ctx, {
+                    type: "bar",
+                    data: { labels: ["Немає даних"], datasets: [{ data: [0], backgroundColor: "#2a2e3d" }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+                return;
+            }
+            barChart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: data.bar_comparison.map(d => d.label),
+                    datasets: [
+                        { label: "Поточний", data: data.bar_comparison.map(d => d.current), backgroundColor: "#6c5ce7", borderRadius: 4, maxBarThickness: isMobile ? 20 : 35 },
+                        { label: "Попередній", data: data.bar_comparison.map(d => d.previous), backgroundColor: "#2a2e3d", borderRadius: 4, maxBarThickness: isMobile ? 20 : 35 },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: "#8b8fa3", font: { size: isMobile ? 9 : 11 }, boxWidth: isMobile ? 12 : 40, padding: isMobile ? 8 : 10 } }, tooltip: { backgroundColor: "#1a1d27", titleColor: "#e1e4ed", bodyColor: "#e1e4ed", borderColor: "#2a2e3d", borderWidth: 1 } },
+                    scales: {
+                        x: { ticks: barTickOpts, grid: { display: false } },
+                        y: { ticks: { color: "#8b8fa3", font: { size: isMobile ? 8 : 10 } }, grid: { color: "rgba(42,46,61,0.5)" } }
+                    }
+                }
+            });
+        }
+    }
+
+    // --- Balances ---
+    function renderBalances(data) {
+        const block = document.getElementById("balancesBlock");
+        const stats = [
+            ["Загальний баланс", fmt(data.total_balance)],
+            ["Середній баланс", fmt(data.avg_balance)],
+            ["З балансом 0", data.users_with_balance.toLocaleString("uk-UA")],
+            ["Максимальний баланс", fmt(data.max_balance)],
+        ];
+        block.innerHTML = stats.map(([l, v]) =>
+            `<div class="balance-stat"><span class="balance-stat-label">${l}</span><span class="balance-stat-value">${v}</span></div>`
+        ).join("");
+    }
+
+    // --- Payouts statuses ---
+    function renderPayoutsStatus(data) {
+        const block = document.getElementById("payoutsStatusBlock");
+        const total = data.statuses.reduce((s, i) => s + i.count, 0) || 1;
+        let html = data.statuses.map(s =>
+            `<div class="payout-status-item">
+                <span class="payout-status-label"><span class="payout-status-dot" style="background:${s.color}"></span>${s.label}</span>
+                <span class="payout-status-count">${s.count}</span>
+            </div>`
+        ).join("");
+
+        html += `<div class="payout-progress-bar">` +
+            data.statuses.map(s =>
+                `<div class="payout-progress-segment" style="width:${(s.count / total * 100)}%;background:${s.color}"></div>`
+            ).join("") + `</div>`;
+
+        if (data.urgent_count > 0) {
+            html += `<div class="urgent-badge"><span class="material-symbols-outlined" style="font-size:14px">warning</span> Термінових: ${data.urgent_count}</div>`;
+        }
+        block.innerHTML = html;
+    }
+
+    // --- Tables ---
+    function renderTables(data) {
+        // Deposits
+        let html = `<table class="dash-table"><thead><tr>
+            <th>Дата</th><th>Користувач</th><th>Сума (FC)</th><th>Сума (валюта)</th><th>Статус</th>
+        </tr></thead><tbody>`;
+        if (data.deposits.length) {
+            data.deposits.forEach(d => {
+                html += `<tr><td>${esc(d.paid_at)}</td><td>${esc(d.user__username)}</td><td>${fmt(d.amount_coins)}</td><td>${d.amount_currency} ${esc(d.currency).toUpperCase()}</td><td><span class="status-badge ${esc(d.status)}">${esc(d.status)}</span></td></tr>`;
+            });
+        } else {
+            html += `<tr class="empty-row"><td colspan="5">Немає даних</td></tr>`;
+        }
+        html += `</tbody></table>`;
+        document.getElementById("tab-deposits").innerHTML = html;
+
+        // Purchases
+        html = `<table class="dash-table"><thead><tr>
+            <th>Дата</th><th>Покупець</th><th>Автор</th><th>Книга</th><th>Ціна</th><th>Комісія</th><th>Автор отримав</th>
+        </tr></thead><tbody>`;
+        if (data.purchases.length) {
+            data.purchases.forEach(p => {
+                html += `<tr><td>${esc(p.created_at)}</td><td>${esc(p.buyer__user__username)}</td><td>${esc(p.owner__user__username)}</td><td>${esc(p.book__title)}</td><td>${fmt(p.original_price)}</td><td>${fmt(p.commission_amount)} (${p.commission_percent}%)</td><td>${fmt(p.final_amount)}</td></tr>`;
+            });
+        } else {
+            html += `<tr class="empty-row"><td colspan="7">Немає даних</td></tr>`;
+        }
+        html += `</tbody></table>`;
+        document.getElementById("tab-purchases").innerHTML = html;
+
+        // Payouts
+        html = `<table class="dash-table"><thead><tr>
+            <th>Дата</th><th>Користувач</th><th>Сума (FC)</th><th>Комісія</th><th>До виплати</th><th>Статус</th><th></th>
+        </tr></thead><tbody>`;
+        if (data.payouts.length) {
+            data.payouts.forEach(p => {
+                const urgentIcon = p.is_urgent ? `<span class="material-symbols-outlined urgent-icon">bolt</span>` : "";
+                html += `<tr><td>${esc(p.created_at)}</td><td>${esc(p.profile__user__username)}</td><td>${fmt(p.coins_amount)}</td><td>${fmt(p.commission_coins)} (${p.commission_percent}%)</td><td>${fmt(p.amount_net)} ${esc(p.payout_currency)}</td><td><span class="status-badge ${esc(p.status)}">${esc(p.status)}</span></td><td>${urgentIcon}</td></tr>`;
+            });
+        } else {
+            html += `<tr class="empty-row"><td colspan="7">Немає даних</td></tr>`;
+        }
+        html += `</tbody></table>`;
+        document.getElementById("tab-payouts").innerHTML = html;
+
+        // Thanks
+        html = `<table class="dash-table"><thead><tr>
+            <th>Дата</th><th>Від кого</th><th>Кому</th><th>Книга</th><th>Сума</th>
+        </tr></thead><tbody>`;
+        if (data.thanks.length) {
+            data.thanks.forEach(t => {
+                html += `<tr><td>${esc(t.created_at)}</td><td>${esc(t.giver__username)}</td><td>${esc(t.receiver__username)}</td><td>${esc(t.book__title)}</td><td>${fmt(t.amount)}</td></tr>`;
+            });
+        } else {
+            html += `<tr class="empty-row"><td colspan="5">Немає даних</td></tr>`;
+        }
+        html += `</tbody></table>`;
+        document.getElementById("tab-thanks").innerHTML = html;
+    }
+
+    // --- Donut chart ---
+    function renderDonut(data) {
+        const ctx = document.getElementById("donutChart").getContext("2d");
+        if (donutChart) donutChart.destroy();
+
+        const roleLabels = Object.keys(data.roles);
+        const roleValues = Object.values(data.roles);
+        const roleColors = ["#0984e3", "#6c5ce7", "#00b894"];
+
+        document.querySelector("#donutCenter .number").textContent = data.total_users.toLocaleString("uk-UA");
+
+        donutChart = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels: roleLabels,
+                datasets: [{
+                    data: roleValues,
+                    backgroundColor: roleColors,
+                    borderWidth: 0,
+                    cutout: "70%",
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: "bottom", labels: { color: "#8b8fa3", font: { size: isMobile ? 10 : 12 }, boxWidth: isMobile ? 12 : 40, padding: isMobile ? 8 : 16 } },
+                    tooltip: { backgroundColor: "#1a1d27", titleColor: "#e1e4ed", bodyColor: "#e1e4ed", borderColor: "#2a2e3d", borderWidth: 1 }
+                }
+            }
+        });
+    }
+
+    // --- Commission ---
+    function renderCommission(data) {
+        const block = document.getElementById("commissionBlock");
+        block.innerHTML = data.map(c =>
+            `<div class="commission-item"><span class="commission-label">${c.label}</span><span class="commission-count">${c.count}</span></div>`
+        ).join("");
+    }
+
+    // --- Load data ---
+    async function loadData() {
+        showLoading(true);
+        try {
+            const resp = await fetch(`${API_URL}?period=${currentPeriod}`);
+            if (resp.redirected || !resp.ok) {
+                window.location.reload();
+                return;
+            }
+            dashData = await resp.json();
+            renderKPI(dashData.kpi);
+            renderLineChart(dashData.charts.line);
+            renderBarChart(dashData.charts);
+            renderBalances(dashData.balances);
+            renderPayoutsStatus(dashData.payouts_status);
+            renderTables(dashData.tables);
+            renderDonut(dashData.users);
+            renderCommission(dashData.users.commission);
+        } catch(e) {
+            console.error("Dashboard load error:", e);
+        }
+        showLoading(false);
+    }
+
+    // --- Event listeners ---
+    document.getElementById("periodFilter").addEventListener("click", function(e) {
+        if (!e.target.classList.contains("period-btn")) return;
+        document.querySelectorAll(".period-btn").forEach(b => b.classList.remove("active"));
+        e.target.classList.add("active");
+        currentPeriod = e.target.dataset.period;
+        loadData();
+    });
+
+    document.getElementById("barToggle").addEventListener("click", function(e) {
+        if (!e.target.classList.contains("chart-toggle-btn")) return;
+        document.querySelectorAll(".chart-toggle-btn").forEach(b => b.classList.remove("active"));
+        e.target.classList.add("active");
+        barMode = e.target.dataset.mode;
+        if (dashData) renderBarChart(dashData.charts);
+    });
+
+    document.querySelector(".tab-buttons").addEventListener("click", function(e) {
+        if (!e.target.classList.contains("tab-btn")) return;
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+        e.target.classList.add("active");
+        document.getElementById("tab-" + e.target.dataset.tab).classList.add("active");
+    });
+
+    loadData();
+})();
+</script>
+{% endblock %}
