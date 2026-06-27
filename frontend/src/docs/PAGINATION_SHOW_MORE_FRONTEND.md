@@ -158,7 +158,19 @@
 
 ---
 
-## 7) Пов’язані файли
+## 7) Серверна пагінація розділів на сторінці книги
+
+Окремо від «Показати ще» на сторінці `/books/:slug` список розділів завантажується **серверно**:
+
+- `BookChapters` → `getPaginatedChapters(bookId, rangeStart)`;
+- при >50 розділах — `ChapterRangeNavigation` (селектор діапазонів `1-50`, `51-100`, …);
+- правила розміру сторінки на backend: 50 (51–999 глав), 100 (1000+).
+
+Детально: `CHAPTER_PAGINATION_FRONTEND.md`, `backend/docs/CHAPTER_PAGINATION_BACKEND.md`.
+
+---
+
+## 8) Пов’язані файли
 
 - `frontend/src/navigation/ShowMoreNavigation.tsx`
 - `frontend/src/navigation/ShowMoreNavigation.module.css`
@@ -171,3 +183,4 @@
 - `frontend/src/users/TranslatorsList.tsx`
 - `frontend/src/notification/NotificationsPage.tsx`
 - `frontend/src/catalog/CreateBookPage.tsx`
+- `frontend/src/navigation/ChapterRangeNavigation.tsx` (серверна пагінація розділів — не «Показати ще»)

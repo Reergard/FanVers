@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SectionLineTitle } from "../navigation/SectionLineTitle";
+import { Container } from "../shared/Container";
 import {
   NewsCarouselCover,
   NewsCarouselSceneBadges,
@@ -27,6 +28,22 @@ const BOOKS_NEWS_STALE_MS = 5 * 60 * 1000;
 const AUTOPLAY_INTERVAL_MS = 9000;
 /** Скорочений опис у моб. і ПК — однакова логіка відображення тексту */
 const NEWS_DESCRIPTION_MAX_CHARS = 500;
+
+function HomeNewsSection({
+  className,
+  ariaLabel,
+  children,
+}: {
+  className: string;
+  ariaLabel: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className={className} aria-label={ariaLabel}>
+      <Container>{children}</Container>
+    </section>
+  );
+}
 
 /** Ті самі зірки й логіка, що на сторінці книги: ★ з трьома станами (empty/average/filled). */
 function RatingStarsDisplay({
@@ -109,7 +126,7 @@ function MobileNewsCard({
   const coverUrl = getBookNewsCoverUrl(book);
 
   return (
-    <section className="mg2-mobileSection" aria-label="Новинки">
+    <HomeNewsSection className="mg2-mobileSection" ariaLabel="Новинки">
       <SectionLineTitle text="НОВИНКИ" className="mg2-sectionLineTitle" />
 
       <article className="mg2-mobileCard">
@@ -204,7 +221,7 @@ function MobileNewsCard({
           </button>
         </div>
       </article>
-    </section>
+    </HomeNewsSection>
   );
 }
 
@@ -414,30 +431,30 @@ export function HomePage2() {
 
   if (isLoading) {
     return (
-      <section className="mg2-mobileSection" aria-label="Новинки">
+      <HomeNewsSection className="mg2-mobileSection" ariaLabel="Новинки">
         <SectionLineTitle text="НОВИНКИ" className="mg2-sectionLineTitle" />
         <p className="mg2-placeholder">Завантаження новинок...</p>
-      </section>
+      </HomeNewsSection>
     );
   }
 
   if (isError) {
     return (
-      <section className="mg2-mobileSection" aria-label="Новинки">
+      <HomeNewsSection className="mg2-mobileSection" ariaLabel="Новинки">
         <SectionLineTitle text="НОВИНКИ" className="mg2-sectionLineTitle" />
         <p className="mg2-placeholder">
           Не вдалося завантажити новинки. Спробуйте пізніше.
         </p>
-      </section>
+      </HomeNewsSection>
     );
   }
 
   if (!books || !Array.isArray(books) || booksLength === 0) {
     return (
-      <section className="mg2-mobileSection" aria-label="Новинки">
+      <HomeNewsSection className="mg2-mobileSection" ariaLabel="Новинки">
         <SectionLineTitle text="НОВИНКИ" className="mg2-sectionLineTitle" />
         <p className="mg2-placeholder">Новинок поки немає</p>
-      </section>
+      </HomeNewsSection>
     );
   }
 
@@ -455,7 +472,7 @@ export function HomePage2() {
   }
 
   return (
-    <section className="mg2-section mg2-desktopNewsSection" aria-label="Новинки">
+    <HomeNewsSection className="mg2-section mg2-desktopNewsSection" ariaLabel="Новинки">
       <SectionLineTitle text="НОВИНКИ" className="mg2-sectionLineTitle" />
 
       <DesktopNewsBanner
@@ -466,7 +483,7 @@ export function HomePage2() {
         currentBookIndex={currentBookIndex}
         total={booksLength}
       />
-    </section>
+    </HomeNewsSection>
   );
 }
 

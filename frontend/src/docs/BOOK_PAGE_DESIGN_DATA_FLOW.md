@@ -36,10 +36,14 @@ BookDetailRouter
 ## 3) Блок chapters: фактическое поведение
 
 `BookChapters.tsx`:
-- получает список `chapters` и сортирует по `position`;
+- получает `bookId` и сам загружает текущую «страницу» глав через `getPaginatedChapters(bookId, rangeStart)`;
+- при >50 главах показывает `ChapterRangeNavigation` («Показано розділів:» + pill `1-50` + «з N»);
+- в режиме reorder владелец передает override `chapters={...}` — пагинация и селектор скрыты;
 - рендерит таблицу с названием, ценой, датой;
 - owner-кнопки (`Додати розділ`, `Створити том`, `Змінити порядок`) показывает только при `isOwner`;
 - и кнопка в строке, и клик по названию используют один `onRead(chapter)`.
+
+Детали пагинации: `CHAPTER_PAGINATION_FRONTEND.md`.
 
 Нюанс reader-режима:
 - в `BookDetailReader` `getReadLabel` показывает `Купити` для `is_paid && !is_purchased`;

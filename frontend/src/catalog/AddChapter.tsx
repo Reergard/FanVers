@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   catalogApi,
   catalogKeys,
+  invalidateBookChapterLists,
   type Book,
   type Volume,
 } from "../api/catalogApi";
@@ -277,7 +278,11 @@ export default function AddChapter() {
         setPrice("1.00");
         latestContentRef.current = null;
         if (fileInputRef.current) fileInputRef.current.value = "";
-        await queryClient.invalidateQueries({ queryKey: catalogKeys.chapters(slug) });
+        if (book?.id) {
+          await invalidateBookChapterLists(queryClient, slug, book.id);
+        } else {
+          await queryClient.invalidateQueries({ queryKey: catalogKeys.chapters(slug) });
+        }
         await queryClient.invalidateQueries({ queryKey: catalogKeys.book(slug) });
         navigate(`/books/${slug}`, { state: { chapterCreated: true } });
       } catch (err) {

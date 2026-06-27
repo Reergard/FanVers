@@ -27,12 +27,17 @@
 
 ```text
 BookDetailRouter
-  -> useQuery chapters (GET .../chapters/)
-  -> chapters, containerVersions
+  -> useQuery book, volumes (БЕЗ chapters)
   -> BookDetailOwner
-      -> BookChapters (reorderMode, chapterPositions, onPositionChange, onSaveOrder, onMove, onMoveToVolume)
+      -> BookChapters (bookId) — звичайний режим: paginated chapters
+      -> enterReorderMode():
+          catalogApi.getChapters(slug)  // повний список + container_versions
+          -> reorderChapters, containerVersions у state
+          -> BookChapters (chapters={reorderChapters}, reorderMode, …)
       -> MoveChapterModal (для вибору цільового тому)
 ```
+
+Повний catalog-список завантажується **лише при вході в reorder**, не при відкритті сторінки книги.
 
 ---
 
@@ -52,10 +57,10 @@ BookDetailRouter
 | `isMovingChapter` | Чи виконується переміщення |
 
 **Ключові функції:**
-- `enterReorderMode()` — ініціалізує `chapterPositions` з поточних `chapters`, вмикає режим.
+- `enterReorderMode()` — завантажує повний список через `catalogApi.getChapters(slug)` (+ `container_versions`), ініціалізує `chapterPositions`, вмикає режим.
 - `exitReorderMode()` — вимикає режим, очищає позиції.
 - `saveOrder()` — групує глави по контейнерах, для кожного викликає `catalogApi.reorderChapters()` з `ordered_ids` та `container_version`; при 409 — показує помилку, виходить з режиму.
-- `handleMoveChapter(toVolumeId, toOrder)` — викликає `catalogApi.moveChapter()`, інвалідує chapters/book.
+- `handleMoveChapter(toVolumeId, toOrder)` — викликає `catalogApi.moveChapter()`, інвалідує `invalidateBookChapterLists` + book.
 - `handleMoveChapterToVolume(chapter, toVolumeId, toOrder)` — те саме для переміщення зі стрілок на межі тому.
 
 ### 4.2. BookChapters
@@ -64,6 +69,8 @@ BookDetailRouter
 
 | Проп | Призначення |
 |------|-------------|
+| `bookId` | ID книги для paginated fetch (коли немає override `chapters`) |
+| `chapters?` | Override: повний список у режимі reorder — пагінація вимкнена |
 | `reorderMode` | Показує UI reorder (стрілки, поле позиції, «Перемістити в том») |
 | `chapterPositions` | Локальні позиції для відображення та сортування |
 | `onPositionChange` | Оновлення позицій (batch: id → position) |
@@ -115,7 +122,7 @@ moveChapter(
 ): Promise<MoveChapterResponse>
 ```
 
-- Повертає `{ chapters, container_versions }`; після успіху клієнт інвалідує `catalogKeys.chapters(bookSlug)` та `catalogKeys.book(bookSlug)`.
+- Повертає `{ chapters, container_versions }`; після успіху клієнт викликає `invalidateBookChapterLists(qc, bookSlug, bookId)` та `catalogKeys.book(bookSlug)`.
 
 ---
 
@@ -133,7 +140,10 @@ moveChapter(
 
 | Ключ | Використання |
 |------|--------------|
-| `catalogKeys.chapters(slug)` (= `["book-chapters", slug]`) | Список глав; інвалідується після reorder, move, createVolume, deleteChapter |
+| `catalogKeys.chapters(slug)` (= `["book-chapters", slug]`) | Повний список (reorder); інвалідується через `invalidateBookChapterLists` |
+| `catalogKeys.chaptersPage(bookId, rangeStart)` | Сторінка paginated списку на UI |
+| `catalogKeys.chaptersPagesPrefix(bookId)` | Префікс для скидання всіх сторінок |
+| `invalidateBookChapterLists(qc, slug, bookId)` | Скидає і `chapters(slug)`, і всі `chaptersPage` |
 | `catalogKeys.book(slug)` | Дані книги; інвалідується після move, deleteChapter |
 | `catalogKeys.volumes(slug)` | Томи; інвалідується після createVolume |
 
@@ -147,4 +157,6 @@ moveChapter(
 | `catalog/sections/BookChapters.tsx` | UI таблиці глав, стрілки, поле позиції, кнопки |
 | `catalog/sections/MoveChapterModal.tsx` | Модальне вікно вибору тому та позиції |
 | `api/catalogApi.ts` | `reorderChapters`, `moveChapter`, `getChapters` (container_versions) |
-| `catalog/BookDetailRouter.tsx` | Завантаження chapters з `container_versions`, передача в BookDetailOwner |
+| `catalog/BookDetailRouter.tsx` | Завантаження book/volumes; chapters — у `BookChapters` або при reorder у Owner |
+
+**Пов’язані документи:** `CHAPTER_PAGINATION_FRONTEND.md`, `backend/docs/CHAPTER_PAGINATION_BACKEND.md`.

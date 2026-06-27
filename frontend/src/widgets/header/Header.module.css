@@ -768,15 +768,33 @@
   }
 
   .navSeparator {
-    margin-top: 10px; /* было 14 */
+    margin-top: 10px; /* було 14 */
     opacity: 0.75;
   }
 
-  /* Home hero: на планшете больше лого и зона */
-  /* 155px при 430px, адаптивно: 36vw ≈ 155 при 430px */
+}
+
+/* Hero logo: плавне позиціювання від телефону до планшету.
+   На 430px збігається з flex+translateY(-31%), далі плавно наближається до центру шару. */
+@media (min-width: 430px) and (max-width: 1024px) {
+  .headerHome .heroLogoZone {
+    overflow: visible;
+  }
+
+  .headerHome .heroLogo {
+    position: absolute;
+    top: max(calc(85px + 0.56vw), calc(120px - 4vw));
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+  }
+}
+
+/* Hero logo: збільшення на широких планшетах пропорційно шару у фоні */
+@media (min-width: 700px) and (max-width: 1024px) {
   .headerHome .heroLogoImg {
-    width: clamp(130px, 36vw, 240px);
-    height: clamp(130px, 36vw, 240px);
+    width: clamp(240px, 36vw, 360px);
+    height: clamp(240px, 36vw, 360px);
   }
 }
 

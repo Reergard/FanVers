@@ -22,10 +22,15 @@ URL /books/:slug
       -> useAuth() => isAuthenticated, userId, authReady
       -> useQuery book      (GET /api/catalog/books/info/:slug/)
       -> useQuery volumes   (GET /api/catalog/books/:slug/volumes/)
-      -> useQuery chapters  (GET /api/catalog/books/:slug/chapters/)
       -> isOwner = auth + (book.ownerId ?? book.owner) === userId
       -> BookDetailOwner | BookDetailReader
+          -> BookChapters (bookId, volumes, …)
+              -> useQuery getPaginatedChapters(bookId, rangeStart)
+                  GET /api/navigation/chapters/paginated/?book_id=&start_chapter=
+              -> ChapterRangeNavigation (якщо page_ranges.length > 0)
 ```
+
+Список розділів **не** завантажується в Router. Повний catalog-список (`GET .../chapters/`) використовується лише в режимі **reorder** власника — див. `CHAPTER_REORDER_FRONTEND.md`, `CHAPTER_PAGINATION_FRONTEND.md`.
 
 ---
 
@@ -33,13 +38,14 @@ URL /books/:slug
 
 | Файл | Что делает |
 |---|---|
-| `catalog/BookDetailRouter.tsx` | Грузит `book/volumes/chapters`, ждет `authReady`, выбирает owner/reader, обрабатывает 404/403/other. |
-| `catalog/BookDetailOwner.tsx` | Режим владельца: передает `isOwner`, owner-кнопки и `onRead` в `BookChapters`; управление порядком глав и томами. |
-| `catalog/BookDetailReader.tsx` | Режим читателя: передает `onRead`, `getReadLabel`, `SubscriptionPurchaseBlock` в layout. |
+| `catalog/BookDetailRouter.tsx` | Грузит `book` и `volumes`, ждет `authReady`, выбирает owner/reader, обрабатывает 404/403/other. |
+| `catalog/BookDetailOwner.tsx` | Режим владельца: передает `bookId`, owner-кнопки и `onRead` в `BookChapters`; reorder — отдельная загрузка полного списка. |
+| `catalog/BookDetailReader.tsx` | Режим читателя: передает `bookId`, `onRead`, `getReadLabel`, `SubscriptionPurchaseBlock` в layout. |
 | `catalog/sections/BookExtraImages.tsx` | Додаткові зображення книги (read-only); між описом і «Інші роботи автора»; приховано без `extra_images`. |
-| `catalog/sections/BookChapters.tsx` | Таблица глав. `handleChapterClick`: при prepaid — purchaseChapter → navigate; иначе navigate. |
+| `catalog/sections/BookChapters.tsx` | Таблица глав (серверная пагинация через `getPaginatedChapters`). `ChapterRangeNavigation` при >50 разделах. `handleChapterClick`: при prepaid — purchaseChapter → navigate; иначе navigate. |
+| `navigation/ChapterRangeNavigation.tsx` | Селектор диапазона «Показано розділів: 1-50 з N». |
 | `catalog/sections/SubscriptionPurchaseBlock.tsx` | Блок абонименту: prepaid-плани, активний пакет, підказка. |
-| `api/catalogApi.ts` | Типы и методы `getBook/getChapters/getVolumes`, нормализация ответов. |
+| `api/catalogApi.ts` | Типы и методы `getBook/getChapters/getPaginatedChapters/getVolumes`, `invalidateBookChapterLists`, нормализация ответов. |
 
 ---
 
@@ -71,7 +77,8 @@ URL /books/:slug
 
 - `GET /api/catalog/books/info/<slug>/` -> данные книги (включая `extra_images` — додаткові зображення)
 - `GET /api/catalog/books/<slug>/volumes/` -> тома
-- `GET /api/catalog/books/<slug>/chapters/` -> главы (включая container_versions)
+- `GET /api/navigation/chapters/paginated/?book_id=&start_chapter=` -> страница списка глав для UI таблицы (см. `CHAPTER_PAGINATION_FRONTEND.md`)
+- `GET /api/catalog/books/<slug>/chapters/` -> полный список + `container_versions` (reorder, не для обычного просмотра)
 - `POST /api/catalog/books/<slug>/create-volume/` -> создание тома
 - `POST /api/catalog/books/<slug>/add_chapter/` -> добавление главы
 - `POST /api/catalog/books/<slug>/chapters/reorder/` -> изменение порядка глав (см. CHAPTER_REORDER_FRONTEND.md)

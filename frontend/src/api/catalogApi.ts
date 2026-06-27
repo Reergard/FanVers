@@ -1,4 +1,6 @@
+import type { QueryClient } from "@tanstack/react-query";
 import { http } from "./http";
+import { API } from "./endpoints";
 import { resolveIsNewBadge } from "../shared/bookNewBadge";
 import type { BookAccessRights, PermissionLevel } from "../catalog/settings/accessRights.types";
 
@@ -163,6 +165,19 @@ export interface ChapterNavigation {
   prev_chapter: ChapterNavigationItem | null;
   next_chapter: ChapterNavigationItem | null;
   all_chapters: ChapterNavigationItem[];
+}
+
+export interface ChapterPageRange {
+  start: number;
+  end: number;
+  label: string;
+}
+
+export interface PaginatedChaptersResponse {
+  chapters: Chapter[];
+  total_chapters: number;
+  current_range: { start: number; end: number };
+  page_ranges: ChapterPageRange[];
 }
 
 type PaginatedResponse<T> = {
@@ -473,6 +488,8 @@ export const catalogKeys = {
     ["chapter-navigation", bookSlug, chapterSlug] as const,
   chaptersPage: (bookId: number, rangeStart: number) =>
     ["book-chapters-page", bookId, rangeStart] as const,
+  /** Префікс для інвалідації всіх сторінок пагінації глав книги */
+  chaptersPagesPrefix: (bookId: number) => ["book-chapters-page", bookId] as const,
   userTranslations: (userId: number) => ["user-translations", userId] as const,
   abandonedTranslations: () => ["abandoned-translations"] as const,
 };
@@ -514,6 +531,56 @@ export interface ChaptersResponse {
   chapters: Chapter[];
   container_versions: Record<string, number>;
   volumes?: Volume[];
+}
+
+export async function getPaginatedChapters(
+  bookId: number,
+  startChapter = 1
+): Promise<PaginatedChaptersResponse> {
+  const { data } = await http.get<Record<string, unknown>>(API.paginatedChapters, {
+    params: { book_id: bookId, start_chapter: startChapter },
+  });
+
+  const chaptersRaw = Array.isArray(data.chapters) ? data.chapters : [];
+  const pageRangesRaw = Array.isArray(data.page_ranges) ? data.page_ranges : [];
+  const currentRangeRaw =
+    data.current_range != null && typeof data.current_range === "object"
+      ? (data.current_range as Record<string, unknown>)
+      : null;
+
+  return {
+    chapters: chaptersRaw.map((c) => normalizeChapter(c as Record<string, unknown>)),
+    total_chapters: Number(data.total_chapters ?? chaptersRaw.length),
+    current_range: {
+      start: Number(currentRangeRaw?.start ?? startChapter),
+      end: Number(currentRangeRaw?.end ?? chaptersRaw.length),
+    },
+    page_ranges: pageRangesRaw
+      .map((r) => {
+        const o = r as Record<string, unknown>;
+        const start = Number(o.start);
+        const end = Number(o.end);
+        if (Number.isNaN(start) || Number.isNaN(end)) return null;
+        return {
+          start,
+          end,
+          label: typeof o.label === "string" ? o.label : `${start}-${end}`,
+        };
+      })
+      .filter((r): r is ChapterPageRange => r != null),
+  };
+}
+
+/** Інвалідує повний список глав і всі сторінки пагінації */
+export async function invalidateBookChapterLists(
+  queryClient: QueryClient,
+  bookSlug: string,
+  bookId: number
+): Promise<void> {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: catalogKeys.chapters(bookSlug) }),
+    queryClient.invalidateQueries({ queryKey: catalogKeys.chaptersPagesPrefix(bookId) }),
+  ]);
 }
 
 export async function getChapters(slug: string): Promise<ChaptersResponse> {
@@ -937,6 +1004,7 @@ export const catalogApi = {
   getBookAccessRights,
   updateBookAccessRights,
   getChapters,
+  getPaginatedChapters,
   getVolumes,
   getChapterDetail,
   deleteChapter,

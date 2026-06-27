@@ -53,6 +53,7 @@ export const API = {
   bookmarkStatus: (bookId: number) => `/api/navigation/bookmarks/status/${bookId}/`,
   bookmarks: "/api/navigation/bookmarks/",
   bookmarkById: (id: number) => `/api/navigation/bookmarks/${id}/`,
+  paginatedChapters: "/api/navigation/chapters/paginated/",
 
   // Notifications
   notifications: "/api/notification/notifications/",

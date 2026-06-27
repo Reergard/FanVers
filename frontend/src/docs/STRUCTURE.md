@@ -85,6 +85,8 @@ frontend/src/
 ├── navigation/
 │   ├── FilterDropdown.tsx
 │   ├── FilterDropdown.module.css
+│   ├── ChapterRangeNavigation.tsx
+│   ├── ChapterRangeNavigation.module.css
 │   ├── ShowMoreNavigation.tsx
 │   ├── ShowMoreNavigation.module.css
 │   ├── SortByNavigation.tsx
@@ -423,6 +425,18 @@ export function AppRoutes() {
 **Пов’язані файли:**
 - `navigation/FilterDropdown.module.css`
 - `shared/hooks/useScrollLock.ts`
+- `navigation/ChapterRangeNavigation.tsx` (селектор діапазону розділів)
+
+### `navigation/ChapterRangeNavigation.tsx`
+**Що це:** селектор діапазону розділів на сторінці книги (серверна пагінація).
+
+**Навіщо існує:** при >50 розділах дозволяє перемикати діапазони `1-50`, `51-100`, … без завантаження всього списку.
+
+**Пов’язані файли:**
+- `navigation/ChapterRangeNavigation.module.css`
+- `navigation/FilterDropdown.tsx`
+- `catalog/sections/BookChapters.tsx`
+- `docs/CHAPTER_PAGINATION_FRONTEND.md`
 
 ---
 
@@ -625,7 +639,7 @@ export function AppRoutes() {
 
 ## `catalog/` — фіча Каталог (сторінка книги)
 
-**Що це:** сторінка книги `/books/:slug` — BookDetailRouter, BookDetailLayout, BookDetailOwner, BookDetailReader, секції (BookHero, BookDescription, BookChapters, **BookCommentsContainer**, **BookRatingStars** тощо). Також у фічі `catalog/`: сторінка глави `ChapterDetailRouter` + `ChapterDetail` для `/books/:bookSlug/chapters/:chapterSlug`, сторінка додавання глави `AddChapter.tsx` для `/books/:slug/add-chapter`, сторінка створення книги `CreateBookPage.tsx` для `/create-book`, сторінка налаштувань книги `SettingsBook.tsx` для `/books/:slug/settings`, покинуті переклади `AbandonedTranslations.tsx` для `/abandoned`.
+**Що це:** сторінка книги `/books/:slug` — BookDetailRouter, BookDetailLayout, BookDetailOwner, BookDetailReader, секції (BookHero, BookDescription, BookChapters з серверною пагінацією розділів, **ChapterRangeNavigation**, **BookCommentsContainer**, **BookRatingStars** тощо). Також у фічі `catalog/`: сторінка глави `ChapterDetailRouter` + `ChapterDetail` для `/books/:bookSlug/chapters/:chapterSlug`, сторінка додавання глави `AddChapter.tsx` для `/books/:slug/add-chapter`, сторінка створення книги `CreateBookPage.tsx` для `/create-book`, сторінка налаштувань книги `SettingsBook.tsx` для `/books/:slug/settings`, покинуті переклади `AbandonedTranslations.tsx` для `/abandoned`.
 
 **Маршрути (App.tsx):** `/create-book` → CreateBookPage, `/books/:slug/settings` → SettingsBook, `/books/:slug/add-chapter` → AddChapter (оголошується **перед** `/books/:slug`), `/books/:bookSlug/chapters/:chapterSlug` → ChapterDetailRouter, `/books/:slug` → BookDetailRouter, `/abandoned` → AbandonedTranslations.
 

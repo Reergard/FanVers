@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BookCard } from "../BookCard/BookCard";
 import type { BookCardBook } from "../BookCard/BookCard";
 import { SectionLineTitle } from "../navigation/SectionLineTitle";
 import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation";
+import { ActionButton } from "../shared/ActionButton/ActionButton";
+import { Container } from "../shared/Container";
 import {
   getBooksRecentUpdates,
   getBookNewsCoverUrl,
@@ -16,6 +18,18 @@ import "./HomePage.module.css";
 const PAGE_SIZE = 8;
 
 const BOOKS_RECENT_STALE_MS = 5 * 60 * 1000;
+
+function HomeUpdatesSection({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <section className="mg2-section" aria-label="Останні оновлення">
+      <Container>{children}</Container>
+    </section>
+  );
+}
 
 function toBookCardBook(book: BookRecentUpdateItem): BookCardBook {
   return {
@@ -58,35 +72,35 @@ export function HomePage3() {
 
   if (isLoading) {
     return (
-      <section className="mg2-section" aria-label="Останні оновлення">
+      <HomeUpdatesSection>
         <SectionLineTitle text="ОСТАННІ ОНОВЛЕННЯ" className="mg2-sectionLineTitle" />
         <p className="mg2-placeholder">Завантаження оновлень…</p>
-      </section>
+      </HomeUpdatesSection>
     );
   }
 
   if (isError) {
     return (
-      <section className="mg2-section" aria-label="Останні оновлення">
+      <HomeUpdatesSection>
         <SectionLineTitle text="ОСТАННІ ОНОВЛЕННЯ" className="mg2-sectionLineTitle" />
         <p className="mg2-placeholder">
           Не вдалося завантажити оновлення. Спробуйте пізніше.
         </p>
-      </section>
+      </HomeUpdatesSection>
     );
   }
 
   if (booksLength === 0) {
     return (
-      <section className="mg2-section" aria-label="Останні оновлення">
+      <HomeUpdatesSection>
         <SectionLineTitle text="ОСТАННІ ОНОВЛЕННЯ" className="mg2-sectionLineTitle" />
         <p className="mg2-placeholder">Нещодавніх оновлень глав поки немає</p>
-      </section>
+      </HomeUpdatesSection>
     );
   }
 
   return (
-    <section className="mg2-section" aria-label="Останні оновлення">
+    <HomeUpdatesSection>
       <SectionLineTitle text="ОСТАННІ ОНОВЛЕННЯ" className="mg2-sectionLineTitle" />
 
       <div className="mg2-grid">
@@ -103,8 +117,18 @@ export function HomePage3() {
                   image: coverUrl,
                 }}
                 variant="withTags"
+                hideFooter
               />
               <p className="mg2-description">{caption}</p>
+              <ActionButton
+                to={book.slug ? `/books/${book.slug}` : "#"}
+                variant="default"
+                size="sm"
+                className="mg2-readBtn"
+                ariaLabel={`Читати: ${book.title}`}
+              >
+                Читати
+              </ActionButton>
             </article>
           );
         })}
@@ -119,7 +143,7 @@ export function HomePage3() {
         }
         ariaLabel="Показати ще оновлення"
       />
-    </section>
+    </HomeUpdatesSection>
   );
 }
 

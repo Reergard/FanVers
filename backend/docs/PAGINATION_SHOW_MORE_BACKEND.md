@@ -94,13 +94,18 @@
 
 ---
 
-## 5) Що є схожого, але не використовується цією кнопкою
+## 5) Окрема серверна пагінація розділів книги
 
-У проекті є окремий endpoint для пагінації глав:
+На сторінці книги (`/books/:slug`) список розділів **не** використовує `ShowMoreNavigation`.
 
-- `ChapterViewSet.paginated_chapters` у `backend/apps/navigation/api/views.py`.
+| Аспект | Значення |
+|--------|----------|
+| Endpoint | `GET /api/navigation/chapters/paginated/?book_id=&start_chapter=` |
+| Backend | `ChapterPagination` у `backend/apps/navigation/models.py` |
+| Frontend | `BookChapters` + `ChapterRangeNavigation` |
+| Документи | `backend/docs/CHAPTER_PAGINATION_BACKEND.md`, `frontend/src/docs/CHAPTER_PAGINATION_FRONTEND.md` |
 
-Він працює для глав книги (`book_id`, `start_chapter`) і не використовується сторінками з `ShowMoreNavigation`.
+Це **інший** механізм, ніж кнопка «Показати ще» у §1–4.
 
 ---
 

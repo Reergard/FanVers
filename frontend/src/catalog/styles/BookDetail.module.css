@@ -699,6 +699,13 @@
   font-family: "Seminaria", serif;
 }
 
+.chapterRangeWrap {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  overflow: visible;
+}
+
 /* Без рамки блоку глав */
 .chapterTable {
   display: flex;

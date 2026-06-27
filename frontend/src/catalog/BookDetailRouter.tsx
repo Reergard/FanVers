@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { catalogApi, type Book, type Chapter, type Volume } from "../api/catalogApi";
+import { catalogApi, type Book, type Volume } from "../api/catalogApi";
 import { useAuth } from "../auth/useAuth";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import BookDetailOwner from "./BookDetailOwner";
@@ -56,14 +56,6 @@ export default function BookDetailRouter() {
     refetchOnWindowFocus: false,
   });
 
-  const chaptersQ = useQuery({
-    queryKey: ["book-chapters", slug],
-    queryFn: () => catalogApi.getChapters(slug),
-    enabled: Boolean(slug) && Boolean(book),
-    staleTime: STALE_TIME,
-    refetchOnWindowFocus: false,
-  });
-
   /** Пряме завантаження томів (як на сторінці add-chapter) — гарантує всі томи включно з порожніми */
   const [directVolumes, setDirectVolumes] = useState<Volume[] | null>(null);
   const [volumesRefreshKey, setVolumesRefreshKey] = useState(0);
@@ -94,17 +86,14 @@ export default function BookDetailRouter() {
   }
   if (!book) return <div>Книгу не знайдено</div>;
 
-  const chaptersData = chaptersQ.data;
-  const chapters: Chapter[] = chaptersData?.chapters ?? [];
-  const containerVersions = chaptersData?.container_versions ?? {};
-  /** volumes: пріоритет прямому запиту (як add-chapter); fallback — merge з інших джерел */
   const fromDirect = directVolumes ?? [];
-  const fromMerge = [...(volumesQ.data ?? []), ...(chaptersData?.volumes ?? [])];
+  const fromMerge = [...(volumesQ.data ?? [])];
   const volumesById = new Map<number, Volume>();
   for (const v of [...fromMerge, ...fromDirect]) volumesById.set(v.id, v);
   const volumes: Volume[] = Array.from(volumesById.values()).sort(
     (a, b) => (a.order ?? a.position ?? a.id) - (b.order ?? b.position ?? b.id)
   );
+  const chaptersLoading = volumesQ.isLoading || directVolumes === null;
   const ownerId = book.ownerId ?? book.owner;
 
   if (!authReady) {
@@ -133,9 +122,7 @@ export default function BookDetailRouter() {
       <BookDetailOwner
         book={book as Book}
         volumes={volumes}
-        chapters={chapters}
-        containerVersions={containerVersions}
-        chaptersLoading={chaptersQ.isLoading || volumesQ.isLoading || directVolumes === null}
+        chaptersLoading={chaptersLoading}
         volumesLoading={volumesQ.isLoading}
         onVolumesRefresh={refreshVolumes}
       />
@@ -154,8 +141,7 @@ export default function BookDetailRouter() {
     <BookDetailReader
       book={book as Book}
       volumes={volumes}
-      chapters={chapters}
-      chaptersLoading={chaptersQ.isLoading || volumesQ.isLoading || directVolumes === null}
+      chaptersLoading={chaptersLoading}
       volumesLoading={volumesQ.isLoading}
     />
     </>

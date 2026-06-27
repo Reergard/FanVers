@@ -97,7 +97,7 @@
    - `catalogApi.uploadChapter(slug, title.trim(), file, isPaid, volumeId, isPaid ? parseFloat(price) : 0)`.
 5. При успіху:
    - Скидання полів форми (title, file, isPaid, selectedVolume, price, input file).
-   - `queryClient.invalidateQueries({ queryKey: catalogKeys.chapters(slug) })` та `catalogKeys.book(slug)`.
+   - `invalidateBookChapterLists(queryClient, slug, book.id)` (якщо є `book.id`) або `catalogKeys.chapters(slug)`; також `catalogKeys.book(slug)`.
    - `navigate(\`/books/${slug}\`, { state: { chapterCreated: true } })` — перехід на сторінку книги з флагом у state.
 6. При помилці: `setError(message)` (текст з `err.message` або «Помилка при завантаженні глави»).
 7. У `finally`: `setIsSubmitting(false)`.
@@ -154,7 +154,7 @@
   → Паралельно getVolumes(slug) → setVolumes
   → Форма: title, file (.docx), isPaid, price, volume; handleFileChange (isDocxFile), handleUploadChapter
   → uploadChapter() → POST add_chapter/
-  → Успіх: invalidate chapters + book, navigate(/books/${slug}, { state: { chapterCreated: true } })
+  → Успіх: invalidateBookChapterLists (chapters + paginated pages) + book, navigate(/books/${slug}, { state: { chapterCreated: true } })
   → BookDetailRouter: useEffect бачить state.chapterCreated → showSuccessAutoClose(...), navigate(..., state: {})
   → AutoCloseNotificationModal показується 3 с, потім onClose (таймер)
 ```
@@ -164,7 +164,7 @@
 ## 6. Пов’язані документи
 
 - Backend: `backend/docs/ADD_CHAPTER_BACKEND.md` — ендпоінт add_chapter, перевірки, форма запиту.
-- Сторінка книги: [BOOK_PAGE_DATA_FLOW.md](./BOOK_PAGE_DATA_FLOW.md), [BOOK_PAGE_DESIGN_DATA_FLOW.md](./BOOK_PAGE_DESIGN_DATA_FLOW.md).
+- Сторінка книги: [BOOK_PAGE_DATA_FLOW.md](./BOOK_PAGE_DATA_FLOW.md), [BOOK_PAGE_DESIGN_DATA_FLOW.md](./BOOK_PAGE_DESIGN_DATA_FLOW.md), [CHAPTER_PAGINATION_FRONTEND.md](./CHAPTER_PAGINATION_FRONTEND.md).
 - Уведомлення (toast): [NOTIFICATIONS_FRONTEND.md](./NOTIFICATIONS_FRONTEND.md) (секція про NotificationProvider та AutoClose).
 
 **Останнє оновлення:** за поточним коду в проєкті.

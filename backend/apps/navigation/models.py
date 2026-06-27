@@ -27,17 +27,24 @@ class Bookmark(models.Model):
         return f"{self.user.username} - {self.book.title} ({self.status})"
 
 class ChapterPagination:
+    NO_PAGINATION_LIMIT = 50
+    LARGE_BOOK_THRESHOLD = 1000
+    PAGE_SIZE_DEFAULT = 50
+    PAGE_SIZE_LARGE = 100
+
     @staticmethod
     def get_chapters_per_page(total_chapters):
         """Определяет количество глав на странице в зависимости от общего количества"""
-        if total_chapters <= 50:
+        if total_chapters <= ChapterPagination.NO_PAGINATION_LIMIT:
             return total_chapters
-        return 50
+        if total_chapters >= ChapterPagination.LARGE_BOOK_THRESHOLD:
+            return ChapterPagination.PAGE_SIZE_LARGE
+        return ChapterPagination.PAGE_SIZE_DEFAULT
 
     @staticmethod
     def get_page_ranges(total_chapters):
         """Возвращает список диапазонов страниц для выпадающего списка"""
-        if total_chapters <= 50:
+        if total_chapters <= ChapterPagination.NO_PAGINATION_LIMIT:
             return []
 
         chapters_per_page = ChapterPagination.get_chapters_per_page(total_chapters)

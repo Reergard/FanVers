@@ -322,6 +322,14 @@ Container увеличивает max-width до 1680px
 - `src/docs/PAGINATION_SHOW_MORE_FRONTEND.md`
 - `backend/docs/PAGINATION_SHOW_MORE_BACKEND.md`
 
+Окремо — **серверна** пагінація розділів на сторінці книги (`/books/:slug`):
+
+- `BookChapters` + `ChapterRangeNavigation` (селектор діапазонів при >50 розділах);
+- endpoint `GET /api/navigation/chapters/paginated/`;
+- не використовує `ShowMoreNavigation`.
+
+Детально: `src/docs/CHAPTER_PAGINATION_FRONTEND.md`, `backend/docs/CHAPTER_PAGINATION_BACKEND.md`.
+
 21) Сортування через "Сортувати за"
 
 Поточний підхід у проєкті:
@@ -355,7 +363,8 @@ Container увеличивает max-width до 1680px
 
 - `viewedOnly` у поточній реалізації сторінки змінює тільки локальний state і не впливає на результат;
 - `hideBookmarks` працює для авторизованого користувача через `book.bookmark_status !== null`; для гостя перемикання блокується з warning;
-- у фільтрах сторінки пошуку використовується `navigation/FilterDropdown.tsx` (прив’язка до натиснутого фільтра, multi-select, блокування скролу сторінки під час відкриття).
+- у фільтрах сторінки пошуку використовується `navigation/FilterDropdown.tsx` (прив’язка до натиснутого фільтра, multi-select, блокування скролу сторінки під час відкриття);
+- той самий `FilterDropdown` використовується в `ChapterRangeNavigation` для селектора діапазону розділів на сторінці книги.
 
 Детально:
 

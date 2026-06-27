@@ -5,8 +5,7 @@ import { editorsApi, type ChapterForEdit } from "../api/editorsApi";
 import { getAccess } from "../auth/token";
 import { authStore } from "../auth/store";
 import { LazyChapterEditor } from "./components/LazyChapterEditor";
-import { catalogApi, catalogKeys } from "../api/catalogApi";
-import type { Volume } from "../api/catalogApi";
+import { catalogApi, catalogKeys, invalidateBookChapterLists, type Book, type Volume } from "../api/catalogApi";
 import { useAuth } from "../auth/useAuth";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { Container } from "../shared/Container";
@@ -365,7 +364,12 @@ export default function EditChapter() {
         }
 
         await editorsApi.updateChapter(chapterIdNum, formData);
-        await queryClient.invalidateQueries({ queryKey: catalogKeys.chapters(originalData.book_slug) });
+        const cachedBook = queryClient.getQueryData<Book>(
+          catalogKeys.book(originalData.book_slug)
+        );
+        const bookId =
+          cachedBook?.id ?? (await catalogApi.getBook(originalData.book_slug)).id;
+        await invalidateBookChapterLists(queryClient, originalData.book_slug, bookId);
         await queryClient.invalidateQueries({ queryKey: catalogKeys.book(originalData.book_slug) });
         navigate(`/books/${originalData.book_slug}`, { state: { chapterUpdated: true } });
       } catch (err) {

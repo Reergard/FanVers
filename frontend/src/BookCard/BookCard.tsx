@@ -91,6 +91,8 @@ type Props = {
   description?: string;
   /** default: замість рядків статистики показати `book.description` (каталог) */
   showBookDescription?: boolean;
+  /** withTags: не рендерити footer з кнопкою «Читати» (кнопка виноситься назовні) */
+  hideFooter?: boolean;
 };
 
 type ExpandModal = "fandoms" | "tags" | "genres" | null;
@@ -151,6 +153,7 @@ export function BookCard({
   variant = "default",
   description = "",
   showBookDescription = false,
+  hideFooter = false,
 }: Props) {
   const navigate = useNavigate();
   const slug = book.slug;
@@ -482,7 +485,7 @@ export function BookCard({
           </div>
         )}
 
-        {withTags && (
+        {withTags && !hideFooter && (
           <div className="bookCard__footer">
             {isAbandonedTranslation && (
               <span className="bookCard__status">Статус: {abandonedStatusText}</span>

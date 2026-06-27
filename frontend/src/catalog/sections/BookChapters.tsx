@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useLocation } from "react-router-dom";
@@ -14,8 +14,15 @@ import {
   type SubscriptionSettingsResponse,
 } from "../../api/subscriptionApi";
 import styles from "../styles/BookDetail.module.css";
-import { catalogKeys, type Chapter, type Volume } from "../../api/catalogApi";
+import {
+  catalogKeys,
+  getPaginatedChapters,
+  invalidateBookChapterLists,
+  type Chapter,
+  type Volume,
+} from "../../api/catalogApi";
 import { monitoringKeys } from "../../api/monitoringKeys";
+import { ChapterRangeNavigation } from "../../navigation/ChapterRangeNavigation";
 import checkIcon from "../assets/icons/check.svg";
 import deleteIcon from "../assets/icons/Delete.svg";
 import editIcon from "../assets/icons/Edit.svg";
@@ -92,7 +99,9 @@ function groupChapters(chapters: Chapter[], volumes?: Volume[]): VolumeGroup[] {
 }
 
 export type BookChaptersProps = {
-  chapters: Chapter[];
+  bookId: number;
+  /** Якщо задано — використовується замість пагінованого запиту (напр. режим reorder) */
+  chapters?: Chapter[];
   /** Список томів — якщо передано, показуються й порожні томи */
   volumes?: Volume[];
   isOwner?: boolean;
@@ -140,10 +149,11 @@ export type BookChaptersProps = {
 };
 
 export function BookChapters({
-  chapters,
+  bookId,
+  chapters: chaptersOverride,
   volumes,
   isOwner = false,
-  loading = false,
+  loading: loadingOverride,
   addChapterTo,
   onAddChapter,
   onCreateVolume,
@@ -171,14 +181,49 @@ export function BookChapters({
   requireAuthForPurchase = false,
 }: BookChaptersProps) {
   const queryClient = useQueryClient();
+  const sectionRef = useRef<HTMLElement>(null);
   const { showSuccess, showError } = useNotification();
   const { isAuthenticated } = useAuth();
   const { openLoginModal } = useAuthModal();
   const location = useLocation();
+  const [rangeStart, setRangeStart] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [subscriptionSelectedIds, setSubscriptionSelectedIds] = useState<Set<number>>(new Set());
   const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
   const [purchasingChapterId, setPurchasingChapterId] = useState<number | null>(null);
+
+  const usePagination = chaptersOverride == null && bookId > 0;
+
+  useEffect(() => {
+    setRangeStart(1);
+  }, [bookId]);
+
+  const paginatedQ = useQuery({
+    queryKey: catalogKeys.chaptersPage(bookId, rangeStart),
+    queryFn: () => getPaginatedChapters(bookId, rangeStart),
+    enabled: usePagination,
+    staleTime: 2 * 60_000,
+    refetchOnWindowFocus: false,
+  });
+
+  const chapters = chaptersOverride ?? paginatedQ.data?.chapters ?? [];
+  const pageRanges = usePagination ? (paginatedQ.data?.page_ranges ?? []) : [];
+  const totalChapters = usePagination
+    ? (paginatedQ.data?.total_chapters ?? chapters.length)
+    : chapters.length;
+  const loading = loadingOverride ?? (usePagination ? paginatedQ.isLoading : false);
+  const showRangeNav = usePagination && pageRanges.length > 0 && !reorderMode;
+
+  function handleRangeChange(nextStart: number) {
+    setRangeStart(nextStart);
+    sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function invalidateChaptersCache() {
+    if (bookSlug && bookId > 0) {
+      invalidateBookChapterLists(queryClient, bookSlug, bookId);
+    }
+  }
 
   const { data: subSettings } = useQuery({
     queryKey: bookSlug ? subscriptionKeys.settings(bookSlug) : ["subscription", "none"],
@@ -212,8 +257,8 @@ export function BookChapters({
     onSuccess: () => {
       if (bookSlug) {
         queryClient.invalidateQueries({ queryKey: subscriptionKeys.settings(bookSlug) });
-        queryClient.invalidateQueries({ queryKey: catalogKeys.chapters(bookSlug) });
       }
+      invalidateChaptersCache();
       queryClient.invalidateQueries({ queryKey: monitoringKeys.readingStats() });
       showSuccess("Главу придбано");
       onPurchaseSuccess?.();
@@ -237,6 +282,7 @@ export function BookChapters({
         queryClient.invalidateQueries({ queryKey: subscriptionKeys.settings(bookSlug) });
         queryClient.invalidateQueries({ queryKey: subscriptionKeys.userSubscriptions() });
       }
+      invalidateChaptersCache();
       queryClient.invalidateQueries({ queryKey: monitoringKeys.readingStats() });
       showSuccess("Розділи успішно придбано");
       setSubscriptionSelectedIds(new Set());
@@ -369,8 +415,18 @@ export function BookChapters({
   }
 
   return (
-    <section className={styles.chapters} aria-label="Розділи">
+    <section ref={sectionRef} className={styles.chapters} aria-label="Розділи">
       <header className={styles.chaptersHeader}>
+        {showRangeNav && (
+          <div className={styles.chapterRangeWrap}>
+            <ChapterRangeNavigation
+              rangeStart={rangeStart}
+              pageRanges={pageRanges}
+              totalChapters={totalChapters}
+              onChange={handleRangeChange}
+            />
+          </div>
+        )}
         {canApplyPlan && (
           <div className={styles.chapterActions}>
             <div className={styles.planSelect}>

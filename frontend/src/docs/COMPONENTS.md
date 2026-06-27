@@ -98,6 +98,26 @@
 
 ---
 
+### `ChapterRangeNavigation`
+
+**Призначення:** Селектор діапазону розділів на сторінці книги («Показано розділів:» + pill + «з N»).
+
+**Файли:**
+- `navigation/ChapterRangeNavigation.tsx`
+- `navigation/ChapterRangeNavigation.module.css`
+
+**Як працює:**
+- Рендериться лише якщо `pageRanges.length > 0` (backend повертає діапазони при >50 розділах).
+- Випадаюча панель — через `FilterDropdown` (portal, позиціонування від тригера).
+- Chip-кнопки діапазонів; закриття: ×, outside click, Escape, вибір діапазону.
+
+**Місця використання:**
+- `catalog/sections/BookChapters.tsx`
+
+**Деталі:** `docs/CHAPTER_PAGINATION_FRONTEND.md`.
+
+---
+
 ### `FilterDropdown`
 
 **Призначення:** Переиспользуемий dropdown для фільтрів, прив’язаний до натиснутого елемента.
@@ -115,6 +135,7 @@
 
 **Місця використання:**
 - `search/search.tsx`
+- `navigation/ChapterRangeNavigation.tsx` (селектор діапазону розділів; власні chip-стилі в `ChapterRangeNavigation.module.css`)
 
 ---
 

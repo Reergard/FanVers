@@ -1,8 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { catalogKeys } from "../api/catalogApi";
-import type { Book, Chapter, Volume } from "../api/catalogApi";
+import { catalogKeys, invalidateBookChapterLists, type Book, type Volume } from "../api/catalogApi";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 import { BookDetailLayout } from "./BookDetailLayout";
 import { BookHero } from "./sections/BookHero";
@@ -17,7 +16,6 @@ import { buildBookCoverAlt } from "../seo/bookSeo";
 interface BookDetailReaderProps {
   book: Book;
   volumes: Volume[];
-  chapters: Chapter[];
   chaptersLoading?: boolean;
   volumesLoading?: boolean;
 }
@@ -25,7 +23,6 @@ interface BookDetailReaderProps {
 export default function BookDetailReader({
   book,
   volumes,
-  chapters,
   chaptersLoading = false,
   volumesLoading: _volumesLoading,
 }: BookDetailReaderProps) {
@@ -51,7 +48,7 @@ export default function BookDetailReader({
     return [
       { label: "Автор:", value: book.author ?? "—" },
       { label: "Перекладач:", value: book.creator_username ?? "—" },
-      { label: "Розділів:", value: String(book.chapters_count ?? chapters.length) },
+      { label: "Розділів:", value: String(book.chapters_count ?? "—") },
       {
         label: "Жанр:",
         value: book.genres?.length ? book.genres.map((g) => g.name).join(", ") : "—",
@@ -79,7 +76,6 @@ export default function BookDetailReader({
     book.book_type,
     book.creator_username,
     book.chapters_count,
-    chapters.length,
     book.genres,
     book.tags,
     book.fandoms,
@@ -132,20 +128,20 @@ export default function BookDetailReader({
         <SubscriptionPurchaseBlock
           bookSlug={book.slug}
           onPurchaseSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: catalogKeys.chapters(book.slug) });
+            invalidateBookChapterLists(queryClient, book.slug, book.id);
             queryClient.invalidateQueries({ queryKey: catalogKeys.book(book.slug) });
           }}
         />
       }
       chapters={
         <BookChapters
-          chapters={chapters}
+          bookId={book.id}
           volumes={volumes}
           isOwner={false}
           bookSlug={book.slug}
           requireAuthForPurchase
           onPurchaseSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: catalogKeys.chapters(book.slug) });
+            invalidateBookChapterLists(queryClient, book.slug, book.id);
             queryClient.invalidateQueries({ queryKey: catalogKeys.book(book.slug) });
           }}
           loading={chaptersLoading}

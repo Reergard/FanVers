@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { catalogApi, catalogKeys } from "../api/catalogApi";
+import { catalogApi, catalogKeys, invalidateBookChapterLists, type Book } from "../api/catalogApi";
 import { getSubscriptionSettings, purchaseChapter } from "../api/subscriptionApi";
 import { subscriptionKeys } from "../api/subscriptionApi";
 import { monitoringKeys } from "../api/monitoringKeys";
@@ -49,9 +49,18 @@ export default function ChapterDetailRouter() {
       targetChapterSlug: string;
       useBalance?: boolean;
     }) => purchaseChapter(chapterId, undefined, useBalance),
-    onSuccess: (_data, { targetChapterSlug }) => {
+    onSuccess: async (_data, { targetChapterSlug }) => {
       qc.invalidateQueries({ queryKey: catalogKeys.chapterDetail(bookSlug, chapterSlug) });
-      qc.invalidateQueries({ queryKey: catalogKeys.chapters(bookSlug) });
+      const book = qc.getQueryData<Book>(catalogKeys.book(bookSlug));
+      const chapter = qc.getQueryData<{ book_id?: number }>(
+        catalogKeys.chapterDetail(bookSlug, chapterSlug)
+      );
+      const bookId = chapter?.book_id ?? book?.id;
+      if (bookId) {
+        await invalidateBookChapterLists(qc, bookSlug, bookId);
+      } else {
+        await qc.invalidateQueries({ queryKey: catalogKeys.chapters(bookSlug) });
+      }
       qc.invalidateQueries({ queryKey: subscriptionKeys.settings(bookSlug) });
       qc.invalidateQueries({ queryKey: subscriptionKeys.userSubscriptions() });
       qc.invalidateQueries({ queryKey: monitoringKeys.readingStats() });

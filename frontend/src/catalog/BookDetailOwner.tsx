@@ -2,8 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
-import { catalogApi, catalogKeys } from "../api/catalogApi";
-import type { Book, Chapter, Volume } from "../api/catalogApi";
+import { catalogApi, catalogKeys, invalidateBookChapterLists, type Book, type Chapter, type Volume } from "../api/catalogApi";
 import { resolveBookCoverUrl } from "../shared/bookCover/resolveBookCoverUrl";
 import { buildBookCoverAlt } from "../seo/bookSeo";
 import { BookDetailLayout } from "./BookDetailLayout";
@@ -21,8 +20,6 @@ import styles from "./styles/BookDetail.module.css";
 interface BookDetailOwnerProps {
   book: Book;
   volumes: Volume[];
-  chapters: Chapter[];
-  containerVersions?: Record<string, number>;
   chaptersLoading?: boolean;
   volumesLoading?: boolean;
   onVolumesRefresh?: () => void;
@@ -31,8 +28,6 @@ interface BookDetailOwnerProps {
 export default function BookDetailOwner({
   book,
   volumes,
-  chapters,
-  containerVersions = {},
   chaptersLoading = false,
   volumesLoading: _volumesLoading,
   onVolumesRefresh,
@@ -42,6 +37,9 @@ export default function BookDetailOwner({
   const { showSuccessAutoClose } = useNotification();
 
   const [reorderMode, setReorderMode] = useState(false);
+  const [reorderChapters, setReorderChapters] = useState<Chapter[] | null>(null);
+  const [reorderContainerVersions, setReorderContainerVersions] = useState<Record<string, number>>({});
+  const [isLoadingReorder, setIsLoadingReorder] = useState(false);
   const [chapterPositions, setChapterPositions] = useState<Record<number, number>>({});
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSavingOrder, setIsSavingOrder] = useState(false);
@@ -75,7 +73,7 @@ export default function BookDetailOwner({
     return [
       { label: "Автор:", value: book.author ?? "—" },
       { label: "Перекладач:", value: book.creator_username ?? "—" },
-      { label: "Розділів:", value: String(book.chapters_count ?? chapters.length) },
+      { label: "Розділів:", value: String(book.chapters_count ?? "—") },
       {
         label: "Жанр:",
         value: book.genres?.length ? book.genres.map((g) => g.name).join(", ") : "—",
@@ -103,7 +101,6 @@ export default function BookDetailOwner({
     book.book_type,
     book.creator_username,
     book.chapters_count,
-    chapters.length,
     book.genres,
     book.tags,
     book.fandoms,
@@ -118,18 +115,30 @@ export default function BookDetailOwner({
 
   const description = book.description ?? null;
 
-  function enterReorderMode() {
-    const map: Record<number, number> = {};
-    chapters.forEach((c) => {
-      map[c.id] = c.order;
-    });
-    setChapterPositions(map);
-    setReorderMode(true);
+  async function enterReorderMode() {
     setSaveError(null);
+    setIsLoadingReorder(true);
+    try {
+      const data = await catalogApi.getChapters(book.slug);
+      const map: Record<number, number> = {};
+      data.chapters.forEach((c) => {
+        map[c.id] = c.order;
+      });
+      setReorderChapters(data.chapters);
+      setReorderContainerVersions(data.container_versions);
+      setChapterPositions(map);
+      setReorderMode(true);
+    } catch {
+      setSaveError("Не вдалося завантажити список розділів для зміни порядку");
+    } finally {
+      setIsLoadingReorder(false);
+    }
   }
 
   function exitReorderMode() {
     setReorderMode(false);
+    setReorderChapters(null);
+    setReorderContainerVersions({});
     setChapterPositions({});
     setSaveError(null);
   }
@@ -140,7 +149,7 @@ export default function BookDetailOwner({
     try {
       await catalogApi.createVolume(book.slug, title);
       await qc.invalidateQueries({ queryKey: catalogKeys.volumes(book.slug) });
-      await qc.invalidateQueries({ queryKey: catalogKeys.chapters(book.slug) });
+      await invalidateBookChapterLists(qc, book.slug, book.id);
       onVolumesRefresh?.();
       showSuccessAutoClose("Том успішно створено");
     } catch (err) {
@@ -163,7 +172,7 @@ export default function BookDetailOwner({
     try {
       await catalogApi.deleteVolume(book.slug, volumeToDelete.id);
       await qc.invalidateQueries({ queryKey: catalogKeys.volumes(book.slug) });
-      await qc.invalidateQueries({ queryKey: catalogKeys.chapters(book.slug) });
+      await invalidateBookChapterLists(qc, book.slug, book.id);
       await qc.invalidateQueries({ queryKey: catalogKeys.book(book.slug) });
       onVolumesRefresh?.();
       setVolumeToDelete(null);
@@ -193,7 +202,7 @@ export default function BookDetailOwner({
     setSaveError(null);
     try {
       await catalogApi.moveChapter(book.slug, chapter.id, toVolumeId, toOrder);
-      await qc.invalidateQueries({ queryKey: catalogKeys.chapters(book.slug) });
+      await invalidateBookChapterLists(qc, book.slug, book.id);
       await qc.invalidateQueries({ queryKey: catalogKeys.book(book.slug) });
       showSuccessAutoClose("Розділ успішно переміщено");
     } catch (err) {
@@ -207,17 +216,18 @@ export default function BookDetailOwner({
   }
 
   async function saveOrder() {
+    if (!reorderChapters) return;
     setSaveError(null);
     setIsSavingOrder(true);
     try {
       const byContainer = new Map<number | null, { chapters: Chapter[]; version?: number }>();
-      chapters.forEach((ch) => {
+      reorderChapters.forEach((ch) => {
         const vid = ch.volume ?? ch.volumeId ?? null;
         if (!byContainer.has(vid)) {
           const key = vid == null ? "null" : String(vid);
           byContainer.set(vid, {
             chapters: [],
-            version: containerVersions[key],
+            version: reorderContainerVersions[key],
           });
         }
         byContainer.get(vid)!.chapters.push(ch);
@@ -235,14 +245,14 @@ export default function BookDetailOwner({
           version
         );
       }
-      await qc.invalidateQueries({ queryKey: ["book-chapters", book.slug] });
+      await invalidateBookChapterLists(qc, book.slug, book.id);
       showSuccessAutoClose("Порядок розділів успішно оновлено");
       exitReorderMode();
     } catch (err: unknown) {
       const axErr = err as { response?: { status?: number; data?: unknown } };
       if (axErr.response?.status === 409) {
         setSaveError("Порядок змінено в іншій вкладці. Оновіть список.");
-        await qc.invalidateQueries({ queryKey: ["book-chapters", book.slug] });
+        await invalidateBookChapterLists(qc, book.slug, book.id);
         exitReorderMode();
       } else {
         setSaveError("Не вдалося зберегти порядок. Спробуйте ще раз.");
@@ -287,10 +297,11 @@ export default function BookDetailOwner({
         <>
           {saveError && <div role="alert" className={styles.chapterSaveError}>{saveError}</div>}
           <BookChapters
-            chapters={chapters}
+            bookId={book.id}
+            chapters={reorderMode ? reorderChapters ?? undefined : undefined}
             volumes={volumes}
             isOwner
-            loading={chaptersLoading}
+            loading={chaptersLoading || isLoadingReorder}
             addChapterTo={`/books/${book.slug}/add-chapter`}
             onCreateVolume={() => setCreateVolumeModalOpen(true)}
             isCreatingVolume={isCreatingVolume}
@@ -308,7 +319,7 @@ export default function BookDetailOwner({
               if (!window.confirm("Ви впевнені, що хочете видалити цей розділ?")) return;
               try {
                 await catalogApi.deleteChapter(book.slug, ch.id);
-                await qc.invalidateQueries({ queryKey: catalogKeys.chapters(book.slug) });
+                await invalidateBookChapterLists(qc, book.slug, book.id);
                 await qc.invalidateQueries({ queryKey: catalogKeys.book(book.slug) });
               } catch (err) {
                 setSaveError(
