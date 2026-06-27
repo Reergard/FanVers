@@ -239,6 +239,7 @@ export default function Profile() {
   const [addMethodFromSelect, setAddMethodFromSelect] = useState(false);
   const [adultConfirmModalOpen, setAdultConfirmModalOpen] = useState(false);
   const [aboutModalOpen, setAboutModalOpen] = useState(false);
+  const [commissionInfoModalOpen, setCommissionInfoModalOpen] = useState(false);
   const [aboutDraft, setAboutDraft] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
@@ -907,8 +908,19 @@ export default function Profile() {
                       <span className={styles.mutedGold}>Комісія з продажу:</span>{" "}
                       <span className={styles.balanceCommissionValue}>{profile.commission ?? 15}%</span>
                     </div>
-                    <p className={styles.modalHint} style={{ margin: "4px 0 0", fontSize: "0.78em" }}>
+                    <p className={styles.commissionHint}>
                       * Даний % стягується із суми кожної транзакції з продажу.
+                    </p>
+                    <p className={styles.commissionHint}>
+                      Аби дізнатися як зменшити %{" "}
+                      <button
+                        type="button"
+                        className={styles.commissionHintLink}
+                        onClick={() => setCommissionInfoModalOpen(true)}
+                      >
+                        натисніть
+                      </button>
+                      .
                     </p>
                   </div>
                 )}
@@ -1172,6 +1184,67 @@ export default function Profile() {
           </section>
         </div>
       </div>
+
+      <Modal
+        open={commissionInfoModalOpen}
+        onClose={() => setCommissionInfoModalOpen(false)}
+        title="Як зменшити комісію?"
+      >
+        <div className={styles.commissionModalBody}>
+          <p className={styles.commissionModalLead}>
+            Кожен розділ ранобе чи фанфіку, який ти публікуєш на FanVers, додає символи до твоєї
+            загальної статистики перекладу. Чим довша історія — тим менша комісія платформи. Для нових перекладачів це 15%.
+          </p>
+          <p className={styles.commissionModalLead}>
+            Символи рахуються автоматично: додаєш новий розділ —
+            відсоток оновлюється. 
+          </p>
+          <h3 className={styles.commissionModalSubtitle}>Ранги перекладача</h3>
+          <ul className={styles.commissionTierList}>
+            <li className={styles.commissionTierItem}>
+              <span className={styles.commissionTierBadge}>15%</span>
+              <div className={styles.commissionTierText}>
+                <strong>Початковий шлях</strong> — до{" "}
+                <span className={styles.commissionTierHighlight}>5&nbsp;000&nbsp;000</span> символів
+                у всіх твоїх творах разом.
+              </div>
+            </li>
+            <li className={styles.commissionTierItem}>
+              <span className={styles.commissionTierBadge}>12%</span>
+              <div className={styles.commissionTierText}>
+                <strong>Досвідчений перекладач</strong> — від{" "}
+                <span className={styles.commissionTierHighlight}>5&nbsp;000&nbsp;000</span> символів.
+              </div>
+            </li>
+            <li className={styles.commissionTierItem}>
+              <span className={styles.commissionTierBadge}>10%</span>
+              <div className={styles.commissionTierText}>
+                <strong>Майстер слова</strong> — від{" "}
+                <span className={styles.commissionTierHighlight}>10&nbsp;000&nbsp;000</span> символів.
+              </div>
+            </li>
+          </ul>
+          <p className={styles.commissionModalFootnote}>
+            Твій поточний рівень:{" "}
+            <span className={styles.commissionModalFootnoteValue}>
+              {profile.commission ?? 15}%
+            </span>
+            {profile.total_characters != null ? (
+              <>
+                {" "}
+                · символів перекладено:{" "}
+                <span className={styles.commissionModalFootnoteValue}>
+                  {profile.total_characters.toLocaleString("uk-UA")}
+                </span>
+              </>
+            ) : null}
+          </p>
+          <p className={styles.modalHint}>
+            Комісія знімається лише з продажів платних розділів — не з поповнення балансу та не зі
+            звичайного виведення коштів.
+          </p>
+        </div>
+      </Modal>
 
       <Modal
         open={aboutModalOpen}

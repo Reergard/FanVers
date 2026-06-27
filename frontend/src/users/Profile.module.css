@@ -442,6 +442,118 @@
   font-size: clamp(14px, 1.2vw, 18px);
 }
 
+.commissionHint {
+  margin: 4px 0 0;
+  width: 100%;
+  font-size: clamp(11px, 0.95vw, 13px);
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.commissionHintLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: #05b4c7;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+.commissionHintLink:hover {
+  color: #7ee8f7;
+}
+
+.commissionHintLink:focus-visible {
+  outline: 2px solid rgba(5, 180, 199, 0.75);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.commissionModalBody {
+  display: grid;
+  gap: clamp(12px, 2vw, 16px);
+}
+
+.commissionModalLead {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: clamp(13px, 1.05vw, 15px);
+  line-height: 1.55;
+}
+
+.commissionModalSubtitle {
+  margin: 4px 0 0;
+  font-family: var(--font-decor, "Seminaria"), serif;
+  font-size: clamp(16px, 1.4vw, 20px);
+  font-weight: 400;
+  color: #f58807;
+  letter-spacing: 0.04em;
+}
+
+.commissionTierList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.commissionTierItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(5, 180, 199, 0.35);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.commissionTierBadge {
+  flex: 0 0 auto;
+  min-width: 44px;
+  padding: 4px 10px;
+  border: 1px solid #05b4c7;
+  border-radius: 999px;
+  font-family: "SofiaSansSemiCondensed", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #05b4c7;
+  text-align: center;
+}
+
+.commissionTierText {
+  margin: 0;
+  font-size: clamp(12px, 1vw, 14px);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.commissionTierText strong {
+  font-family: var(--font-decor, "Seminaria"), serif;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.commissionTierHighlight {
+  color: #f58807;
+  white-space: nowrap;
+}
+
+.commissionModalFootnote {
+  margin: 0;
+  padding-top: 4px;
+  font-size: clamp(12px, 1vw, 14px);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.commissionModalFootnoteValue {
+  color: #05b4c7;
+  font-weight: 600;
+}
+
 .cyan {
   font-family: var(--font-decor, "Seminaria"), serif;
   color: #05B4C7;
