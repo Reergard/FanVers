@@ -642,7 +642,8 @@
 
   :global(.mg2-cardShell) {
     width: 273px;
-    height: 476px;
+    min-height: 476px;
+    height: auto;
     box-sizing: border-box;
     padding: 12px 10px 18px;
     border-radius: 18px;

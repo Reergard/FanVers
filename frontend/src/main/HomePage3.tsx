@@ -4,7 +4,6 @@ import { BookCard } from "../BookCard/BookCard";
 import type { BookCardBook } from "../BookCard/BookCard";
 import { SectionLineTitle } from "../navigation/SectionLineTitle";
 import { ShowMoreNavigation } from "../navigation/ShowMoreNavigation";
-import { ActionButton } from "../shared/ActionButton/ActionButton";
 import {
   getBooksRecentUpdates,
   getBookNewsCoverUrl,
@@ -28,6 +27,9 @@ function toBookCardBook(book: BookRecentUpdateItem): BookCardBook {
     book_type: book.book_type,
     is_new_badge: book.is_new_badge,
     created_at: book.created_at,
+    genres: book.genres,
+    tags: book.tags,
+    fandoms: book.fandoms,
   };
 }
 
@@ -100,17 +102,9 @@ export function HomePage3() {
                   ...bookCardBook,
                   image: coverUrl,
                 }}
+                variant="withTags"
               />
               <p className="mg2-description">{caption}</p>
-              <ActionButton
-                to={book.slug ? `/books/${book.slug}` : "#"}
-                variant="default"
-                size="sm"
-                className="mg2-readBtn"
-                ariaLabel={`Читати: ${book.title}`}
-              >
-                Читати
-              </ActionButton>
             </article>
           );
         })}

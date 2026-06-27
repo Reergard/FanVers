@@ -9,7 +9,7 @@ export const USER_MENU: MenuItem[] = [
   { to: "/messages", label: "Повідомлення", iconName: "bell" },
   { to: "/chat", label: "ChatVerse", iconName: "mail" },
   { to: "/bookmarks", label: "Закладки", iconName: "zakladki" },
-  { to: "/my-translations", label: "Власні переклади", iconName: "my_books" },
+  { to: "/my-translations", label: "Власні твори", iconName: "my_books" },
   { to: "/profile", label: "Профіль", iconName: "profile" },
   { to: "/logout", label: "Вихід", iconName: "exit", kind: "danger" },
 ];

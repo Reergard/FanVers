@@ -53,7 +53,7 @@ export default function UserTranslations() {
     return (
       <section className={styles.page}>
         <Container>
-          <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Власні переклади" }]} />
+          <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Власні твори" }]} />
           <div className={styles.loading}>Завантаження…</div>
         </Container>
       </section>
@@ -64,7 +64,7 @@ export default function UserTranslations() {
     return (
       <section className={styles.page}>
         <Container>
-          <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Власні переклади" }]} />
+          <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Власні твори" }]} />
           <div className={styles.authRequired}>
             <h2>Для перегляду власних перекладів необхідно увійти в систему</h2>
             <p>
@@ -85,8 +85,8 @@ export default function UserTranslations() {
       <Container>
         <div className={styles.layout}>
           <div className={styles.mainCol}>
-            <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Власні переклади" }]} />
-            <PageTitle>Власні переклади</PageTitle>
+            <Breadcrumb items={[{ label: "Головна", to: "/" }, { label: "Власні твори" }]} />
+            <PageTitle>Власні твори</PageTitle>
 
             {error ? (
               <div className={styles.error}>
@@ -115,7 +115,7 @@ export default function UserTranslations() {
                   visibleCount={visibleCount}
                   totalCount={books.length}
                   onShowMore={showMore}
-                  ariaLabel="Показати ще власні переклади"
+                  ariaLabel="Показати ще власні твори"
                 />
               </>
             ) : (

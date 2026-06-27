@@ -54,6 +54,16 @@ export async function getBooksNews(): Promise<BookNewsItem[]> {
 export interface BookRecentUpdateItem extends BookNewsItem {
   latest_chapter_title: string | null;
   chapters_count: number;
+  genres?: { name: string }[];
+  tags?: { name: string }[];
+  fandoms?: { name: string }[];
+}
+
+function normalizeNameList(raw: unknown): { name: string }[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((item) => item != null && typeof item === "object" && "name" in item)
+    .map((item) => ({ name: String((item as Record<string, unknown>).name) }));
 }
 
 function normalizeBookRecentUpdate(raw: unknown): BookRecentUpdateItem | null {
@@ -69,6 +79,9 @@ function normalizeBookRecentUpdate(raw: unknown): BookRecentUpdateItem | null {
     ...base,
     latest_chapter_title: latest,
     chapters_count: Number.isFinite(n) ? n : 0,
+    genres: normalizeNameList(o.genres),
+    tags: normalizeNameList(o.tags),
+    fandoms: normalizeNameList(o.fandoms),
   };
 }
 
