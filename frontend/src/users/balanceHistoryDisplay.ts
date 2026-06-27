@@ -14,7 +14,6 @@ const OPERATION_LABELS: Record<string, string> = {
 const CREDIT_OPERATIONS = new Set([
   "deposit",
   "earning",
-  "advertising",
   "refund",
   "thanks_received",
 ]);
@@ -32,6 +31,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function balanceOperationLabel(item: BalanceHistoryItem): string {
+  if (item.description) return item.description;
   const type = item.operation_type ?? item.type ?? "";
   return OPERATION_LABELS[type] ?? type;
 }

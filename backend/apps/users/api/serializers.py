@@ -92,7 +92,7 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 class BalanceLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = BalanceLog
-        fields = ['amount', 'operation_type', 'created_at', 'status']
+        fields = ['amount', 'operation_type', 'description', 'created_at', 'status']
 
 
 class ProfileImageUploadSerializer(serializers.Serializer):

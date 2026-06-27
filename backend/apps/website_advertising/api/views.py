@@ -213,7 +213,19 @@ class AdvertisementViewSet(
                     }
                 )
 
-            profile.balance_operation(total_order_cost, "advertising")
+            # Формуємо опис для BalanceLog
+            dates_set = set()
+            for item in prepared_items:
+                dates_set.add((str(item["start_date"]), str(item["end_date"])))
+            dates_parts = [f"{s} — {e}" for s, e in sorted(dates_set)]
+            ad_description = (
+                f"Реклама для книги «{book.title}» "
+                f"на {', '.join(dates_parts)}"
+            )
+            if len(ad_description) > 300:
+                ad_description = ad_description[:297] + "..."
+
+            profile.balance_operation(total_order_cost, "advertising", description=ad_description)
 
             created_ads = []
             for item in prepared_items:

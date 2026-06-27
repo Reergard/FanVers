@@ -49,6 +49,8 @@ export type UserProfile = {
 export type BalanceHistoryItem = {
   amount?: string | number;
   operation_type?: string;
+  /** Опис операції (напр. «Реклама для книги "Title" на 2026-06-27 — 2026-07-05») */
+  description?: string;
   /** @deprecated використовуйте operation_type */
   type?: string;
   status?: string;

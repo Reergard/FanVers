@@ -704,17 +704,17 @@ else:
 from urllib.parse import urlencode
 
 from django.urls import reverse, reverse_lazy
+from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 
 
 def _payout_requests_link(query: dict):
-    """Посилання на changelist заявок з фільтром по status (для SIDEBAR unfold)."""
-
-    def link(request):
-        base = reverse("admin:payouts_payoutrequest_changelist")
-        return f"{base}?{urlencode(query, doseq=True)}"
-
-    return link
+    """Ленива URL-адреса changelist із фільтром (format_lazy, не callable)."""
+    return format_lazy(
+        "{}?{}",
+        reverse_lazy("admin:payouts_payoutrequest_changelist"),
+        urlencode(query, doseq=True),
+    )
 
 UNFOLD = {
     "SITE_TITLE": "FanVers Admin",

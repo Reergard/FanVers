@@ -203,7 +203,7 @@ class Profile(models.Model):
         'deposit', 'earning', 'thanks_received', 'refund',
     ])
 
-    def balance_operation(self, amount, operation_type):
+    def balance_operation(self, amount, operation_type, description=''):
         """
         Єдиний метод зміни балансу з блокуванням рядка (select_for_update).
         Повертає BalanceLog запис.
@@ -261,6 +261,7 @@ class Profile(models.Model):
             balance_log = profile.balance_logs.create(
                 amount=amount,
                 operation_type=operation_type,
+                description=description,
                 status='completed',
             )
 
@@ -442,6 +443,12 @@ class BalanceLog(models.Model):
             ('thanks_received', 'Подяка (зарахування)'),
         ]
     )
+    description = models.CharField(
+        max_length=300,
+        blank=True,
+        default='',
+        verbose_name='Опис операції',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
         max_length=20,
@@ -452,7 +459,7 @@ class BalanceLog(models.Model):
         ],
         default='pending'
     )
-    
+
     class Meta:
         ordering = ['-created_at']
 
