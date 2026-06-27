@@ -104,6 +104,7 @@ type ChapterDetailProps = {
   chapterContentHtml: string;
   prevChapterSlug?: string | null;
   nextChapterSlug?: string | null;
+  navigationReady?: boolean;
   isOwner: boolean;
   onNavigateToChapter?: (targetChapterSlug: string) => void;
   chapterMeta: ChapterReaderMeta;
@@ -128,6 +129,7 @@ function ChapterDetailImpl({
   chapterContentHtml,
   prevChapterSlug = null,
   nextChapterSlug = null,
+  navigationReady = false,
   isOwner,
   onNavigateToChapter,
   chapterMeta,
@@ -252,18 +254,25 @@ function ChapterDetailImpl({
             <h1 className={styles.navTitle__text}>{chapterTitle}</h1>
           </div>
 
-          <Link
-            className={`${styles.navBtn} ${styles.navBtnRight}`}
-            to={nextTo}
-            aria-label={nextLabel}
-            onClick={(e) => {
-              if (!nextChapterSlug || !onNavigateToChapter) return;
-              e.preventDefault();
-              onNavigateToChapter(nextChapterSlug);
-            }}
-          >
-            <Icon name="chapter-next-frame" className={styles.navBtnIcon} aria-hidden />
-          </Link>
+          {nextChapterSlug ? (
+            <Link
+              className={`${styles.navBtn} ${styles.navBtnRight}`}
+              to={nextTo}
+              aria-label={nextLabel}
+              onClick={(e) => {
+                if (!onNavigateToChapter) return;
+                e.preventDefault();
+                onNavigateToChapter(nextChapterSlug);
+              }}
+            >
+              <Icon name="chapter-next-frame" className={styles.navBtnIcon} aria-hidden />
+            </Link>
+          ) : navigationReady ? null : (
+            <span
+              className={`${styles.navBtn} ${styles.navBtnRight} ${styles.navBtnPlaceholder}`}
+              aria-hidden
+            />
+          )}
         </Container>
       </header>
 
@@ -304,18 +313,25 @@ function ChapterDetailImpl({
               <div className={styles.navTitle__text}>{chapterTitle}</div>
             </div>
 
-            <Link
-              className={`${styles.navBtn} ${styles.navBtnRight}`}
-              to={nextTo}
-              aria-label={nextLabel}
-              onClick={(e) => {
-                if (!nextChapterSlug || !onNavigateToChapter) return;
-                e.preventDefault();
-                onNavigateToChapter(nextChapterSlug);
-              }}
-            >
-              <Icon name="chapter-next-frame" className={styles.navBtnIcon} aria-hidden />
-            </Link>
+            {nextChapterSlug ? (
+              <Link
+                className={`${styles.navBtn} ${styles.navBtnRight}`}
+                to={nextTo}
+                aria-label={nextLabel}
+                onClick={(e) => {
+                  if (!onNavigateToChapter) return;
+                  e.preventDefault();
+                  onNavigateToChapter(nextChapterSlug);
+                }}
+              >
+                <Icon name="chapter-next-frame" className={styles.navBtnIcon} aria-hidden />
+              </Link>
+            ) : navigationReady ? null : (
+              <span
+                className={`${styles.navBtn} ${styles.navBtnRight} ${styles.navBtnPlaceholder}`}
+                aria-hidden
+              />
+            )}
           </div>
 
           <div className={styles.reportRow}>

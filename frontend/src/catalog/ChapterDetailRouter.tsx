@@ -297,6 +297,7 @@ export default function ChapterDetailRouter() {
         chapterContentHtml={chapter.content}
         prevChapterSlug={navigation?.prev_chapter?.slug ?? null}
         nextChapterSlug={navigation?.next_chapter?.slug ?? null}
+        navigationReady={navigationQ.isFetched}
         isOwner={isOwner}
         onNavigateToChapter={handleNavigateToChapter}
         chapterMeta={{

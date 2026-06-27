@@ -48,6 +48,11 @@
   flex-direction: row-reverse;
 }
 
+.navBtnPlaceholder {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .navBtn__text {
   white-space: nowrap;
 }
@@ -292,21 +297,35 @@
 @media (max-width: 1024px) {
   .chapterNav__inner,
   .chapterFooter__row {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "navPrev navNext"
+      "navTitle navTitle";
+    column-gap: clamp(10px, calc(2.2 * var(--vwu)), 24px);
+    row-gap: 12px;
+    align-items: start;
   }
 
-  .navBtn,
-  .navBtnRight {
-    justify-self: stretch;
+  .chapterNav__inner > .navBtn:not(.navBtnRight),
+  .chapterFooter__row > .navBtn:not(.navBtnRight) {
+    grid-area: navPrev;
+    justify-self: start;
+    width: auto;
   }
 
-  .navBtnRight {
-    flex-direction: row-reverse;
+  .chapterNav__inner > .navBtnRight,
+  .chapterFooter__row > .navBtnRight {
+    grid-area: navNext;
+    justify-self: end;
+    width: auto;
   }
 
-  .navTitle {
-    order: -1;
+  .chapterNav__inner > .navTitle,
+  .chapterFooter__row > .navTitle {
+    grid-area: navTitle;
+    justify-self: center;
+    width: 100%;
   }
 
   .reader__inner {
