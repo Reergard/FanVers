@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import ghostBlueIcon from "../../assets/icons/Ghost.svg";
 import sendIcon from "../../catalog/assets/icons/send.svg";
@@ -69,9 +69,11 @@ export function ChatWindow({
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const messagesRef = useRef<HTMLUListElement | null>(null);
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const initializedChatRef = useRef<number | null>(null);
   const scrollAnchorRef = useRef<{ height: number; top: number } | null>(null);
   const lastOlderTriggerRef = useRef(0);
+  const [composerMultiline, setComposerMultiline] = useState(false);
 
   const chatId = selectedChat?.id ?? null;
   const otherUsername = useMemo(
@@ -136,6 +138,41 @@ export function ChatWindow({
     }
     void onLoadOlderMessages(chatId);
   };
+
+  const syncComposerHeight = useCallback(() => {
+    const el = composerRef.current;
+    if (!el) return;
+
+    const style = getComputedStyle(el);
+    const singleLine = Number.parseFloat(style.lineHeight) || 30;
+    const maxBlock = Number.parseFloat(style.maxBlockSize) || 320;
+    const hasNewline = text.includes("\n");
+
+    el.style.height = "auto";
+    const contentHeight = el.scrollHeight;
+
+    if (!hasNewline && contentHeight <= singleLine + 3) {
+      el.style.height = "";
+      el.style.overflowY = "hidden";
+      setComposerMultiline(false);
+      return;
+    }
+
+    const next = Math.min(Math.max(contentHeight, singleLine), maxBlock);
+    el.style.height = `${next}px`;
+    el.style.overflowY = contentHeight > maxBlock ? "auto" : "hidden";
+    setComposerMultiline(true);
+  }, [text]);
+
+  useLayoutEffect(() => {
+    syncComposerHeight();
+  }, [text, syncComposerHeight]);
+
+  useEffect(() => {
+    const onResize = () => syncComposerHeight();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [syncComposerHeight]);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -258,8 +295,9 @@ export function ChatWindow({
       </ul>
 
       <form className={styles.composer} aria-label="Надіслати повідомлення" onSubmit={submit}>
-        <label className={styles.inputShell}>
+        <label className={clsx(styles.inputShell, composerMultiline && styles.inputShellMultiline)}>
           <textarea
+            ref={composerRef}
             className={`${styles.input} fv-native-scrollbar`}
             value={text}
             onChange={(event) => setText(event.target.value)}

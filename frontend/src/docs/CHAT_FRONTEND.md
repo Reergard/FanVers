@@ -202,7 +202,8 @@ CSS-змінні в `:root` (`main.css`):
 | Елемент | `textarea`, не `input type="text"` |
 | Контейнер | `.inputShell` — «пігулка» з золотою рамкою, `border-radius: 999px` |
 | Шрифт / колір | BadScript, золотий текст `rgba(241, 157, 16, …)` |
-| Висота | `max-block-size: clamp(120px, 18vh, 220px)`, `overflow-y: auto` |
+| Висота | **Auto-grow**: 1 рядок → росте з текстом до `max-block-size: clamp(12rem, 34vh, 20rem)`, далі внутрішній скрол; логіка в `ChatWindow.syncComposerHeight` |
+| Форма оболонки | Одна строка — «пігулка» (`border-radius: 999px`); кілька рядків — `.inputShellMultiline` з м’якшим скругленням |
 | Клавіатура | Enter → submit; Shift+Enter → `\n` |
 | Скролбар | Кастомний золотий (див. вище) |
 

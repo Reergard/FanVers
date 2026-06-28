@@ -187,7 +187,7 @@
 
 .chatPanel {
   min-width: 0;
-  padding: clamp(6px, 0.55vw, 10px) clamp(16px, 1.4vw, 24px) clamp(14px, 1.2vw, 20px);
+  padding: clamp(6px, 0.55vw, 10px) clamp(16px, 1.4vw, 24px) clamp(8px, 0.7vw, 12px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   margin-top: clamp(74px, 5.6vw, 98px);
@@ -384,20 +384,38 @@
 
 .composer {
   padding-inline: clamp(10px, 0.95vw, 16px);
-  padding-block: clamp(6px, 0.55vw, 10px);
+  padding-block: clamp(4px, 0.4vw, 6px) clamp(2px, 0.25vw, 4px);
   border-top: 1px solid rgba(228, 148, 17, 0.45);
 }
 
 .inputShell {
-  min-height: clamp(52px, 4.2vw, 76px);
-  border: 1px solid rgba(228, 148, 17, 0.62);
+  --composer-pill-height: clamp(52px, 4vw, 58px);
+  --composer-line-height: 30px;
+  border: 1px solid rgba(228, 148, 17, 0.7);
   border-radius: 999px;
   display: grid;
   grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 6px;
+  padding-inline: clamp(18px, 1.35vw, 24px) clamp(10px, 0.85vw, 14px);
+  transition: border-radius 180ms ease;
+  overflow: visible;
+}
+
+.inputShell:not(.inputShellMultiline) {
+  height: var(--composer-pill-height);
+  min-height: 0;
+  padding-block: 0;
+}
+
+.inputShellMultiline {
+  border-radius: clamp(20px, 1.6vw, 30px);
   align-items: end;
+  min-height: clamp(52px, 4.2vw, 76px);
+  height: auto;
+  padding-block: clamp(8px, 0.65vw, 12px);
+  padding-inline: clamp(16px, 1.2vw, 22px) clamp(10px, 0.9vw, 16px);
   gap: clamp(8px, 0.7vw, 12px);
-  padding: clamp(8px, 0.65vw, 12px) clamp(10px, 0.9vw, 16px) clamp(8px, 0.65vw, 12px)
-    clamp(16px, 1.2vw, 22px);
 }
 
 .inputShell:focus-within {
@@ -408,21 +426,35 @@
 .input {
   inline-size: 100%;
   min-width: 0;
-  min-block-size: 1.4em;
   border: 0;
   outline: none;
   background-color: transparent;
-  color: rgba(241, 157, 16, 0.95);
+  color: rgba(241, 157, 16, 0.94);
   font-family: "BadScript", var(--font-decor), serif;
   font-size: 19px;
-  line-height: 1.4;
+  line-height: var(--composer-line-height, 30px);
   resize: none;
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
-  max-block-size: clamp(120px, 18vh, 220px);
-  padding-inline-end: 4px;
+  max-block-size: clamp(12rem, 34vh, 20rem);
+  padding: 0;
+  padding-inline-end: 2px;
+  box-sizing: border-box;
+  align-self: center;
+  text-shadow: 0 0 0.55px rgba(245, 136, 7, 0.75);
   scrollbar-width: thin;
   scrollbar-color: var(--fv-native-scrollbar-thumb) var(--fv-native-scrollbar-track);
+}
+
+.inputShell:not(.inputShellMultiline) .input {
+  height: var(--composer-line-height);
+  min-block-size: 0;
+  max-block-size: var(--composer-line-height);
+}
+
+.inputShellMultiline .input {
+  align-self: end;
+  padding-block: 2px;
 }
 
 .input::-webkit-scrollbar {
@@ -448,28 +480,39 @@
 
 .input::placeholder {
   color: rgba(241, 157, 16, 0.56);
+  text-shadow: none;
 }
 
 .sendBtn {
-  min-width: clamp(70px, 6vw, 108px);
-  min-height: clamp(30px, 2.35vw, 40px);
-  border-radius: 999px;
+  flex-shrink: 0;
+  align-self: center;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 0;
   border: 0;
-  padding: 0 clamp(8px, 0.8vw, 14px);
+  padding: 0;
+  margin: 0;
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  color: rgba(241, 157, 16, 0.95);
+  justify-content: center;
   cursor: pointer;
   appearance: none;
   background-color: transparent;
+  overflow: visible;
+}
+
+.inputShellMultiline .sendBtn {
+  align-self: end;
+  margin-block-end: 2px;
 }
 
 .sendIconGraphic {
   inline-size: 61px;
-  block-size: 10px;
+  block-size: 26px;
   display: block;
   object-fit: contain;
+  object-position: center;
+  flex-shrink: 0;
 }
 
 .unreadBadge {
@@ -898,6 +941,16 @@
 
   .input {
     font-size: 18px;
+  }
+
+  .inputShell {
+    --composer-pill-height: clamp(50px, 12vw, 56px);
+    --composer-line-height: 28px;
+  }
+
+  .sendIconGraphic {
+    inline-size: 56px;
+    block-size: 24px;
   }
 }
 
