@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import ghostBlueIcon from "../../assets/icons/Ghost.svg";
 import sendIcon from "../../catalog/assets/icons/send.svg";
 import { Modal } from "../../shared/Modal/Modal";
@@ -150,6 +150,12 @@ export function ChatWindow({
     setText("");
   };
 
+  const onComposerKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== "Enter" || event.shiftKey) return;
+    event.preventDefault();
+    void submit(event as unknown as FormEvent<HTMLFormElement>);
+  };
+
   const askDeleteChat = () => {
     setConfirmDeleteOpen(true);
   };
@@ -253,12 +259,13 @@ export function ChatWindow({
 
       <form className={styles.composer} aria-label="Надіслати повідомлення" onSubmit={submit}>
         <label className={styles.inputShell}>
-          <input
-            className={styles.input}
-            type="text"
+          <textarea
+            className={`${styles.input} fv-native-scrollbar`}
             value={text}
             onChange={(event) => setText(event.target.value)}
+            onKeyDown={onComposerKeyDown}
             placeholder="Ваше повідомлення..."
+            rows={1}
           />
           <button className={styles.sendBtn} type="submit" aria-label="Надіслати">
             <img className={styles.sendIconGraphic} src={sendIcon} alt="" aria-hidden="true" />

@@ -85,7 +85,7 @@ export function MagicalGuide1() {
               const caption = getTrendCardCaptionFromBook(book);
               return (
                 <article key={book.id} className="mg2-cardShell">
-                  <BookCard book={book} />
+                  <BookCard book={book} hideStats />
                   {caption ? (
                     <p className="mg2-description">{caption}</p>
                   ) : (

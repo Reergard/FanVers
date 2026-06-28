@@ -91,6 +91,8 @@ type Props = {
   description?: string;
   /** default: замість рядків статистики показати `book.description` (каталог) */
   showBookDescription?: boolean;
+  /** default: не показувати рядки статистики (Тренди, ТОП на головній) */
+  hideStats?: boolean;
   /** withTags: не рендерити footer з кнопкою «Читати» (кнопка виноситься назовні) */
   hideFooter?: boolean;
 };
@@ -153,6 +155,7 @@ export function BookCard({
   variant = "default",
   description = "",
   showBookDescription = false,
+  hideStats = false,
   hideFooter = false,
 }: Props) {
   const navigate = useNavigate();
@@ -340,6 +343,7 @@ export function BookCard({
           <h3 className="bookCard__title">{book.title || "Без назви"}</h3>
         )}
 
+        {(withTags || showBookDescription || !hideStats) && (
         <div className="bookCard__meta">
           {withTags ? (
             <>
@@ -478,6 +482,7 @@ export function BookCard({
             </>
           )}
         </div>
+        )}
 
         {!withTags && isAbandonedTranslation && !showBookDescription && (
           <div className="bookCard__defaultAbandonedStatus">

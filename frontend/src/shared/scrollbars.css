@@ -1,0 +1,41 @@
+/* Нативная полоса прокрутки для полей ввода и прокручиваемых блоков с классом .fv-native-scrollbar */
+textarea,
+select,
+.fv-native-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--fv-native-scrollbar-thumb) var(--fv-native-scrollbar-track);
+}
+
+textarea::-webkit-scrollbar,
+select::-webkit-scrollbar,
+.fv-native-scrollbar::-webkit-scrollbar {
+  width: var(--fv-native-scrollbar-size);
+  height: var(--fv-native-scrollbar-size);
+}
+
+textarea::-webkit-scrollbar-track,
+select::-webkit-scrollbar-track,
+.fv-native-scrollbar::-webkit-scrollbar-track {
+  background: var(--fv-native-scrollbar-track);
+  border-radius: 999px;
+}
+
+textarea::-webkit-scrollbar-thumb,
+select::-webkit-scrollbar-thumb,
+.fv-native-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--fv-native-scrollbar-thumb);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  min-height: 36px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover,
+select::-webkit-scrollbar-thumb:hover,
+.fv-native-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--fv-native-scrollbar-thumb-hover);
+}
+
+textarea::-webkit-scrollbar-corner,
+.fv-native-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { Modal } from "../../shared/Modal/Modal";
 import { resolveAvatarUrl } from "../../shared/avatar/resolveAvatarUrl";
@@ -12,6 +12,15 @@ type Props = {
   onClose: () => void;
   onCreate: (username: string, firstMessage?: string) => Promise<void> | void;
 };
+
+function clsx(...classes: Array<string | false | null | undefined>): string {
+  return classes.filter(Boolean).join(" ");
+}
+
+function isLongFirstMessage(text: string): boolean {
+  if (text.length >= 100) return true;
+  return text.split(/\r?\n/).length >= 3;
+}
 
 export function CreateChatModal({ open, onClose, onCreate }: Props) {
   const [username, setUsername] = useState("");
@@ -63,6 +72,8 @@ export function CreateChatModal({ open, onClose, onCreate }: Props) {
     setSuggestions([]);
   };
 
+  const expanded = useMemo(() => isLongFirstMessage(firstMessage), [firstMessage]);
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!username.trim()) return;
@@ -73,8 +84,13 @@ export function CreateChatModal({ open, onClose, onCreate }: Props) {
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Створити чат" className={styles.createModal}>
-      <form className={styles.createForm} onSubmit={submit}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Створити чат"
+      className={clsx(styles.createModal, expanded && styles.createModalExpanded)}
+    >
+      <form className={clsx(styles.createForm, expanded && styles.createFormExpanded)} onSubmit={submit}>
         <label className={styles.createLabel}>
           Логін, нік з профілю або id
           <div className={styles.userSearchWrap}>
@@ -120,15 +136,23 @@ export function CreateChatModal({ open, onClose, onCreate }: Props) {
           </div>
         </label>
 
-        <label className={styles.createLabel}>
+        <label className={clsx(styles.createLabel, expanded && styles.createMessageField)}>
           Перше повідомлення (необов'язково)
-          <textarea
-            className={styles.createTextarea}
-            value={firstMessage}
-            onChange={(event) => setFirstMessage(event.target.value)}
-            placeholder="Напишіть перше повідомлення..."
-            rows={3}
-          />
+          <div className={clsx(styles.createTextareaWrap, expanded && styles.createTextareaWrapHint)}>
+            <textarea
+              className={clsx(styles.createTextarea, expanded && styles.createTextareaExpanded, "fv-native-scrollbar")}
+              value={firstMessage}
+              onChange={(event) => setFirstMessage(event.target.value)}
+              placeholder="Напишіть перше повідомлення..."
+              rows={expanded ? 10 : 3}
+              title={expanded ? "Потягніть за нижній правий кут для зміни розміру" : undefined}
+            />
+            {expanded ? (
+              <span className={styles.createResizeHintLabel} aria-hidden="true">
+                ↘
+              </span>
+            ) : null}
+          </div>
         </label>
 
         <div className={styles.createActions}>

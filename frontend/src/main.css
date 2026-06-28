@@ -24,6 +24,11 @@
   --si-thumb-top: 0px; /* выставляет JS */
   --si-thumb-height: 40px; /* выставляет JS */
   --si-progress: 0; /* выставляет JS (на будущее) */
+
+  --fv-native-scrollbar-size: 8px;
+  --fv-native-scrollbar-thumb: #f58807;
+  --fv-native-scrollbar-thumb-hover: #f9a032;
+  --fv-native-scrollbar-track: rgba(10, 18, 20, 0.72);
 }
 
 @font-face {

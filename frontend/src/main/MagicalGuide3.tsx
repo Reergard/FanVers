@@ -114,7 +114,7 @@ export function MagicalGuide3() {
               const caption = getTopCardCaptionFromBook(book);
               return (
                 <article key={book.id} className="mg2-cardShell">
-                  <BookCard book={book} />
+                  <BookCard book={book} hideStats />
                   {caption ? (
                     <p className="mg2-description">{caption}</p>
                   ) : (

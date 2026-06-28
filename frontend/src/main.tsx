@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HelmetProvider } from 'react-helmet-async'
 import './main.css'
+import './shared/scrollbars.css'
 import App from "./App";
 
 
