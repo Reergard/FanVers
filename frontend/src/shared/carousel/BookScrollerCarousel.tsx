@@ -261,6 +261,8 @@ export function BookScrollerCarousel({
   }, [itemCount]);
 
   const showNavigation = showNav && pagesCount > 1;
+  /** 1–2 книги на одній «сторінці» — по центру; більше — як раніше зліва */
+  const centerItems = itemCount > 0 && itemCount <= 2 && pagesCount === 1;
 
   return (
     <>
@@ -268,7 +270,13 @@ export function BookScrollerCarousel({
         <ul
           ref={scrollerRef}
           id={carouselRegionId}
-          className={[styles.carousel, carouselClassName].filter(Boolean).join(" ")}
+          className={[
+            styles.carousel,
+            centerItems ? styles.carouselFew : "",
+            carouselClassName,
+          ]
+            .filter(Boolean)
+            .join(" ")}
         >
           {children}
         </ul>

@@ -46,6 +46,17 @@
   display: none;
 }
 
+/* 1–2 книги, коли всі вміщаються без прокрутки — група по центру */
+.carouselFew {
+  justify-content: center;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+.carouselFew.dragging {
+  cursor: grabbing;
+}
+
 .carousel.dragging {
   cursor: grabbing;
   scroll-snap-type: none;
