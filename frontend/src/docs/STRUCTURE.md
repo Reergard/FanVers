@@ -112,9 +112,13 @@ frontend/src/
 │   ├── types.ts
 │   └── assets/
 ├── website_advertising/
-│   ├── AdvertisingBooks.tsx
-│   └── (BookCard використовується з variant=ad)
+│   ├── AdvertisingBooks.tsx   # AdvertisingCarousel + BookScrollerCarousel, variant=ad
+│   └── AdvertisingBooks.module.css
 ├── shared/
+│   ├── carousel/
+│   │   ├── BookScrollerCarousel.tsx
+│   │   ├── BookScrollerCarousel.module.css
+│   │   └── carouselUtils.ts
 │   ├── Container.tsx
 │   ├── Container.module.css
 │   ├── Icon.tsx
@@ -654,7 +658,7 @@ export function AppRoutes() {
 
 ## `catalog/` — фіча Каталог (сторінка книги)
 
-**Що це:** сторінка книги `/books/:slug` — BookDetailRouter, BookDetailLayout, BookDetailOwner, BookDetailReader, секції (BookHero, BookDescription, BookChapters з серверною пагінацією розділів, **ChapterRangeNavigation**, **BookCommentsContainer**, **BookRatingStars** тощо). Також у фічі `catalog/`: сторінка глави `ChapterDetailRouter` + `ChapterDetail` для `/books/:bookSlug/chapters/:chapterSlug`, сторінка додавання глави `AddChapter.tsx` для `/books/:slug/add-chapter`, сторінка створення книги `CreateBookPage.tsx` для `/create-book`, сторінка налаштувань книги `SettingsBook.tsx` для `/books/:slug/settings`, покинуті переклади `AbandonedTranslations.tsx` для `/abandoned`.
+**Що це:** сторінка книги `/books/:slug` — BookDetailRouter, BookDetailLayout, BookDetailOwner, BookDetailReader, секції (BookHero, BookDescription, **BookExtraImages**, **AuthorWorks** — карусель «Інші роботи автора», BookChapters з серверною пагінацією розділів, **ChapterRangeNavigation**, **BookCommentsContainer**, **BookRatingStars** тощо). Також у фічі `catalog/`: сторінка глави `ChapterDetailRouter` + `ChapterDetail` для `/books/:bookSlug/chapters/:chapterSlug`, сторінка додавання глави `AddChapter.tsx` для `/books/:slug/add-chapter`, сторінка створення книги `CreateBookPage.tsx` для `/create-book`, сторінка налаштувань книги `SettingsBook.tsx` для `/books/:slug/settings`, покинуті переклади `AbandonedTranslations.tsx` для `/abandoned`.
 
 **Маршрути (App.tsx):** `/create-book` → CreateBookPage, `/books/:slug/settings` → SettingsBook, `/books/:slug/add-chapter` → AddChapter (оголошується **перед** `/books/:slug`), `/books/:bookSlug/chapters/:chapterSlug` → ChapterDetailRouter, `/books/:slug` → BookDetailRouter, `/abandoned` → AbandonedTranslations.
 
@@ -664,7 +668,13 @@ export function AppRoutes() {
 
 ## `website_advertising/` — реклама книг
 
-**Що це:** AdvertisingBooks — блоки реклами (використовує BookCard variant=ad).
+**Що це:** `AdvertisingCarousel` (експорт з `AdvertisingBooks.tsx`) — React Query + `BookCard variant=ad` у спільному **`BookScrollerCarousel`**. Використовується на головній, в каталозі та пошуку. Див. **docs/LISTS_AND_CAROUSELS_FRONTEND.md**, **docs/ADVERTISING_BOOK_SETTINGS_FLOW.md**.
+
+---
+
+## `shared/carousel/` — горизонтальна карусель книг
+
+**Що це:** `BookScrollerCarousel` — стрілки, зірки-пагінація, свайп (сенсор), drag мишкою (ПК). Використовується в рекламі (`AdvertisingCarousel`) і на сторінці книги (`catalog/sections/AuthorWorks.tsx`, `BookCard variant="carousel"`).
 
 ---
 

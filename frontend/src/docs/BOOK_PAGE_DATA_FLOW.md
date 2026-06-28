@@ -28,6 +28,9 @@ URL /books/:slug
               -> useQuery getPaginatedChapters(bookId, rangeStart)
                   GET /api/navigation/chapters/paginated/?book_id=&start_chapter=
               -> ChapterRangeNavigation (якщо page_ranges.length > 0)
+          -> AuthorWorks (bookSlug)
+              -> useQuery getAuthorOtherWorks(bookSlug)
+                  GET /api/catalog/books/<slug>/author-works/
 ```
 
 Список розділів **не** завантажується в Router. Повний catalog-список (`GET .../chapters/`) використовується лише в режимі **reorder** власника — див. `CHAPTER_REORDER_FRONTEND.md`, `CHAPTER_PAGINATION_FRONTEND.md`.
@@ -42,10 +45,12 @@ URL /books/:slug
 | `catalog/BookDetailOwner.tsx` | Режим владельца: передает `bookId`, owner-кнопки и `onRead` в `BookChapters`; reorder — отдельная загрузка полного списка. |
 | `catalog/BookDetailReader.tsx` | Режим читателя: передает `bookId`, `onRead`, `getReadLabel`, `SubscriptionPurchaseBlock` в layout. |
 | `catalog/sections/BookExtraImages.tsx` | Додаткові зображення книги (read-only); між описом і «Інші роботи автора»; приховано без `extra_images`. |
+| `catalog/sections/AuthorWorks.tsx` | Карусель **«ІНШІ РОБОТИ АВТОРА»**: `getAuthorOtherWorks(bookSlug)` → `BookScrollerCarousel` + `BookCard variant="carousel"`. Секція прихована при pending/error/порожній відповіді. |
 | `catalog/sections/BookChapters.tsx` | Таблица глав (серверная пагинация через `getPaginatedChapters`). `ChapterRangeNavigation` при >50 разделах. `handleChapterClick`: при prepaid — purchaseChapter → navigate; иначе navigate. |
 | `navigation/ChapterRangeNavigation.tsx` | Селектор диапазона «Показано розділів: 1-50 з N». |
 | `catalog/sections/SubscriptionPurchaseBlock.tsx` | Блок абонименту: prepaid-плани, активний пакет, підказка. |
-| `api/catalogApi.ts` | Типы и методы `getBook/getChapters/getPaginatedChapters/getVolumes`, `invalidateBookChapterLists`, нормализация ответов. |
+| `api/catalogApi.ts` | Типы и методы `getBook/getChapters/getPaginatedChapters/getVolumes/getAuthorOtherWorks`, `catalogKeys.authorOtherWorks`, `invalidateBookChapterLists`, нормализация ответов. |
+| `shared/carousel/BookScrollerCarousel.tsx` | Спільна горизонтальна карусель (стрілки, зірки, drag мишкою). Див. **LISTS_AND_CAROUSELS_FRONTEND.md**. |
 
 ---
 
@@ -76,6 +81,7 @@ URL /books/:slug
 ---
 
 - `GET /api/catalog/books/info/<slug>/` -> данные книги (включая `extra_images` — додаткові зображення)
+- `GET /api/catalog/books/<slug>/author-works/` -> інші книги того ж **owner** (до 24), з перевіркою доступу; див. **LISTS_AND_CAROUSELS_BACKEND.md** §3
 - `GET /api/catalog/books/<slug>/volumes/` -> тома
 - `GET /api/navigation/chapters/paginated/?book_id=&start_chapter=` -> страница списка глав для UI таблицы (см. `CHAPTER_PAGINATION_FRONTEND.md`)
 - `GET /api/catalog/books/<slug>/chapters/` -> полный список + `container_versions` (reorder, не для обычного просмотра)
@@ -100,3 +106,7 @@ URL /books/:slug
 
 Если переход на `/books/:slug` пришел со state `chapterCreated === true`,  
 `BookDetailRouter` вызывает `showSuccessAutoClose("Розділ успішно створено")` и очищает state через `navigate(..., { replace: true })`.
+
+---
+
+*Останнє оновлення: 2026-06-28 (карусель «Інші роботи автора», `author-works` API).*

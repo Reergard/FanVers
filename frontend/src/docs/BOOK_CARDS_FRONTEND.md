@@ -15,7 +15,7 @@
 | Файл | Призначення |
 |------|-------------|
 | `frontend/src/BookCard/BookCard.tsx` | Логіка компонента, рендер залежно від variant |
-| `frontend/src/BookCard/BookCard.css` | Усі стилі картки (базові + варіанти default, withTags, bookmark, ad) |
+| `frontend/src/BookCard/BookCard.css` | Усі стилі картки (базові + варіанти default, withTags, bookmark, ad, carousel) |
 
 ### Залежності BookCard
 
@@ -39,7 +39,7 @@
 ```ts
 type Props = {
   book: BookCardBook;           // Book | UserTranslationBook | BookmarkBook
-  variant?: "default" | "withTags" | "bookmark" | "ad";
+  variant?: "default" | "withTags" | "bookmark" | "ad" | "carousel";
   description?: string;         // Тільки для variant="ad"
 };
 ```
@@ -48,19 +48,23 @@ type Props = {
 
 Компонент перевіряє `variant` і рендерить **різну розмітку**:
 
-1. **`variant="bookmark"`** — повертає окремий JSX (article з іншою структурою), без обгортки Link
-2. **`variant="ad"`** — аналогічно, окремий JSX з еліпсом і описом
-3. **`variant="default"`** або **`variant="withTags"`** — спільна розмітка з умовним контентом у `.bookCard__meta` і `.bookCard__footer`
+1. **`variant="bookmark"`** — окремий JSX
+2. **`variant="carousel"`** — обкладинка + назва (карусель «Інші роботи автора»), обгортка `Link`
+3. **`variant="ad"`** — еліпс, опис, кнопка «читати»
+4. **`variant="default"`** / **`variant="withTags"`** — спільна розмітка з `.bookCard__meta`
 
 ### Обгортка посиланням
 
-- **default, withTags:** якщо є `slug`, картка обгортається в `<Link to={/books/${slug}}>`. Якщо slug немає — у `<div class="bookCard-no-link">`.
-- **bookmark, ad:** компонент повертає лише `<article>`. Посилання (якщо потрібно) додає батьківський компонент (наприклад, BookmarksPage обгортає в Link).
+- **bookmark:** компонент повертає `<article>`; Link додає `BookmarksPage`.
+- **carousel, ad:** компонент обгортає картку в `<Link to={/books/${slug}}>` (якщо є slug).
+- **default, withTags:** Link на всю картку або `bookCard-no-link`.
 
 ### Навігація
 
-- **bookmark, ad:** кнопка «читати» викликає `navigate(/books/${slug})` через `useNavigate()`.
-- **default, withTags:** клік по всій картці веде на сторінку книги через Link; кнопка «Читати» (у withTags) — це `ActionButton to={/books/${slug}}`.
+- **bookmark:** кнопка «читати» → `navigate`.
+- **ad:** декоративна кнопка «читати»; перехід — клік по `Link`.
+- **carousel:** лише клік по картці (`Link`); drag каруселі блокує випадковий клік (див. **LISTS_AND_CAROUSELS_FRONTEND.md**).
+- **default, withTags:** Link на всю картку; кнопка «Читати» у withTags — `ActionButton to=...`.
 
 ---
 
@@ -122,7 +126,7 @@ type Props = {
 
 ### 4.4. ad
 
-**Де використовується:** Реклама на головній (секція AdvertisingBooks у HomePage1).
+**Де використовується:** Реклама на головній, в каталозі та пошуку (`AdvertisingCarousel` у `website_advertising/AdvertisingBooks.tsx` → `BookScrollerCarousel`).
 
 **Що показує:**
 - Декоративний еліпс на фоні (через `::before` і CSS-змінну `--ellipse-bg`)
@@ -139,6 +143,22 @@ type Props = {
 - Мінімальна висота картки: 468px
 - Еліпс задається inline-style: `--ellipse-bg: url(...Ellipse_for_book.svg)`
 
+### 4.5. carousel
+
+**Де використовується:** карусель **«ІНШІ РОБОТИ АВТОРА»** на сторінці книги (`catalog/sections/AuthorWorks.tsx` → `BookScrollerCarousel`).
+
+**Що показує:**
+- Еліпс на фоні (як у `ad`)
+- Обкладинка з vertical line, NEW, 18+, «A»
+- Декоративна лінія **над** назвою
+- Назва книги (без опису й кнопки)
+
+**Класи:** `bookCard bookCard--carousel`, `bookCard__cover--carousel`, `bookCard__title--carousel`.
+
+**Особливості:**
+- Обгортка `<Link>`; `draggable={false}` на `<img>` обкладинки
+- Бейджі: та сама логіка, що в інших варіантах (`adult_content` → 18+; `book_type === "AUTHOR"` → «A»; `is_new_badge` / `created_at` → NEW)
+
 ---
 
 ## 5. Сторінки та варіанти
@@ -152,7 +172,8 @@ type Props = {
 | Головна (НОВИНКИ, ОСТАННІ ОНОВЛЕННЯ) | `/` | default | `main/HomePage2.tsx`, `main/HomePage3.tsx` |
 | Чарівний Гід (Тренди / Рекомендації / Топ) | `/MagicalGuide` | default | `main/MagicalGuide1.tsx`, `MagicalGuide2.tsx`, `MagicalGuide3.tsx` |
 | Закладки | `/bookmarks` | bookmark | `bookmarks/BookmarksPage.tsx` |
-| Реклама на головній | `/` (секція HomePage1) | ad | `website_advertising/AdvertisingBooks.tsx` |
+| Реклама (головна, каталог, пошук) | `/`, `/catalog`, `/search` | ad | `website_advertising/AdvertisingCarousel` |
+| Інші роботи автора | `/books/:slug` | carousel | `catalog/sections/AuthorWorks.tsx` |
 
 ---
 
@@ -180,9 +201,10 @@ type Props = {
 
 - `BookmarksPage.module.css`: `.grid` (3 колонки, на планшеті 2, на мобільній 2), `.cardWithGradient article` (градієнт для чергових карток), `.cardLink`, `.cardNoLink`
 
-### 6.5. Реклама
+### 6.5. Реклама та каруселі книг
 
-- `AdvertisingBooks.module.css`: карусель, ширина карток через `--per-view`
+- `shared/carousel/BookScrollerCarousel.module.css` — `--per-view`, навігація
+- `catalog/styles/BookDetail.module.css` — `.authorWorksCarousel` для сторінки книги
 
 ### 6.6. Чарівний Гід
 
@@ -202,7 +224,9 @@ type Props = {
 
 **Для withTags:** потрібні `fandoms`, `tags`, `genres`, `translation_status_display`.
 
-**Для ad:** додатково передається prop `description` (рядок).
+**Для ad:** prop `description`.
+
+**Для carousel:** достатньо полів обкладинки (`image`, `adult_content`, `book_type`, `is_new_badge`, `slug`, `title`).
 
 ---
 
@@ -211,7 +235,8 @@ type Props = {
 - **default, withTags:** на екрані ≤768px застосовується grid (назва зверху, обкладинка зліва, мета справа). Для Catalog і UserTranslations — селектор `.catalog-page .bookCard:not(.bookCard--withTags)`, `.bookCard-mobile-grid .bookCard:not(.bookCard--withTags)`.
 - **withTags:** на мобільній — окремий grid з areas для title, cover, meta, status, button.
 - **bookmark:** на мобільній — vertical line на обкладинці, іконка закладки прихована, інші розміри.
-- **ad:** без окремих мобільних правил у BookCard; адаптивність через карусель AdvertisingBooks.
+- **ad:** адаптивність через `BookScrollerCarousel`.
+- **carousel:** компактна картка; ширина обкладинки в `BookCard.css` §4.5.
 
 ---
 
@@ -221,11 +246,11 @@ type Props = {
 |---------|-----------|
 | Де компонент? | `BookCard/BookCard.tsx` |
 | Де стилі? | `BookCard/BookCard.css` |
-| Як вибрати варіант? | Prop `variant="default" \| "withTags" \| "bookmark" \| "ad"` |
-| Потрібен опис? | Тільки для `variant="ad"` — prop `description` |
-| Хто обгортає в Link? | Для default/withTags — сам BookCard; для bookmark — BookmarksPage |
+| Як вибрати варіант? | `variant="default" \| "withTags" \| "bookmark" \| "ad" \| "carousel"` |
+| Потрібен опис? | Тільки для `variant="ad"` |
+| Хто обгортає в Link? | `carousel`, `ad`, `default`, `withTags` — сам BookCard; `bookmark` — BookmarksPage |
 | Є інші компоненти карток? | Ні, тільки BookCard |
 
 ---
 
-*Останнє оновлення: за станом коду проєкту.*
+*Останнє оновлення: 2026-06-28 (`variant="carousel"` для «Інші роботи автора»).*

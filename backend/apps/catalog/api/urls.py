@@ -8,6 +8,7 @@ from .views import (
     create_book, update_book, abandoned_translations, user_translations, register_book_view,
     update_book_access_rights, check_book_access, apply_become_translator,
     upload_book_extra_image, delete_book_extra_image, replace_book_extra_image,
+    author_other_works,
 )
 from apps.editors.api.views import reorder_chapters, move_chapter
 
@@ -34,6 +35,7 @@ urlpatterns = [
     path('owned-books/', owned_books, name='owned-books'),
     path('user-translations/', user_translations, name='user-translations'),
     path('books/info/<slug:slug>/', BookInfoView.as_view(), name='book-info'),
+    path('books/<slug:slug>/author-works/', author_other_works, name='author-other-works'),
     path('books/create/', create_book, name='book-create'),
     path('books/<slug:slug>/update/', update_book, name='book-update'),
     path('books/<slug:slug>/extra-images/', upload_book_extra_image, name='book-extra-image-upload'),

@@ -1,0 +1,276 @@
+.carouselWrap {
+  position: relative;
+  min-width: 0;
+}
+
+.carousel {
+  --per-view: 5;
+  --gap: clamp(12px, 1.2vw, 20px);
+  --edge-left: 2px;
+  --edge-right: 2px;
+
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc(
+    (100% - (var(--gap) * (var(--per-view) - 1))) / var(--per-view)
+  );
+  gap: var(--gap);
+
+  list-style: none;
+  margin: 0;
+  padding: clamp(24px, 2.5vw, 36px) var(--edge-right) clamp(10px, 1.2vw, 16px)
+    var(--edge-left);
+  max-width: 100%;
+  min-width: 0;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  touch-action: pan-x;
+  cursor: grab;
+
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: var(--edge-left);
+  scroll-padding-right: var(--edge-right);
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+
+  overscroll-behavior-x: auto;
+  overscroll-behavior-y: auto;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel.dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+  user-select: none;
+}
+
+.carousel :global(.bookCard-link) {
+  touch-action: pan-x;
+}
+
+.carousel :global(img) {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.carousel :global(a) {
+  -webkit-user-drag: none;
+}
+
+.item {
+  min-width: 0;
+  width: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.nav {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  justify-items: center;
+  gap: clamp(12px, 1.6vw, 18px);
+  margin-top: clamp(10px, 1.4vw, 18px);
+}
+
+.navBtn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.navBtn:hover:not(:disabled) {
+  opacity: 0.8;
+}
+
+.navBtn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.navBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.navBtn:focus-visible,
+.starDot:focus-visible {
+  outline: 2px solid rgba(5, 180, 199, 0.95);
+  outline-offset: 6px;
+  border-radius: 999px;
+}
+
+.navBtn img {
+  width: 170px;
+  height: 30px;
+  display: block;
+  object-fit: contain;
+  opacity: 1;
+  filter: brightness(1.35) contrast(1.08);
+}
+
+.stars {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 0.8vw, 10px);
+  min-height: 27px;
+}
+
+.starDot {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform 140ms ease, opacity 140ms ease;
+}
+
+.starDot:hover {
+  opacity: 1;
+}
+
+.starDot:active {
+  transform: scale(0.95);
+}
+
+.starDot img {
+  width: 27px;
+  height: 27px;
+  display: block;
+  object-fit: contain;
+  opacity: 1;
+  filter: brightness(1.2);
+  transition: opacity 140ms ease, filter 140ms ease;
+}
+
+.starDot:hover img {
+  filter: brightness(1.35) drop-shadow(0 0 6px rgba(245, 136, 7, 0.45));
+}
+
+.starDotActive img {
+  opacity: 1;
+  filter: brightness(1.15) drop-shadow(0 0 10px #f58807);
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .carouselWrap {
+    margin-inline: -24px;
+    width: calc(100% + 48px);
+  }
+}
+
+@media (max-width: 1024px) {
+  .carousel {
+    --per-view: 3;
+    --gap: 18px;
+    --edge-left: 12px;
+    --edge-right: 12px;
+  }
+
+  .navBtn img {
+    width: 155px;
+    height: 27px;
+  }
+
+  .stars {
+    min-height: 25px;
+  }
+
+  .starDot img {
+    width: 25px;
+    height: 25px;
+  }
+}
+
+@media (max-width: 768px) {
+  .carouselWrap {
+    margin-inline: -16px;
+    width: calc(100% + 32px);
+  }
+
+  .carousel {
+    --gap: 10px;
+    --edge-left: 12px;
+    --edge-right: 12px;
+    padding-top: 9px;
+    padding-bottom: 1px;
+    scroll-snap-type: x proximity;
+  }
+
+  .item {
+    scroll-snap-stop: normal;
+  }
+
+  .nav {
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .carouselWrap {
+    margin-inline: -12px;
+    width: calc(100% + 24px);
+  }
+
+  .carousel {
+    --edge-left: 12px;
+    --edge-right: 12px;
+  }
+
+  .navBtn img {
+    width: 61px;
+    height: 10px;
+  }
+
+  .stars {
+    min-height: 10px;
+  }
+
+  .starDot img {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .carouselWrap {
+    margin-inline: -8px;
+    width: calc(100% + 16px);
+  }
+}
+
+@media (min-width: 769px) {
+  .carousel {
+    padding-top: clamp(8px, 1vw, 12px);
+  }
+
+  .nav {
+    margin-top: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel {
+    scroll-behavior: auto;
+  }
+
+  .navBtn,
+  .starDot,
+  .starDot img {
+    transition: none;
+  }
+}

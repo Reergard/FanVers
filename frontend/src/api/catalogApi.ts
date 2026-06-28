@@ -492,6 +492,7 @@ export const catalogKeys = {
   chaptersPagesPrefix: (bookId: number) => ["book-chapters-page", bookId] as const,
   userTranslations: (userId: number) => ["user-translations", userId] as const,
   abandonedTranslations: () => ["abandoned-translations"] as const,
+  authorOtherWorks: (slug: string) => ["author-other-works", slug] as const,
 };
 
 // --- API методы ---
@@ -501,6 +502,17 @@ export async function getBook(slug: string): Promise<Book> {
     `${CATALOG}/books/info/${encodeURIComponent(slug)}/`
   );
   return normalizeBook(data);
+}
+
+/** Інші книги того ж власника для каруселі на сторінці книги */
+export async function getAuthorOtherWorks(slug: string): Promise<Book[]> {
+  const { data } = await http.get<Record<string, unknown>[]>(
+    `${CATALOG}/books/${encodeURIComponent(slug)}/author-works/`
+  );
+  if (!Array.isArray(data)) return [];
+  return data
+    .filter((item): item is Record<string, unknown> => item != null && typeof item === "object")
+    .map(normalizeBook);
 }
 
 /** Права доступу — отримуються з books/info/ (ті ж дані, що й у getBook) */
@@ -1001,6 +1013,7 @@ export async function replaceBookExtraImage(
 
 export const catalogApi = {
   getBook,
+  getAuthorOtherWorks,
   getBookAccessRights,
   updateBookAccessRights,
   getChapters,

@@ -338,6 +338,23 @@
 
 ---
 
+### `BookScrollerCarousel` — горизонтальна карусель книг
+
+**Призначення:** Спільний скролер для каруселей з `BookCard`: стрілки, зірки-пагінація, свайп на сенсорі, перетягування мишкою на ПК.
+
+**Файли:**
+- `shared/carousel/BookScrollerCarousel.tsx`
+- `shared/carousel/BookScrollerCarousel.module.css`
+- `shared/carousel/carouselUtils.ts`
+
+**Місця використання:**
+- `website_advertising/AdvertisingBooks.tsx` — `AdvertisingCarousel` (`BookCard variant="ad"`)
+- `catalog/sections/AuthorWorks.tsx` — «Інші роботи автора» (`BookCard variant="carousel"`)
+
+**Повна документація:** `docs/LISTS_AND_CAROUSELS_FRONTEND.md` §1.
+
+---
+
 ### `BookCard` — **ЄДИНЕ ДЖЕРЕЛО** карток книг
 
 > **Важливо:** У проєкті використовується **лише один** компонент для карток книг — `BookCard`. Інших компонентів карток книг немає. Усі сторінки імпортують `BookCard` з `../BookCard/BookCard` і передають потрібний `variant`.
@@ -353,7 +370,8 @@
 - `variant="default"` — дати, статистика (Catalog, UserTranslations).
 - `variant="withTags"` — фендоми, теги, жанри, статус, кнопка (Abandoned, Search).
 - `variant="bookmark"` — Закладки: компактний дизайн, іконка закладки на обкладинці, без еліпса.
-- `variant="ad"` — Реклама на головній: еліпс на фоні, опис, vertical line на обкладинці.
+- `variant="ad"` — Реклама: еліпс на фоні, опис, vertical line на обкладинці (`AdvertisingCarousel` → `BookScrollerCarousel`).
+- `variant="carousel"` — «Інші роботи автора» на сторінці книги: обкладинка + лінія над назвою (`AuthorWorks` → `BookScrollerCarousel`).
 - Якщо є `slug` — картка клікабельна (`Link` на `/books/:slug`), інакше рендериться неклікабельний варіант (для default/withTags).
 - Зображення обкладинки бере з `book.image`; якщо порожнє — використовує локальний placeholder.
 
@@ -366,7 +384,8 @@
 - `main/HomePage3.tsx` — ОСТАННІ ОНОВЛЕННЯ (default)
 - `main/MagicalGuide1.tsx`, `MagicalGuide2.tsx`, `MagicalGuide3.tsx` — `/MagicalGuide`: **ТОП** (`MagicalGuide3`) з `useTopBooks` → `GET /api/analytics_books/top/`; **Тренди** (`MagicalGuide1`) та **рекомендації** (`MagicalGuide2`) — заглушки / майбутній API. Див. **docs/LISTS_AND_CAROUSELS_FRONTEND.md**.
 - `bookmarks/BookmarksPage.tsx` — закладки (bookmark)
-- `website_advertising/AdvertisingBooks.tsx` — реклама на головній (ad)
+- `website_advertising/AdvertisingBooks.tsx` — реклама (ad) через `AdvertisingCarousel`
+- `catalog/sections/AuthorWorks.tsx` — інші роботи автора (carousel)
 
 **Приклад використання:**
 ```tsx
@@ -374,6 +393,7 @@
 <BookCard book={book} variant="withTags" />
 <BookCard book={book} variant="bookmark" />
 <BookCard book={book} variant="ad" description="Опис книги..." />
+<BookCard book={book} variant="carousel" />
 ```
 
 **Повна документація:** `docs/BOOK_CARDS_FRONTEND.md`

@@ -85,8 +85,8 @@ export type BookCardBook = BookCardBase;
 
 type Props = {
   book: BookCardBook;
-  /** default: дати (Catalog, UserTranslations). withTags: фендоми, теги, жанри, статус, кнопка (Abandoned, Search). bookmark: Закладки. ad: Реклама (еліпс, опис) */
-  variant?: "default" | "withTags" | "bookmark" | "ad";
+  /** default | withTags | bookmark | ad | carousel (обкладинка + назва на сторінці книги) */
+  variant?: "default" | "withTags" | "bookmark" | "ad" | "carousel";
   /** Для variant=ad: опис книги */
   description?: string;
   /** default: замість рядків статистики показати `book.description` (каталог) */
@@ -164,6 +164,7 @@ export function BookCard({
   const withTags = variant === "withTags";
   const isBookmark = variant === "bookmark";
   const isAd = variant === "ad";
+  const isCarousel = variant === "carousel";
   const [expandModal, setExpandModal] = useState<ExpandModal>(null);
 
   const adMax480 = useMedia("(max-width: 480px)");
@@ -253,6 +254,49 @@ export function BookCard({
           </ActionButton>
         </div>
       </article>
+    );
+  }
+
+  /* variant=carousel: інші роботи автора — обкладинка + назва, як у рекламі без опису */
+  if (isCarousel) {
+    const carouselArticle = (
+      <article
+        className="bookCard bookCard--carousel"
+        data-variant="carousel"
+        style={{ "--ellipse-bg": `url(${ellipseBg})` } as React.CSSProperties}
+      >
+        <div className="bookCard__cover bookCard__cover--carousel">
+          {renderCoverOverlays({
+            showNewBadge,
+            showAdultBadge,
+            showAuthorBadge,
+            adultBadgeSrc: badge18Large,
+          })}
+          <img
+            className="bookCard__cover-img"
+            src={imageUrl}
+            alt={buildBookCardCoverAlt(book.title || "")}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+          />
+        </div>
+        <h3 className="bookCard__title bookCard__title--carousel">
+          {book.title || "Без назви"}
+        </h3>
+      </article>
+    );
+
+    return slug ? (
+      <Link
+        to={`/books/${slug}`}
+        className="bookCard-link"
+        aria-label={`Перейти до книги: ${book.title || "книгу"}`}
+      >
+        {carouselArticle}
+      </Link>
+    ) : (
+      carouselArticle
     );
   }
 

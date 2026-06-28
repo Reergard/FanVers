@@ -13,7 +13,8 @@ BookDetailRouter
       -> BookDetailLayout
           -> hero         (BookHero)
           -> description  (BookDescription)
-          -> authorWorks  (AuthorWorks)
+          -> extraImages  (BookExtraImages, якщо є дані)
+          -> authorWorks  (AuthorWorks → BookScrollerCarousel)
           -> subscription (SubscriptionPurchaseBlock, тільки reader)
           -> chapters     (BookChapters)
           -> comments     (BookCommentsContainer -> BookComments)
@@ -31,9 +32,27 @@ BookDetailRouter
 
 `BookDetailLayout` не работает с API напрямую, только размещает блоки.
 
+`BookDetailOwner` и `BookDetailReader` передают `<AuthorWorks bookSlug={book.slug} />` в слот `authorWorks`.
+
 ---
 
-## 3) Блок chapters: фактическое поведение
+## 3) Блок authorWorks — «ІНШІ РОБОТИ АВТОРА»
+
+`AuthorWorks.tsx`:
+- окремий `useQuery` (`catalogKeys.authorOtherWorks`, `getAuthorOtherWorks`);
+- не чекає на дані основної книги окрім `bookSlug`;
+- при `isPending`, `isError` або `books.length === 0` повертає `null` (секція не займає місце);
+- рендерить заголовок з декоративною лінією і `BookScrollerCarousel` з `BookCard variant="carousel"`.
+
+**Відбір книг (бекенд):** той самий `owner`, що й у поточної книги (не `creator`); поточна книга виключена; лише з обкладинкою та slug; перевірка `view`-доступу. Деталі: **LISTS_AND_CAROUSELS_FRONTEND.md** §2, **LISTS_AND_CAROUSELS_BACKEND.md** §3.
+
+**Навігація каруселі:** стрілки, зірки, свайп на сенсорі, **перетягування мишкою** на ПК (drag блокує випадковий клік по картці). Див. **LISTS_AND_CAROUSELS_FRONTEND.md** §1.3.
+
+**Стилі:** `BookDetail.module.css` (`.authorWorks*`), `BookCard.css` (`.bookCard--carousel`).
+
+---
+
+## 4) Блок chapters: фактическое поведение
 
 `BookChapters.tsx`:
 - получает `bookId` и сам загружает текущую «страницу» глав через `getPaginatedChapters(bookId, rangeStart)`;
@@ -51,7 +70,7 @@ BookDetailRouter
 
 ---
 
-## 4) Hero и рейтинги
+## 5) Hero и рейтинги
 
 `BookHero` получает основные пропсы из owner/reader:
 - `title`, `titleSecondary`, `coverImageUrl`, `showAgeBadge`, `authorMarkText`, `metaRows`.
@@ -63,7 +82,7 @@ BookDetailRouter
 
 ---
 
-## 5) Комментарии
+## 6) Комментарии
 
 `BookCommentsContainer`:
 - для страницы книги работает с `type="book"` и `slug={book.slug}`;
@@ -72,7 +91,11 @@ BookDetailRouter
 
 ---
 
-## 6) Где начинается страница главы
+## 7) Где начинается страница главы
 
 Переход в главу идет из блока `BookChapters` через `onRead`.  
 Дальше работу берет `ChapterDetailRouter` (см. `CHAPTER_PAGE_DATA_FLOW.md`).
+
+---
+
+*Останнє оновлення: 2026-06-28 (`AuthorWorks`, `BookScrollerCarousel`).*

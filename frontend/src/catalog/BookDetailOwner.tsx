@@ -292,7 +292,7 @@ export default function BookDetailOwner({
       }
       description={<BookDescription description={description} />}
       extraImages={<BookExtraImages extraImages={book.extra_images} bookTitle={book.title} />}
-      authorWorks={<AuthorWorks />}
+      authorWorks={<AuthorWorks bookSlug={book.slug} />}
       chapters={
         <>
           {saveError && <div role="alert" className={styles.chapterSaveError}>{saveError}</div>}

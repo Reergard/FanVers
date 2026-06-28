@@ -21,7 +21,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
 from apps.navigation.models import Bookmark
 from django.db import transaction
-from django.db.models import Max
+from django.db.models import Max, Q
 from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
 from decimal import Decimal
@@ -1090,6 +1090,52 @@ def delete_chapter(request, book_slug, chapter_id):
             {'error': str(e)}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+AUTHOR_OTHER_WORKS_LIMIT = 24
+AUTHOR_OTHER_WORKS_SCAN_LIMIT = 200
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def author_other_works(request, slug):
+    """
+    Інші книги того ж власника (owner), доступні поточному користувачу.
+    Використовується каруселлю «ІНШІ РОБОТИ АВТОРА» на сторінці книги.
+    """
+    book = get_object_or_404(Book, slug=slug)
+    err = require_book_view_access(request.user, book)
+    if err:
+        return err
+
+    if not book.owner_id:
+        return Response([])
+
+    candidates = (
+        Book.objects.filter(owner_id=book.owner_id)
+        .exclude(pk=book.pk)
+        .exclude(Q(slug__isnull=True) | Q(slug=""))
+        .exclude(Q(image__isnull=True) | Q(image=""))
+        .select_related('owner', 'creator', 'country')
+        .prefetch_related('genres', 'tags', 'fandoms')
+        .order_by('-last_updated', '-id')[:AUTHOR_OTHER_WORKS_SCAN_LIMIT]
+    )
+
+    visible_books = []
+    for candidate in candidates:
+        is_allowed, _ = check_book_access_permission(request.user, candidate, 'view')
+        if not is_allowed:
+            continue
+        visible_books.append(candidate)
+        if len(visible_books) >= AUTHOR_OTHER_WORKS_LIMIT:
+            break
+
+    serializer = BookReaderSerializer(
+        visible_books,
+        many=True,
+        context={'request': request},
+    )
+    return Response(serializer.data)
 
 
 class BookInfoView(generics.RetrieveAPIView):

@@ -621,10 +621,50 @@
 }
 
 .authorWorksInner {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: clamp(16px, 3vw, 24px);
+  display: block;
+  min-width: 0;
+}
+
+.authorWorksCarouselWrap {
+  margin-inline: 0;
+  width: 100%;
+}
+
+.authorWorksCarousel {
+  --per-view: 5;
+  padding-bottom: clamp(2px, 0.4vw, 6px) !important;
+}
+
+.authorWorksNav {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 1024px) {
+  .authorWorksCarousel {
+    --per-view: 3;
+  }
+
+  .authorWorksCarouselWrap {
+    margin-inline: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .authorWorksCarouselWrap {
+    margin-inline: -8px;
+    width: calc(100% + 16px);
+  }
+
+  .authorWorksCarousel {
+    --per-view: 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .authorWorksCarousel {
+    --per-view: 1;
+  }
 }
 
 /* ===== РОЗДІЛИ (таблица глав) ===== */

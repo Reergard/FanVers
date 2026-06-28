@@ -123,7 +123,7 @@ export default function BookDetailReader({
       }
       description={<BookDescription description={description} />}
       extraImages={<BookExtraImages extraImages={book.extra_images} bookTitle={book.title} />}
-      authorWorks={<AuthorWorks />}
+      authorWorks={<AuthorWorks bookSlug={book.slug} />}
       subscription={
         <SubscriptionPurchaseBlock
           bookSlug={book.slug}
