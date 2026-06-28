@@ -130,6 +130,7 @@ frontend/src/
 │   ├── ScrollToTop.tsx
 │   ├── ActionButton/
 │   ├── Modal/
+│   ├── scrollbars.css     # глобальні стилі нативного скролбара для textarea/select (.fv-native-scrollbar)
 │   ├── NotificationModal/
 │   │   ├── NotificationModal.tsx
 │   │   ├── NotificationModal.module.css
@@ -468,8 +469,8 @@ export function AppRoutes() {
 - `Chat.tsx` — thin re-export на `ChatPage`.
 - `ChatPage.tsx` — page orchestration: auth-gate, завантаження чатів, підключення ws конкретного чату.
 - `components/ChatList.tsx` — лівий список чатів + кнопка створення.
-- `components/ChatWindow.tsx` — повідомлення, підвантаження старіших (cursor), відправка, confirm delete.
-- `components/CreateChatModal.tsx` — пошук (`user-search`) + створення через `shared/Modal/Modal`.
+- `components/ChatWindow.tsx` — повідомлення, підвантаження старіших (cursor), **textarea-композер** (Enter / Shift+Enter), confirm delete.
+- `components/CreateChatModal.tsx` — пошук (`user-search`) + створення через `shared/Modal/Modal`; **адаптивна модалка** при довгому першому повідомленні.
 - `api/chatApi.ts`, `api/types.ts` — HTTP-контракти (`getChatMessagesPage`, `searchChatUsers`, …).
 - `store/chatStore.ts`, `store/useChat.ts` — external store (`useSyncExternalStore`).
 - `ws/chatWs.ts`, `ws/counterWs.ts` — realtime-шар.
@@ -479,6 +480,8 @@ export function AppRoutes() {
 - `api/endpoints.ts` (`API.chat`)
 - `widgets/header/Header.tsx` (`counterWs`, періодичний refetch списку чатів, бейдж `unreadTotal` через `useChat`)
 - `docs/CHAT_FRONTEND.md`
+
+Деталі UI (поля вводу, скролбари, вирівнювання тексту повідомлень) — **`docs/CHAT_FRONTEND.md` §10**.
 
 ---
 
@@ -546,6 +549,18 @@ export function AppRoutes() {
 - Керується через CSS-змінні
 - Автоматично ховається, якщо контент не потребує скроллу
 - Підтримка `prefers-reduced-motion`
+
+### `shared/scrollbars.css`
+**Що це:** єдиний стиль **нативної** смуги прокрутки для полів вводу на сайті (золотий thumb `#f58807`, як у фільтрах каталогу / пошуку).
+
+**Підключення:** імпорт у `main.tsx` після `main.css`; CSS-змінні `--fv-native-scrollbar-*` оголошені в `:root` у `main.css`.
+
+**Застосування:**
+- автоматично — усі `textarea` і `select`;
+- опційно — клас `.fv-native-scrollbar` на будь-якому прокручуваному блоці;
+- у чаті — додатково дубль у `Chat.module.css` для `.input` і `.createTextarea`.
+
+**Не замінює** overlay `ScrollIndicator` для `html/body` (сторінковий скрол без нативної смуги).
 
 ### `shared/Modal/`, `shared/NotificationModal/`
 **Що це:** модальні вікна (`Modal`) та глобальні toast через `NotificationModal` і `AutoCloseNotificationModal`. Провайдер `NotificationModal/NotificationProvider.tsx` дає `useNotification()`: `showSuccess`, `showError`, `showInfo`, `showWarning`, **`showSuccessAutoClose(message)`** — успіх без кнопок, авто-закриття через 3 с (використовується після створення глави).

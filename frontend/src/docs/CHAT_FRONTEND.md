@@ -117,6 +117,14 @@
 ### «Створити чат» → `CreateChatModal`
 
 - Пошук за підрядком (API `user-search`); submit → `createChat(username, firstMessage?)`. Неоднозначний збіг / валідація — повідомлення з API; дублікат чату обробляється як успіх (200) з наявним діалогом.
+- Поле **«Перше повідомлення»** — `textarea` (не `input`): зберігає переноси рядків і абзаци при вставці довгого тексту.
+- При довгому першому повідомленні модалка **розширюється** (див. §10); кнопка **«Створити»** — золотий primary (`.createPrimaryBtn`).
+
+### Поле вводу в обраному чаті (`ChatWindow`)
+
+- Композер — **`textarea`** (клас `.input` у `Chat.module.css`), не однострочний `input`.
+- **Enter** — надіслати; **Shift+Enter** — новий рядок.
+- Текст передається на бекенд як є (лише `.trim()` по краях усього повідомлення); бекенд теж робить `strip()` лише зовнішніх пробілів — внутрішні `\n` зберігаються.
 
 ### Вибір чату в списку
 
@@ -137,6 +145,20 @@
 
 `ChatWindow.tsx`: своє, якщо `message.sender.id === userId` або fallback за нормалізованим `username` (WS інколи дає лише username).
 
+### Відображення тексту повідомлень
+
+Стилі в `Chat.module.css`:
+
+| Клас | Призначення |
+|------|-------------|
+| `.msgText` | Базовий блок тексту: `white-space: pre-wrap` — **зберігає переноси рядків** з БД/WS; шрифт BadScript. |
+| `.msgTextLeft` | Вхідні (чужі): колір золотий `rgba(241, 157, 16, …)`, вирівнювання за замовчуванням по лівому краю. |
+| `.msgTextRight` | Власні: колір бірюзовий `rgba(8, 184, 206, …)`; блок справа (`justify-self: end`); **текст усередині блоку** — `text-align: justify` + `text-align-last: start` (останній рядок абзацу не розтягується). |
+
+Важливо: позиція бульбашки (ліво/право) і вирівнювання тексту всередині неї — різні речі. Блок власного повідомлення притиснутий до правого краю стрічки, але рядки тексту заповнюють ширину самого блоку.
+
+Повідомлення, надіслані **до** переходу на `textarea` в композері, могли зберегтися в БД без `\n` (старий однострочний `input` склеював абзаци) — їх потрібно надіслати знову, щоб відновити форматування.
+
 ---
 
 ## 8) Захисти та перевірки
@@ -154,11 +176,77 @@
 
 ---
 
-## 10) Пов’язана документація
+## 10) UI: поля вводу, скролбари, модалка створення
+
+### Загальні скролбари на сайті
+
+Файл **`frontend/src/shared/scrollbars.css`**, підключення в **`main.tsx`** після `main.css`.
+
+CSS-змінні в `:root` (`main.css`):
+
+- `--fv-native-scrollbar-size` — `8px`
+- `--fv-native-scrollbar-thumb` — `#f58807` (золотий акцент сайту)
+- `--fv-native-scrollbar-thumb-hover` — `#f9a032`
+- `--fv-native-scrollbar-track` — `rgba(10, 18, 20, 0.72)`
+
+Автоматично застосовується до **`textarea`**, **`select`** і елементів з класом **`.fv-native-scrollbar`**.
+
+У чаті на композері та в модалці створення додатково клас **`fv-native-scrollbar`** і дубльовані правила в `Chat.module.css` (`.input`, `.createTextarea`) — для надійності в CSS Modules.
+
+**Свідомо без скролбара** (локальні override): список повідомлень `.messages`, список чатів `.chatListInner` — нативний скрол лишається, смуга прихована.
+
+### Композер чату (`ChatWindow` → `.input`)
+
+| Аспект | Реалізація |
+|--------|------------|
+| Елемент | `textarea`, не `input type="text"` |
+| Контейнер | `.inputShell` — «пігулка» з золотою рамкою, `border-radius: 999px` |
+| Шрифт / колір | BadScript, золотий текст `rgba(241, 157, 16, …)` |
+| Висота | `max-block-size: clamp(120px, 18vh, 220px)`, `overflow-y: auto` |
+| Клавіатура | Enter → submit; Shift+Enter → `\n` |
+| Скролбар | Кастомний золотий (див. вище) |
+
+### Модалка «Створити чат» (`CreateChatModal`)
+
+Базові класи: `.createModal`, `.createForm`, `.createTextarea`, `.createPrimaryBtn` / `.createSecondaryBtn` у `Chat.module.css`; обгортка — `shared/Modal/Modal`.
+
+**Розширений режим** (`isLongFirstMessage` у `CreateChatModal.tsx`):
+
+- Умова: `firstMessage.length >= 100` **або** `>= 3` рядки (`\n`).
+- Класи: `.createModalExpanded`, `.createFormExpanded`, `.createMessageField`, `.createTextareaExpanded`.
+- Розмір модалки: **до `95vh` висоти**, **до `820px` / `96vw` ширини**.
+- **Скрол модалки вимкнено** (`overflow: hidden` на `.createModalExpanded`) — прокручується **лише textarea** всередині форми (flex/grid ланцюг: modal → content → form → message field → wrap → textarea).
+- Підказка ручного resize: подвійний куток (бірюза + золото), символ ↘, `title` на textarea; `resize: vertical` збережено.
+- Кнопка **«Створити»**: золотий градієнт, білий текст (`.createPrimaryBtn`); disabled — приглушений золотий фон, поки не введено логін.
+
+**Компактний режим** (короткий текст): модалка ~`560px`, textarea `rows={3}`.
+
+### Кнопки в модалках чату
+
+| Клас | Стиль |
+|------|--------|
+| `.createSecondaryBtn` | Прозорий фон, біла обводка — «Скасувати» / «Ні» |
+| `.createPrimaryBtn` | Золотий градієнт `#f59a14 → #e07800`, білий текст — «Створити» / «Так» |
+
+Акцент узгоджений з іншими золотими елементами чату (напр. `.deleteChatBtn`, `.createChat`).
+
+### Де правити
+
+| Що змінити | Файл |
+|------------|------|
+| Вирівнювання / колір тексту повідомлень | `chat/Chat.module.css` — `.msgText`, `.msgTextLeft`, `.msgTextRight` |
+| Композер, клавіатура | `chat/components/ChatWindow.tsx` |
+| Модалка створення, поріг «довгого» тексту | `chat/components/CreateChatModal.tsx`, `isLongFirstMessage` |
+| Розміри розширеної модалки, resize-hint | `chat/Chat.module.css` — `.createModalExpanded`, `.createTextareaWrapHint` |
+| Глобальний скролбар полів | `shared/scrollbars.css`, змінні в `main.css`, імпорт у `main.tsx` |
+
+---
+
+## 11) Пов’язана документація
 
 - `frontend/src/docs/USER_DATA_FLOW.md` — чат і header у контексті auth.
 - `backend/docs/CHAT_BACKEND.md` — моделі, REST, pagination, consumers, `message_service`, throttling, `user-search`.
 
 ---
 
-**Останнє оновлення:** пагінація повідомлень, `user-search`, backoff реконнекту, `authStatus` / 401–403, `profileQueryKey`, payload counter `type: "message"`.
+**Останнє оновлення:** пагінація повідомлень, `user-search`, backoff реконнекту, `authStatus` / 401–403, `profileQueryKey`, payload counter `type: "message"`; **UI полів вводу** — `textarea` у композері та модалці, `pre-wrap` / `justify` для повідомлень, розширена модалка створення, `shared/scrollbars.css`, золоті primary-кнопки.

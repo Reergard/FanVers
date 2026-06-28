@@ -18,7 +18,7 @@ src/
   main/           # страницы/фичи главной (HomePage.tsx + стили + локальные картинки)
   users/          # страницы/фичи пользователей (Profile.tsx, profileService, types)
   website_advertising/  # реклама книг (AdvertisingBooks, BookCard variant=ad)
-  shared/         # переиспользуемые "примитивы": Container, Icon, Modal, hooks, utils
+  shared/         # переиспользуемые "примитивы": Container, Icon, Modal, scrollbars.css, hooks, utils
   widgets/        # крупные блоки: header, footer (и дальше: sidebar, drawer и т.д.)
   assets/         # глобальные ассеты: icons, logos, backgrounds, fonts
   docs/           # документация (Concept.md, STRUCTURE.md, ANALYTICS_FRONTEND.md, LISTS_AND_CAROUSELS_FRONTEND.md, AUTHENTICATION_FRONTEND.md, CHAT_FRONTEND.md и др.)
@@ -388,8 +388,9 @@ Container увеличивает max-width до 1680px
 - `ChatPage` перевіряє `useAuth()` (`authReady`, `isAuthenticated`): для гостя редірект на `/login`.
 - Після авторизації викликається `fetchChats()`.
 - При виборі чату `ChatWindow` завантажує повідомлення сторінками (`next_before`) і викликає `mark_as_read`.
-- `CreateChatModal` — пошук користувачів через `GET .../user-search/`.
-- Відправка повідомлення:
+- `CreateChatModal` — пошук користувачів через `GET .../user-search/`; поле першого повідомлення — **`textarea`** (зберігає `\n`); при довгому тексті модалка розширюється до ~95vh, скрол лише всередині textarea (див. `CHAT_FRONTEND.md` §10).
+- Композер обраного чату — **`textarea`**: Enter надсилає, Shift+Enter — новий рядок; відображення — `white-space: pre-wrap`; власні повідомлення — `text-align: justify` усередині блоку.
+- Відправка (транспорт):
   - пріоритетно через `chatWs.sendMessage(...)`,
   - fallback через HTTP `sendMessage`.
 - Видалення чату — через confirm modal (Так/Ні) і `DELETE /api/chat/{id}/`.
