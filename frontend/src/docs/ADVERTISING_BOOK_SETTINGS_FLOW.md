@@ -37,7 +37,14 @@
 | Головна, каталог | `GET .../main_page_ads/`, `GET .../catalog_page_ads/` або універсальний `GET .../public/?location=main\|catalog` | Плоскі слоти (`target_kind=none`), без ранжування |
 | Пошук | **`GET .../search_ads/`** з `genre_ids`, `tag_ids`, `fandom_ids` | Окремий сценарій: дедуп id фільтрів, score, стабільне сортування (-score, -pk), top N |
 
-Фронт для головної/каталогу/пошуку: **`AdvertisingCarousel`** (`website_advertising/AdvertisingBooks.tsx`) — React Query + `BookCard variant="ad"` у спільному **`BookScrollerCarousel`** (`shared/carousel/`). Горизонтальний скрол: свайп на сенсорі, перетягування мишкою на ПК. Див. **LISTS_AND_CAROUSELS_FRONTEND.md** §1.
+Фронт для головної/каталогу/пошуку: **`AdvertisingCarousel`** (`website_advertising/AdvertisingBooks.tsx`) — React Query + `BookCard variant="ad"` у спільному **`BookScrollerCarousel`** (`shared/carousel/`).
+
+**Публічна карусель реклами:**
+- горизонтальний скрол: свайп на сенсорі, перетягування мишкою на ПК;
+- **автопрокрутка** кожні **5 с** (циклічно), пауза при наведенні, відновлення через **15 с** без руху миші або при `mouseleave`;
+- вимкнено при `prefers-reduced-motion` або якщо всі картки вміщаються на екрані.
+
+Див. **LISTS_AND_CAROUSELS_FRONTEND.md** §1.3–§1.5.
 
 ## Документація для персоналу
 
@@ -45,4 +52,4 @@
 
 ---
 
-*Останнє оновлення: 2026-06-28 (`BookScrollerCarousel` для публічної реклами).*
+*Останнє оновлення: 2026-06-28 (автопрокрутка рекламної каруселі 5 с / idle 15 с).*

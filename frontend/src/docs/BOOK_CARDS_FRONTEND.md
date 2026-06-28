@@ -15,6 +15,7 @@
 | Файл | Призначення |
 |------|-------------|
 | `frontend/src/BookCard/BookCard.tsx` | Логіка компонента, рендер залежно від variant |
+| `frontend/src/BookCard/BookCardTitle.tsx` | Спільний заголовок: ellipsis або бегуча строка (marquee) |
 | `frontend/src/BookCard/BookCard.css` | Усі стилі картки (базові + варіанти default, withTags, bookmark, ad, carousel) |
 
 ### Залежності BookCard
@@ -28,7 +29,19 @@
 - `assets/backgrounds/18+small.svg`, `18+.svg` — бейджі 18+
 - `assets/backgrounds/Ellipse_for_book.svg` — еліпс для variant ad
 - `assets/backgrounds/line__smoll_book.svg` — вертикальна лінія на обкладинці
-- `assets/icons/NEW.svg` — бейдж NEW
+- `shared/hooks/useMedia.ts` — адаптивна обрізка опису в `variant="ad"` (через `BookCard.tsx`)
+
+### Заголовок (`BookCardTitle`)
+
+Усі варіанти використовують **`BookCardTitle`** замість сирого `<h3>`:
+
+- якщо текст **вміщується** — `text-overflow: ellipsis` (одна строка);
+- якщо **не вміщується** — CSS-marquee з дубльованим текстом (клон з `aria-hidden`);
+- `ResizeObserver` перераховує overflow при зміні ширини;
+- при `prefers-reduced-motion: reduce` marquee **вимкнено** (лише ellipsis);
+- пауза marquee при `:hover` на viewport заголовка.
+
+Класи: `.bookCard__titleViewport`, `.bookCard__titleTrack`, `.bookCard__titleText`; модифікатор `--marquee`.
 
 ---
 
@@ -203,8 +216,9 @@ type Props = {
 
 ### 6.5. Реклама та каруселі книг
 
-- `shared/carousel/BookScrollerCarousel.module.css` — `--per-view`, навігація
+- `shared/carousel/BookScrollerCarousel.module.css` — `--per-view`, навігація, вирівнювання кнопки «ЧИТАТИ» в ряді `bookCard--ad`
 - `catalog/styles/BookDetail.module.css` — `.authorWorksCarousel` для сторінки книги
+- Автопрокрутка реклами (5 с, пауза при наведенні) — **LISTS_AND_CAROUSELS_FRONTEND.md** §1.5
 
 ### 6.6. Чарівний Гід
 
@@ -245,7 +259,8 @@ type Props = {
 | Питання | Відповідь |
 |---------|-----------|
 | Де компонент? | `BookCard/BookCard.tsx` |
-| Де стилі? | `BookCard/BookCard.css` |
+| Де стилі? | `BookCard/BookCard.css` (+ marquee в §`.bookCard__titleViewport`) |
+| Де заголовок? | `BookCard/BookCardTitle.tsx` (усі variants) |
 | Як вибрати варіант? | `variant="default" \| "withTags" \| "bookmark" \| "ad" \| "carousel"` |
 | Потрібен опис? | Тільки для `variant="ad"` |
 | Хто обгортає в Link? | `carousel`, `ad`, `default`, `withTags` — сам BookCard; `bookmark` — BookmarksPage |
@@ -253,4 +268,4 @@ type Props = {
 
 ---
 
-*Останнє оновлення: 2026-06-28 (`variant="carousel"` для «Інші роботи автора»).*
+*Останнє оновлення: 2026-06-28 (`BookCardTitle`, marquee назв, інтеграція з каруселями).*

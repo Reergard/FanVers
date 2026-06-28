@@ -46,9 +46,9 @@ BookDetailRouter
 
 **Відбір книг (бекенд):** той самий `owner`, що й у поточної книги (не `creator`); поточна книга виключена; лише з обкладинкою та slug; перевірка `view`-доступу. Деталі: **LISTS_AND_CAROUSELS_FRONTEND.md** §2, **LISTS_AND_CAROUSELS_BACKEND.md** §3.
 
-**Навігація каруселі:** стрілки, зірки, свайп на сенсорі, **перетягування мишкою** на ПК (drag блокує випадковий клік по картці). Див. **LISTS_AND_CAROUSELS_FRONTEND.md** §1.3.
+**Навігація каруселі:** стрілки, зірки, свайп на сенсорі, **перетягування мишкою** на ПК (drag блокує випадковий клік по картці). Автопрокрутка **вимкнена** (на відміну від реклами). Див. **LISTS_AND_CAROUSELS_FRONTEND.md** §1.3, §2.
 
-**Стилі:** `BookDetail.module.css` (`.authorWorks*`), `BookCard.css` (`.bookCard--carousel`).
+**Стилі:** `BookDetail.module.css` (`.authorWorks*`), `BookCard.css` (`.bookCard--carousel`, `BookCardTitle`).
 
 ---
 
@@ -98,4 +98,4 @@ BookDetailRouter
 
 ---
 
-*Останнє оновлення: 2026-06-28 (`AuthorWorks`, `BookScrollerCarousel`).*
+*Останнє оновлення: 2026-06-28 (`AuthorWorks`, `BookScrollerCarousel`, без автопрокрутки).*

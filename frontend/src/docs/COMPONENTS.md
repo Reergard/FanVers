@@ -340,18 +340,42 @@
 
 ### `BookScrollerCarousel` — горизонтальна карусель книг
 
-**Призначення:** Спільний скролер для каруселей з `BookCard`: стрілки, зірки-пагінація, свайп на сенсорі, перетягування мишкою на ПК.
+**Призначення:** Спільний скролер для каруселей з `BookCard`: стрілки, зірки-пагінація, свайп на сенсорі, перетягування мишкою на ПК. Опційна **автопрокрутка** (лише реклама).
 
 **Файли:**
 - `shared/carousel/BookScrollerCarousel.tsx`
 - `shared/carousel/BookScrollerCarousel.module.css`
 - `shared/carousel/carouselUtils.ts`
 
+**Пропси автопрокрутки** (реклама): `autoAdvanceEnabled`, `autoAdvanceMs` (5000), `autoAdvanceHoverIdleMs` (15000).
+
 **Місця використання:**
-- `website_advertising/AdvertisingBooks.tsx` — `AdvertisingCarousel` (`BookCard variant="ad"`)
-- `catalog/sections/AuthorWorks.tsx` — «Інші роботи автора» (`BookCard variant="carousel"`)
+- `website_advertising/AdvertisingBooks.tsx` — `AdvertisingCarousel` (`BookCard variant="ad"`, автопрокрутка увімкнена)
+- `catalog/sections/AuthorWorks.tsx` — «Інші роботи автора» (`BookCard variant="carousel"`, без автопрокрутки)
 
 **Повна документація:** `docs/LISTS_AND_CAROUSELS_FRONTEND.md` §1.
+
+---
+
+### `useCarouselIndexSwipe` — свайп мишкою для index-каруселей
+
+**Призначення:** Горизонтальний drag мишкою, коли слайди перемикаються **індексом** (не `scrollLeft`). Використовується в **«НОВИНКИ»** на головній.
+
+**Файл:** `shared/carousel/useCarouselIndexSwipe.ts`
+
+**Повна документація:** `docs/LISTS_AND_CAROUSELS_FRONTEND.md` §3.1.
+
+---
+
+### `BookCardTitle` — заголовок картки книги
+
+**Призначення:** Єдиний `<h3>` для всіх варіантів `BookCard`: ellipsis або бегуча строка при переповненні.
+
+**Файли:**
+- `BookCard/BookCardTitle.tsx`
+- `BookCard/BookCard.css` — `.bookCard__titleViewport`, marquee keyframes
+
+**Повна документація:** `docs/BOOK_CARDS_FRONTEND.md` (розділ «Заголовок»).
 
 ---
 
@@ -363,6 +387,7 @@
 
 **Файли:**
 - `BookCard/BookCard.tsx`
+- `BookCard/BookCardTitle.tsx`
 - `BookCard/BookCard.css`
 
 **Особливості:**

@@ -233,6 +233,16 @@
   overflow: visible;
 }
 
+:global(.mg2-newsSwipeTarget) {
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+:global(.mg2-newsSwipeTarget.carousel-index-dragging) {
+  cursor: grabbing;
+  user-select: none;
+}
+
 :global(.mg2-desktopBannerInner) {
   display: grid;
   grid-template-columns: 1.18fr 0.96fr;

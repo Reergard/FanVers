@@ -73,8 +73,9 @@ frontend/src/
 │   ├── styles/
 │   │   └── AddChapter.module.css
 │   └── ...
-├── BookCard/              # Єдиний компонент карток книг (variant: default, withTags, bookmark, ad). Детально: docs/BOOK_CARDS_FRONTEND.md
+├── BookCard/              # Єдиний компонент карток книг (variant: default, withTags, bookmark, ad, carousel). BookCardTitle — marquee назв. Детально: docs/BOOK_CARDS_FRONTEND.md
 │   ├── BookCard.tsx
+│   ├── BookCardTitle.tsx
 │   └── BookCard.css
 ├── main/
 │   ├── HomePage.tsx
@@ -118,7 +119,8 @@ frontend/src/
 │   ├── carousel/
 │   │   ├── BookScrollerCarousel.tsx
 │   │   ├── BookScrollerCarousel.module.css
-│   │   └── carouselUtils.ts
+│   │   ├── carouselUtils.ts
+│   │   └── useCarouselIndexSwipe.ts
 │   ├── Container.tsx
 │   ├── Container.module.css
 │   ├── Icon.tsx
@@ -668,13 +670,13 @@ export function AppRoutes() {
 
 ## `website_advertising/` — реклама книг
 
-**Що це:** `AdvertisingCarousel` (експорт з `AdvertisingBooks.tsx`) — React Query + `BookCard variant=ad` у спільному **`BookScrollerCarousel`**. Використовується на головній, в каталозі та пошуку. Див. **docs/LISTS_AND_CAROUSELS_FRONTEND.md**, **docs/ADVERTISING_BOOK_SETTINGS_FLOW.md**.
+**Що це:** `AdvertisingCarousel` (експорт з `AdvertisingBooks.tsx`) — React Query + `BookCard variant=ad` у спільному **`BookScrollerCarousel`** з автопрокруткою (5 с). Використовується на головній, в каталозі та пошуку. Див. **docs/LISTS_AND_CAROUSELS_FRONTEND.md**, **docs/ADVERTISING_BOOK_SETTINGS_FLOW.md**.
 
 ---
 
 ## `shared/carousel/` — горизонтальна карусель книг
 
-**Що це:** `BookScrollerCarousel` — стрілки, зірки-пагінація, свайп (сенсор), drag мишкою (ПК). Використовується в рекламі (`AdvertisingCarousel`) і на сторінці книги (`catalog/sections/AuthorWorks.tsx`, `BookCard variant="carousel"`).
+**Що це:** `BookScrollerCarousel` — стрілки, зірки-пагінація, свайп (сенсор), drag мишкою (ПК), опційна автопрокрутка (реклама: 5 с, idle 15 с). `useCarouselIndexSwipe` — свайп мишкою для index-каруселі «Новинки». Використовується в рекламі (`AdvertisingCarousel`) і на сторінці книги (`AuthorWorks`, `BookCard variant="carousel"`). Див. **docs/LISTS_AND_CAROUSELS_FRONTEND.md**.
 
 ---
 
@@ -809,7 +811,7 @@ export function HeaderLogo() {
 
 ## Швидка перевірка «куди це класти?»
 
-- «Це **картка книги**?» → **завжди** `BookCard/BookCard.tsx` з потрібним `variant` (default, withTags, bookmark, ad). Інших компонентів карток книг немає.
+- «Це **картка книги**?» → **завжди** `BookCard/BookCard.tsx` з потрібним `variant` (default, withTags, bookmark, ad, carousel). Інших компонентів карток книг немає.
 - «Це **сторінка**?» → фіча-папка (`main/`, `users/`, `catalog/`)
 - «Це **макет сайту**?» → `app/`
 - «Це дрібний повторюваний компонент/хук/утиліта?» → `shared/`

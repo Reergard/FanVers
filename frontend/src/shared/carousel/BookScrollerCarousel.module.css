@@ -3,6 +3,11 @@
   min-width: 0;
 }
 
+.autoAdvanceRoot {
+  width: 100%;
+  min-width: 0;
+}
+
 .carousel {
   --per-view: 5;
   --gap: clamp(12px, 1.2vw, 20px);
@@ -48,9 +53,19 @@
 
 /* 1–2 книги, коли всі вміщаються без прокрутки — група по центру */
 .carouselFew {
+  display: flex;
   justify-content: center;
+  flex-wrap: nowrap;
   overflow-x: hidden;
   cursor: default;
+}
+
+.carouselFew .item {
+  flex: 0 0 calc((100% - (var(--gap) * (var(--per-view) - 1))) / var(--per-view));
+  width: calc((100% - (var(--gap) * (var(--per-view) - 1))) / var(--per-view));
+  max-width: calc((100% - (var(--gap) * (var(--per-view) - 1))) / var(--per-view));
+  display: flex;
+  flex-direction: column;
 }
 
 .carouselFew.dragging {
@@ -61,10 +76,6 @@
   cursor: grabbing;
   scroll-snap-type: none;
   user-select: none;
-}
-
-.carousel :global(.bookCard-link) {
-  touch-action: pan-x;
 }
 
 .carousel :global(img) {
@@ -82,6 +93,38 @@
   width: 100%;
   scroll-snap-align: start;
   scroll-snap-stop: always;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+}
+
+/* Реклама (variant=ad): однакова висота карток і кнопка «читати» внизу ряду */
+.carousel :global(.bookCard-link) {
+  touch-action: pan-x;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.carousel :global(.bookCard.bookCard--ad) {
+  flex: 1;
+  width: 100%;
+  min-height: 468px;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  align-content: start;
+}
+
+.carousel :global(.bookCard.bookCard--ad) .bookCard__desc {
+  min-height: calc(6 * 1.45em);
+  align-self: start;
+}
+
+.carousel :global(.bookCard.bookCard--ad) .bookCard__actions {
+  margin-top: auto;
 }
 
 .nav {
@@ -192,6 +235,10 @@
     --edge-right: 12px;
   }
 
+  .carousel :global(.bookCard.bookCard--ad) .bookCard__desc {
+    min-height: calc(5 * 1.45em);
+  }
+
   .navBtn img {
     width: 155px;
     height: 27px;
@@ -222,6 +269,15 @@
     scroll-snap-type: x proximity;
   }
 
+  .carousel :global(.bookCard.bookCard--ad) {
+    min-height: 0;
+    grid-template-rows: auto auto 1fr auto;
+  }
+
+  .carousel :global(.bookCard.bookCard--ad) .bookCard__desc {
+    min-height: calc(4 * 1.45em);
+  }
+
   .item {
     scroll-snap-stop: normal;
   }
@@ -240,6 +296,10 @@
   .carousel {
     --edge-left: 12px;
     --edge-right: 12px;
+  }
+
+  .carousel :global(.bookCard.bookCard--ad) .bookCard__desc {
+    min-height: calc(3 * 1.45em);
   }
 
   .navBtn img {

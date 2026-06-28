@@ -4,12 +4,21 @@ import {
   useId,
   useRef,
   useState,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react";
 import rightArrow from "../../assets/backgrounds/right_arrow.svg";
 import leftArrow from "../../assets/backgrounds/left_arrow.svg";
 import starIcon from "../../assets/backgrounds/star_navigation_books.svg";
-import { getCarouselBehavior, getCarouselMetrics } from "./carouselUtils";
+import {
+  getCarouselBehavior,
+  getCarouselMetrics,
+  getCarouselNextAutoScrollLeft,
+  getCarouselPage,
+  getCarouselPageScrollLeft,
+  isCarouselAtEnd,
+  isCarouselAtStart,
+} from "./carouselUtils";
 import styles from "./BookScrollerCarousel.module.css";
 
 export type BookScrollerCarouselProps = {
@@ -19,6 +28,15 @@ export type BookScrollerCarouselProps = {
   wrapClassName?: string;
   navClassName?: string;
   showNav?: boolean;
+  /** Автопрокрутка сторінок (увімкнути лише для реклами) */
+  autoAdvanceEnabled?: boolean;
+  /** Інтервал автопрокрутки, мс */
+  autoAdvanceMs?: number;
+  /**
+   * Пауза автопрокрутки при наведенні; якщо миша не рухається цей час (мс) —
+   * прокрутка відновлюється, навіть коли курсор ще над каруселлю.
+   */
+  autoAdvanceHoverIdleMs?: number;
 };
 
 /**
@@ -32,15 +50,36 @@ export function BookScrollerCarousel({
   wrapClassName,
   navClassName,
   showNav = true,
+  autoAdvanceEnabled = false,
+  autoAdvanceMs,
+  autoAdvanceHoverIdleMs,
 }: BookScrollerCarouselProps) {
   const carouselRegionId = useId();
   const scrollerRef = useRef<HTMLUListElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const syncStateFromScrollRef = useRef<() => void>(() => {});
+  const scrollToPageRef = useRef<(targetPage: number) => void>(() => {});
+  const pageRef = useRef(0);
+  const autoAdvanceTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hoverIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** true — курсор над каруселлю (mouseenter без mouseleave) */
+  const isHoveredRef = useRef(false);
+  /** true — пауза автопрокрутки через наведення або активний drag */
+  const hoverPauseAutoAdvanceRef = useRef(false);
+  const isPointerActiveRef = useRef(false);
+  const lastHoverMoveRef = useRef<{ x: number; y: number } | null>(null);
+  const scheduleHoverIdleResumeRef = useRef<() => void>(() => {});
+  const advanceAutoPageRef = useRef<() => void>(() => {});
+  const canAutoAdvanceRef = useRef<() => boolean>(() => false);
   const [page, setPage] = useState(0);
   const [pagesCount, setPagesCount] = useState(1);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
+
+  const autoAdvanceActive =
+    autoAdvanceEnabled && typeof autoAdvanceMs === "number" && autoAdvanceMs > 0;
+
+  pageRef.current = page;
 
   const syncStateFromScroll = useCallback(() => {
     const el = scrollerRef.current;
@@ -49,7 +88,7 @@ export function BookScrollerCarousel({
     const metrics = getCarouselMetrics(el, itemCount);
     setPagesCount(metrics.pagesCount);
 
-    if (metrics.step <= 0 || metrics.maxScrollLeft <= 0) {
+    if (metrics.maxScrollLeft <= 0) {
       setPage(0);
       setAtStart(true);
       setAtEnd(true);
@@ -60,12 +99,10 @@ export function BookScrollerCarousel({
       metrics.maxScrollLeft,
       Math.max(0, el.scrollLeft),
     );
-    const nextPage = Math.round(safeLeft / metrics.step);
-    setPage(
-      Math.max(0, Math.min(nextPage, Math.max(0, metrics.pagesCount - 1))),
-    );
-    setAtStart(safeLeft <= 2);
-    setAtEnd(safeLeft >= metrics.maxScrollLeft - 2);
+    const nextPage = getCarouselPage(metrics, safeLeft);
+    setPage(nextPage);
+    setAtStart(isCarouselAtStart(metrics, safeLeft));
+    setAtEnd(isCarouselAtEnd(metrics, safeLeft));
   }, [itemCount]);
 
   syncStateFromScrollRef.current = syncStateFromScroll;
@@ -81,23 +118,106 @@ export function BookScrollerCarousel({
         Math.min(targetPage, Math.max(0, metrics.pagesCount - 1)),
       );
 
-      if (metrics.step <= 0) {
+      if (metrics.maxScrollLeft <= 0) {
         setPage(0);
         return;
       }
 
-      const targetLeft = Math.min(metrics.maxScrollLeft, nextPage * metrics.step);
+      const targetLeft = getCarouselPageScrollLeft(metrics, nextPage);
       el.scrollTo({ left: targetLeft, behavior: getCarouselBehavior() });
     },
     [itemCount],
   );
 
+  scrollToPageRef.current = scrollToPage;
+
   const scrollByPage = useCallback(
     (direction: -1 | 1) => {
-      scrollToPage(page + direction);
+      scrollToPage(pageRef.current + direction);
     },
-    [page, scrollToPage],
+    [scrollToPage],
   );
+
+  const clearAutoAdvanceTimer = useCallback(() => {
+    if (autoAdvanceTimerRef.current !== null) {
+      clearInterval(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = null;
+    }
+  }, []);
+
+  const canAutoAdvance = useCallback(() => {
+    if (!autoAdvanceActive) return false;
+    const el = scrollerRef.current;
+    if (!el) return false;
+
+    const metrics = getCarouselMetrics(el, itemCount);
+    if (metrics.maxScrollLeft <= 0) return false;
+
+    if (hoverPauseAutoAdvanceRef.current || isPointerActiveRef.current) return false;
+    if (typeof document !== "undefined" && document.hidden) return false;
+    if (
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return false;
+    }
+    return true;
+  }, [autoAdvanceActive, itemCount]);
+
+  canAutoAdvanceRef.current = canAutoAdvance;
+
+  const advanceAutoPage = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    const metrics = getCarouselMetrics(el, itemCount);
+    if (metrics.maxScrollLeft <= 0) return;
+
+    const targetLeft = getCarouselNextAutoScrollLeft(metrics, el.scrollLeft);
+    const nextPage = getCarouselPage(metrics, targetLeft);
+
+    pageRef.current = nextPage;
+    setPage(nextPage);
+    setAtStart(isCarouselAtStart(metrics, targetLeft));
+    setAtEnd(isCarouselAtEnd(metrics, targetLeft));
+
+    el.scrollTo({ left: targetLeft, behavior: getCarouselBehavior() });
+  }, [itemCount]);
+
+  advanceAutoPageRef.current = advanceAutoPage;
+
+  const clearHoverIdleTimer = useCallback(() => {
+    if (hoverIdleTimerRef.current !== null) {
+      clearTimeout(hoverIdleTimerRef.current);
+      hoverIdleTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleHoverIdleResume = useCallback(() => {
+    clearHoverIdleTimer();
+    if (
+      !autoAdvanceActive ||
+      typeof autoAdvanceHoverIdleMs !== "number" ||
+      autoAdvanceHoverIdleMs <= 0
+    ) {
+      return;
+    }
+
+    hoverIdleTimerRef.current = setTimeout(() => {
+      hoverIdleTimerRef.current = null;
+      hoverPauseAutoAdvanceRef.current = false;
+      if (canAutoAdvanceRef.current()) {
+        advanceAutoPageRef.current();
+      }
+    }, autoAdvanceHoverIdleMs);
+  }, [
+    autoAdvanceActive,
+    autoAdvanceHoverIdleMs,
+    clearHoverIdleTimer,
+  ]);
+
+  scheduleHoverIdleResumeRef.current = scheduleHoverIdleResume;
 
   useEffect(() => {
     const el = scrollerRef.current;
@@ -123,6 +243,9 @@ export function BookScrollerCarousel({
 
     const onPointerDown = (e: PointerEvent) => {
       if (e.pointerType !== "mouse" || e.button !== 0) return;
+      if (el.scrollWidth <= el.clientWidth + 1) return;
+
+      isPointerActiveRef.current = true;
       e.preventDefault();
       dragState.pointerId = e.pointerId;
       dragState.startX = e.clientX;
@@ -150,8 +273,13 @@ export function BookScrollerCarousel({
     const onPointerUp = (e: PointerEvent) => {
       const wasDragging = dragState.moved;
       endDrag(e.pointerId);
+      isPointerActiveRef.current = false;
       if (wasDragging) {
         syncStateFromScrollRef.current();
+      }
+      if (isHoveredRef.current) {
+        hoverPauseAutoAdvanceRef.current = true;
+        scheduleHoverIdleResumeRef.current();
       }
     };
 
@@ -179,6 +307,27 @@ export function BookScrollerCarousel({
       el.classList.remove(styles.dragging);
     };
   }, [itemCount]);
+
+  useEffect(() => {
+    if (!autoAdvanceActive || !autoAdvanceMs) return;
+
+    const tick = () => {
+      if (!canAutoAdvanceRef.current()) return;
+      advanceAutoPageRef.current();
+    };
+
+    autoAdvanceTimerRef.current = window.setInterval(tick, autoAdvanceMs);
+
+    return () => {
+      clearAutoAdvanceTimer();
+    };
+  }, [autoAdvanceActive, autoAdvanceMs, clearAutoAdvanceTimer]);
+
+  useEffect(() => {
+    return () => {
+      clearHoverIdleTimer();
+    };
+  }, [clearHoverIdleTimer]);
 
   useEffect(() => {
     const el = scrollerRef.current;
@@ -252,7 +401,7 @@ export function BookScrollerCarousel({
         if (!node) return;
         const m = getCarouselMetrics(node, itemCount);
         if (m.step > 0) {
-          const targetLeft = Math.min(m.maxScrollLeft, maxPage * m.step);
+          const targetLeft = getCarouselPageScrollLeft(m, maxPage);
           node.scrollTo({ left: targetLeft, behavior: "auto" });
         }
       });
@@ -264,7 +413,48 @@ export function BookScrollerCarousel({
   /** 1–2 книги на одній «сторінці» — по центру; більше — як раніше зліва */
   const centerItems = itemCount > 0 && itemCount <= 2 && pagesCount === 1;
 
-  return (
+  const HOVER_MOVE_THRESHOLD_PX = 4;
+
+  const handleMouseEnter = () => {
+    isHoveredRef.current = true;
+    lastHoverMoveRef.current = null;
+    hoverPauseAutoAdvanceRef.current = true;
+    clearHoverIdleTimer();
+    scheduleHoverIdleResume();
+  };
+
+  const handleMouseMove = (e: ReactMouseEvent) => {
+    if (!autoAdvanceActive || !isHoveredRef.current) return;
+
+    const { clientX, clientY } = e;
+    const last = lastHoverMoveRef.current;
+
+    if (last === null) {
+      lastHoverMoveRef.current = { x: clientX, y: clientY };
+      return;
+    }
+
+    const dx = clientX - last.x;
+    const dy = clientY - last.y;
+    if (dx * dx + dy * dy < HOVER_MOVE_THRESHOLD_PX * HOVER_MOVE_THRESHOLD_PX) {
+      return;
+    }
+
+    lastHoverMoveRef.current = { x: clientX, y: clientY };
+    hoverPauseAutoAdvanceRef.current = true;
+    clearHoverIdleTimer();
+    scheduleHoverIdleResume();
+  };
+
+  const handleMouseLeave = () => {
+    if (!autoAdvanceActive) return;
+    isHoveredRef.current = false;
+    lastHoverMoveRef.current = null;
+    hoverPauseAutoAdvanceRef.current = false;
+    clearHoverIdleTimer();
+  };
+
+  const carouselBody = (
     <>
       <div className={[styles.carouselWrap, wrapClassName].filter(Boolean).join(" ")}>
         <ul
@@ -332,6 +522,21 @@ export function BookScrollerCarousel({
       )}
     </>
   );
+
+  if (autoAdvanceActive) {
+    return (
+      <div
+        className={styles.autoAdvanceRoot}
+        onMouseEnter={handleMouseEnter}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
+        {carouselBody}
+      </div>
+    );
+  }
+
+  return carouselBody;
 }
 
 export function BookScrollerCarouselItem({

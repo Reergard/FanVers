@@ -16,6 +16,11 @@ import {
   BookScrollerCarouselItem,
 } from "../shared/carousel/BookScrollerCarousel";
 
+/** Інтервал автопрокрутки рекламної каруселі (5 с) */
+const ADVERTISING_CAROUSEL_AUTO_ADVANCE_MS = 5000;
+/** Після наведення: якщо миша не рухається 15 с — автопрокрутка знову вмикається */
+const ADVERTISING_CAROUSEL_HOVER_IDLE_MS = 15000;
+
 /** Дані для картки реклами (передаються в BookCard variant=ad) */
 type AdBookItem = {
   id: string;
@@ -84,7 +89,12 @@ export function AdvertisingCarousel({
         className={styles.sectionTitle}
       />
 
-      <BookScrollerCarousel itemCount={books.length}>
+      <BookScrollerCarousel
+        itemCount={books.length}
+        autoAdvanceEnabled
+        autoAdvanceMs={ADVERTISING_CAROUSEL_AUTO_ADVANCE_MS}
+        autoAdvanceHoverIdleMs={ADVERTISING_CAROUSEL_HOVER_IDLE_MS}
+      >
         {books.map((b) => (
           <BookScrollerCarouselItem key={`${b.id}-${b.slug ?? b.title}`}>
             <BookCard

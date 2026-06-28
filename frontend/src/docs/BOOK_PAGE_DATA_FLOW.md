@@ -50,7 +50,7 @@ URL /books/:slug
 | `navigation/ChapterRangeNavigation.tsx` | Селектор диапазона «Показано розділів: 1-50 з N». |
 | `catalog/sections/SubscriptionPurchaseBlock.tsx` | Блок абонименту: prepaid-плани, активний пакет, підказка. |
 | `api/catalogApi.ts` | Типы и методы `getBook/getChapters/getPaginatedChapters/getVolumes/getAuthorOtherWorks`, `catalogKeys.authorOtherWorks`, `invalidateBookChapterLists`, нормализация ответов. |
-| `shared/carousel/BookScrollerCarousel.tsx` | Спільна горизонтальна карусель (стрілки, зірки, drag мишкою). Див. **LISTS_AND_CAROUSELS_FRONTEND.md**. |
+| `shared/carousel/BookScrollerCarousel.tsx` | Спільна горизонтальна карусель (стрілки, зірки, drag мишкою). Без автопрокрутки в author works. Див. **LISTS_AND_CAROUSELS_FRONTEND.md**. |
 
 ---
 

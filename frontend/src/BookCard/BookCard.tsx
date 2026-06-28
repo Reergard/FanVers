@@ -13,6 +13,7 @@ import actionBtnStyles from "../shared/ActionButton/ActionButton.module.css";
 import { Icon } from "../shared/Icon";
 import { Modal } from "../shared/Modal/Modal";
 import { useMedia } from "../shared/hooks/useMedia";
+import { BookCardTitle } from "./BookCardTitle";
 import "./BookCard.css";
 
 /** Як у каруселі «Новинки» (моб.): обмеження довжини + «...»; різні ліміти по ширині екрана. */
@@ -236,9 +237,7 @@ export function BookCard({
             <Icon name="zakladki" />
           </span>
         </div>
-        <h3 className="bookCard__title bookCard__title--bookmark">
-          {book.title || "Без назви"}
-        </h3>
+        <BookCardTitle title={book.title} variant="bookmark" />
         {isAbandonedTranslation && (
           <p className="bookCard__status bookCard__status--bookmark">
             Статус: {abandonedStatusText}
@@ -281,9 +280,7 @@ export function BookCard({
             draggable={false}
           />
         </div>
-        <h3 className="bookCard__title bookCard__title--carousel">
-          {book.title || "Без назви"}
-        </h3>
+        <BookCardTitle title={book.title} variant="carousel" />
       </article>
     );
 
@@ -323,9 +320,7 @@ export function BookCard({
             decoding="async"
           />
         </div>
-        <h3 className="bookCard__title bookCard__title--ad">
-          {book.title || "Без назви"}
-        </h3>
+        <BookCardTitle title={book.title} variant="ad" />
         {adDescriptionDisplay && (
           <p className="bookCard__desc">{adDescriptionDisplay}</p>
         )}
@@ -377,15 +372,10 @@ export function BookCard({
       </div>
 
       <div className="bookCard__content">
-        {withTags ? (
-          <div className="bookCard__title-wrap">
-            <span className="bookCard__title-inner">
-              <h3 className="bookCard__title">{book.title || "Без назви"}</h3>
-            </span>
-          </div>
-        ) : (
-          <h3 className="bookCard__title">{book.title || "Без назви"}</h3>
-        )}
+        <BookCardTitle
+          title={book.title}
+          variant={withTags ? "withTags" : "default"}
+        />
 
         {(withTags || showBookDescription || !hideStats) && (
         <div className="bookCard__meta">

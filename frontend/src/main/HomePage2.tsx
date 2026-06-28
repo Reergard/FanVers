@@ -8,6 +8,7 @@ import {
 } from "./NewsCarouselCover";
 import { ActionButton } from "../shared/ActionButton/ActionButton";
 import { useMedia } from "../shared/hooks/useMedia";
+import { useCarouselIndexSwipe } from "../shared/carousel/useCarouselIndexSwipe";
 import { fetchBookRatings } from "../api/ratingApi";
 import { getBooksNews, getBookNewsCoverUrl, type BookNewsItem } from "../api/mainApi";
 import bookDetailStyles from "../catalog/styles/BookDetail.module.css";
@@ -124,12 +125,13 @@ function MobileNewsCard({
       : description;
 
   const coverUrl = getBookNewsCoverUrl(book);
+  const swipeRef = useCarouselIndexSwipe<HTMLElement>(onNext, onPrev, total > 1);
 
   return (
     <HomeNewsSection className="mg2-mobileSection" ariaLabel="Новинки">
       <SectionLineTitle text="НОВИНКИ" className="mg2-sectionLineTitle" />
 
-      <article className="mg2-mobileCard">
+      <article ref={swipeRef} className="mg2-mobileCard mg2-newsSwipeTarget">
         <h3 className="mg2-mobileTitle">{book.title}</h3>
 
         <div className="mg2-mobileFrameOuter">
@@ -266,9 +268,14 @@ function DesktopNewsBanner({
   const coverUrl = getBookNewsCoverUrl(book);
 
   const titleId = useId();
+  const swipeRef = useCarouselIndexSwipe<HTMLElement>(onNext, onPrev, total > 1);
 
   return (
-    <article className="mg2-desktopBanner" aria-labelledby={titleId}>
+    <article
+      ref={swipeRef}
+      className="mg2-desktopBanner mg2-newsSwipeTarget"
+      aria-labelledby={titleId}
+    >
       <button
         type="button"
         className="mg2-desktopArrow mg2-desktopArrowLeft"
