@@ -58,9 +58,9 @@
   .panelPopover:not(.panelAuthenticated) {
     width: clamp(420px, calc(29 * var(--vwu)), 500px);
     max-width: min(calc(100 * var(--vwu)), 500px);
-    max-height: 70dvh;
-    min-height: 70dvh;
-    height: 70dvh;
+    max-height: clamp(560px, 70dvh, 680px);
+    min-height: clamp(560px, 70dvh, 680px);
+    height: clamp(560px, 70dvh, 680px);
   }
 
   .panelPopover:not(.panelAuthenticated) .frameText {
@@ -83,9 +83,9 @@
   .panelPopover.panelAuthenticated {
     width: clamp(460px, calc(32 * var(--vwu)), 560px);
     max-width: min(calc(115 * var(--vwu)), 560px);
-    max-height: 90dvh;
-    min-height: 90dvh;
-    height: 90dvh;
+    max-height: clamp(720px, 90dvh, 860px);
+    min-height: clamp(720px, 90dvh, 860px);
+    height: clamp(720px, 90dvh, 860px);
   }
 }
 

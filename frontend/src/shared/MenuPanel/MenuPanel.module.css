@@ -26,6 +26,7 @@
   overflow: hidden;
   position: relative;
   z-index: 1;
+  pointer-events: none;
 }
 
 /* ПК/ноутбук — зменшена орбіта і компактні елементи, все вміщується без скролу */
@@ -45,6 +46,7 @@
     margin-top: -58px;
     transform: scale(1.5);
     transform-origin: right top;
+    pointer-events: none;
   }
 
   .userName {
@@ -141,6 +143,8 @@
   align-items: center;
   padding: 0;
   margin-top: clamp(16px, calc(2.5 * var(--vwu)), 28px);
+  position: relative;
+  z-index: 3;
 }
 
 .ctaButton {
@@ -212,6 +216,8 @@
   justify-content: flex-start;
   gap: clamp(2px, calc(0.4 * var(--vwu)), 6px);
   margin-top: auto;
+  position: relative;
+  z-index: 3;
 }
 
 
