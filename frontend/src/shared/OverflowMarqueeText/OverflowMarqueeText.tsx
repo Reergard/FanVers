@@ -7,8 +7,6 @@ const MARQUEE_PX_PER_SECOND = 42;
 type OverflowMarqueeTextProps = {
   text: string;
   className?: string;
-  /** DEV: жовтий фон viewport — видно межі блоку */
-  devHighlight?: boolean;
 };
 
 function prefersReducedMotion(): boolean {
@@ -25,7 +23,6 @@ function prefersReducedMotion(): boolean {
 export function OverflowMarqueeText({
   text,
   className,
-  devHighlight = false,
 }: OverflowMarqueeTextProps) {
   const displayText = text.trim() || "—";
   const viewportRef = useRef<HTMLSpanElement>(null);
@@ -86,7 +83,6 @@ export function OverflowMarqueeText({
       ref={viewportRef}
       className={[
         styles.viewport,
-        devHighlight ? styles.viewportDev : "",
         isMarquee ? styles.viewportMarquee : "",
         className,
       ]

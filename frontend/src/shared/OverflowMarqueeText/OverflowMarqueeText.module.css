@@ -21,11 +21,6 @@
   box-sizing: border-box;
 }
 
-.viewportDev {
-  /* DEV: прибрати після налаштування меж ніка */
-  background: rgba(255, 220, 0, 0.45);
-}
-
 .track {
   display: inline-block;
   max-width: 100%;

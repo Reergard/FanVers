@@ -52,7 +52,7 @@ export function MenuPanel({
       {/* Имя пользователя */}
       <div className={styles.nameSection}>
         <h2 className={styles.userName}>
-          <OverflowMarqueeText text={name} devHighlight />
+          <OverflowMarqueeText text={name} />
         </h2>
       </div>
 

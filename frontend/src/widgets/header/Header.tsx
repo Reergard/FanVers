@@ -450,7 +450,7 @@ export function Header() {
               </Link>
               <div className={styles.userText}>
                 <div className={styles.userName}>
-                  <OverflowMarqueeText text={user.name} devHighlight />
+                  <OverflowMarqueeText text={user.name} />
                 </div>
                 <div className={styles.userCoins}>
                   <span className={styles.coinsLabel}>FanCoins:</span>{" "}
