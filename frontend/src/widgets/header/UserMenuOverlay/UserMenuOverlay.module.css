@@ -45,22 +45,22 @@
   animation: slideInRight 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* ПК 1025–1439px — меню завжди на всю висоту, не залежить від margin-bottom орбіти */
-@media (min-width: 1025px) and (max-width: 1439px) {
+/* ПК 1025–1599px — меню завжди на всю висоту, не залежить від margin-bottom орбіти */
+@media (min-width: 1025px) and (max-width: 1599px) {
   .panelPopover {
     min-height: 100dvh;
     height: 100dvh;
   }
 }
 
-/* 1440px+ — гостьове меню: шрифт x2, вища рамка, висота 70dvh */
-@media (min-width: 1440px) {
+/* 1600px+ — гостьове меню: шрифт x2, вища рамка, висота 70dvh */
+@media (min-width: 1600px) {
   .panelPopover:not(.panelAuthenticated) {
     width: clamp(420px, calc(29 * var(--vwu)), 500px);
     max-width: min(calc(100 * var(--vwu)), 500px);
-    max-height: clamp(560px, 70dvh, 680px);
-    min-height: clamp(560px, 70dvh, 680px);
-    height: clamp(560px, 70dvh, 680px);
+    max-height: 70dvh;
+    min-height: 70dvh;
+    height: 70dvh;
   }
 
   .panelPopover:not(.panelAuthenticated) .frameText {
@@ -78,14 +78,14 @@
   }
 }
 
-/* 1440px+ — авторизоване меню: висота 90dvh, ширша панель, більші шрифти */
-@media (min-width: 1440px) {
+/* 1600px+ — авторизоване меню: висота 90dvh, ширша панель, більші шрифти */
+@media (min-width: 1600px) {
   .panelPopover.panelAuthenticated {
     width: clamp(460px, calc(32 * var(--vwu)), 560px);
     max-width: min(calc(115 * var(--vwu)), 560px);
-    max-height: clamp(720px, 90dvh, 860px);
-    min-height: clamp(720px, 90dvh, 860px);
-    height: clamp(720px, 90dvh, 860px);
+    max-height: 90dvh;
+    min-height: 90dvh;
+    height: 90dvh;
   }
 }
 
