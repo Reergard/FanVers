@@ -42,11 +42,13 @@
     gap: 0;
   }
 
-  .nameSection {
+  .menuPanel .nameSection {
     margin-top: -58px;
+    margin-bottom: -5px;
     transform: scale(1.5);
     transform-origin: right top;
     pointer-events: none;
+    --name-inset-left: clamp(95px, calc(7 * var(--vwu)), 115px);
   }
 
   .userName {
@@ -54,7 +56,7 @@
   }
 
   .ctaSection {
-    margin-top: 2px;
+    margin-top: 1px;
     transform: scale(1);
     transform-origin: center top;
   }
@@ -78,16 +80,16 @@
   }
 }
 
-/* 1600px+ — авторизоване меню: більші шрифти, нік вище, більше відступу до Створити книгу */
+/* 1600px+ — авторизоване меню: більші шрифти, нік вище */
 @media (min-width: 1600px) {
-  
   .menuPanel .avatarOrbit {
     margin-bottom: -219px;
   }
 
   .menuPanel .nameSection {
     margin-top: -75px;
-    margin-bottom: 36px;
+    margin-bottom: 25px;
+    --name-inset-left: clamp(95px, calc(8 * var(--vwu)), 105px);
   }
 
   .menuPanel .userName {
@@ -95,7 +97,7 @@
   }
 
   .menuPanel .ctaSection {
-    margin-top: 26px !important;
+    margin-top: 17px !important;
   }
 
   .menuPanel .ctaButton {
@@ -103,7 +105,6 @@
     padding: 12px 30px !important;
   }
 
-  /* Як на ПК: margin-top замість auto — тягне Повідомлення…Вихід вгору */
   .menuPanel .menuSection {
     margin-top: 50px !important;
   }
@@ -114,14 +115,19 @@
   }
 }
 
-/* Нік — верхній шар, піднімається над нижньою частиною орбіти */
+/* Нік — базові стилі (мобільна версія); ПК перевизначає @media вище */
 .nameSection {
+  --name-inset-right: clamp(8px, calc(1 * var(--vwu)), 12px);
+  --name-inset-left: clamp(70px, calc(9 * var(--vwu)), 90px);
   display: flex;
   justify-content: flex-end;
   width: 100%;
-  padding-right: clamp(8px, calc(1 * var(--vwu)), 12px);
-  padding-left: 0;
+  min-width: 0;
+  box-sizing: border-box;
+  padding-left: var(--name-inset-left);
+  padding-right: var(--name-inset-right);
   margin-top: clamp(-70px, calc(-6 * var(--vwu)), -85px);
+  margin-bottom: clamp(-5px, calc(-0.5 * var(--vwu)), 0px);
   position: relative;
   z-index: 2;
 }
@@ -130,11 +136,15 @@
   margin: 0;
   margin-top: clamp(-12px, calc(-1.5 * var(--vwu)), -20px);
   font-size: clamp(24px, calc(3.9 * var(--vwu)), 32px);
-  line-height: 1.15;
+  line-height: 1.28;
   color: rgba(255, 255, 255, 0.92);
   text-align: right;
   font-family: "BadScript", sans-serif;
   font-style: italic;
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .ctaSection {
@@ -142,7 +152,7 @@
   justify-content: center;
   align-items: center;
   padding: 0;
-  margin-top: clamp(16px, calc(2.5 * var(--vwu)), 28px);
+  margin-top: clamp(10px, calc(1.8 * var(--vwu)), 20px);
   position: relative;
   z-index: 3;
 }

@@ -1,3 +1,4 @@
+import { OverflowMarqueeText } from "../OverflowMarqueeText/OverflowMarqueeText";
 import { Link } from "react-router-dom";
 import styles from "./MenuPanel.module.css";
 import { AvatarOrbit } from "../AvatarOrbit/AvatarOrbit";
@@ -50,7 +51,9 @@ export function MenuPanel({
 
       {/* Имя пользователя */}
       <div className={styles.nameSection}>
-        <h2 className={styles.userName}>{name}</h2>
+        <h2 className={styles.userName}>
+          <OverflowMarqueeText text={name} devHighlight />
+        </h2>
       </div>
 
       {/* CTA кнопка с рамкой — переход на сторінку створення книги */}

@@ -1,0 +1,86 @@
+.viewport {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Курсив / декоративні шрифти виходять за glyph-box — без цього ріжуться краї */
+.viewport:not(.viewportMarquee) .track {
+  padding-inline-start: 0.06em;
+  padding-inline-end: 0.22em;
+  padding-block-start: 0.22em;
+  padding-block-end: 0.32em;
+  box-sizing: border-box;
+}
+
+.viewportMarquee {
+  padding-block: 0.22em;
+  box-sizing: border-box;
+}
+
+.viewportDev {
+  /* DEV: прибрати після налаштування меж ніка */
+  background: rgba(255, 220, 0, 0.45);
+}
+
+.track {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+}
+
+@supports (overflow: clip) {
+  .viewport {
+    overflow: clip;
+    overflow-clip-margin-block: 0.34em;
+  }
+
+  .viewport:not(.viewportMarquee) .track {
+    overflow: clip;
+    overflow-clip-margin-block: 0.12em;
+  }
+
+  .viewportMarquee {
+    overflow-clip-margin-block: 0.38em;
+  }
+}
+
+.text {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.viewportMarquee .trackMarquee {
+  display: inline-flex;
+  align-items: baseline;
+  max-width: none;
+  overflow: visible;
+  text-overflow: unset;
+  gap: var(--overflow-marquee-gap, 2em);
+  animation: overflowMarquee var(--overflow-marquee-duration, 12s) linear infinite;
+}
+
+.viewportMarquee:hover .trackMarquee {
+  animation-play-state: paused;
+}
+
+@keyframes overflowMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - (var(--overflow-marquee-gap, 2em) / 2)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewportMarquee .trackMarquee {
+    animation: none;
+  }
+}

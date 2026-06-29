@@ -13,6 +13,7 @@ import { UserMenuOverlay } from "./UserMenuOverlay/UserMenuOverlay";
 import { CreateBookReaderModal } from "./CreateBookReaderModal";
 import { USER_MENU } from "../../shared/menu/menuData";
 import { useMedia } from "../../shared/hooks/useMedia";
+import { OverflowMarqueeText } from "../../shared/OverflowMarqueeText/OverflowMarqueeText";
 import { useAuth } from "../../auth/useAuth";
 import { useChat } from "../../chat/store/useChat";
 import { counterWs } from "../../chat/ws/counterWs";
@@ -448,7 +449,9 @@ export function Header() {
                 <img className={styles.avatarImage} src={user.avatarUrl} alt="" />
               </Link>
               <div className={styles.userText}>
-                <div className={styles.userName}>{user.name}</div>
+                <div className={styles.userName}>
+                  <OverflowMarqueeText text={user.name} devHighlight />
+                </div>
                 <div className={styles.userCoins}>
                   <span className={styles.coinsLabel}>FanCoins:</span>{" "}
                   <span className={styles.userCoinsValue}>{user.coins}</span>

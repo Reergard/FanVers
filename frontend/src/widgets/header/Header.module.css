@@ -332,10 +332,8 @@
 
 .userName {
   max-width: 170px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
+  width: 100%;
+  min-width: 0;
   font-family: "Seminaria", sans-serif;
 
   /* было 21px, стало адаптивно */

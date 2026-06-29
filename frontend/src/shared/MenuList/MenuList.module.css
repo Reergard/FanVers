@@ -87,25 +87,4 @@
   }
 }
 
-/* 1600px+ — авторизоване меню: більші шрифти та іконки */
-@media (min-width: 1600px) {
-  .menuList {
-    gap: 10px;
-  }
-
-  .menuLink {
-    padding: 10px 22px;
-    gap: 16px;
-  }
-
-  .menuIcon {
-    width: 28px;
-    height: 28px;
-  }
-
-  .menuLabel {
-    font-size: 24px;
-  }
-}
-
 
