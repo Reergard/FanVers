@@ -223,16 +223,48 @@ export function BookScrollerCarousel({
     const el = scrollerRef.current;
     if (!el || itemCount === 0) return;
 
+    const DRAG_CLICK_BLOCK_PX = 4;
+    /** Мін. зміщення перед вибором осі (touch) */
+    const AXIS_LOCK_THRESHOLD_PX = 5;
+    /** Горизонталь: |dx| >= |dy| * ratio (зміщення на користь каруселі) */
+    const HORIZONTAL_INTENT_RATIO = 0.5;
+    /** Вертикаль: лише явний жест — |dy| > |dx| * ratio */
+    const VERTICAL_INTENT_RATIO = 1.4;
+    /** Сенсор: трохи чутливіше рух за пальцем */
+    const TOUCH_DRAG_MULTIPLIER = 1.18;
+    /** Сенсор: короткий свайп → наступна / попередня сторінка */
+    const TOUCH_PAGE_FLICK_MIN_PX = 22;
+    const TOUCH_PAGE_FLICK_RATIO = 0.08;
+
+    type AxisLock = null | "horizontal" | "vertical";
+
     const dragState = {
       pointerId: null as number | null,
+      pointerType: "" as string,
       startX: 0,
+      startY: 0,
       scrollLeft: 0,
       moved: false,
+      axisLock: null as AxisLock,
+    };
+
+    const hasOverflow = () => el.scrollWidth > el.clientWidth + 1;
+
+    const clearPendingWindowListeners = () => {
+      window.removeEventListener("pointermove", onPendingPointerMove);
+      window.removeEventListener("pointerup", onPendingPointerEnd);
+      window.removeEventListener("pointercancel", onPendingPointerEnd);
+    };
+
+    const resetDragState = () => {
+      dragState.pointerId = null;
+      dragState.pointerType = "";
+      dragState.axisLock = null;
     };
 
     const endDrag = (pointerId: number) => {
       if (dragState.pointerId !== pointerId) return;
-      dragState.pointerId = null;
+      resetDragState();
       el.classList.remove(styles.dragging);
       try {
         el.releasePointerCapture(pointerId);
@@ -241,29 +273,162 @@ export function BookScrollerCarousel({
       }
     };
 
-    const onPointerDown = (e: PointerEvent) => {
-      if (e.pointerType !== "mouse" || e.button !== 0) return;
-      if (el.scrollWidth <= el.clientWidth + 1) return;
+    const applyHorizontalDrag = (e: PointerEvent) => {
+      const dx = e.clientX - dragState.startX;
+      if (Math.abs(dx) > DRAG_CLICK_BLOCK_PX) {
+        dragState.moved = true;
+      }
+      if (dragState.axisLock === "horizontal") {
+        e.preventDefault();
+      }
+      const multiplier =
+        dragState.pointerType === "touch" || dragState.pointerType === "pen"
+          ? TOUCH_DRAG_MULTIPLIER
+          : 1;
+      el.scrollLeft = dragState.scrollLeft - dx * multiplier;
+      syncStateFromScrollRef.current();
+    };
 
+    const snapTouchCarouselAfterDrag = (
+      releaseX: number,
+      startX: number,
+    ) => {
+      const dx = releaseX - startX;
+      const metrics = getCarouselMetrics(el, itemCount);
+      const flickThreshold = Math.max(
+        TOUCH_PAGE_FLICK_MIN_PX,
+        Math.round(el.clientWidth * TOUCH_PAGE_FLICK_RATIO),
+      );
+      const currentPage = getCarouselPage(metrics, el.scrollLeft);
+
+      if (Math.abs(dx) >= flickThreshold) {
+        const direction = dx < 0 ? 1 : -1;
+        const targetPage = Math.max(
+          0,
+          Math.min(metrics.pagesCount - 1, currentPage + direction),
+        );
+        scrollToPageRef.current(targetPage);
+        return;
+      }
+
+      scrollToPageRef.current(currentPage);
+    };
+
+    const beginHorizontalDrag = (e: PointerEvent) => {
       isPointerActiveRef.current = true;
-      e.preventDefault();
-      dragState.pointerId = e.pointerId;
-      dragState.startX = e.clientX;
-      dragState.scrollLeft = el.scrollLeft;
-      dragState.moved = false;
+      dragState.axisLock = "horizontal";
       el.classList.add(styles.dragging);
+      e.preventDefault();
       el.setPointerCapture(e.pointerId);
+      applyHorizontalDrag(e);
+    };
+
+    /** ПК: drag лише після руху > порогу, щоб клік по Link не гасився preventDefault на pointerdown */
+    const tryStartMouseHorizontalDrag = (e: PointerEvent) => {
+      if (dragState.pointerType !== "mouse" || dragState.axisLock !== null) return;
+
+      const dx = e.clientX - dragState.startX;
+      const dy = e.clientY - dragState.startY;
+      if (
+        Math.abs(dx) <= DRAG_CLICK_BLOCK_PX &&
+        Math.abs(dy) <= DRAG_CLICK_BLOCK_PX
+      ) {
+        return;
+      }
+
+      if (Math.abs(dx) >= Math.abs(dy)) {
+        beginHorizontalDrag(e);
+        return;
+      }
+
+      resetDragState();
+      dragState.moved = false;
+    };
+
+    const onPendingPointerMove = (e: PointerEvent) => {
+      if (dragState.pointerId !== e.pointerId || dragState.axisLock !== null) return;
+
+      const dx = e.clientX - dragState.startX;
+      const dy = e.clientY - dragState.startY;
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+
+      if (
+        absDx < AXIS_LOCK_THRESHOLD_PX &&
+        absDy < AXIS_LOCK_THRESHOLD_PX
+      ) {
+        return;
+      }
+
+      const horizontalIntent =
+        absDx >= AXIS_LOCK_THRESHOLD_PX &&
+        absDx >= absDy * HORIZONTAL_INTENT_RATIO;
+      const verticalIntent =
+        absDy >= AXIS_LOCK_THRESHOLD_PX &&
+        absDy > absDx * VERTICAL_INTENT_RATIO;
+
+      if (horizontalIntent) {
+        clearPendingWindowListeners();
+        beginHorizontalDrag(e);
+        return;
+      }
+
+      if (verticalIntent) {
+        clearPendingWindowListeners();
+        resetDragState();
+        dragState.axisLock = "vertical";
+        return;
+      }
+
+      /* Діагональ / неоднозначно — чекаємо далі, не віддаємо жест сторінці */
+    };
+
+    const onPendingPointerEnd = (e: PointerEvent) => {
+      if (dragState.pointerId !== e.pointerId) return;
+      clearPendingWindowListeners();
+      resetDragState();
+      dragState.moved = false;
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (!hasOverflow()) return;
+
+      if (e.pointerType === "mouse") {
+        if (e.button !== 0) return;
+
+        dragState.pointerId = e.pointerId;
+        dragState.pointerType = e.pointerType;
+        dragState.startX = e.clientX;
+        dragState.startY = e.clientY;
+        dragState.scrollLeft = el.scrollLeft;
+        dragState.moved = false;
+        dragState.axisLock = null;
+        return;
+      }
+
+      if (e.pointerType === "touch" || e.pointerType === "pen") {
+        dragState.pointerId = e.pointerId;
+        dragState.pointerType = e.pointerType;
+        dragState.startX = e.clientX;
+        dragState.startY = e.clientY;
+        dragState.scrollLeft = el.scrollLeft;
+        dragState.moved = false;
+        dragState.axisLock = null;
+        window.addEventListener("pointermove", onPendingPointerMove);
+        window.addEventListener("pointerup", onPendingPointerEnd);
+        window.addEventListener("pointercancel", onPendingPointerEnd);
+      }
     };
 
     const onPointerMove = (e: PointerEvent) => {
       if (dragState.pointerId === null || e.pointerId !== dragState.pointerId) return;
-      const dx = e.clientX - dragState.startX;
-      if (Math.abs(dx) > 4) {
-        dragState.moved = true;
-        e.preventDefault();
+      if (dragState.axisLock === "horizontal") {
+        applyHorizontalDrag(e);
+        return;
       }
-      el.scrollLeft = dragState.scrollLeft - dx;
-      syncStateFromScrollRef.current();
+      if (dragState.pointerType === "mouse") {
+        tryStartMouseHorizontalDrag(e);
+      }
     };
 
     const onDragStart = (e: DragEvent) => {
@@ -271,11 +436,28 @@ export function BookScrollerCarousel({
     };
 
     const onPointerUp = (e: PointerEvent) => {
+      if (dragState.pointerId !== e.pointerId) return;
+
+      if (dragState.axisLock === null) {
+        clearPendingWindowListeners();
+        resetDragState();
+        dragState.moved = false;
+        return;
+      }
+
+      if (dragState.axisLock !== "horizontal") return;
+
       const wasDragging = dragState.moved;
+      const releasePointerType = dragState.pointerType;
+      const releaseStartX = dragState.startX;
       endDrag(e.pointerId);
       isPointerActiveRef.current = false;
       if (wasDragging) {
-        syncStateFromScrollRef.current();
+        if (releasePointerType === "touch" || releasePointerType === "pen") {
+          snapTouchCarouselAfterDrag(e.clientX, releaseStartX);
+        } else {
+          syncStateFromScrollRef.current();
+        }
       }
       if (isHoveredRef.current) {
         hoverPauseAutoAdvanceRef.current = true;
@@ -298,6 +480,7 @@ export function BookScrollerCarousel({
     el.addEventListener("click", onClickCapture, true);
 
     return () => {
+      clearPendingWindowListeners();
       el.removeEventListener("pointerdown", onPointerDown);
       el.removeEventListener("pointermove", onPointerMove);
       el.removeEventListener("pointerup", onPointerUp);
@@ -305,6 +488,9 @@ export function BookScrollerCarousel({
       el.removeEventListener("dragstart", onDragStart, true);
       el.removeEventListener("click", onClickCapture, true);
       el.classList.remove(styles.dragging);
+      isPointerActiveRef.current = false;
+      resetDragState();
+      dragState.moved = false;
     };
   }, [itemCount]);
 

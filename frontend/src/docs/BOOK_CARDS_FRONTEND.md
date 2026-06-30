@@ -76,7 +76,7 @@ type Props = {
 
 - **bookmark:** кнопка «читати» → `navigate`.
 - **ad:** декоративна кнопка «читати»; перехід — клік по `Link`.
-- **carousel:** лише клік по картці (`Link`); drag каруселі блокує випадковий клік (див. **LISTS_AND_CAROUSELS_FRONTEND.md**).
+- **carousel, ad:** лише клік по картці (`Link`); свайп / drag каруселі блокує випадковий клік (див. **LISTS_AND_CAROUSELS_FRONTEND.md** §1.5).
 - **default, withTags:** Link на всю картку; кнопка «Читати» у withTags — `ActionButton to=...`.
 
 ---
@@ -218,7 +218,7 @@ type Props = {
 
 - `shared/carousel/BookScrollerCarousel.module.css` — `--per-view`, навігація, вирівнювання кнопки «ЧИТАТИ» в ряді `bookCard--ad`
 - `catalog/styles/BookDetail.module.css` — `.authorWorksCarousel` для сторінки книги
-- Автопрокрутка реклами (5 с, пауза при наведенні) — **LISTS_AND_CAROUSELS_FRONTEND.md** §1.5
+- Автопрокрутка реклами (5 с, пауза при наведенні) — **LISTS_AND_CAROUSELS_FRONTEND.md** §1.7
 
 ### 6.6. Чарівний Гід
 

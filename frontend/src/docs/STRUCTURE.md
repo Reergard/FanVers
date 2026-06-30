@@ -676,7 +676,7 @@ export function AppRoutes() {
 
 ## `shared/carousel/` — горизонтальна карусель книг
 
-**Що це:** `BookScrollerCarousel` — стрілки, зірки-пагінація, свайп (сенсор), drag мишкою (ПК), опційна автопрокрутка (реклама: 5 с, idle 15 с). `useCarouselIndexSwipe` — свайп мишкою для index-каруселі «Новинки». Використовується в рекламі (`AdvertisingCarousel`) і на сторінці книги (`AuthorWorks`, `BookCard variant="carousel"`). Див. **docs/LISTS_AND_CAROUSELS_FRONTEND.md**.
+**Що це:** `BookScrollerCarousel` — стрілки, зірки-пагінація, сенсорний свайп (JS drag + axis-lock), drag мишкою (ПК), опційна автопрокрутка (реклама: 5 с, idle 15 с). `useCarouselIndexSwipe` — свайп мишкою для index-каруселі «Новинки». Використовується в рекламі (`AdvertisingCarousel`) і на сторінці книги (`AuthorWorks`, `BookCard variant="carousel"`). Див. **docs/LISTS_AND_CAROUSELS_FRONTEND.md**.
 
 ---
 

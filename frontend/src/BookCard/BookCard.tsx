@@ -318,6 +318,7 @@ export function BookCard({
             alt={buildBookCardCoverAlt(book.title || "")}
             loading="lazy"
             decoding="async"
+            draggable={false}
           />
         </div>
         <BookCardTitle title={book.title} variant="ad" />

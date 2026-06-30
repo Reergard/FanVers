@@ -12,8 +12,8 @@
 
 | Файл | Призначення |
 |------|-------------|
-| `shared/carousel/BookScrollerCarousel.tsx` | Скролер, стрілки, зірки-пагінація, drag мишкою, опційна автопрокрутка |
-| `shared/carousel/BookScrollerCarousel.module.css` | Сітка `--per-view`, overflow, навігація, `carouselFew`, стилі `bookCard--ad` |
+| `shared/carousel/BookScrollerCarousel.tsx` | Скролер, стрілки, зірки-пагінація, drag (сенсор + миша), опційна автопрокрутка |
+| `shared/carousel/BookScrollerCarousel.module.css` | Сітка `--per-view`, overflow, `touch-action`, навігація, `carouselFew`, стилі `bookCard--ad` |
 | `shared/carousel/carouselUtils.ts` | Метрики, позиції сторінок, `getCarouselNextAutoScrollLeft`, `getCarouselBehavior` |
 | `shared/carousel/useCarouselIndexSwipe.ts` | Свайп мишкою для **index-каруселей** (один слайд за раз, без `scrollLeft`) |
 
@@ -30,27 +30,60 @@
 
 - **Стрілки** — прокрутка на одну «сторінку» (`perView` карток за раз; остання сторінка — `maxScrollLeft`, не `step × page`).
 - **Зірки** — перехід на конкретну сторінку.
-- **Сенсор (телефон/планшет)** — нативний горизонтальний свайп (`overflow-x: auto`, `touch-action: pan-x`).
-- **Миша (ПК)** — перетягування зажатою ЛКМ по ряду карток (`cursor: grab` / `grabbing`).
+- **Сенсор (телефон / планшет / stylus)** — горизонтальний жест через **JS drag** (axis-lock + snap на відпусканні). Нативний `overflow-x` не використовується для свайпу: кожна картка — `<Link>`, що блокує горизонтальний touch-scroll у браузері.
+- **Миша (ПК)** — перетягування зажатою ЛКМ (`cursor: grab` / `grabbing`); клік без руху залишається переходом по `Link`.
+- **Вертикальний скрол сторінки на сенсорі** — не блокується: у CSS `touch-action: pan-y pinch-zoom` (див. §1.3).
 
-### 1.3. Логіка drag мишкою
+Обробники pointer вмикаються **лише якщо є overflow** (`scrollWidth > clientWidth`). Якщо всі книги вміщаються — кліки по картках без перехоплення.
 
-Реалізація в `BookScrollerCarousel.tsx`:
+### 1.3. Сенсор (touch / pen)
 
-1. `pointerdown` (лише `pointerType === "mouse"`, ЛКМ; лише якщо є overflow) — захоплення pointer, клас `.dragging`, `isPointerActive` блокує автопрокрутку.
-2. `pointermove` — зміна `scrollLeft`; синхронізація стану навігації.
-3. `pointerup` — відпускання; фінальна синхронізація; якщо курсор ще над каруселлю — пауза автопрокрутки + idle-таймер.
-4. Якщо був рух (>4 px) — `click` по посиланню картки **блокується** (випадковий перехід на книгу).
-5. `dragstart` на зображеннях скасовується (`preventDefault`, `draggable={false}` на обкладинці в `variant="carousel"`, CSS `-webkit-user-drag: none`).
+Реалізація в `BookScrollerCarousel.tsx` + `BookScrollerCarousel.module.css`.
 
-**Стан стрілок** після drag прив’язаний до **реальної позиції скролу** (`isCarouselAtStart` / `isCarouselAtEnd` у `carouselUtils.ts`), а не лише до округленого номера сторінки:
+**CSS:**
 
-- ліва стрілка неактивна на початку;
-- права — у кінці списку.
+| Клас / правило | `touch-action` | Навіщо |
+|----------------|----------------|--------|
+| `.carousel` | `pan-y pinch-zoom` | Вертикальний скрол сторінки; горизонталь — через JS |
+| `.carousel.dragging` | `none` | Під час активного горизонтального drag карусель перехоплює жест |
 
-Під час drag `scroll-snap-type` тимчасово вимикається (клас `.dragging`).
+**Жест (лише при overflow):**
 
-### 1.4. Позиції сторінок і «коротка остання сторінка»
+1. `pointerdown` (`touch` / `pen`) — запам’ятовує початкові координати та `scrollLeft`; слухачі `pointermove` / `pointerup` на `window` для вибору осі.
+2. **Axis-lock** (поріг 5 px):
+   - **горизонталь** — `|dx| ≥ 5` і `|dx| ≥ |dy| × 0.5` → `beginHorizontalDrag`;
+   - **вертикаль** — `|dy| ≥ 5` і `|dy| > |dx| × 1.4` → жест віддається сторінці (`pan-y`);
+   - діагональ / неоднозначно — очікування, без примусового вибору.
+3. Під час горизонтального drag — зміна `scrollLeft` з множником **1.18** (`TOUCH_DRAG_MULTIPLIER`), клас `.dragging`, `isPointerActive` блокує автопрокрутку.
+4. `pointerup` після горизонтального drag — **snap до сторінки** (`snapTouchCarouselAfterDrag`):
+   - якщо `|dx|` жесту ≥ `max(22 px, 8% ширини каруселі)` → наступна / попередня сторінка (`scrollToPage`);
+   - інакше → поточна сторінка за `scrollLeft`.
+5. **Тап** без значного руху (≤4 px) — `Link` на картці працює; після свайпу `click` блокується (§1.5).
+
+Напрямок як у стрілок: свайп **ліворуч** (палець рухається вліво, `dx < 0`) → наступна сторінка.
+
+### 1.4. Drag мишкою (ПК)
+
+Окрема гілка `pointerType === "mouse"` — не змішується з touch.
+
+1. `pointerdown` (ЛКМ, є overflow) — лише запам’ятовує точку та `scrollLeft`; **без** `preventDefault` і без `.dragging` (клік по `Link` зберігається).
+2. `pointermove` — `tryStartMouseHorizontalDrag`: drag стартує лише після руху **>4 px** і якщо `|dx| ≥ |dy|`; інакше вертикальний рух скидає стан без drag.
+3. Після старту — `beginHorizontalDrag`: `setPointerCapture`, `.dragging`, `scrollLeft` без множника (1:1).
+4. `pointerup` — синхронізація стану навігації з `scrollLeft` (без snap «сторінка за жестом», на відміну від touch); якщо курсор ще над каруселлю — пауза автопрокрутки + idle-таймер.
+5. Клік без drag (рух ≤4 px) — перехід по `Link`; після drag — блокування `click` (§1.5).
+
+Сенсорні ноутбуки з `pointerType: "touch"` використовують логіку §1.3, не цю.
+
+### 1.5. Спільне для drag (сенсор і миша)
+
+- Якщо був рух **>4 px** — `click` по посиланню картки **блокується** (`onClickCapture`, capture-фаза), щоб уникнути випадкового переходу після свайпу / drag.
+- `dragstart` на зображеннях у каруселі скасовується (`preventDefault`); на обкладинці — `draggable={false}` у `BookCard` для `variant="carousel"` і `variant="ad"`; у CSS — `-webkit-user-drag: none` на `img`.
+- **Стан стрілок** після drag прив’язаний до **реальної позиції скролу** (`isCarouselAtStart` / `isCarouselAtEnd` у `carouselUtils.ts`), а не лише до округленого номера сторінки:
+  - ліва стрілка неактивна на початку;
+  - права — у кінці списку.
+- Під час drag `scroll-snap-type` тимчасово вимикається (клас `.dragging`).
+
+### 1.6. Позиції сторінок і «коротка остання сторінка»
 
 У `carouselUtils.ts`:
 
@@ -66,7 +99,7 @@
 
 Автопрокрутка вмикається лише коли `maxScrollLeft > 0` (є куди скролити).
 
-### 1.5. Автопрокрутка (лише реклама)
+### 1.7. Автопрокрутка (лише реклама)
 
 Увімкнена **тільки** в `AdvertisingCarousel` (`AdvertisingBooks.tsx`):
 
@@ -100,11 +133,11 @@
 
 Технічно: один постійний `setInterval`; пауза — через ref-флаги (`hoverPauseAutoAdvanceRef`, `isPointerActiveRef`), інтервал не знищується при наведенні. Обгортка `.autoAdvanceRoot` охоплює скролер і навігацію (стрілки, зірки).
 
-### 1.6. Центрування 1–2 книг
+### 1.8. Центрування 1–2 книг
 
 Якщо `itemCount ≤ 2` і всі вміщаються без прокрутки (`pagesCount === 1`), до `<ul>` додається клас `carouselFew` — flex по центру, фіксована ширина слота (без розтягування на всю ширину).
 
-### 1.7. Адаптив `--per-view`
+### 1.9. Адаптив `--per-view`
 
 У `BookScrollerCarousel.module.css` (за замовчуванням):
 
@@ -117,7 +150,7 @@
 
 Секція author works перевизначає `--per-view` у `.authorWorksCarousel`.
 
-### 1.8. Стилі рекламних карток у каруселі
+### 1.10. Стилі рекламних карток у каруселі
 
 У `BookScrollerCarousel.module.css` для `bookCard--ad` у контексті каруселі:
 
@@ -137,7 +170,7 @@
 | Query key | `catalogKeys.authorOtherWorks(slug)` → `["author-other-works", slug]` |
 | Картка | `BookCard` `variant="carousel"` — обкладинка (NEW, 18+, «A»), лінія **над** назвою, клік → `/books/:slug` |
 | Видимість | Секція **прихована**, якщо завантаження, помилка API або **0 книг** у відповіді |
-| Автопрокрутка | **Вимкнена** (лише ручна навігація + drag) |
+| Автопрокрутка | **Вимкнена** (ручна навігація, сенсорний свайп, drag мишкою) |
 
 ### 2.1. Логіка відбору книг (бекенд)
 
@@ -224,4 +257,4 @@
 
 ---
 
-**Останнє оновлення:** 2026-06-28 (автопрокрутка реклами 5 с / idle 15 с, коротка остання сторінка, `useCarouselIndexSwipe` для «Новинок», `carouselFew`)
+**Останнє оновлення:** 2026-06-30 (сенсорний drag з axis-lock і snap, `touch-action: pan-y`, відкладений drag мишкою для кліків по `Link`, `draggable={false}` на обкладинці `ad`/`carousel`)
