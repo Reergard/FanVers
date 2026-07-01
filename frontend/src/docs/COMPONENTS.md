@@ -32,6 +32,7 @@
 - `navigation/ShowMoreNavigation.tsx` — через `ShowMoreButton` для кнопки "Показати ще" (єдина обгортка пагінації списків)
 - `widgets/announcementBanner/AnnouncementBanner.tsx` — кнопка-посилання в банері оголошення (variant="outline", size="sm", to + onClick)
 - `info/about/behind-the-scenes.tsx` — кнопка «Написати в підтримку» на сторінці «За лаштунками»
+- `chat/ChatPage.tsx` — кнопка «Увійти» для неавторизованих користувачів (variant="primary")
 
 **Приклад використання:**
 ```tsx
@@ -238,6 +239,7 @@
 
 **Місця використання:**
 - `main/HomePage.tsx` — обгортка для контенту головної сторінки
+- `chat/ChatPage.tsx` — обгортка верхньої панелі чату (breadcrumb + WS-бейдж)
 - `widgets/header/Header.tsx` — обгортка для контенту хедера
 - `widgets/footer/Footer.tsx` — обгортка для контенту футера
 - `website_advertising/AdvertisingBooks.tsx` — обгортка для секції реклами книг
@@ -665,9 +667,9 @@
 
 **Як розподілена відповідальність:**
 
-- **ChatPage** — auth-гейт (`useAuth`), ініціалізація списку чатів, підключення ws конкретного чату, проброс actions/стану в дочірні компоненти.
-- **ChatList** — лівий список діалогів, вибір чату, бейдж непрочитаних (`.unreadBadge`) за `chat.unread_count`, кнопка відкриття модалки створення.
-- **ChatWindow** — рендер повідомлень, пагінація старіших (`next_before`), відправка (ws → fallback HTTP), mark-as-read при відкритті чату, confirm-видалення.
+- **ChatPage** — auth-гейт (інлайн-блок з `ActionButton` «Увійти», не redirect), ініціалізація списку чатів, підключення ws конкретного чату, scroll-to-content при першому завантаженні (`useLayoutEffect` + `scrollIntoView` на `.layout`), бейдж WS-статусу, проброс actions/стану в дочірні компоненти.
+- **ChatList** — лівий список діалогів (desktop: вертикальний; mobile: горизонтальний свайп `overflow-x: auto` + `-webkit-overflow-scrolling: touch`), вибір чату, бейдж непрочитаних (`.unreadBadge`) за `chat.unread_count`, кнопка відкриття модалки створення.
+- **ChatWindow** — рендер повідомлень з **внутрішнім скролом** (при відкритті показує останнє повідомлення через `el.scrollTop = el.scrollHeight`; auto-scroll після відправки через `requestAnimationFrame(scrollToBottom)`), пагінація старіших (`next_before`) зі збереженням позиції скролу (scroll anchor: `{ top, height }`), відправка (ws → fallback HTTP), mark-as-read при відкритті чату, confirm-видалення.
 - **CreateChatModal** — пошук співрозмовника (`user-search`) + створення чату (`username` / перше повідомлення) через спільний `Modal`.
 
 **Особливості:**
@@ -677,6 +679,10 @@
 - бекенд зазвичай повертає **200** з уже наявним діалогом; `showWarning` лишається запасним шляхом, якщо в помилці ще трапляється текст про «вже існує» / «already exists».
 - "Видалити чат" має confirm-модалку з кнопками `Так/Ні`.
 
+**Layout (desktop):** CSS Grid — sticky sidebar (`position: sticky; top: 0`) + chatPanel з явною `height: clamp(620px, 92svh, 1400px)` для внутрішнього скролу повідомлень. `overflow-x: clip` на `.app` (`Base.module.css`) — необхідно для sticky.
+
+**Layout (mobile ≤ 768px):** одна колонка (`minmax(0, 1fr)`), горизонтальний свайп списку чатів, composer фіксований внизу екрана (`position: fixed; bottom: 0; background-color: #020a0b`), overflow заголовка чату обрізається з `text-overflow: ellipsis`.
+
 **Місця використання:**
 
 - `App.tsx` — маршрут `/chat`.
@@ -684,7 +690,7 @@
 
 **Детальна документація:**
 
-- `docs/CHAT_FRONTEND.md`
+- `docs/CHAT_FRONTEND.md` (layout та адаптивність — §8.1)
 
 ---
 
@@ -712,4 +718,4 @@
 
 ---
 
-**Останнє оновлення:** 2026-02-25
+**Останнє оновлення:** 2026-07-01

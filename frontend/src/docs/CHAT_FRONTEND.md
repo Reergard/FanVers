@@ -105,10 +105,12 @@
 ## 5) Поведінка сторінки `/chat` (`ChatPage.tsx`)
 
 1. `useAuth()`: `authReady`, `isAuthenticated`, `username`, `userId`.
-2. Поки `!authReady` — «Завантаження…».
-3. Якщо `!isAuthenticated` — `<Navigate to="/login" />`.
+2. Поки `!authReady` — «Завантаження…» (з `Breadcrumb`).
+3. Якщо `!isAuthenticated` — **інлайн-блок** із заголовком, текстом і `ActionButton` «Увійти» (відкриває `openLoginModal("/chat")`); **не** редирект на `/login`.
 4. Після авторизації: **`fetchChats()`**; при **`visibilitychange` → visible** — знову **`fetchChats()`**.
 5. `chatWs` підключається до **`selectedChatId`**; у cleanup — `offMessage` + **`disconnect()`**.
+6. **Scroll-to-content** при першому завантаженні: `useLayoutEffect` прокручує сторінку до `div.layout` (ref `layoutRef`) через `scrollIntoView({ block: "start" })`, щоб хедер і меню сайту не були видні — відразу показується блок чату. Спрацьовує **один раз** (guard `didInitialScrollRef`), **до** paint (без видимого стрибка).
+7. **Верхня панель** (`chatTopBar`): `Breadcrumb` + бейдж статусу WS-з'єднання (`chatWsStatus`: `connected` / `reconnecting` / `disconnected`) — показується лише коли обрано конкретний чат.
 
 ---
 
@@ -130,10 +132,12 @@
 
 - `selectChat(chatId)`; у **`ChatList`** для чатів з **`unread_count > 0`** показується **`.unreadBadge`**.
 - У `ChatWindow` при ініціалізації чату: **`fetchMessages`** (перша сторінка) + **`markReadLocal` + `markChatAsRead`**; скрол вгору — **`loadOlderMessages`** за `messagesOlderCursor`.
+- При відкритті чату **показується останнє повідомлення** (низ списку): внутрішній скрол контейнера `.messages` (`el.scrollTop = el.scrollHeight`) у `useLayoutEffect` — до paint, без стрибка.
 
 ### Відправка повідомлення
 
 - Якщо WS відкритий — `chatWs.sendMessage`; інакше **`sendMessage`** (HTTP). Бекенд у обох випадках оновлює БД і шле події в кімнату чату та counter.
+- Після відправки — **автоматичний скрол** до нового повідомлення: `requestAnimationFrame(scrollToBottom)` після `setText("")`, щоб React встиг відрендерити повідомлення перед скролом.
 
 ### «Видалити чат»
 
@@ -166,6 +170,40 @@
 - Store: `selectChat` без зайвого emit; `fetchMessages` / завантаження старіших не дублюються під час завантаження; `markReadLocal` якщо вже 0; дедуп повідомлень за `id`.
 - `ChatWindow`: `initializedChatRef` уникає повторних load/read для того ж `chatId`.
 - `CreateChatModal`: submit залежить від валідного вибору користувача / полів (див. код).
+
+---
+
+## 8.1) Layout та адаптивність
+
+### Загальна структура
+
+Сторінка чату (`ChatPage`) складається з:
+- `section.page` → `Container` (верхня панель: breadcrumb + WS-бейдж) → `div.layout` (CSS Grid: sidebar + chatPanel).
+
+### Desktop (> 768px)
+
+- **`.layout`**: CSS Grid `grid-template-columns: minmax(220px, 1fr) minmax(0, 3fr)`, `min-height: clamp(620px, 76svh, 900px)`, `align-items: start`.
+- **`.sidebar`**: `position: sticky; top: 0; align-self: start; max-height: 100svh; overflow-y: auto` — залишається на місці при скролі сторінки. Працює завдяки `overflow-x: clip` (не `hidden`) на `.app` у `Base.module.css` — `clip` не створює scroll-контейнер і не ламає sticky.
+- **`.chatPanel`**: `height: clamp(620px, 92svh, 1400px)` — **явна висота** необхідна для внутрішнього скролу повідомлень. `grid-template-rows: auto minmax(0, 1fr) auto` — header / messages / composer; `minmax(0, 1fr)` на `.messages` запобігає розтягуванню контейнера під контент.
+- **Внутрішній скрол** `.messages` (`overflow-y: auto`): при відкритті чату прокручується до останнього повідомлення; при підвантаженні старіших — позиція зберігається через `scrollAnchorRef` (`{ top, height }` → `el.scrollTop = anchor.top + growth`).
+
+### Mobile (≤ 768px)
+
+- **`.layout`**: `grid-template-columns: minmax(0, 1fr)` (одна колонка). `minmax(0, …)` замість `1fr` запобігає виходу контенту за межі екрана (бо `1fr` = `minmax(auto, 1fr)`, а `auto` мінімум розширює колонку під довгий текст).
+- **`.sidebar`**: `position: static` (скидання sticky), горизонтальний список чатів.
+- **`.chatListInner`**: `display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch` — **горизонтальний свайп** пальцем по списку чатів. Смуга прокрутки прихована (`scrollbar-width: none` + `::-webkit-scrollbar { width: 0; height: 0 }`). Кожен `li` має `width: clamp(200px, 44vw, 300px); flex-shrink: 0` — фіксована ширина, не стискається.
+- **`.chatHeader`**: `overflow: hidden` на заголовку і його дочірніх елементах; `.headerTitle` — `text-overflow: ellipsis; white-space: nowrap` для довгих імен. `.chatHeaderActions` — `flex-shrink: 0` (кнопка «Видалити» не обрізається).
+- **`.chatPanel`**: `height: auto; min-height: clamp(540px, 72svh, 860px); padding-bottom: 70px` — скидання desktop-висоти, відступ під фіксований composer.
+- **`.composer`**: `position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; background-color: #020a0b` — **прибитий до низу екрана**. Колір фону збігається з `body` (`#020a0b` у `main.css`), щоб не було прозорості.
+
+### Важливі CSS-залежності
+
+| Що | Чому саме так |
+|----|---------------|
+| `overflow-x: clip` на `.app` | `hidden` створює scroll-контейнер → ламає `position: sticky`. `clip` візуально обрізає, але не створює scroll-контейнер. |
+| Явна `height` на `.chatPanel` (desktop) | `min-height` батьківського grid не створює definite row track → `.messages` з `overflow: auto` не має обмеження висоти → скрол не працює. |
+| `minmax(0, 1fr)` у mobile grid | `1fr` = `minmax(auto, 1fr)` → `auto` мінімум розширює колонку під довгий контент → overflow за viewport. |
+| `width` (не `min-width`) на `.chatListInner > li` | `min-width` не дає definite ширину → `chatItem` з `inline-size: 100%` розтягується під текст. |
 
 ---
 
@@ -250,4 +288,4 @@ CSS-змінні в `:root` (`main.css`):
 
 ---
 
-**Останнє оновлення:** пагінація повідомлень, `user-search`, backoff реконнекту, `authStatus` / 401–403, `profileQueryKey`, payload counter `type: "message"`; **UI полів вводу** — `textarea` у композері та модалці, `pre-wrap` / `justify` для повідомлень, розширена модалка створення, `shared/scrollbars.css`, золоті primary-кнопки.
+**Останнє оновлення:** layout та адаптивність (§8.1) — sticky sidebar (desktop), внутрішній скрол повідомлень з явною `height` на `.chatPanel`, scroll-to-content при завантаженні сторінки, горизонтальний свайп списку чатів (mobile), фіксований composer (mobile), `overflow-x: clip` на `.app`, `minmax(0, 1fr)` проти overflow, auto-scroll після відправки, WS-бейдж статусу, інлайн auth-gate замість redirect.

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ChatWsConnectionStatus } from "./ws/chatWs";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/useAuth";
@@ -25,6 +25,8 @@ export default function ChatPage() {
   const { showWarning, showError } = useNotification();
   const [createOpen, setCreateOpen] = useState(false);
   const [chatWsStatus, setChatWsStatus] = useState<ChatWsConnectionStatus>("disconnected");
+  const layoutRef = useRef<HTMLDivElement | null>(null);
+  const didInitialScrollRef = useRef(false);
 
   useEffect(() => {
     return chatWs.subscribeConnectionStatus(setChatWsStatus);
@@ -68,6 +70,15 @@ export default function ChatPage() {
       chatWs.disconnect();
     };
   }, [actions, authReady, isAuthenticated, state.selectedChatId, username]);
+
+  /* ── Scroll past header/menu to the chat content on initial page load ── */
+  useLayoutEffect(() => {
+    if (!authReady || !isAuthenticated) return;
+    if (didInitialScrollRef.current) return;
+    if (!layoutRef.current) return;
+    didInitialScrollRef.current = true;
+    layoutRef.current.scrollIntoView({ block: "start" });
+  }, [authReady, isAuthenticated]);
 
   const onSelectChat = useCallback(
     (chatId: number) => {
@@ -183,7 +194,7 @@ export default function ChatPage() {
             ) : null}
           </div>
         </Container>
-      <div className={styles.layout}>
+      <div ref={layoutRef} className={styles.layout}>
         <ChatList
           chats={state.chats}
           selectedChatId={state.selectedChatId}

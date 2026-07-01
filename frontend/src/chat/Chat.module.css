@@ -51,6 +51,11 @@
   display: grid;
   grid-template-rows: auto auto 1fr;
   gap: clamp(12px, 1.3vw, 20px);
+  position: sticky;
+  top: 0;
+  align-self: start;
+  max-height: 100svh;
+  overflow-y: auto;
 }
 
 .brand {
@@ -190,7 +195,7 @@
   padding: clamp(6px, 0.55vw, 10px) clamp(16px, 1.4vw, 24px) clamp(8px, 0.7vw, 12px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  margin-top: clamp(74px, 5.6vw, 98px);
+  height: clamp(620px, 92svh, 1400px);
 }
 
 .chatHeader {
@@ -290,6 +295,7 @@
   overflow: auto;
   scrollbar-width: none;
   isolation: isolate;
+  min-height: 0;
 }
 
 .messages::before {
@@ -899,21 +905,26 @@
 
 @media (max-width: 768px) {
   .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
     min-height: unset;
   }
 
   .sidebar {
     border-right: 0;
     border-bottom: 1px solid rgba(6, 174, 194, 0.18);
+    position: static;
+    max-height: none;
+    overflow-y: visible;
   }
 
   .chatListInner {
     display: flex;
-    overflow: auto;
+    overflow-x: auto;
     gap: 10px;
     padding-bottom: 4px;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   .chatListInner::-webkit-scrollbar {
@@ -922,12 +933,37 @@
   }
 
   .chatListInner > li {
-    min-width: clamp(220px, 46vw, 310px);
+    width: clamp(200px, 44vw, 300px);
+    flex-shrink: 0;
+  }
+
+  .chatHeader {
+    overflow: hidden;
+  }
+
+  .chatHeaderLeft {
+    overflow: hidden;
+  }
+
+  .headerTitleRow {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .headerTitle {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chatHeaderActions {
+    flex-shrink: 0;
   }
 
   .chatPanel {
-    min-height: clamp(540px, 72svh, 860px);
+    height: clamp(540px, 72svh, 860px);
     margin-top: clamp(16px, 3.2vw, 28px);
+    padding-bottom: 70px;
   }
 
   .messages {
@@ -951,6 +987,15 @@
   .sendIconGraphic {
     inline-size: 56px;
     block-size: 24px;
+  }
+
+  .composer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background-color: #020a0b;
   }
 }
 

@@ -301,10 +301,14 @@ export function Base({ children }: Props) {
 ```css
 .app {
   min-height: 100svh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   position: relative;
+  width: 100%;
+  max-width: 100%;
   color: rgba(255,255,255,.92);
+  overflow-x: clip; /* clip, не hidden — щоб не ламати position: sticky (напр. sidebar чату) */
 }
 
 .bg {
@@ -315,8 +319,12 @@ export function Base({ children }: Props) {
 }
 
 .main {
-  flex: 1;
+  flex: 1 0 auto;
+  min-width: 0;
+  min-height: 0;
   padding-block: 24px;
+  position: relative;
+  z-index: 0;
 }
 
 /* Спеціальні правила для 4K екранів */
@@ -331,6 +339,7 @@ export function Base({ children }: Props) {
   }
   .app {
     min-height: auto;
+    height: auto;
   }
 }
 ```
@@ -473,9 +482,9 @@ export function AppRoutes() {
 Склад:
 
 - `Chat.tsx` — thin re-export на `ChatPage`.
-- `ChatPage.tsx` — page orchestration: auth-gate, завантаження чатів, підключення ws конкретного чату.
-- `components/ChatList.tsx` — лівий список чатів + кнопка створення.
-- `components/ChatWindow.tsx` — повідомлення, підвантаження старіших (cursor), **textarea-композер** (Enter / Shift+Enter), confirm delete.
+- `ChatPage.tsx` — page orchestration: auth-gate (інлайн-блок з `ActionButton`, не redirect), завантаження чатів, підключення ws конкретного чату, scroll-to-content при першому завантаженні (`useLayoutEffect` + `scrollIntoView`), бейдж WS-статусу.
+- `components/ChatList.tsx` — лівий список чатів (desktop: вертикальний; mobile: горизонтальний свайп) + кнопка створення.
+- `components/ChatWindow.tsx` — повідомлення з внутрішнім скролом (показує останнє повідомлення при відкритті, auto-scroll після відправки), підвантаження старіших (cursor + scroll anchor), **textarea-композер** (Enter / Shift+Enter), confirm delete.
 - `components/CreateChatModal.tsx` — пошук (`user-search`) + створення через `shared/Modal/Modal`; **адаптивна модалка** при довгому першому повідомленні.
 - `api/chatApi.ts`, `api/types.ts` — HTTP-контракти (`getChatMessagesPage`, `searchChatUsers`, …).
 - `store/chatStore.ts`, `store/useChat.ts` — external store (`useSyncExternalStore`).
@@ -484,8 +493,11 @@ export function AppRoutes() {
 Пов’язано з:
 
 - `api/endpoints.ts` (`API.chat`)
+- `app/Base.module.css` — `overflow-x: clip` на `.app` (необхідно для `position: sticky` sidebar чату)
 - `widgets/header/Header.tsx` (`counterWs`, періодичний refetch списку чатів, бейдж `unreadTotal` через `useChat`)
 - `docs/CHAT_FRONTEND.md`
+
+Layout: desktop — CSS Grid (sticky sidebar + chatPanel з явною висотою для внутрішнього скролу); mobile — одна колонка, горизонтальний свайп списку чатів, фіксований composer внизу екрана. Деталі: **`docs/CHAT_FRONTEND.md` §8.1**.
 
 Деталі UI (поля вводу, скролбари, вирівнювання тексту повідомлень) — **`docs/CHAT_FRONTEND.md` §10**.
 

@@ -71,7 +71,8 @@ export function ChatWindow({
   const messagesRef = useRef<HTMLUListElement | null>(null);
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const initializedChatRef = useRef<number | null>(null);
-  const scrollAnchorRef = useRef<{ height: number; top: number } | null>(null);
+  /** Anchor for restoring internal scroll after prepending older messages */
+  const scrollAnchorRef = useRef<{ top: number; height: number } | null>(null);
   const lastOlderTriggerRef = useRef(0);
   const [composerMultiline, setComposerMultiline] = useState(false);
 
@@ -104,37 +105,42 @@ export function ChatWindow({
     onMarkRead(chatId);
   }, [chatId, onLoadMessages, onMarkRead]);
 
-  useEffect(() => {
-    if (loadingMessages) return;
+  /* ── Internal scroll: scroll the messages container to the bottom ── */
+  const scrollToBottom = useCallback(() => {
     const el = messagesRef.current;
     if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, []);
+
+  useLayoutEffect(() => {
+    if (loadingMessages) return;
+    if (!messagesRef.current) return;
     if (loadingOlderMessages) return;
 
     const anchor = scrollAnchorRef.current;
     if (anchor) {
-      const newH = el.scrollHeight;
-      el.scrollTop = anchor.top + (newH - anchor.height);
+      /* Older messages were prepended — keep the same content in view */
+      const el = messagesRef.current;
+      const growth = el.scrollHeight - anchor.height;
+      el.scrollTop = anchor.top + growth;
       scrollAnchorRef.current = null;
       return;
     }
-    el.scrollTop = el.scrollHeight;
-  }, [messages.length, chatId, loadingMessages, loadingOlderMessages]);
 
-  const onScrollMessages = () => {
-    const el = messagesRef.current;
-    if (!el || chatId == null || loadingOlderMessages || !hasOlderMessages) return;
-    if (Date.now() - lastOlderTriggerRef.current < 900) return;
-    if (el.scrollTop > 72) return;
-    lastOlderTriggerRef.current = Date.now();
-    scrollAnchorRef.current = { height: el.scrollHeight, top: el.scrollTop };
-    void onLoadOlderMessages(chatId);
-  };
+    /* Scroll messages container to bottom (before paint → no visible jump) */
+    scrollToBottom();
+    /* Safety fallback after browser finishes layout/paint */
+    requestAnimationFrame(scrollToBottom);
+  }, [messages.length, chatId, loadingMessages, loadingOlderMessages, scrollToBottom]);
 
   const loadOlderClick = () => {
     if (chatId == null || loadingOlderMessages || !hasOlderMessages) return;
     const el = messagesRef.current;
     if (el) {
-      scrollAnchorRef.current = { height: el.scrollHeight, top: el.scrollTop };
+      scrollAnchorRef.current = {
+        top: el.scrollTop,
+        height: el.scrollHeight,
+      };
     }
     void onLoadOlderMessages(chatId);
   };
@@ -174,6 +180,24 @@ export function ChatWindow({
     return () => window.removeEventListener("resize", onResize);
   }, [syncComposerHeight]);
 
+  /* Mobile: keep composer visible when virtual keyboard opens */
+  const onComposerFocus = useCallback(() => {
+    if (typeof window === "undefined" || window.innerWidth > 768) return;
+    const scrollIntoComposer = () => {
+      composerRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    };
+    /* Delay lets the keyboard finish animating before we scroll */
+    const timerId = setTimeout(scrollIntoComposer, 350);
+    const vv = window.visualViewport;
+    if (vv) {
+      const handleVvResize = () => {
+        composerRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      };
+      vv.addEventListener("resize", handleVvResize, { once: true });
+    }
+    return () => clearTimeout(timerId);
+  }, []);
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!chatId) return;
@@ -185,6 +209,7 @@ export function ChatWindow({
       await onFallbackSend(chatId, normalized, currentUsername);
     }
     setText("");
+    requestAnimationFrame(scrollToBottom);
   };
 
   const onComposerKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -243,7 +268,6 @@ export function ChatWindow({
         className={styles.messages}
         role="log"
         aria-label="Повідомлення"
-        onScroll={onScrollMessages}
       >
         {hasOlderMessages ? (
           <li className={styles.loadOlderWrap}>
@@ -302,6 +326,7 @@ export function ChatWindow({
             value={text}
             onChange={(event) => setText(event.target.value)}
             onKeyDown={onComposerKeyDown}
+            onFocus={onComposerFocus}
             placeholder="Ваше повідомлення..."
             rows={1}
           />
