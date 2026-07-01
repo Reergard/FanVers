@@ -73,7 +73,6 @@ export function ChatWindow({
   const initializedChatRef = useRef<number | null>(null);
   /** Anchor for restoring internal scroll after prepending older messages */
   const scrollAnchorRef = useRef<{ top: number; height: number } | null>(null);
-  const lastOlderTriggerRef = useRef(0);
   const [composerMultiline, setComposerMultiline] = useState(false);
 
   const chatId = selectedChat?.id ?? null;
