@@ -41,8 +41,8 @@
 |--------|-----------|-----------|
 | GA4 Measurement ID | `G-J9978WWKVX` | `analytics.google.com` |
 | Meta Business Portfolio | FanVers | `business.facebook.com` |
-| Meta Рекламний акаунт | FanVers (ID: `2118256932432323`) | `business.facebook.com` → Ads Manager |
-| Meta Pixel ID | `988312620871477` | `business.facebook.com` → Events Manager |
+| Meta Рекламний акаунт | FanVers (ID: `(перевірити в business.facebook.com)`) | `business.facebook.com` → Ads Manager |
+| Meta Pixel ID | `1978242316129462` | `business.facebook.com` → Events Manager |
 | Google Search Console | DNS TXT верифікація | `search.google.com/search-console` |
 | Bing Webmaster Tools | DNS CNAME верифікація | `bing.com/webmasters` |
 | Канонічний домен | `fan-vers.com` (не www) | 301 redirect в nginx |
@@ -161,8 +161,8 @@ backend/apps/users/
 - [x] Bing Webmaster Tools — верифікований через CNAME
 - [x] GA4 — підключений на фронтенді
 - [x] Meta Business Portfolio «FanVers» створено
-- [x] Meta Рекламний акаунт FanVers (ID: `2118256932432323`) створено
-- [x] Meta Pixel (ID: `988312620871477`) підключений на фронтенді та пов'язаний з рекламним акаунтом
+- [x] Meta Рекламний акаунт FanVers (ID: `(перевірити в business.facebook.com)`) створено
+- [x] Meta Pixel (ID: `1978242316129462`) підключений на фронтенді та пов'язаний з рекламним акаунтом
 
 ### Залишилось зробити 📋
 

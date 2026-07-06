@@ -218,19 +218,19 @@ Meta Pixel **підключений та працює**. Початкова ін
 
 | Параметр | Значення |
 |----------|----------|
-| **Meta Business Portfolio** | FanVers (створено в `business.facebook.com`) |
-| **Рекламний акаунт** | FanVers (ID: `2118256932432323`) |
-| **Pixel ID** | `988312620871477` (Meta Pixel / Dataset «FanVers») |
+| **Meta Business Portfolio** | Чеське ІП (створено в `business.facebook.com`) |
+| **Рекламний акаунт** | (перевірити ID в `business.facebook.com`) |
+| **Pixel ID** | `1978242316129462` (Meta Pixel / Dataset «FanVers») |
 | Events Manager | `business.facebook.com` → Events Manager |
 | Скрипт | `fbevents.js` (завантажується динамічно фронтендом) |
 | Файл конфігурації | `frontend/src/analytics/metaPixel.ts` |
 
 **Структура Meta Business:**
 ```
-Business Portfolio (FanVers)
-├── Рекламний акаунт FanVers (ID: 2118256932432323)
-│   └── Пов'язаний з Pixel FanVers
-└── Meta Pixel / Dataset FanVers (ID: 988312620871477)
+Business Portfolio (Чеське ІП)
+├── Рекламний акаунт (перевірити ID в business.facebook.com)
+│   └── Пов'язаний з Pixel
+└── Meta Pixel / Dataset (ID: 1978242316129462)
 ```
 
 Бізнес-портфоліо прив'язане до компанії (не до особистого профілю), що дозволяє в майбутньому додавати інші незалежні сайти та проекти.
@@ -442,9 +442,9 @@ add_header Content-Security-Policy "
 - [x] `facebookexternalhit` є в списку ботів (middleware.py та nginx)
 - [x] OG-теги генеруються в шаблонах (`og:image`, `og:title`, `og:description`)
 - [x] Cookie consent API синхронізує рішення між пристроями
-- [x] Meta Pixel ID: `988312620871477` (файл `frontend/src/analytics/metaPixel.ts`)
+- [x] Meta Pixel ID: `1978242316129462` (файл `frontend/src/analytics/metaPixel.ts`)
 - [x] Business Portfolio створено (`business.facebook.com`)
-- [x] Рекламний акаунт FanVers (ID: `2118256932432323`) створено та пов'язано з Pixel
+- [x] Рекламний акаунт FanVers (ID: `(перевірити в business.facebook.com)`) створено та пов'язано з Pixel
 
 ### Канонічний домен:
 - [x] www → non-www 301 редирект (nginx)
