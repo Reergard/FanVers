@@ -13,14 +13,39 @@ from rest_framework.throttling import ScopedRateThrottle
 
 from apps.payments.models import PaymentSession
 from apps.payments.services import (
+    calculate_service_fee,
     create_checkout_session,
     handle_checkout_session_completed,
     handle_checkout_session_expired,
 )
 
-from .serializers import CreateCheckoutSessionSerializer, SessionStatusQuerySerializer
+from .serializers import CreateCheckoutSessionSerializer, FeePreviewQuerySerializer, SessionStatusQuerySerializer
 
 logger = logging.getLogger(__name__)
+
+
+class FeePreviewView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        qs = FeePreviewQuerySerializer(data=request.query_params)
+        qs.is_valid(raise_exception=True)
+        amount = qs.validated_data["amount"]
+
+        try:
+            fee = calculate_service_fee(amount)
+        except Exception:
+            logger.error("fee preview failed", exc_info=True)
+            return Response({"error": "Не вдалося розрахувати комісію"}, status=500)
+
+        return Response({
+            "amount_coins": str(fee.amount_coins),
+            "fee_percent": str(fee.fee_percent),
+            "fee_fixed_uah": str(fee.fee_fixed_uah),
+            "fee_total_uah": str(fee.fee_total_uah),
+            "amount_charged_uah": str(fee.amount_charged_uah),
+        })
 
 
 class CreateCheckoutSessionView(APIView):

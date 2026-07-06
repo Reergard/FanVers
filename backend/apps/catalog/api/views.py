@@ -1175,6 +1175,7 @@ class BookInfoView(generics.RetrieveAPIView):
             translation_status_display = serializers.CharField(source='get_translation_status_display', read_only=True)
             translation_status = serializers.CharField(read_only=True)
             original_status_display = serializers.CharField(source='get_original_status_display', read_only=True)
+            chapters_count = serializers.SerializerMethodField()
             genres = GenresSerializer(many=True, read_only=True)
             tags = TagSerializer(many=True, read_only=True)
             fandoms = FandomSerializer(many=True, read_only=True)
@@ -1189,7 +1190,7 @@ class BookInfoView(generics.RetrieveAPIView):
                     'original_status_display', 'country', 'slug',
                     'last_updated', 'owner', 'creator', 'adult_content',
                     'owner_username', 'creator_username', 'book_type',
-                    'genres', 'tags', 'fandoms', 'extra_images',
+                    'chapters_count', 'genres', 'tags', 'fandoms', 'extra_images',
                 ] + access_fields
                 read_only_fields = fields
 
@@ -1206,6 +1207,9 @@ class BookInfoView(generics.RetrieveAPIView):
 
             def get_creator_username(self, obj):
                 return obj.creator.username if obj.creator else None
+
+            def get_chapters_count(self, obj):
+                return obj.chapters.count()
 
             def to_representation(self, instance):
                 data = super().to_representation(instance)

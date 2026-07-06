@@ -633,6 +633,11 @@ if not DEBUG and not PAYOUT_ENCRYPTION_KEY:
 STRIPE_SECRET_KEY = env.str("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_SECRET = env.str("STRIPE_WEBHOOK_SECRET", default="")
 STRIPE_API_VERSION = env.str("STRIPE_API_VERSION", default="2024-12-18.acacia")
+
+# --- Service fee (deposit top-up) ---
+SERVICE_FEE_PERCENT = Decimal(env.str("SERVICE_FEE_PERCENT", default="5"))
+SERVICE_FEE_FIXED_CZK = Decimal(env.str("SERVICE_FEE_FIXED_CZK", default="8"))
+SERVICE_FEE_CZK_UAH_FALLBACK = Decimal(env.str("SERVICE_FEE_CZK_UAH_FALLBACK", default="1.70"))
 STRIPE_SUCCESS_URL = env.str(
     "STRIPE_SUCCESS_URL",
     default=("http://127.0.0.1:5173/payment/success" if DEBUG else "https://fan-vers.com/payment/success"),

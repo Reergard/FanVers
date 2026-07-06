@@ -30,6 +30,10 @@ class PaymentSession(models.Model):
 
     amount_coins = models.DecimalField(max_digits=10, decimal_places=2)
     amount_kopecks = models.PositiveIntegerField()
+    service_fee_uah = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        verbose_name=_('Сервісний збір (UAH)'),
+    )
     currency = models.CharField(max_length=3, default="uah")
 
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING, db_index=True)

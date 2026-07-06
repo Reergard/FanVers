@@ -32,6 +32,7 @@
 
 | Метод | URL | Хто викликає |
 |-------|-----|--------------|
+| `GET` | `/api/payments/fee-preview/?amount=...` | Авторизований клієнт (JWT) |
 | `POST` | `/api/payments/create-checkout-session/` | Авторизований клієнт (JWT) |
 | `GET` | `/api/payments/session-status/?session_id=...` | Авторизований клієнт (JWT) |
 | `POST` | `/api/payments/webhook/` | Сервери Stripe (без JWT) |
@@ -47,6 +48,9 @@
 | `STRIPE_SECRET_KEY` | Секретний ключ API Stripe для сервера. Якщо порожній рядок, `CreateCheckoutSessionView` повертає **500** з текстом `"Stripe is not configured"`. |
 | `STRIPE_WEBHOOK_SECRET` | Секрет підпису webhook (`whsec_...`). Якщо порожній, `stripe_webhook` повертає **500** (без тіла в коді — `HttpResponse(status=500)`). |
 | `STRIPE_API_VERSION` | Версія API Stripe для клієнта. За замовчуванням у коді: `2024-12-18.acacia`. |
+| `SERVICE_FEE_PERCENT` | Відсоток сервісного збору при поповненні. За замовчуванням **5**. |
+| `SERVICE_FEE_FIXED_CZK` | Фіксована частина збору в CZK. За замовчуванням **8**. |
+| `SERVICE_FEE_CZK_UAH_FALLBACK` | Запасний курс CZK→UAH, якщо Wise API недоступний. За замовчуванням **1.70**. |
 | `STRIPE_SUCCESS_URL` | База для `success_url` у Checkout. У `services.py` до неї додається `?session_id={CHECKOUT_SESSION_ID}` (спочатку `rstrip("/")`). За замовчуванням: у `DEBUG` — `http://127.0.0.1:5173/payment/success`, інакше — `https://fan-vers.com/payment/success`. |
 | `STRIPE_CANCEL_URL` | `cancel_url` для Checkout. За замовчуванням: у `DEBUG` — `http://127.0.0.1:5173/profile`, інакше — `https://fan-vers.com/profile`. |
 
@@ -74,7 +78,8 @@
 | `stripe_session_id` | `CharField(128)`, `unique`, індекс, **`null=True`, `blank=True`** | Ідентифікатор `cs_...` від Stripe. Спочатку **`None`**: запис створюється до виклику Stripe, після успішного `Session.create` оновлюється через `update()`. |
 | `stripe_payment_intent_id` | `CharField`, опційно | Payment Intent з об’єкта сесії у webhook. |
 | `amount_coins` | `Decimal(10,2)` | Скільки FanCoins зарахувати; саме це значення потім передається в `balance_operation` (не сума з metadata webhook). |
-| `amount_kopecks` | `PositiveInteger` | Сума для Stripe: `int(amount_coins * 100)` (мінімальні одиниці валюти для `unit_amount`). |
+| `amount_kopecks` | `PositiveInteger` | Сума для Stripe **з урахуванням сервісного збору**: `int(amount_charged_uah * 100)` (мінімальні одиниці валюти для `unit_amount`). |
+| `service_fee_uah` | `Decimal(10,2)`, default 0 | Розмір сервісного збору в UAH, що був включений у `amount_kopecks`. |
 | `currency` | `CharField(3)`, default `uah` | Валюта Checkout. |
 | `status` | choices | `pending`, `paid`, `expired`, `failed`. За замовчуванням `pending`. |
 | `metadata` | `JSONField` | Доп. дані: у коді кладуться `user_id`, `amount_coins`, за наявності — `ip`, `user_agent` (обрізаний до 500 символів). |
@@ -121,20 +126,33 @@
 
 - Якщо `profile.balance + amount_coins > 1_000_000` → `ValueError("max balance exceeded")` (той самий поріг «максимум балансу», що перевіряється в міксині при deposit).
 
-### 5.3. Транзакція БД перед Stripe
+### 5.3. Розрахунок сервісного збору
+
+Перед транзакцією викликається **`calculate_service_fee(amount_coins)`** (`services.py`):
+
+1. Зчитуються `SERVICE_FEE_PERCENT` та `SERVICE_FEE_FIXED_CZK` із `settings.py`.
+2. Курс CZK→UAH — з кешу (`service_fee:czk_uah_rate`, TTL 24 год) або через **Wise API** (`apps.payouts.services.exchange_rates.fetch_rate`). При помилці API — fallback із `SERVICE_FEE_CZK_UAH_FALLBACK`.
+3. `fee_fixed_uah = fee_fixed_czk × rate` (округлення ROUND_UP до 0.01).
+4. `fee_from_percent = amount_coins × percent / 100` (ROUND_UP).
+5. `fee_total = fee_from_percent + fee_fixed_uah`.
+6. `amount_charged = amount_coins + fee_total`.
+
+Результат — `ServiceFeeResult` (dataclass).
+
+### 5.4. Транзакція БД перед Stripe
 
 У **`transaction.atomic()`**:
 
 1. `Profile.objects.select_for_update().get(user_id=user.id)` — блокування рядка профілю.
 2. Перевірка ліміту балансу.
-3. `PaymentSession.objects.create(...)` з `stripe_session_id=None`, `status=pending`, `expires_at` через 30 хв, `amount_kopecks`, `metadata`.
+3. `PaymentSession.objects.create(...)` з `stripe_session_id=None`, `status=pending`, `expires_at` через 30 хв, `amount_kopecks=amount_charged_kopecks` (з урахуванням збору), `service_fee_uah`, `metadata`.
 
-### 5.4. Виклик Stripe (поза транзакцією)
+### 5.5. Виклик Stripe (поза транзакцією)
 
 `stripe.checkout.Session.create` з параметрами з коду:
 
 - `payment_method_types=['card']`, `mode='payment'`, `currency='uah'`.
-- Одна позиція `line_items` з `unit_amount=amount_kopecks`.
+- Одна позиція `line_items` з `unit_amount=amount_charged_kopecks` (**сума + збір**).
 - `client_reference_id=str(user.id)`.
 - `customer_email` — `user.email`, якщо атрибут є, інакше `None`.
 - `metadata` Stripe = `metadata` з БД **плюс** `payment_session_id` (UUID запису).
@@ -147,7 +165,9 @@
 - Якщо немає `id` або `url` сесії → `RuntimeError`.
 - Інакше: `PaymentSession.objects.filter(id=...).update(stripe_session_id=...)`.
 
-### 5.5. Відповідь API
+**Важливо:** Stripe отримує `amount_charged_kopecks` (сума + збір), але в `PaymentSession.amount_coins` зберігається **оригінальна** сума без збору — саме вона зараховується на баланс через `balance_operation` у webhook.
+
+### 5.6. Відповідь API
 
 `CreateCheckoutSessionView` повертає **`{"checkout_url": "<url>"}`** при успіху.
 
@@ -157,6 +177,28 @@
 
 - Немає `STRIPE_SECRET_KEY` → **500**, `{"error": "Stripe is not configured"}`.
 - Будь-який виняток у `create_checkout_session` логуються з `exc_info`, клієнту **400**, `{"error": "Не вдалося створити платіж. Спробуйте ще раз."}`.
+
+---
+
+## 5.7. Попередній перегляд збору (fee-preview)
+
+**`FeePreviewView`** (`apps/payments/api/views.py`), `GET /api/payments/fee-preview/?amount=...`:
+
+- Доступ: **JWT + `IsAuthenticated`**.
+- Валідація: `FeePreviewQuerySerializer` — `amount` як `Decimal`, від **100** до **100000**.
+- Викликає `calculate_service_fee(amount)` і повертає JSON:
+
+```json
+{
+  "amount_coins": "1000.00",
+  "fee_percent": "5",
+  "fee_fixed_uah": "13.60",
+  "fee_total_uah": "63.60",
+  "amount_charged_uah": "1063.60"
+}
+```
+
+Фронтенд використовує цей ендпоінт для показу розбивки збору в модалці поповнення (debounce 400 мс).
 
 ---
 
@@ -263,6 +305,7 @@ View: **`stripe_webhook`** у `apps/payments/api/views.py` — звичайни�
 
 ## 12. Міграції
 
-Початкова міграція додатка: **`apps/payments/migrations/0001_initial.py`** (створює `WebhookEvent` та `PaymentSession`).
+- **`0001_initial.py`** — створює `WebhookEvent` та `PaymentSession`.
+- **`0003_add_service_fee_uah.py`** — додає поле `service_fee_uah` до `PaymentSession` (`default=0`).
 
 Після змін моделей потрібно стандартно **`makemigrations` / `migrate`**.
