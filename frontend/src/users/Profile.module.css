@@ -902,6 +902,30 @@
   font-size: clamp(12px, 1.05vw, 14px);
 }
 
+.feeBreakdown {
+  display: grid;
+  gap: 6px;
+  padding: clamp(10px, 1.4vw, 14px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  font-size: clamp(12px, 1.05vw, 14px);
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.feeRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.feeRowTotal {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: 6px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+}
+
 .payoutMethodBtn {
   display: flex;
   align-items: center;

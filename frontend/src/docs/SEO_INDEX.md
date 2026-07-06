@@ -49,8 +49,8 @@
 |--------|-----------|-----------------|-----------|
 | GA4 | `G-J9978WWKVX` | `frontend/src/analytics/ga4.ts` | `analytics.google.com` |
 | Meta Business Portfolio | FanVers | — | `business.facebook.com` |
-| Meta Рекламний акаунт | FanVers (ID: `2118256932432323`) | — | `business.facebook.com` → Ads Manager |
-| Meta Pixel | `988312620871477` | `frontend/src/analytics/metaPixel.ts` | `business.facebook.com` → Events Manager |
+| Meta Рекламний акаунт | FanVers (ID: `(перевірити в business.facebook.com)`) | — | `business.facebook.com` → Ads Manager |
+| Meta Pixel | `1978242316129462` | `frontend/src/analytics/metaPixel.ts` | `business.facebook.com` → Events Manager |
 | Google Search Console | — | DNS TXT (Cloudflare) | `search.google.com/search-console` |
 | Bing Webmaster Tools | — | DNS CNAME (Cloudflare) | `bing.com/webmasters` |
 | Домен | `fan-vers.com` | Cloudflare DNS | `dash.cloudflare.com` |
@@ -147,7 +147,7 @@ frontend/src/settings/
 |-----------|--------|
 | GA4 інтеграція з GDPR consent | ✅ Працює |
 | Meta Business Portfolio «FanVers» | ✅ Створено |
-| Meta Рекламний акаунт FanVers (ID: `2118256932432323`) | ✅ Створено, пов'язано з Pixel |
+| Meta Рекламний акаунт FanVers (ID: `(перевірити в business.facebook.com)`) | ✅ Створено, пов'язано з Pixel |
 | Meta Pixel інтеграція з GDPR consent | ✅ Працює |
 | UTM capture та URL cleanup | ✅ Працює |
 | SPA page view трекінг (GA4 + Meta Pixel) | ✅ Працює |

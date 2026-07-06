@@ -450,19 +450,19 @@ Meta Pixel — JavaScript-код від Meta (Facebook/Instagram) для від�
 ### 10.2. Pixel ID та рекламна інфраструктура Meta
 
 ```
-Pixel ID:           988312620871477
-Рекламний акаунт:   2118256932432323 (назва: FanVers)
-Business Portfolio:  FanVers (business.facebook.com)
+Pixel ID:           1978242316129462
+Рекламний акаунт:   (новий, чеське ІП — перевірити в business.facebook.com)
+Business Portfolio:  Чеське ІП (business.facebook.com)
 ```
 
-Pixel ID — унікальний ідентифікатор нашого Meta Pixel (Dataset «FanVers»). Зашитий у файлі `metaPixel.ts`. Якщо потрібно змінити — правити **тільки в цьому файлі**.
+Pixel ID — унікальний ідентифікатор нашого Meta Pixel (Dataset). Зашитий у файлі `metaPixel.ts`. Якщо потрібно змінити — правити **тільки в цьому файлі**.
 
 **Організаційна структура Meta Business:**
 ```
-Business Portfolio (FanVers) — прив'язане до компанії, не до особистого профілю
-├── Рекламний акаунт FanVers (ID: 2118256932432323)
-│   └── Пов'язаний з Pixel FanVers
-└── Meta Pixel / Dataset FanVers (ID: 988312620871477)
+Business Portfolio (Чеське ІП) — прив'язане до компанії, не до особистого профілю
+├── Рекламний акаунт (перевірити ID в business.facebook.com)
+│   └── Пов'язаний з Pixel
+└── Meta Pixel / Dataset (ID: 1978242316129462)
 ```
 
 Business Portfolio дозволяє в майбутньому додавати інші незалежні сайти та проекти, не змішуючи їх налаштування.
@@ -476,7 +476,7 @@ Business Portfolio дозволяє в майбутньому додавати �
 #### Константи
 
 ```typescript
-const PIXEL_ID = "988312620871477";
+const PIXEL_ID = "1978242316129462";
 ```
 
 Єдине місце де зберігається Pixel ID. При зміні — правити тільки тут.
@@ -606,7 +606,7 @@ declare global {
 #### В Meta Events Manager
 
 1. Зайди на `business.facebook.com` → Events Manager
-2. Обери піксель `988312620871477`
+2. Обери піксель `1978242316129462`
 3. Вкладка **Test Events** — покаже події в реальному часі (потрібно вказати URL сайту)
 4. Вкладка **Overview** — загальна статистика подій (дані з затримкою до 20 хвилин)
 
@@ -759,8 +759,8 @@ A: Перевірити що Pixel завантажується **тільки �
 
 ### Meta Pixel
 - [x] Business Portfolio «FanVers» створено в `business.facebook.com`
-- [x] Рекламний акаунт FanVers (ID: `2118256932432323`) створено
-- [x] Meta Pixel (ID: `988312620871477`) створено та пов'язано з рекламним акаунтом
+- [x] Рекламний акаунт FanVers (ID: `(перевірити в business.facebook.com)`) створено
+- [x] Meta Pixel (ID: `1978242316129462`) створено та пов'язано з рекламним акаунтом
 - [x] Pixel ID оновлено у файлі `metaPixel.ts`
 - [x] Meta Events Manager: `business.facebook.com` → Events Manager
 - [x] Cookie consent контролює завантаження Meta Pixel (GDPR)

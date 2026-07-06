@@ -30,6 +30,7 @@
 
 | Ключ | Шлях |
 |------|------|
+| `feePreview` | `GET /api/payments/fee-preview/` (query `amount`) |
 | `createCheckoutSession` | `POST /api/payments/create-checkout-session/` |
 | `paymentSessionStatus` | `GET /api/payments/session-status/` (query `session_id`) |
 
@@ -39,6 +40,7 @@
 
 ## 3. `paymentApi.ts`
 
+- **`getFeePreview(amount)`** — `http.get(API.feePreview, { params: { amount } })`, повертає **`FeePreview`**: `amount_coins`, `fee_percent`, `fee_fixed_uah`, `fee_total_uah`, `amount_charged_uah` (усі рядки). Використовується для показу розбивки збору перед оплатою.
 - **`createCheckoutSession(amount)`** — `http.post(API.createCheckoutSession, { amount })`, повертає **`{ checkout_url: string }`**.
 - **`getPaymentSessionStatus(sessionId)`** — `http.get(API.paymentSessionStatus, { params: { session_id: sessionId } })`, очікує відповідь з полями **`status`**, **`amount_coins`** (рядок), **`paid_at`** (`string | null`).
 
@@ -48,15 +50,32 @@
 
 ## 4. Профіль: модалка поповнення (`Profile.tsx`)
 
-**Імпорт:** `createCheckoutSession` з `../payments/paymentApi` (не `depositBalance`).
+**Імпорт:** `createCheckoutSession`, `getFeePreview` з `../payments/paymentApi`.
 
-**Мутація `depositMutation`:**
+### 4.1. Двокрокова модалка
+
+Модалка поповнення має два кроки (стан `depositStep`):
+
+1. **Крок «select»** — вибір платіжної системи. Поки єдиний варіант — **Stripe** (кнопка зі стилем `.payoutMethodBtn`, логотип Stripe кольором `#635bff`). При натисканні `depositStep` переходить у `"form"`.
+2. **Крок «form»** — форма введення суми з розбивкою сервісного збору та кнопкою «Перейти до оплати».
+
+При відкритті модалки завжди починається з кроку «select». При закритті — стан скидається.
+
+### 4.2. Попередній перегляд збору
+
+При зміні суми (`depositAmount`) з затримкою **400 мс** (debounce через `setTimeout` + `useRef`) викликається `getFeePreview(amount)`. Результат зберігається в стані `feePreview`.
+
+Якщо `feePreview` доступний і сума ≥ 100, під полем вводу показується **блок розбивки** (`.feeBreakdown`):
+
+- Поповнення: `amount_coins` UAH
+- Сервісний збір (`fee_percent`% + `fee_fixed_uah` UAH): `fee_total_uah` UAH
+- **До сплати:** `amount_charged_uah` UAH
+
+### 4.3. Мутація `depositMutation`
 
 - `mutationFn`: викликає `createCheckoutSession(amt)`.
 - `onSuccess`: **`window.location.href = data.checkout_url`** — повне перенаправлення на хост Stripe, сесія браузера на FanVers лишається, але сторінка змінюється.
 - `onError`: показує `err?.response?.data?.error` або текст **«Помилка створення платежу»**.
-
-**Кнопка в модалці підтвердження суми:** текст **«Перейти до оплати»** (не «Купити coins»). Зовнішня кнопка відкриття модалки може лишатися з підписом «Купити coins» — це окремий елемент UI в тому ж файлі.
 
 **Валідація суми на клієнті (перед викликом):** перевіряється лише `Number(amount)` — скінченне число та `> 0`; детальні правила **min 100 / max 100000 / ліміт балансу** перевіряються на сервері.
 

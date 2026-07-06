@@ -46,6 +46,7 @@ export const API = {
   cancelPayoutRequest: (id: number) => `/api/payouts/request/${id}/cancel/`,
 
   // Payments (Stripe Checkout)
+  feePreview: "/api/payments/fee-preview/",
   createCheckoutSession: "/api/payments/create-checkout-session/",
   paymentSessionStatus: "/api/payments/session-status/",
 

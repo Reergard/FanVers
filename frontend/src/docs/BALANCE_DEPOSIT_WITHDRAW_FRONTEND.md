@@ -19,7 +19,7 @@ UI **не** є захистом: усі обмеження перевіряют�
 
 Файл: `users/Profile.tsx`.
 
-- **Поповнити** — кнопка відкриває `Modal` (`shared/Modal/Modal`), поле суми, виклик `depositMutation` → `depositBalance`.
+- **Поповнити** — кнопка відкриває двокрокову `Modal`: спочатку вибір платіжної системи (зараз лише Stripe), потім форма суми з розбивкою сервісного збору та кнопкою «Перейти до оплати». Детальний опис: `STRIPE_CHECKOUT_PAYMENTS_FRONTEND.md`, розділ 4.
 - **Вивести кошти** — рендериться **тільки** якщо `profile.can_withdraw_balance === true` (дані з `GET /api/users/profile/`). Модалка: `open={withdrawModalOpen && mayWithdrawBalance}`.
 - **Історія транзакцій** — окрема модалка; список з локального `balanceHistory` після успіху мутацій (якщо API не поверне `balance_history`, список може лишатися порожнім; повний масив `balance_history` приходить у відповіді профілю власнику).
 

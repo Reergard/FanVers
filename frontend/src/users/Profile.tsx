@@ -37,7 +37,7 @@ import { PayoutMethodSelectModal } from "./PayoutMethodSelectModal";
 import { extractApiError } from "./payoutErrors";
 import { PayoutRequestsList } from "./PayoutRequestsList";
 import { AddPayoutMethodModal } from "./AddPayoutMethodModal";
-import { createCheckoutSession } from "../payments/paymentApi";
+import { createCheckoutSession, getFeePreview, type FeePreview } from "../payments/paymentApi";
 import { useNotification } from "../shared/NotificationModal/NotificationProvider";
 import { Modal } from "../shared/Modal/Modal";
 import { useAdultContent } from "../settings/useAdultContent";
@@ -226,6 +226,7 @@ export default function Profile() {
   });
 
   const [depositModalOpen, setDepositModalOpen] = useState(false);
+  const [depositStep, setDepositStep] = useState<"select" | "form">("select");
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [withdrawIdempotencyKey, setWithdrawIdempotencyKey] = useState(() => crypto.randomUUID());
   const [payoutMethodSelectOpen, setPayoutMethodSelectOpen] = useState(false);
@@ -242,6 +243,9 @@ export default function Profile() {
   const [commissionInfoModalOpen, setCommissionInfoModalOpen] = useState(false);
   const [aboutDraft, setAboutDraft] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
+  const [feePreview, setFeePreview] = useState<FeePreview | null>(null);
+  const [feeLoading, setFeeLoading] = useState(false);
+  const feeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawUrgent, setWithdrawUrgent] = useState(false);
   const [withdrawConfirmOpen, setWithdrawConfirmOpen] = useState(false);
@@ -271,6 +275,25 @@ export default function Profile() {
       void queryClient.invalidateQueries({ queryKey: monitoringKeys.readingStats() });
     }
   }, [isAuthenticated, authReady, queryClient]);
+
+  useEffect(() => {
+    if (feeTimerRef.current) clearTimeout(feeTimerRef.current);
+    const num = Number(depositAmount);
+    if (!Number.isFinite(num) || num < 100) {
+      setFeePreview(null);
+      return;
+    }
+    setFeeLoading(true);
+    feeTimerRef.current = setTimeout(() => {
+      getFeePreview(num)
+        .then(setFeePreview)
+        .catch(() => setFeePreview(null))
+        .finally(() => setFeeLoading(false));
+    }, 400);
+    return () => {
+      if (feeTimerRef.current) clearTimeout(feeTimerRef.current);
+    };
+  }, [depositAmount]);
 
   const profile = profileQuery.data;
   const readingStats = readingStatsQuery.data;
@@ -966,7 +989,7 @@ export default function Profile() {
                 <button
                   type="button"
                   className={`${styles.btnGreen} ${styles.balanceBtnDeposit}`}
-                  onClick={() => setDepositModalOpen(true)}
+                  onClick={() => { setDepositStep("select"); setDepositModalOpen(true); }}
                   disabled={depositMutation.isPending}
                 >
                   <img src={paymentIcon} alt="" className={styles.btnBalanceIcon} aria-hidden="true" />
@@ -1304,35 +1327,93 @@ export default function Profile() {
 
       <Modal
         open={depositModalOpen}
-        onClose={() => setDepositModalOpen(false)}
-        title="Купити coins"
+        onClose={() => {
+          setDepositModalOpen(false);
+          setDepositStep("select");
+          setFeePreview(null);
+        }}
+        title={depositStep === "select" ? "Купити coins" : "Купити coins — Stripe"}
       >
-        <div className={styles.modalForm}>
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>Сума</span>
-            <span className={styles.fieldBox}>
-              <input
-                className={styles.input}
-                type="number"
-                min="100"
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(e.target.value)}
-                placeholder="0"
-              />
-            </span>
-          </label>
-          <p className={styles.modalHint}>
-            Мінімальна сума поповнення — 100.
-          </p>
-          <button
-            type="button"
-            className={styles.btnGreen}
-            onClick={handleDeposit}
-            disabled={depositMutation.isPending || !depositAmount}
-          >
-            {depositMutation.isPending ? "Завантаження..." : "Перейти до оплати"}
-          </button>
-        </div>
+        {depositStep === "select" ? (
+          <div className={styles.modalForm}>
+            <p className={styles.modalHint}>
+              Оберіть платіжну систему для поповнення балансу.
+            </p>
+
+            <button
+              type="button"
+              className={styles.payoutMethodBtn}
+              onClick={() => setDepositStep("form")}
+            >
+              <span
+                className={styles.payoutMethodLogo}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  fontWeight: 700,
+                  fontSize: "1.3em",
+                  color: "#635bff",
+                  letterSpacing: "-0.5px",
+                }}
+                aria-label="Stripe"
+              >
+                stripe
+              </span>
+              <span className={styles.payoutMethodInfo}>
+                <strong>Stripe</strong>
+                <span className={styles.payoutMethodDesc}>
+                  Оплата банківською картою (Visa, Mastercard)
+                </span>
+              </span>
+            </button>
+          </div>
+        ) : (
+          <div className={styles.modalForm}>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>Сума (FanCoins)</span>
+              <span className={styles.fieldBox}>
+                <input
+                  className={styles.input}
+                  type="number"
+                  min="100"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  placeholder="0"
+                />
+              </span>
+            </label>
+            <p className={styles.modalHint}>
+              Мінімальна сума поповнення — 100.
+            </p>
+            {feePreview && !feeLoading && (
+              <div className={styles.feeBreakdown}>
+                <div className={styles.feeRow}>
+                  <span>Поповнення</span>
+                  <span>{feePreview.amount_coins} FanCoins</span>
+                </div>
+                <div className={styles.feeRow}>
+                  <span>Сервісний збір ({feePreview.fee_percent}% + {feePreview.fee_fixed_uah} UAH)</span>
+                  <span>{feePreview.fee_total_uah} UAH</span>
+                </div>
+                <div className={`${styles.feeRow} ${styles.feeRowTotal}`}>
+                  <span>До сплати</span>
+                  <span>{feePreview.amount_charged_uah} UAH</span>
+                </div>
+              </div>
+            )}
+            {feeLoading && (
+              <p className={styles.modalHint}>Розраховуємо комісію…</p>
+            )}
+            <button
+              type="button"
+              className={styles.btnGreen}
+              onClick={handleDeposit}
+              disabled={depositMutation.isPending || !depositAmount || feeLoading}
+            >
+              {depositMutation.isPending ? "Завантаження..." : "Перейти до оплати"}
+            </button>
+          </div>
+        )}
       </Modal>
 
       <Modal
