@@ -161,7 +161,48 @@
 
 ---
 
-## 6. Пов’язані документи
+## 6. Масове завантаження розділів (Bulk Upload)
+
+### 6.1. Розташування
+
+Секція масового завантаження знаходиться **на тій самій сторінці** `AddChapter.tsx`, всередині форми — після блоку завантаження одного `.docx` файлу і перед чекбоксом «Закритий доступ». Це `<div>` з власними state-змінними та обробниками. Всі кнопки мають `type="button"`, щоб не ініціювати submit форми.
+
+### 6.2. Стани
+
+- `bulkFiles: File[]` — обрані файли .docx.
+- `bulkTitles: Record<string, string>` — назви розділів (ключ = індекс файлу).
+- `bulkSubmitting: boolean` — блокування кнопки під час запиту.
+- `bulkResult: BulkUploadResult | null` — результат (created + errors).
+- `bulkError: string` — помилки валідації на фронті.
+
+### 6.3. Потік користувача
+
+1. Натискає кнопку «Обрати файли .docx» → відкривається файловий діалог з `multiple`.
+2. Фронтенд валідує: тільки .docx, максимум 20 файлів, сумарно ≤ 100 МБ.
+3. Відображається список файлів: ім’я файлу + поле вводу з автоматичною назвою (з імені файлу без .docx).
+4. Користувач може відредагувати назву кожного розділу, видалити окремі файли зі списку, або очистити весь список.
+5. Натискає «Завантажити N розділ(ів)» → `catalogApi.uploadChaptersBulk()`.
+6. При успіху без помилок: кеш інвалідується, редирект на сторінку книги.
+7. При partial success (є і created, і errors): кеш інвалідується, список очищається, результат показується на сторінці (зелене повідомлення про створені + червоний список помилок).
+
+### 6.4. API
+
+- **Функція:** `catalogApi.uploadChaptersBulk(slug, files, titles, isPaid, volumeId, price)`.
+- Формується **FormData**: `files` (multiple), `titles` (JSON-рядок), `is_paid`, `volume`, `price`.
+- Запит: `POST /api/catalog/books/${slug}/add_chapters_bulk/`.
+- Відповідь: `BulkUploadResult { created: [...], errors: [...] }`.
+
+### 6.5. Спільні контролі
+
+Масове завантаження використовує ті ж `isPaid`, `price`, `selectedVolume` з батьківського компонента, що й форма створення одного розділу.
+
+### 6.6. CSS
+
+Стилі в `AddChapter.module.css`: `.bulkSection`, `.bulkTitle`, `.bulkHint`, `.bulkPickBtn`, `.bulkList`, `.bulkItem`, `.bulkItemFile`, `.bulkItemInput`, `.bulkItemRemove`, `.bulkError`, `.bulkSuccess`, `.bulkErrors`.
+
+---
+
+## 7. Пов’язані документи
 
 - Backend: `backend/docs/ADD_CHAPTER_BACKEND.md` — ендпоінт add_chapter, перевірки, форма запиту.
 - Сторінка книги: [BOOK_PAGE_DATA_FLOW.md](./BOOK_PAGE_DATA_FLOW.md), [BOOK_PAGE_DESIGN_DATA_FLOW.md](./BOOK_PAGE_DESIGN_DATA_FLOW.md), [CHAPTER_PAGINATION_FRONTEND.md](./CHAPTER_PAGINATION_FRONTEND.md).

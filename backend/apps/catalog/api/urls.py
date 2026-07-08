@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     BookOwnerViewSet, BookReaderViewSet,
     genres_list, tags_list, countries_list, fandoms_list,
-    add_chapter, chapter_list, chapter_detail, volume_list,
+    add_chapter, add_chapters_bulk, chapter_list, chapter_detail, volume_list,
     create_volume, delete_volume, owned_books, delete_chapter, BookInfoView,
     create_book, update_book, abandoned_translations, user_translations, register_book_view,
     update_book_access_rights, check_book_access, apply_become_translator,
@@ -24,6 +24,7 @@ urlpatterns = [
     path('countries/', countries_list, name='countries_list'),
     path('fandoms/', fandoms_list, name='fandoms_list'),
     path('books/<slug:slug>/add_chapter/', add_chapter, name='add_chapter'),
+    path('books/<slug:slug>/add_chapters_bulk/', add_chapters_bulk, name='add_chapters_bulk'),
     path('books/<slug:book_slug>/chapters/', chapter_list, name='chapter_list'),
     path('books/<slug:book_slug>/chapters/reorder/', reorder_chapters, name='reorder_chapters'),
     path('books/<slug:book_slug>/chapters/<int:chapter_id>/move/', move_chapter, name='move_chapter'),

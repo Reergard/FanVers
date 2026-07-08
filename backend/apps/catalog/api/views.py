@@ -452,6 +452,164 @@ def add_chapter(request, slug):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+
+MAX_BULK_FILES = 20
+MAX_BULK_TOTAL_BYTES = 100 * 1024 * 1024  # 100 MB
+
+
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
+@permission_classes([IsAuthenticated, IsBookOwner])
+def add_chapters_bulk(request, slug):
+    try:
+        book = get_object_or_404(Book, slug=slug)
+
+        if request.user != book.owner:
+            return Response(
+                {'error': 'У вас немає прав для додавання глав до цієї книги'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        files = request.FILES.getlist('files')
+        if not files:
+            return Response(
+                {'error': 'Необхідно завантажити хоча б один файл'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if len(files) > MAX_BULK_FILES:
+            return Response(
+                {'error': f'Максимум {MAX_BULK_FILES} файлів за один раз'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        total_size = sum(getattr(f, 'size', 0) or 0 for f in files)
+        if total_size > MAX_BULK_TOTAL_BYTES:
+            return Response(
+                {'error': 'Сумарний розмір файлів перевищує 100 МБ'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        import json as _json
+
+        titles_raw = request.data.get('titles')
+        titles_map = {}
+        if titles_raw:
+            try:
+                titles_map = (
+                    _json.loads(titles_raw) if isinstance(titles_raw, str) else titles_raw
+                )
+                if not isinstance(titles_map, dict):
+                    titles_map = {}
+            except (_json.JSONDecodeError, TypeError, ValueError):
+                titles_map = {}
+
+        is_paid = request.data.get('is_paid', '').lower() == 'true'
+
+        if is_paid:
+            try:
+                price = Decimal(request.data.get('price', '1.00'))
+            except (TypeError, ValueError):
+                price = Decimal('1.00')
+            if price <= 0 or price > 1000:
+                return Response(
+                    {'error': 'Некоректна ціна розділу'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            price = Decimal('0.00')
+
+        volume_id = request.data.get('volume')
+        vol_id = int(volume_id) if volume_id else None
+        if vol_id is not None:
+            if not Volume.objects.filter(id=vol_id, book=book).exists():
+                return Response(
+                    {'error': 'Обраний том не належить цій книзі'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        created = []
+        errors = []
+
+        with transaction.atomic():
+            Book.objects.select_for_update().get(id=book.id)
+            agg = Chapter.objects.filter(book=book, volume_id=vol_id).aggregate(Max('order'))
+            next_order = (agg['order__max'] or 0) + 1
+
+            for idx, uploaded in enumerate(files):
+                filename = getattr(uploaded, 'name', '') or f'file_{idx}'
+                file_error = validate_docx_file(uploaded)
+                if file_error:
+                    errors.append({'filename': filename, 'reason': file_error})
+                    continue
+
+                title_key = str(idx)
+                title = titles_map.get(title_key, '').strip() if title_key in titles_map else ''
+                if not title:
+                    base = os.path.splitext(filename)[0]
+                    title = base.strip() or f'Розділ {next_order}'
+                if len(title) > 255:
+                    title = title[:255]
+
+                try:
+                    with transaction.atomic():
+                        chapter = Chapter.objects.create(
+                            book=book,
+                            title=title,
+                            file=None,
+                            volume_id=vol_id,
+                            is_paid=is_paid,
+                            price=price,
+                            order=next_order,
+                        )
+
+                        tmp_path = write_uploaded_docx_to_temp(uploaded)
+                        try:
+                            from apps.catalog.services.docx_to_json import docx_to_content_json
+
+                            content_json = docx_to_content_json(
+                                docx_path=tmp_path,
+                                media_dir=settings.MEDIA_ROOT,
+                                book_slug=book.slug,
+                                chapter_slug=chapter.slug,
+                            )
+                            chapter.save_content(content_json)
+                        finally:
+                            try:
+                                os.unlink(tmp_path)
+                            except OSError:
+                                pass
+
+                    next_order += 1
+                    serializer = ChapterSerializer(chapter)
+                    created.append(serializer.data)
+
+                except Exception as exc:
+                    logger.warning(
+                        "add_chapters_bulk: file %s failed: %s", filename, exc
+                    )
+                    errors.append({'filename': filename, 'reason': str(exc)})
+
+            book.last_updated = timezone.now()
+            book.save(update_fields=['last_updated'])
+
+        if created:
+            Book.mark_translation_owner_activity(book)
+
+        resp_status = status.HTTP_201_CREATED if created else status.HTTP_400_BAD_REQUEST
+        return Response(
+            {'created': created, 'errors': errors},
+            status=resp_status,
+        )
+
+    except Exception as e:
+        logger.exception("add_chapters_bulk error for book=%s: %s", slug, e)
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
 class BookOwnerViewSet(viewsets.ModelViewSet):
     serializer_class = BookOwnerSerializer
     lookup_field = 'slug'

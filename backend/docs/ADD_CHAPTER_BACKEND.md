@@ -85,7 +85,71 @@
 
 ---
 
-## 6. Пов’язана документація
+---
+
+## 6. Масове завантаження розділів (Bulk Upload)
+
+### 6.1. URL та метод
+
+- **URL:** `POST /api/catalog/books/<slug>/add_chapters_bulk/`
+- **Оголошення:** `backend/apps/catalog/api/urls.py` — `path(‘books/<slug:slug>/add_chapters_bulk/’, add_chapters_bulk, name=’add_chapters_bulk’)`.
+- **View:** функція `add_chapters_bulk(request, slug)` у `apps/catalog/api/views.py`.
+
+### 6.2. Декоратори та дозволи
+
+Аналогічно до `add_chapter`: `@api_view([‘POST’])`, `@parser_classes([MultiPartParser, FormParser])`, `@permission_classes([IsAuthenticated, IsBookOwner])`.
+
+### 6.3. Ліміти
+
+- **MAX_BULK_FILES = 20** — максимум файлів за один запит.
+- **MAX_BULK_TOTAL_BYTES = 100 МБ** — сумарний розмір усіх файлів.
+- Кожен файл окремо перевіряється через `validate_docx_file()` (розширення, MIME, magic bytes, ≤ 10 МБ).
+
+### 6.4. Формат запиту
+
+- **Content-Type:** multipart/form-data.
+- **Поля:**
+  - `files` (обов’язковий, multiple) — кілька файлів .docx.
+  - `titles` — JSON-рядок, об’єкт `{"0": "Назва першого", "1": "Назва другого", ...}`. Якщо не передано або не вказано для конкретного індексу, назва береться з імені файлу (без `.docx`).
+  - `is_paid` — рядок `"true"` / `"false"`.
+  - `volume` — опційно, id тому (число).
+  - `price` — рядок числа.
+
+### 6.5. Логіка (покроково)
+
+1. Отримання книги, перевірка власника.
+2. Валідація: кількість файлів ≤ 20, сумарний розмір ≤ 100 МБ.
+3. Парсинг `titles` з JSON, парсинг `is_paid`, `price`, `volume`.
+4. `transaction.atomic()` + `select_for_update()` на книзі — запобігання race condition.
+5. Визначення `next_order` = max(order) + 1 для глав книги (з фільтром по тому).
+6. Цикл по файлах:
+   - `validate_docx_file()` — при помилці додається в `errors`, файл пропускається.
+   - Назва: з `titles_map` або з імені файлу (без розширення), обмеження 255 символів.
+   - `Chapter.objects.create(...)` з послідовним `order`.
+   - `write_uploaded_docx_to_temp()` → `docx_to_content_json()` → `chapter.save_content()`.
+   - При винятку — лог + додавання в `errors`, глава видаляється (rollback в межах transaction).
+7. `book.last_updated = timezone.now()`, `book.save()`.
+8. Якщо є створені розділи — `Book.mark_translation_owner_activity(book)`.
+
+### 6.6. Формат відповіді
+
+```json
+{
+  "created": [/* ChapterSerializer data для кожного створеного розділу */],
+  "errors": [{"filename": "file.docx", "reason": "текст помилки"}, ...]
+}
+```
+
+- **201** — якщо хоча б один розділ створено.
+- **400** — якщо жодного не створено, або помилка валідації.
+
+### 6.7. Partial success
+
+При помилці в одному файлі — він пропускається, інші продовжують створюватися. Вся операція в одній транзакції. Користувач бачить що пройшло, а що ні.
+
+---
+
+## 7. Пов’язана документація
 
 - Frontend-потік: `frontend/src/docs/ADD_CHAPTER_FLOW.md`.
 - Доступ до читання глав та навігація: `backend/docs/CHAPTER_ACCESS_BACKEND.md`.

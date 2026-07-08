@@ -9,6 +9,7 @@ import {
   invalidateBookChapterLists,
   type Book,
   type Volume,
+  type BulkUploadResult,
 } from "../api/catalogApi";
 import { editorsApi } from "../api/editorsApi";
 import { LazyChapterEditor } from "../editors/components/LazyChapterEditor";
@@ -20,6 +21,9 @@ import { FilterCheckbox } from "../shared/FilterCheckbox/FilterCheckbox";
 import styles from "./styles/AddChapter.module.css";
 
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+const MAX_BULK_FILES = 20;
+const MAX_BULK_TOTAL_BYTES = 100 * 1024 * 1024;
 
 const EMPTY_EDITOR_DOC: Record<string, unknown> = {
   type: "doc",
@@ -118,6 +122,13 @@ export default function AddChapter() {
   const latestContentRef = useRef<Record<string, unknown> | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [bulkFiles, setBulkFiles] = useState<File[]>([]);
+  const [bulkTitles, setBulkTitles] = useState<Record<string, string>>({});
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+  const [bulkResult, setBulkResult] = useState<BulkUploadResult | null>(null);
+  const [bulkError, setBulkError] = useState("");
+  const bulkInputRef = useRef<HTMLInputElement>(null);
 
   // Скрол у початок до малювання — без мерехтіння
   useLayoutEffect(() => {
@@ -220,6 +231,128 @@ export default function AddChapter() {
     }
   }, []);
 
+  const handleBulkFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files;
+    if (!selected || selected.length === 0) return;
+
+    const arr = Array.from(selected);
+    const valid: File[] = [];
+    const rejected: string[] = [];
+
+    for (const f of arr) {
+      if (!isDocxFile(f)) {
+        rejected.push(f.name);
+      } else {
+        valid.push(f);
+      }
+    }
+
+    if (valid.length === 0) {
+      setBulkError("Жоден файл не є .docx");
+      e.target.value = "";
+      return;
+    }
+
+    if (valid.length > MAX_BULK_FILES) {
+      setBulkError(`Максимум ${MAX_BULK_FILES} файлів за раз. Обрано: ${valid.length}`);
+      e.target.value = "";
+      return;
+    }
+
+    const totalSize = valid.reduce((sum, f) => sum + f.size, 0);
+    if (totalSize > MAX_BULK_TOTAL_BYTES) {
+      setBulkError(`Сумарний розмір файлів перевищує 100 МБ`);
+      e.target.value = "";
+      return;
+    }
+
+    const titles: Record<string, string> = {};
+    valid.forEach((f, i) => {
+      const base = f.name.replace(/\.docx$/i, "").trim();
+      titles[String(i)] = base || `Розділ ${i + 1}`;
+    });
+
+    setBulkFiles(valid);
+    setBulkTitles(titles);
+    setBulkError("");
+    setBulkResult(null);
+    if (rejected.length > 0) {
+      setBulkError(`Пропущено (не .docx): ${rejected.join(", ")}`);
+    }
+    e.target.value = "";
+  }, []);
+
+  const handleBulkTitleChange = useCallback((idx: number, value: string) => {
+    setBulkTitles((prev) => ({ ...prev, [String(idx)]: value }));
+  }, []);
+
+  const handleBulkRemoveFile = useCallback((idx: number) => {
+    setBulkFiles((prev) => {
+      const next = prev.filter((_, i) => i !== idx);
+      setBulkTitles((titles) => {
+        const updated: Record<string, string> = {};
+        next.forEach((f, i) => {
+          const oldKey = i < idx ? String(i) : String(i + 1);
+          updated[String(i)] = titles[oldKey] ?? f.name.replace(/\.docx$/i, "").trim();
+        });
+        return updated;
+      });
+      return next;
+    });
+  }, []);
+
+  const handleBulkSubmit = useCallback(async () => {
+    if (!slug || bulkFiles.length === 0) return;
+    setBulkError("");
+    setBulkResult(null);
+
+    if (isPaid) {
+      const priceNum = parseFloat(price);
+      if (!price || priceNum <= 0 || Number.isNaN(priceNum)) {
+        setBulkError("Вкажіть коректну вартість глави");
+        return;
+      }
+    }
+
+    const volumeId = selectedVolume ? Number(selectedVolume) : null;
+
+    setBulkSubmitting(true);
+    try {
+      const result = await catalogApi.uploadChaptersBulk(
+        slug,
+        bulkFiles,
+        bulkTitles,
+        isPaid,
+        volumeId,
+        isPaid ? parseFloat(price) : 0,
+      );
+      setBulkResult(result);
+
+      if (result.created.length > 0) {
+        setBulkFiles([]);
+        setBulkTitles({});
+        if (book?.id) {
+          await invalidateBookChapterLists(queryClient, slug, book.id);
+        } else {
+          await queryClient.invalidateQueries({ queryKey: catalogKeys.chapters(slug) });
+        }
+        await queryClient.invalidateQueries({ queryKey: catalogKeys.book(slug) });
+
+        if (result.errors.length === 0) {
+          navigate(`/books/${slug}`, { state: { chapterCreated: true } });
+        }
+      }
+    } catch (err) {
+      const message =
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message: unknown }).message)
+          : "Помилка при масовому завантаженні";
+      setBulkError(message);
+    } finally {
+      setBulkSubmitting(false);
+    }
+  }, [slug, bulkFiles, bulkTitles, isPaid, price, selectedVolume, book, navigate, queryClient]);
+
   const handleUploadChapter = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -304,8 +437,9 @@ export default function AddChapter() {
 
   return (
     <Container>
+      <div className={styles.page}>
       <form
-        className={styles.page}
+        className={styles.formGrid}
         onSubmit={handleUploadChapter}
         aria-label="Форма додавання розділу"
       >
@@ -366,7 +500,6 @@ export default function AddChapter() {
                   type="button"
                   className={styles.mainImageDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  style={{ maxWidth: 320 }}
                 >
                   {file ? (
                     <span className={styles.uploadText}>{file.name}</span>
@@ -395,6 +528,133 @@ export default function AddChapter() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* ── Масове завантаження розділів ── */}
+        <div className={styles.bulkSection} aria-label="Масове завантаження розділів">
+          <div className={styles.bulkHeader}>
+            <h2 className={styles.bulkTitle}>Завантажити кілька розділів</h2>
+            <p className={styles.bulkHint}>
+              Оберіть до {MAX_BULK_FILES} файлів .docx (до 100 МБ сумарно). Назви розділів
+              заповняться автоматично з імен файлів — їх можна відредагувати перед відправкою.
+            </p>
+          </div>
+
+          <input
+            ref={bulkInputRef}
+            type="file"
+            multiple
+            accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            onChange={handleBulkFileChange}
+            className={styles.hiddenInput}
+            aria-label="Вибрати кілька файлів .docx"
+          />
+
+          {bulkFiles.length === 0 && (
+            <button
+              type="button"
+              className={styles.bulkPickBtn}
+              onClick={() => bulkInputRef.current?.click()}
+            >
+              <div className={styles.uploadCircle}>
+                <UploadCloudIcon className={styles.uploadIconMain} size={40} />
+              </div>
+              <span className={styles.uploadText}>Обрати файли .docx</span>
+            </button>
+          )}
+
+          {bulkFiles.length > 0 && (
+            <>
+              <div className={styles.bulkListHeader}>
+                <span>Обрано файлів: {bulkFiles.length}</span>
+                <button
+                  type="button"
+                  className={styles.clearFileBtn}
+                  onClick={() => {
+                    setBulkFiles([]);
+                    setBulkTitles({});
+                    setBulkError("");
+                    setBulkResult(null);
+                  }}
+                >
+                  Очистити список
+                </button>
+                <button
+                  type="button"
+                  className={styles.clearFileBtn}
+                  onClick={() => bulkInputRef.current?.click()}
+                >
+                  Обрати інші
+                </button>
+              </div>
+
+              <ul className={styles.bulkList}>
+                {bulkFiles.map((f, idx) => (
+                  <li key={`${f.name}-${idx}`} className={styles.bulkItem}>
+                    <span className={styles.bulkItemFile} title={f.name}>{f.name}</span>
+                    <input
+                      type="text"
+                      className={styles.bulkItemInput}
+                      value={bulkTitles[String(idx)] ?? ""}
+                      onChange={(e) => handleBulkTitleChange(idx, e.target.value)}
+                      placeholder="Назва розділу"
+                      maxLength={255}
+                    />
+                    <button
+                      type="button"
+                      className={styles.bulkItemRemove}
+                      onClick={() => handleBulkRemoveFile(idx)}
+                      aria-label={`Видалити ${f.name}`}
+                      title="Видалити"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+
+              <div className={styles.submitRow} style={{ paddingTop: 16 }}>
+                <ActionButton
+                  type="button"
+                  variant="primary"
+                  disabled={bulkSubmitting}
+                  loading={bulkSubmitting}
+                  ariaLabel="Завантажити розділи"
+                  onClick={handleBulkSubmit}
+                >
+                  {bulkSubmitting ? "Завантаження…" : `Завантажити ${bulkFiles.length} розділ(ів)`}
+                </ActionButton>
+              </div>
+            </>
+          )}
+
+          {bulkError && (
+            <p role="alert" className={styles.bulkError}>{bulkError}</p>
+          )}
+
+          {bulkResult && (
+            <div className={styles.bulkResultBlock}>
+              {bulkResult.created.length > 0 && (
+                <p className={styles.bulkSuccess}>
+                  Створено розділів: {bulkResult.created.length}
+                </p>
+              )}
+              {bulkResult.errors.length > 0 && (
+                <div className={styles.bulkErrors}>
+                  <p className={styles.bulkErrorsTitle}>
+                    Помилки ({bulkResult.errors.length}):
+                  </p>
+                  <ul>
+                    {bulkResult.errors.map((e, i) => (
+                      <li key={i}>
+                        <strong>{e.filename}</strong>: {e.reason}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div style={{ marginTop: 16 }}>
@@ -450,18 +710,21 @@ export default function AddChapter() {
           </p>
         )}
 
-        <div className={styles.submitRow} style={{ paddingTop: 24 }}>
-          <ActionButton
-            type="submit"
-            variant="primary"
-            disabled={isSubmitting || imageUploadsInFlight > 0}
-            loading={isSubmitting}
-            ariaLabel="Додати розділ"
-          >
-            {isSubmitting ? "Завантаження…" : "Додати розділ"}
-          </ActionButton>
-        </div>
+        {bulkFiles.length === 0 && (
+          <div className={styles.submitRow} style={{ paddingTop: 24 }}>
+            <ActionButton
+              type="submit"
+              variant="primary"
+              disabled={isSubmitting || imageUploadsInFlight > 0}
+              loading={isSubmitting}
+              ariaLabel="Додати розділ"
+            >
+              {isSubmitting ? "Завантаження…" : "Додати розділ"}
+            </ActionButton>
+          </div>
+        )}
       </form>
+      </div>
     </Container>
   );
 }

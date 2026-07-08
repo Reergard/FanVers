@@ -813,6 +813,38 @@ export async function createChapterWithEditorContent(
   return normalizeChapter(data);
 }
 
+export interface BulkUploadResult {
+  created: Record<string, unknown>[];
+  errors: { filename: string; reason: string }[];
+}
+
+export async function uploadChaptersBulk(
+  slug: string,
+  files: File[],
+  titles: Record<string, string>,
+  isPaid: boolean,
+  volumeId: number | null,
+  price: number
+): Promise<BulkUploadResult> {
+  const form = new FormData();
+  for (const f of files) {
+    form.append("files", f);
+  }
+  form.append("titles", JSON.stringify(titles));
+  form.append("is_paid", isPaid ? "true" : "false");
+  if (volumeId != null) {
+    form.append("volume", String(volumeId));
+  }
+  form.append("price", String(price));
+
+  const { data } = await http.post<BulkUploadResult>(
+    `${CATALOG}/books/${encodeURIComponent(slug)}/add_chapters_bulk/`,
+    form,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+  return data;
+}
+
 /** Книги користувача (власні переклади та авторські твори) */
 export async function getUserTranslations(): Promise<UserTranslationBook[]> {
   const { data } = await http.get<Record<string, unknown>[]>(
@@ -1027,6 +1059,7 @@ export const catalogApi = {
   reorderChapters,
   moveChapter,
   uploadChapter,
+  uploadChaptersBulk,
   createChapterWithoutFile,
   createChapterWithEditorContent,
   getAllCatalogBooks,

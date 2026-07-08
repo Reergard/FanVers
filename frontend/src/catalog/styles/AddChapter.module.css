@@ -13,6 +13,13 @@
   max-width: 100%;
 }
 
+.formGrid {
+  display: grid;
+  gap: clamp(18px, calc(2.2 * var(--vwu)), 34px);
+  min-width: 0;
+  max-width: 100%;
+}
+
 .top {
   display: grid;
   gap: 10px;
@@ -112,20 +119,23 @@
 }
 
 .mainImageDrop {
-  width: clamp(160px, calc(220 * 100vw / 1366), 220px);
-  height: clamp(240px, calc(340 * 100vw / 1366), 340px);
-  border-radius: 0 18px 18px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 28px;
+  border-radius: 18px;
   border: 1px dashed #f58807;
-  border-left: none;
-  background: rgba(5, 180, 199, 0.15);
+  background: rgba(5, 180, 199, 0.08);
   cursor: pointer;
   box-sizing: border-box;
-  display: grid;
-  place-items: center;
-  gap: 10px;
-  padding: 16px;
   color: #F58807;
-  position: relative;
+  transition: background 0.15s, border-color 0.15s;
+  justify-self: start;
+}
+
+.mainImageDrop:hover {
+  background: rgba(5, 180, 199, 0.18);
+  border-color: rgba(5, 180, 199, 0.7);
 }
 
 .uploadCircle {
@@ -253,8 +263,182 @@
   color: var(--gold);
 }
 
+/* ── Масове завантаження ── */
+
+.bulkSection {
+  margin-top: clamp(24px, calc(3 * var(--vwu)), 48px);
+  padding-top: clamp(20px, calc(2.5 * var(--vwu)), 40px);
+  border-top: 1px dashed rgba(245, 136, 7, 0.35);
+  display: grid;
+  gap: 16px;
+}
+
+.bulkHeader {
+  display: grid;
+  gap: 6px;
+}
+
+.bulkTitle {
+  margin: 0;
+  font-family: var(--font-decor);
+  font-weight: 400;
+  font-size: clamp(18px, calc(2.2 * var(--vwu)), 28px);
+  color: var(--gold);
+}
+
+.bulkHint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.bulkPickBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 28px;
+  border-radius: 18px;
+  border: 1px dashed #f58807;
+  background: rgba(5, 180, 199, 0.08);
+  cursor: pointer;
+  color: #F58807;
+  transition: background 0.15s, border-color 0.15s;
+  justify-self: start;
+}
+
+.bulkPickBtn:hover {
+  background: rgba(5, 180, 199, 0.18);
+  border-color: rgba(5, 180, 199, 0.7);
+}
+
+.bulkListHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.bulkList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.bulkItem {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 2fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--panelBg), var(--panelBg2));
+  border: 1px solid rgba(245, 136, 7, 0.2);
+}
+
+.bulkItemFile {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bulkItemInput {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 136, 7, 0.3);
+  background: rgba(0, 0, 0, 0.3);
+  color: #F58807;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.bulkItemInput:focus {
+  border-color: rgba(5, 180, 199, 0.65);
+}
+
+.bulkItemRemove {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+
+.bulkItemRemove:hover {
+  color: #e57373;
+  border-color: #e57373;
+}
+
+.bulkError {
+  color: #e57373;
+  font-size: 14px;
+  margin: 0;
+}
+
+.bulkResultBlock {
+  display: grid;
+  gap: 10px;
+}
+
+.bulkSuccess {
+  color: #81c784;
+  font-size: 14px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.bulkErrors {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.bulkErrorsTitle {
+  margin: 0 0 6px;
+  color: #e57373;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.bulkErrors ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.bulkErrors li {
+  margin-bottom: 4px;
+}
+
+.bulkErrors strong {
+  color: var(--gold);
+}
+
 @media (max-width: 1024px) {
   .gridTwo {
     grid-template-columns: 1fr;
+  }
+
+  .bulkItem {
+    grid-template-columns: 1fr auto;
+  }
+
+  .bulkItemFile {
+    grid-column: 1 / -1;
   }
 }
