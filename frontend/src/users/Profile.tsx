@@ -986,6 +986,7 @@ export default function Profile() {
                   <span className={styles.mutedGold}>Баланс:</span>
                   <span className={styles.balanceCommissionValue}>{profile.balance}</span>
                 </div>
+                {false && (
                 <button
                   type="button"
                   className={`${styles.btnGreen} ${styles.balanceBtnDeposit}`}
@@ -997,6 +998,7 @@ export default function Profile() {
                     {depositMutation.isPending ? "Завантаження..." : <>Купити<br />coins</>}
                   </span>
                 </button>
+                )}
               </div>
               <div className={styles.balanceHistoryBtns}>
                 <button
