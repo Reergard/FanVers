@@ -14,7 +14,7 @@ import { PageTitle } from "../navigation/PageTitle";
 import { Icon } from "../shared/Icon";
 import "./AbandonedTranslations.css";
 
-const PAGE_SIZE = 1;
+const PAGE_SIZE = 9;
 type SortKey = "choose" | "created" | "updated" | "views" | "income";
 const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: "choose", label: "Вибрати" },
