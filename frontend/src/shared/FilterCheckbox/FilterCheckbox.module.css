@@ -54,3 +54,15 @@
 .row:has(.input:checked) .label {
   color: #00EAFD;
 }
+
+.row:has(.input:disabled) {
+  cursor: not-allowed;
+}
+
+.row:has(.input:disabled) .box {
+  opacity: 0.45;
+}
+
+.row:has(.input:disabled) .label {
+  color: rgba(255, 255, 255, 0.38);
+}

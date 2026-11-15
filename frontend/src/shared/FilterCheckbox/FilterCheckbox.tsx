@@ -5,18 +5,20 @@ type Props = {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  disabled?: boolean;
   /** Додатковий клас для рядка */
   className?: string;
 };
 
 /** Чекбокс для фільтрів (стиль Messages: бірюзовий при виборі, кастомна галочка) */
-export function FilterCheckbox({ id, label, checked, onChange, className }: Props) {
+export function FilterCheckbox({ id, label, checked, onChange, disabled, className }: Props) {
   return (
     <label className={[styles.row, className].filter(Boolean).join(" ")} htmlFor={id}>
       <input
         id={id}
         type="checkbox"
         checked={checked}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
         className={styles.input}
       />

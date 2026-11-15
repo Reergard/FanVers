@@ -657,13 +657,18 @@ export default function AddChapter() {
           )}
         </div>
 
-        <div style={{ marginTop: 16 }}>
+        <div className={styles.paidAccessRow}>
           <FilterCheckbox
             id="add-chapter-paid"
+            className={styles.paidAccessCheckbox}
             label="Закритий доступ (потребує оплати)"
             checked={isPaid}
             onChange={setIsPaid}
+            disabled
           />
+          <span className={styles.paidAccessNotice}>
+            *Вибачаємось. На разі на нашій платформі дана функція вимкнута через юридичні питання.
+          </span>
         </div>
 
         {isPaid && (

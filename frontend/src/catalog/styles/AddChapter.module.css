@@ -429,6 +429,27 @@
   color: var(--gold);
 }
 
+.paidAccessRow {
+  display: flex;
+  align-items: center;
+  gap: 10px 16px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.paidAccessCheckbox {
+  width: max-content;
+  max-width: 100%;
+  grid-template-columns: 16px auto;
+}
+
+.paidAccessNotice {
+  font-size: clamp(12px, 1.15vw, 13px);
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.4;
+  max-width: 42em;
+}
+
 @media (max-width: 1024px) {
   .gridTwo {
     grid-template-columns: 1fr;

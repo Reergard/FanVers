@@ -947,7 +947,7 @@ export default function Profile() {
                     </p>
                   </div>
                 )}
-                {mayWithdrawBalance ? (
+                {false && (mayWithdrawBalance ? (
                   payoutPending ? (
                     <button
                       type="button"
@@ -979,13 +979,14 @@ export default function Profile() {
                       </span>
                     </button>
                   )
-                ) : null}
+                ) : null)}
               </div>
               <div className={styles.balanceRow}>
                 <div className={styles.balanceInfo} data-mobile-area="balance">
                   <span className={styles.mutedGold}>Баланс:</span>
                   <span className={styles.balanceCommissionValue}>{profile.balance}</span>
                 </div>
+                {false && (
                 <button
                   type="button"
                   className={`${styles.btnGreen} ${styles.balanceBtnDeposit}`}
@@ -997,6 +998,7 @@ export default function Profile() {
                     {depositMutation.isPending ? "Завантаження..." : <>Купити<br />coins</>}
                   </span>
                 </button>
+                )}
               </div>
               <div className={styles.balanceHistoryBtns}>
                 <button
